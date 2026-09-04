@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
 using QL_HocVien.Models;
 
 namespace QL_HocVien.Data
@@ -11,6 +12,39 @@ namespace QL_HocVien.Data
         {
             // Tự động tạo cơ sở dữ liệu SQLite nếu chưa tồn tại
             context.Database.EnsureCreated();
+
+            // Đảm bảo bảng MilitaryClasses tồn tại ngay cả khi cơ sở dữ liệu đã tạo từ phiên bản trước
+            try
+            {
+                context.Database.ExecuteSqlRaw(@"
+                    CREATE TABLE IF NOT EXISTS ""MilitaryClasses"" (
+                        ""Id"" INTEGER NOT NULL CONSTRAINT ""PK_MilitaryClasses"" PRIMARY KEY AUTOINCREMENT,
+                        ""ClassCode"" TEXT NOT NULL,
+                        ""ClassName"" TEXT NOT NULL,
+                        ""Unit"" TEXT NOT NULL,
+                        ""Major"" TEXT NOT NULL,
+                        ""OfficerInCharge"" TEXT NOT NULL,
+                        ""AcademicYear"" TEXT NOT NULL,
+                        ""Description"" TEXT NOT NULL,
+                        ""CreatedAt"" TEXT NOT NULL
+                    );
+                    CREATE UNIQUE INDEX IF NOT EXISTS ""IX_MilitaryClasses_ClassCode"" ON ""MilitaryClasses"" (""ClassCode"");
+                ");
+            }
+            catch
+            {
+                // Bỏ qua nếu bảng đã tồn tại
+            }
+
+            // Đảm bảo cột ClassId tồn tại trong bảng Cadets
+            try
+            {
+                context.Database.ExecuteSqlRaw(@"ALTER TABLE ""Cadets"" ADD COLUMN ""ClassId"" INTEGER NULL REFERENCES ""MilitaryClasses""(""Id"") ON DELETE SET NULL;");
+            }
+            catch
+            {
+                // Bỏ qua nếu cột đã tồn tại
+            }
 
             // 1. Seed tài khoản Admin mặc định
             if (!context.Users.Any())
@@ -189,6 +223,32 @@ namespace QL_HocVien.Data
 
                 context.MilitaryClasses.AddRange(classes);
                 context.SaveChanges();
+            }
+
+            // Đồng bộ liên kết lớp cho các học viên đã có từ trước
+            try
+            {
+                var unlinkedCadets = context.Cadets.Where(c => c.ClassId == null).ToList();
+                if (unlinkedCadets.Any())
+                {
+                    var allClasses = context.MilitaryClasses.ToList();
+                    foreach (var c in unlinkedCadets)
+                    {
+                        var matchedClass = allClasses.FirstOrDefault(mc => 
+                            mc.ClassName.Equals(c.ClassName, StringComparison.OrdinalIgnoreCase) ||
+                            mc.ClassCode.Equals(c.ClassName, StringComparison.OrdinalIgnoreCase) ||
+                            (!string.IsNullOrEmpty(c.ClassName) && c.ClassName.StartsWith(mc.ClassCode, StringComparison.OrdinalIgnoreCase)));
+                        if (matchedClass != null)
+                        {
+                            c.ClassId = matchedClass.Id;
+                        }
+                    }
+                    context.SaveChanges();
+                }
+            }
+            catch
+            {
+                // Bỏ qua nếu có lỗi
             }
 
             // 4. Seed học viên mẫu

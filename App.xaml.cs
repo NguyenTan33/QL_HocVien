@@ -20,26 +20,44 @@ namespace QL_HocVien
         {
             base.OnStartup(e);
 
-            var services = new ServiceCollection();
-            ConfigureServices(services);
-            ServiceProvider = services.BuildServiceProvider();
-
-            // Khởi tạo và seed CSDL SQLite tự động
-            using (var scope = ServiceProvider.CreateScope())
+            DispatcherUnhandledException += (sender, args) =>
             {
-                var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                DbInitializer.Initialize(dbContext);
-            }
+                MessageBox.Show($"Đã xảy ra lỗi không mong muốn:\n{args.Exception.Message}\n\nChi tiết:\n{args.Exception}",
+                                "Lỗi Hệ Thống QL_HocVien", MessageBoxButton.OK, MessageBoxImage.Error);
+                args.Handled = true;
+            };
 
-            // Hiển thị màn hình Đăng nhập đầu tiên
-            var loginWindow = ServiceProvider.GetRequiredService<LoginWindow>();
-            loginWindow.Show();
+            try
+            {
+                var services = new ServiceCollection();
+                ConfigureServices(services);
+                ServiceProvider = services.BuildServiceProvider();
+
+                // Khởi tạo và seed CSDL SQLite tự động
+                using (var scope = ServiceProvider.CreateScope())
+                {
+                    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                    DbInitializer.Initialize(dbContext);
+                }
+
+                // Hiển thị màn hình Đăng nhập đầu tiên
+                var loginWindow = ServiceProvider.GetRequiredService<LoginWindow>();
+                MainWindow = loginWindow;
+                loginWindow.Show();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Không thể khởi động ứng dụng:\n{ex.Message}\n\n{ex.StackTrace}",
+                                "Lỗi Khởi Động", MessageBoxButton.OK, MessageBoxImage.Error);
+                Shutdown();
+            }
         }
 
         private void ConfigureServices(IServiceCollection services)
         {
-            // Cấu hình chuỗi kết nối SQLite
-            string connectionString = "Data Source=ql_hocvien.db";
+            // Cấu hình chuỗi kết nối SQLite nằm cố định cùng thư mục thực thi
+            var dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ql_hocvien.db");
+            string connectionString = $"Data Source={dbPath}";
             try
             {
                 var settingsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json");
@@ -50,7 +68,11 @@ namespace QL_HocVien
                     if (doc.RootElement.TryGetProperty("ConnectionStrings", out var connProp) &&
                         connProp.TryGetProperty("DefaultConnection", out var defaultConn))
                     {
-                        connectionString = defaultConn.GetString() ?? connectionString;
+                        var configured = defaultConn.GetString();
+                        if (!string.IsNullOrWhiteSpace(configured))
+                        {
+                            connectionString = configured;
+                        }
                     }
                 }
             }
