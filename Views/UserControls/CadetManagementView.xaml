@@ -24,11 +24,15 @@
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Content="➕ Thêm Học Viên Mới" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,10,0"
+                    <Button Content="📥 Nhập Excel" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,0"
+                            Command="{Binding ImportExcelCommand}"/>
+                    <Button Content="📤 Xuất Excel" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,0"
+                            Command="{Binding ExportExcelCommand}"/>
+                    <Button Content="➕ Thêm Học Viên" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,10,0"
                             Command="{Binding RequestAddNewCommand}"/>
-                    <Button Content="✏️ Sửa Thông Tin" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,0"
+                    <Button Content="✏️ Sửa" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,0"
                             Command="{Binding StartEditCommand}"/>
-                    <Button Content="🔑 Đặt Lại Mật Khẩu" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,0"
+                    <Button Content="🔑 Đổi MK" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,0"
                             Command="{Binding OpenResetPasswordCommand}"/>
                     <Button Content="🗑️ Xóa" Style="{StaticResource DangerButtonStyle}"
                             Command="{Binding DeleteCadetCommand}"/>

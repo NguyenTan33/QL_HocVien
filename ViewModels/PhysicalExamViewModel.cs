@@ -61,16 +61,23 @@ namespace QL_HocVien.ViewModels
         [ObservableProperty]
         private string _formErrorMessage = string.Empty;
 
+        private readonly IExcelService _excelService;
+        private readonly IFileDialogService _fileDialogService;
+
         public PhysicalExamViewModel(
             IPhysicalExamService examService,
             ICadetService cadetService,
             ISubjectService subjectService,
-            IEvaluationService evaluationService)
+            IEvaluationService evaluationService,
+            IExcelService excelService,
+            IFileDialogService fileDialogService)
         {
             _examService = examService;
             _cadetService = cadetService;
             _subjectService = subjectService;
             _evaluationService = evaluationService;
+            _excelService = excelService;
+            _fileDialogService = fileDialogService;
             Title = "Kiểm Tra Rèn Luyện Thể Lực";
 
             _ = InitializeAsync();
@@ -221,6 +228,55 @@ namespace QL_HocVien.ViewModels
             catch (Exception ex)
             {
                 StatusMessage = $"Lỗi xóa: {ex.Message}";
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        [RelayCommand]
+        private async Task ExportExcelAsync()
+        {
+            var fileName = $"KetQua_KiemTraTheLuc_{DateTime.Today:yyyyMMdd}.xlsx";
+            var filePath = _fileDialogService.ShowSaveFileDialog(fileName, "Excel Files (*.xlsx)|*.xlsx", "Xuất kết quả kiểm tra thể lực ra Excel");
+            if (string.IsNullOrWhiteSpace(filePath)) return;
+
+            IsBusy = true;
+            try
+            {
+                var result = await _excelService.ExportExamRecordsToExcelAsync(ExamRecords, filePath);
+                StatusMessage = result.Message;
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Lỗi xuất Excel: {ex.Message}";
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        [RelayCommand]
+        private async Task ImportExcelAsync()
+        {
+            var filePath = _fileDialogService.ShowOpenFileDialog("Excel Files (*.xlsx)|*.xlsx|All Files (*.*)|*.*", "Chọn tệp Excel kết quả kiểm tra thể lực");
+            if (string.IsNullOrWhiteSpace(filePath)) return;
+
+            IsBusy = true;
+            try
+            {
+                var result = await _excelService.ImportExamRecordsFromExcelAsync(filePath);
+                StatusMessage = result.Message;
+                if (result.Success)
+                {
+                    await LoadRecordsAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Lỗi nhập Excel: {ex.Message}";
             }
             finally
             {

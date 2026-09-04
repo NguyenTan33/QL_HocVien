@@ -12,6 +12,8 @@ namespace QL_HocVien.ViewModels
     {
         private readonly ICadetService _cadetService;
         private readonly IAuthService _authService;
+        private readonly IExcelService _excelService;
+        private readonly IFileDialogService _fileDialogService;
 
         public ObservableCollection<Cadet> Cadets { get; } = new();
         public ObservableCollection<string> RankList { get; } = new()
@@ -69,10 +71,16 @@ namespace QL_HocVien.ViewModels
 
         public event Action? OnRequestAddCadet;
 
-        public CadetManagementViewModel(ICadetService cadetService, IAuthService authService)
+        public CadetManagementViewModel(
+            ICadetService cadetService,
+            IAuthService authService,
+            IExcelService excelService,
+            IFileDialogService fileDialogService)
         {
             _cadetService = cadetService;
             _authService = authService;
+            _excelService = excelService;
+            _fileDialogService = fileDialogService;
             Title = "Quản Lý Danh Sách Học Viên";
 
             _ = LoadCadetsAsync();
@@ -234,6 +242,55 @@ namespace QL_HocVien.ViewModels
             catch (Exception ex)
             {
                 StatusMessage = $"Lỗi đặt lại mật khẩu: {ex.Message}";
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        [RelayCommand]
+        private async Task ExportExcelAsync()
+        {
+            var fileName = $"DanhSach_HocVien_{DateTime.Today:yyyyMMdd}.xlsx";
+            var filePath = _fileDialogService.ShowSaveFileDialog(fileName, "Excel Files (*.xlsx)|*.xlsx", "Xuất danh sách học viên ra Excel");
+            if (string.IsNullOrWhiteSpace(filePath)) return;
+
+            IsBusy = true;
+            try
+            {
+                var result = await _excelService.ExportCadetsToExcelAsync(Cadets, filePath);
+                StatusMessage = result.Message;
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Lỗi xuất Excel: {ex.Message}";
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        [RelayCommand]
+        private async Task ImportExcelAsync()
+        {
+            var filePath = _fileDialogService.ShowOpenFileDialog("Excel Files (*.xlsx)|*.xlsx|All Files (*.*)|*.*", "Chọn tệp Excel danh sách học viên");
+            if (string.IsNullOrWhiteSpace(filePath)) return;
+
+            IsBusy = true;
+            try
+            {
+                var result = await _excelService.ImportCadetsFromExcelAsync(filePath);
+                StatusMessage = result.Message;
+                if (result.Success)
+                {
+                    await LoadCadetsAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Lỗi nhập Excel: {ex.Message}";
             }
             finally
             {

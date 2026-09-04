@@ -69,9 +69,17 @@ namespace QL_HocVien.ViewModels
         [ObservableProperty]
         private string _formErrorMessage = string.Empty;
 
-        public SubjectManagementViewModel(ISubjectService subjectService)
+        private readonly IExcelService _excelService;
+        private readonly IFileDialogService _fileDialogService;
+
+        public SubjectManagementViewModel(
+            ISubjectService subjectService,
+            IExcelService excelService,
+            IFileDialogService fileDialogService)
         {
             _subjectService = subjectService;
+            _excelService = excelService;
+            _fileDialogService = fileDialogService;
             Title = "Quản Lý Môn Học & Tiêu Chuẩn Thể Lực";
 
             _ = LoadSubjectsAsync();
@@ -288,6 +296,55 @@ namespace QL_HocVien.ViewModels
             FilterSubjectName = string.Empty;
             SelectedCategory = "Tất cả";
             _ = LoadSubjectsAsync();
+        }
+
+        [RelayCommand]
+        private async Task ExportExcelAsync()
+        {
+            var fileName = $"DanhMuc_MonHoc_{DateTime.Today:yyyyMMdd}.xlsx";
+            var filePath = _fileDialogService.ShowSaveFileDialog(fileName, "Excel Files (*.xlsx)|*.xlsx", "Xuất danh mục môn học ra Excel");
+            if (string.IsNullOrWhiteSpace(filePath)) return;
+
+            IsBusy = true;
+            try
+            {
+                var result = await _excelService.ExportSubjectsToExcelAsync(Subjects, filePath);
+                StatusMessage = result.Message;
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Lỗi xuất Excel: {ex.Message}";
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        [RelayCommand]
+        private async Task ImportExcelAsync()
+        {
+            var filePath = _fileDialogService.ShowOpenFileDialog("Excel Files (*.xlsx)|*.xlsx|All Files (*.*)|*.*", "Chọn tệp Excel danh mục môn học");
+            if (string.IsNullOrWhiteSpace(filePath)) return;
+
+            IsBusy = true;
+            try
+            {
+                var result = await _excelService.ImportSubjectsFromExcelAsync(filePath);
+                StatusMessage = result.Message;
+                if (result.Success)
+                {
+                    await LoadSubjectsAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Lỗi nhập Excel: {ex.Message}";
+            }
+            finally
+            {
+                IsBusy = false;
+            }
         }
 
         partial void OnFilterSubjectCodeChanged(string value) => _ = LoadSubjectsAsync();

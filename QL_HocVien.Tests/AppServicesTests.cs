@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -23,6 +25,7 @@ namespace QL_HocVien.Tests
         private readonly ISubjectService _subjectService;
         private readonly IEvaluationService _evaluationService;
         private readonly IPhysicalExamService _examService;
+        private readonly IExcelService _excelService;
         private readonly string _dbName;
 
         public AppServicesTests()
@@ -46,6 +49,7 @@ namespace QL_HocVien.Tests
             _subjectService = new SubjectService(_subjectRepository);
             _evaluationService = new EvaluationService();
             _examService = new PhysicalExamService(_examRepository, _subjectRepository, _evaluationService);
+            _excelService = new ExcelService(_context, _cadetRepository, _subjectRepository, _examRepository, _evaluationService);
         }
 
         public void Dispose()
@@ -191,6 +195,55 @@ namespace QL_HocVien.Tests
             Assert.Equal("Khá", _evaluationService.EvaluateGrade(c100Subject, 13.5));
             Assert.Equal("Đạt", _evaluationService.EvaluateGrade(c100Subject, 14.0));
             Assert.Equal("Không đạt", _evaluationService.EvaluateGrade(c100Subject, 15.2));
+        }
+
+        [Fact]
+        public async Task Test_Excel_Cadet_Export_And_Import()
+        {
+            var tempFile = Path.Combine(Path.GetTempPath(), $"Cadets_Test_{Guid.NewGuid():N}.xlsx");
+            try
+            {
+                var cadets = (await _cadetService.GetAllCadetsAsync()).ToList();
+                Assert.NotEmpty(cadets);
+
+                // Xuất Excel
+                var exportRes = await _excelService.ExportCadetsToExcelAsync(cadets, tempFile);
+                Assert.True(exportRes.Success, exportRes.Message);
+                Assert.True(File.Exists(tempFile));
+
+                // Nhập lại từ Excel
+                var importRes = await _excelService.ImportCadetsFromExcelAsync(tempFile);
+                Assert.True(importRes.Success, importRes.Message);
+                Assert.NotEmpty(importRes.Cadets);
+                Assert.Equal(cadets.Count, importRes.Cadets.Count);
+            }
+            finally
+            {
+                if (File.Exists(tempFile)) File.Delete(tempFile);
+            }
+        }
+
+        [Fact]
+        public async Task Test_Excel_Full_System_Export_And_Import()
+        {
+            var tempFile = Path.Combine(Path.GetTempPath(), $"FullBackup_Test_{Guid.NewGuid():N}.xlsx");
+            try
+            {
+                // Xuất toàn bộ dữ liệu ra Excel (multi-sheet)
+                var exportRes = await _excelService.ExportAllDataToExcelAsync(tempFile);
+                Assert.True(exportRes.Success, exportRes.Message);
+                Assert.True(File.Exists(tempFile));
+
+                // Nhập lại toàn bộ dữ liệu từ Excel
+                var importRes = await _excelService.ImportAllDataFromExcelAsync(tempFile);
+                Assert.True(importRes.Success, importRes.Message);
+                Assert.True(importRes.CadetsCount > 0);
+                Assert.True(importRes.SubjectsCount > 0);
+            }
+            finally
+            {
+                if (File.Exists(tempFile)) File.Delete(tempFile);
+            }
         }
     }
 }

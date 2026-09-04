@@ -14,6 +14,8 @@ namespace QL_HocVien.ViewModels
         private readonly ICadetService _cadetService;
         private readonly ISubjectService _subjectService;
         private readonly IPhysicalExamService _examService;
+        private readonly IExcelService _excelService;
+        private readonly IFileDialogService _fileDialogService;
 
         [ObservableProperty]
         private int _totalCadets;
@@ -44,11 +46,15 @@ namespace QL_HocVien.ViewModels
         public DashboardViewModel(
             ICadetService cadetService,
             ISubjectService subjectService,
-            IPhysicalExamService examService)
+            IPhysicalExamService examService,
+            IExcelService excelService,
+            IFileDialogService fileDialogService)
         {
             _cadetService = cadetService;
             _subjectService = subjectService;
             _examService = examService;
+            _excelService = excelService;
+            _fileDialogService = fileDialogService;
             Title = "Bảng Tổng Quan & Báo Cáo Rèn Luyện Thể Lực";
 
             _ = LoadDashboardDataAsync();
@@ -92,6 +98,55 @@ namespace QL_HocVien.ViewModels
             catch (Exception ex)
             {
                 StatusMessage = $"Lỗi tải dữ liệu tổng quan: {ex.Message}";
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        [RelayCommand]
+        private async Task ExportAllDataAsync()
+        {
+            var fileName = $"BaoCao_TongHop_QLHV_{DateTime.Today:yyyyMMdd}.xlsx";
+            var filePath = _fileDialogService.ShowSaveFileDialog(fileName, "Excel Files (*.xlsx)|*.xlsx", "Xuất toàn bộ cơ sở dữ liệu ra Excel");
+            if (string.IsNullOrWhiteSpace(filePath)) return;
+
+            IsBusy = true;
+            try
+            {
+                var result = await _excelService.ExportAllDataToExcelAsync(filePath);
+                StatusMessage = result.Message;
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Lỗi xuất toàn bộ dữ liệu: {ex.Message}";
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        [RelayCommand]
+        private async Task ImportAllDataAsync()
+        {
+            var filePath = _fileDialogService.ShowOpenFileDialog("Excel Files (*.xlsx)|*.xlsx|All Files (*.*)|*.*", "Chọn tệp Excel để nhập/khôi phục toàn bộ dữ liệu");
+            if (string.IsNullOrWhiteSpace(filePath)) return;
+
+            IsBusy = true;
+            try
+            {
+                var result = await _excelService.ImportAllDataFromExcelAsync(filePath);
+                StatusMessage = result.Message;
+                if (result.Success)
+                {
+                    await LoadDashboardDataAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Lỗi nhập dữ liệu: {ex.Message}";
             }
             finally
             {

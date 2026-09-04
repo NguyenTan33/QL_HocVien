@@ -14,8 +14,14 @@
                     <TextBlock Text="Theo dõi thống kê số liệu, đánh giá rèn luyện thể lực theo tiêu chuẩn Thông tư 32/2009/TTLT-BQP-BVHTTDL" 
                                FontSize="13" Foreground="#64748B" Margin="0,4,0,0"/>
                 </StackPanel>
-                <Button Content="🔄 Làm Mới Dữ Liệu" HorizontalAlignment="Right" Style="{StaticResource SecondaryButtonStyle}"
-                        Command="{Binding LoadDashboardDataCommand}"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="📥 Nhập Toàn Bộ Dữ Liệu" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,0"
+                            Command="{Binding ImportAllDataCommand}"/>
+                    <Button Content="📤 Xuất Báo Cáo Toàn Bộ" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,10,0"
+                            Command="{Binding ExportAllDataCommand}"/>
+                    <Button Content="🔄 Làm Mới" Style="{StaticResource SecondaryButtonStyle}"
+                            Command="{Binding LoadDashboardDataCommand}"/>
+                </StackPanel>
             </Grid>
 
             <!-- 4 Thẻ KPI thống kê chính -->

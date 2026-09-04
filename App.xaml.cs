@@ -78,6 +78,8 @@ namespace QL_HocVien
             services.AddScoped<ISubjectService, SubjectService>();
             services.AddScoped<IEvaluationService, EvaluationService>();
             services.AddScoped<IPhysicalExamService, PhysicalExamService>();
+            services.AddSingleton<IFileDialogService, FileDialogService>();
+            services.AddScoped<IExcelService, ExcelService>();
 
             // Đăng ký ViewModels
             services.AddTransient<LoginViewModel>();
