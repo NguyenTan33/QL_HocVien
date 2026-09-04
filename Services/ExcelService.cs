@@ -7,6 +7,7 @@ using ClosedXML.Excel;
 using Microsoft.EntityFrameworkCore;
 using QL_HocVien.Data;
 using QL_HocVien.Data.Repositories;
+using QL_HocVien.Infrastructure.Security;
 using QL_HocVien.Models;
 
 namespace QL_HocVien.Services
@@ -24,6 +25,7 @@ namespace QL_HocVien.Services
         private readonly IPositionRepository _positionRepository;
         private readonly IUnitRepository _unitRepository;
         private readonly IMajorRepository _majorRepository;
+        private readonly IExcelSecurityValidator _excelValidator;
 
         public ExcelService(
             AppDbContext context,
@@ -36,7 +38,8 @@ namespace QL_HocVien.Services
             IRankRepository rankRepository,
             IPositionRepository positionRepository,
             IUnitRepository unitRepository,
-            IMajorRepository majorRepository)
+            IMajorRepository majorRepository,
+            IExcelSecurityValidator? excelValidator = null)
         {
             _context = context;
             _cadetRepository = cadetRepository;
@@ -49,6 +52,17 @@ namespace QL_HocVien.Services
             _positionRepository = positionRepository;
             _unitRepository = unitRepository;
             _majorRepository = majorRepository;
+            _excelValidator = excelValidator ?? new ExcelSecurityValidator();
+        }
+
+        private async Task<(bool IsValid, string Message)> ValidateExcelSecurityAsync(string filePath)
+        {
+            var result = await _excelValidator.ValidateExcelFileAsync(filePath);
+            if (!result.IsValid)
+            {
+                return (false, $"[BẢO MẬT] Từ chối tập tin '{result.FileName}': {result.Message}");
+            }
+            return (true, string.Empty);
         }
 
         #region 1. XUẤT & NHẬP HỌC VIÊN
@@ -120,6 +134,10 @@ namespace QL_HocVien.Services
             {
                 if (!File.Exists(filePath))
                     return (false, "Tệp Excel không tồn tại.", importedList);
+
+                var secCheck = await ValidateExcelSecurityAsync(filePath);
+                if (!secCheck.IsValid)
+                    return (false, secCheck.Message, importedList);
 
                 using var workbook = new XLWorkbook(filePath);
                 var ws = workbook.Worksheets.FirstOrDefault(w => w.Name.Contains("học viên") || w.Name.Contains("Cadet"))
@@ -298,6 +316,10 @@ namespace QL_HocVien.Services
             {
                 if (!File.Exists(filePath)) return (false, "Tệp không tồn tại.", list);
 
+                var secCheck = await ValidateExcelSecurityAsync(filePath);
+                if (!secCheck.IsValid)
+                    return (false, secCheck.Message, list);
+
                 using var workbook = new XLWorkbook(filePath);
                 var ws = workbook.Worksheets.FirstOrDefault(w => w.Name.Contains("môn") || w.Name.Contains("Subject"))
                          ?? workbook.Worksheets.FirstOrDefault();
@@ -443,6 +465,10 @@ namespace QL_HocVien.Services
             {
                 if (!File.Exists(filePath)) return (false, "Tệp không tồn tại.", list);
 
+                var secCheck = await ValidateExcelSecurityAsync(filePath);
+                if (!secCheck.IsValid)
+                    return (false, secCheck.Message, list);
+
                 using var workbook = new XLWorkbook(filePath);
                 var ws = workbook.Worksheets.FirstOrDefault(w => w.Name.Contains("thể lực") || w.Name.Contains("Exam"))
                          ?? workbook.Worksheets.FirstOrDefault();
@@ -573,6 +599,10 @@ namespace QL_HocVien.Services
             {
                 if (!File.Exists(filePath))
                     return (false, "Tệp không tồn tại.", importedList);
+
+                var secCheck = await ValidateExcelSecurityAsync(filePath);
+                if (!secCheck.IsValid)
+                    return (false, secCheck.Message, importedList);
 
                 using var workbook = new XLWorkbook(filePath);
                 var ws = workbook.Worksheet("Trang lớp học") 
@@ -739,6 +769,10 @@ namespace QL_HocVien.Services
             {
                 if (!File.Exists(filePath))
                     return (false, "Tệp không tồn tại.", new List<Officer>());
+
+                var secCheck = await ValidateExcelSecurityAsync(filePath);
+                if (!secCheck.IsValid)
+                    return (false, secCheck.Message, new List<Officer>());
 
                 using var workbook = new XLWorkbook(filePath);
                 var ws = workbook.Worksheets.FirstOrDefault(w => w.Name.Contains("cán bộ", StringComparison.OrdinalIgnoreCase) || w.Name.Contains("Officer", StringComparison.OrdinalIgnoreCase)) ?? workbook.Worksheets.FirstOrDefault();
@@ -931,6 +965,10 @@ namespace QL_HocVien.Services
             {
                 if (!File.Exists(filePath))
                     return (false, "Tệp không tồn tại.", 0, 0, 0, 0);
+
+                var secCheck = await ValidateExcelSecurityAsync(filePath);
+                if (!secCheck.IsValid)
+                    return (false, secCheck.Message, 0, 0, 0, 0);
 
                 using var workbook = new XLWorkbook(filePath);
                 int rCount = 0, pCount = 0, uCount = 0, mCount = 0;
@@ -1376,6 +1414,10 @@ namespace QL_HocVien.Services
             {
                 if (!File.Exists(filePath))
                     return (false, "Tệp không tồn tại.", 0, 0, 0, 0, 0);
+
+                var secCheck = await ValidateExcelSecurityAsync(filePath);
+                if (!secCheck.IsValid)
+                    return (false, secCheck.Message, 0, 0, 0, 0, 0);
 
                 // 1. Nhập danh mục tổ chức trước
                 var catResult = await ImportCatalogsFromExcelAsync(filePath);

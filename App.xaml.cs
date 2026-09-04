@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using QL_HocVien.Data;
 using QL_HocVien.Data.Repositories;
+using QL_HocVien.Infrastructure.Factory;
 using QL_HocVien.Services;
 using QL_HocVien.ViewModels;
 using QL_HocVien.Views.Windows;
@@ -111,6 +112,9 @@ namespace QL_HocVien
             services.AddScoped<ICatalogService, CatalogService>();
             services.AddSingleton<IFileDialogService, FileDialogService>();
             services.AddScoped<IExcelService, ExcelService>();
+
+            // Đăng ký Infrastructure (Validation Factory & Security Services - OOP & SOLID)
+            services.AddAppInfrastructureValidation();
 
             // Đăng ký ViewModels
             services.AddTransient<LoginViewModel>();

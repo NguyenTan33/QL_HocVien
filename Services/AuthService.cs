@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using QL_HocVien.Data;
 using QL_HocVien.Data.Repositories;
+using QL_HocVien.Infrastructure.Security;
 using QL_HocVien.Models;
 
 namespace QL_HocVien.Services
@@ -15,6 +16,7 @@ namespace QL_HocVien.Services
         private readonly ICadetRepository _cadetRepository;
         private readonly AppDbContext _context;
         private readonly IEmailService _emailService;
+        private readonly ISecuritySanitizer _sanitizer;
 
         public User? CurrentUser { get; private set; }
 
@@ -22,18 +24,23 @@ namespace QL_HocVien.Services
             IUserRepository userRepository,
             ICadetRepository cadetRepository,
             AppDbContext context,
-            IEmailService emailService)
+            IEmailService emailService,
+            ISecuritySanitizer? sanitizer = null)
         {
             _userRepository = userRepository;
             _cadetRepository = cadetRepository;
             _context = context;
             _emailService = emailService;
+            _sanitizer = sanitizer ?? new SecuritySanitizer();
         }
 
         public async Task<(bool Success, string Message, User? User)> LoginAsync(string usernameOrPhone, string password)
         {
             if (string.IsNullOrWhiteSpace(usernameOrPhone))
                 return (false, "Vui lòng nhập tên tài khoản hoặc số điện thoại.", null);
+
+            if (_sanitizer.ContainsDangerousPatterns(usernameOrPhone, out var threat))
+                return (false, $"[BẢO MẬT] Thông tin đăng nhập không hợp lệ: {threat}", null);
 
             if (string.IsNullOrWhiteSpace(password))
                 return (false, "Vui lòng nhập mật khẩu.", null);
@@ -79,14 +86,26 @@ namespace QL_HocVien.Services
             if (string.IsNullOrWhiteSpace(username) || username.Trim().Length < 3)
                 return (false, "Tên tài khoản phải có ít nhất 3 ký tự.");
 
+            if (_sanitizer.ContainsDangerousPatterns(username, out var t1))
+                return (false, $"[BẢO MẬT] Tên tài khoản không an toàn: {t1}");
+
             if (string.IsNullOrWhiteSpace(fullName))
                 return (false, "Vui lòng nhập họ và tên.");
+
+            if (_sanitizer.ContainsDangerousPatterns(fullName, out var t2))
+                return (false, $"[BẢO MẬT] Họ và tên không an toàn: {t2}");
 
             if (string.IsNullOrWhiteSpace(phoneNumber) || phoneNumber.Trim().Length < 9)
                 return (false, "Số điện thoại không hợp lệ.");
 
+            if (_sanitizer.ContainsDangerousPatterns(phoneNumber, out var t3))
+                return (false, $"[BẢO MẬT] Số điện thoại không an toàn: {t3}");
+
             if (string.IsNullOrWhiteSpace(email) || !email.Contains("@") || !email.Contains("."))
                 return (false, "Địa chỉ email không hợp lệ.");
+
+            if (_sanitizer.ContainsDangerousPatterns(email, out var t4))
+                return (false, $"[BẢO MẬT] Email không an toàn: {t4}");
 
             if (string.IsNullOrWhiteSpace(password) || password.Length < 6)
                 return (false, "Mật khẩu phải có ít nhất 6 ký tự.");
