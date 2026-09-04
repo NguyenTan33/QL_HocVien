@@ -1,0 +1,214 @@
+<Window x:Class="QL_HocVien.Views.Windows.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:QL_HocVien.ViewModels"
+        xmlns:views="clr-namespace:QL_HocVien.Views.UserControls"
+        mc:Ignorable="d"
+        Title="Hệ Thống Quản Lý Học Viên Quân Đội - Tiêu Chuẩn Thể Lực TT32"
+        Height="800" Width="1280"
+        MinHeight="680" MinWidth="1050"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        AllowsTransparency="False"
+        Background="#F1F5F9">
+
+    <Window.Resources>
+        <!-- DataTemplates liên kết từng ViewModel với UserControl tương ứng (MVVM) -->
+        <DataTemplate DataType="{x:Type vm:DashboardViewModel}">
+            <views:DashboardView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:CadetManagementViewModel}">
+            <views:CadetManagementView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:AddCadetViewModel}">
+            <views:AddCadetView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SubjectManagementViewModel}">
+            <views:SubjectManagementView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:PhysicalExamViewModel}">
+            <views:PhysicalExamView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
+            <views:SettingsView/>
+        </DataTemplate>
+
+        <!-- Style cho các nút điều hướng Sidebar -->
+        <Style x:Key="SidebarNavButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#CBD5E1"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Height" Value="46"/>
+            <Setter Property="Margin" Value="12,3"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Padding" Value="16,0"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="navBorder"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="8"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="navBorder" Property="Background" Value="#1E293B"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <!-- Custom Title Bar -->
+            <RowDefinition Height="38"/>
+            <!-- Vùng làm việc chính -->
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- ==================== CUSTOM TITLE BAR ==================== -->
+        <Border Grid.Row="0" Background="#0A1329" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+            <Grid Margin="16,0,8,0">
+                <!-- Tiêu đề và biểu tượng ngôi sao -->
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="★" Foreground="#FBBF24" FontSize="16" FontWeight="Bold" Margin="0,0,8,0"/>
+                    <TextBlock Text="QUÂN ĐỘI NHÂN DÂN VIỆT NAM  |" Foreground="#94A3B8" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                    <TextBlock Text="  HỆ THỐNG QUẢN LÝ HỌC VIÊN &amp; RÈN LUYỆN THỂ LỰC (TT 32/2009)" Foreground="#E2E8F0" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Các nút điều khiển cửa sổ -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="—" Width="36" Height="30" Background="Transparent" Foreground="#94A3B8" BorderThickness="0"
+                            Cursor="Hand" Click="BtnMinimize_Click"/>
+                    <Button x:Name="BtnMax" Content="☐" Width="36" Height="30" Background="Transparent" Foreground="#94A3B8" BorderThickness="0"
+                            Cursor="Hand" Click="BtnMaximize_Click"/>
+                    <Button Content="✕" Width="36" Height="30" Background="Transparent" Foreground="#94A3B8" BorderThickness="0"
+                            Cursor="Hand" Click="BtnClose_Click"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ==================== THÂN ỨNG DỤNG ==================== -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <!-- Cột Sidebar bên trái -->
+                <ColumnDefinition Width="260"/>
+                <!-- Cột Nội dung chính -->
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- SIDEBAR BÊN TRÁI -->
+            <Border Grid.Column="0" Background="#0F172A">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <!-- Header Sidebar -->
+                        <RowDefinition Height="Auto"/>
+                        <!-- Menu Links -->
+                        <RowDefinition Height="*"/>
+                        <!-- Footer / Thông tin người dùng đăng nhập -->
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Header Sidebar -->
+                    <Border Grid.Row="0" Padding="20,20,20,16" BorderBrush="#1E293B" BorderThickness="0,0,0,1">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <Border Width="38" Height="38" CornerRadius="19" Background="#DC2626" Margin="0,0,12,0">
+                                    <TextBlock Text="★" FontSize="20" Foreground="#FBBF24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="QL HỌC VIÊN" FontWeight="ExtraBold" FontSize="15" Foreground="White"/>
+                                    <TextBlock Text="QUÂN SỰ &amp; THỂ LỰC" FontSize="11" FontWeight="Bold" Foreground="#60A5FA"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Menu Chức Năng Sidebar -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,10">
+                        <StackPanel>
+                            <TextBlock Text="DANH MỤC QUẢN LÝ" FontSize="11" FontWeight="Bold" Foreground="#64748B" Margin="20,10,0,6"/>
+
+                            <!-- 1. Bảng Tổng Quan -->
+                            <Button Content="📊   Bảng Tổng Quan" 
+                                    Style="{StaticResource SidebarNavButtonStyle}"
+                                    Command="{Binding NavigateToDashboardCommand}"/>
+
+                            <!-- 2. Quản Lý Học Viên -->
+                            <Button Content="👨‍✈️   Quản Lý Học Viên" 
+                                    Style="{StaticResource SidebarNavButtonStyle}"
+                                    Command="{Binding NavigateToCadetManagementCommand}"/>
+
+                            <!-- 3. Thêm Học Viên -->
+                            <Button Content="➕   Thêm Học Viên" 
+                                    Style="{StaticResource SidebarNavButtonStyle}"
+                                    Command="{Binding NavigateToAddCadetCommand}"/>
+
+                            <!-- 4. Quản Lý Môn Học -->
+                            <Button Content="📚   Quản Lý Môn Học" 
+                                    Style="{StaticResource SidebarNavButtonStyle}"
+                                    Command="{Binding NavigateToSubjectManagementCommand}"/>
+
+                            <TextBlock Text="RÈN LUYỆN &amp; HỆ THỐNG" FontSize="11" FontWeight="Bold" Foreground="#64748B" Margin="20,18,0,6"/>
+
+                            <!-- 5. Kiểm Tra Thể Lực -->
+                            <Button Content="⏱️   Kiểm Tra Thể Lực" 
+                                    Style="{StaticResource SidebarNavButtonStyle}"
+                                    Command="{Binding NavigateToPhysicalExamCommand}"/>
+
+                            <!-- 6. Cài Đặt Hệ Thống -->
+                            <Button Content="⚙️   Cài Đặt &amp; SMTP" 
+                                    Style="{StaticResource SidebarNavButtonStyle}"
+                                    Command="{Binding NavigateToSettingsCommand}"/>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- Footer Sidebar: Người Dùng & Đăng Xuất -->
+                    <Border Grid.Row="2" Background="#0A101D" Padding="16" BorderBrush="#1E293B" BorderThickness="0,1,0,0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Avatar -->
+                            <Border Grid.Column="0" Width="36" Height="36" CornerRadius="18" Background="#1E3A8A" Margin="0,0,10,0">
+                                <TextBlock Text="👤" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+
+                            <!-- Tên và vai trò -->
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding CurrentUser.FullName, FallbackValue='Cán bộ Quân đội'}" 
+                                           FontWeight="SemiBold" FontSize="13" Foreground="White" TextTrimming="CharacterEllipsis"/>
+                                <Border Background="#166534" CornerRadius="4" Padding="6,1" HorizontalAlignment="Left" Margin="0,2,0,0">
+                                    <TextBlock Text="{Binding CurrentUser.Role, FallbackValue='Cán bộ'}" FontSize="10" FontWeight="Bold" Foreground="#86EFAC"/>
+                                </Border>
+                            </StackPanel>
+
+                            <!-- Nút Đăng xuất -->
+                            <Button Grid.Column="2" Content="🚪" FontSize="16" Background="Transparent" Foreground="#EF4444" BorderThickness="0"
+                                    Cursor="Hand" ToolTip="Đăng xuất khỏi hệ thống" VerticalAlignment="Center"
+                                    Command="{Binding LogoutCommand}"/>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- VÙNG HIỂN THỊ NỘI DUNG CHÍNH (CONTENT AREA) -->
+            <Border Grid.Column="1" Background="#F8FAFC">
+                <ContentControl Content="{Binding CurrentView}"/>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>

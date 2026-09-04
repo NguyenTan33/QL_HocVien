@@ -1,0 +1,190 @@
+<UserControl x:Class="QL_HocVien.Views.UserControls.SubjectManagementView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local_cv="clr-namespace:QL_HocVien.Converters"
+             mc:Ignorable="d" 
+             d:DesignHeight="700" d:DesignWidth="950">
+    <Border Padding="24">
+        <Grid>
+            <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Tiêu đề & Nút Thao tác -->
+            <Grid Grid.Row="0" Margin="0,0,0,20">
+                <StackPanel>
+                    <TextBlock Text="QUẢN LÝ MÔN HỌC &amp; TIÊU CHUẨN RÈN LUYỆN THỂ LỰC" FontSize="22" FontWeight="Bold" Foreground="#0F172A"/>
+                    <TextBlock Text="Danh mục các môn rèn luyện, chuẩn đánh giá theo Thông tư 32/2009/TTLT-BQP-BVHTTDL" 
+                               FontSize="13" Foreground="#64748B" Margin="0,4,0,0"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="➕ Thêm Môn Học Mới" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,10,0"
+                            Command="{Binding OpenAddFormCommand}"/>
+                    <Button Content="✏️ Sửa Môn Học" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,0"
+                            Command="{Binding OpenEditFormCommand}"/>
+                    <Button Content="🗑️ Xóa Môn Học" Style="{StaticResource DangerButtonStyle}"
+                            Command="{Binding DeleteSubjectCommand}"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- Khung Lọc Nâng Cao Theo Tên và ID / Mã Môn Học -->
+            <Border Grid.Row="1" Style="{StaticResource CardBorderStyle}" Margin="0,0,0,16" Padding="14">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1.2*"/>
+                        <ColumnDefinition Width="14"/>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="14"/>
+                        <ColumnDefinition Width="1.5*"/>
+                        <ColumnDefinition Width="14"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Lọc Nâng Cao: ID / Mã Môn -->
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Lọc theo ID / Mã môn:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                        <TextBox Text="{Binding FilterSubjectCode, UpdateSourceTrigger=PropertyChanged}" 
+                                 Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                    </StackPanel>
+
+                    <!-- Lọc Nâng Cao: Tên Môn Học -->
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="Lọc theo Tên môn học:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                        <TextBox Text="{Binding FilterSubjectName, UpdateSourceTrigger=PropertyChanged}" 
+                                 Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                    </StackPanel>
+
+                    <!-- Lọc Thể loại / Tố chất -->
+                    <StackPanel Grid.Column="4">
+                        <TextBlock Text="Nhóm tố chất thể lực:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                        <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" 
+                                  Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
+                    </StackPanel>
+
+                    <!-- Nút Xóa Lọc -->
+                    <Button Grid.Column="6" Content="✕ Xóa Bộ Lọc" VerticalAlignment="Bottom" Height="36" 
+                            Style="{StaticResource SecondaryButtonStyle}" Command="{Binding ClearFiltersCommand}"/>
+                </Grid>
+            </Border>
+
+            <!-- Bảng Dữ Liệu Môn Học -->
+            <Border Grid.Row="2" Style="{StaticResource CardBorderStyle}" Padding="0">
+                <DataGrid ItemsSource="{Binding Subjects}" SelectedItem="{Binding SelectedSubject}"
+                          AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
+                          GridLinesVisibility="Horizontal" HeadersVisibility="Column" Background="Transparent"
+                          BorderThickness="0" RowHeight="42" SelectionMode="Single">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Mã Môn (ID)" Binding="{Binding SubjectCode}" Width="120"/>
+                        <DataGridTextColumn Header="Tên Môn Học" Binding="{Binding SubjectName}" Width="220"/>
+                        <DataGridTextColumn Header="Nhóm Tố Chất" Binding="{Binding Category}" Width="140"/>
+                        <DataGridTextColumn Header="Đơn Vị Tính" Binding="{Binding Unit}" Width="100"/>
+                        <DataGridTextColumn Header="Chuẩn Giỏi" Binding="{Binding ExcellentThreshold}" Width="100"/>
+                        <DataGridTextColumn Header="Chuẩn Khá" Binding="{Binding GoodThreshold}" Width="100"/>
+                        <DataGridTextColumn Header="Chuẩn Đạt" Binding="{Binding PassThreshold}" Width="100"/>
+                        <DataGridTextColumn Header="Mô Tả Chi Tiết" Binding="{Binding Description}" Width="*"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+        </Grid>
+
+        <!-- ==================== MODAL THÊM / SỬA MÔN HỌC ==================== -->
+        <Grid Background="#7F000000" Visibility="{Binding IsFormVisible, Converter={x:Static local_cv:BooleanToVisibilityConverter.Instance}}">
+            <Border Background="White" CornerRadius="12" Width="600" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="28">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="25" Color="#000000" Opacity="0.3" ShadowDepth="5"/>
+                </Border.Effect>
+                <StackPanel>
+                    <TextBlock Text="{Binding IsEditing, StringFormat='{}CẬP NHẬT MÔN HỌC', Converter={x:Static local_cv:StringToVisibilityConverter.Instance}}" 
+                               FontSize="18" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,4"/>
+                    <TextBlock Text="Thiết lập mã môn, tên môn và các ngưỡng xếp loại thể lực quân sự" FontSize="12" Foreground="#64748B" Margin="0,0,0,16"/>
+
+                    <!-- Thông báo lỗi modal -->
+                    <Border Background="#FEF2F2" BorderBrush="#FCA5A5" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,14"
+                            Visibility="{Binding FormErrorMessage, Converter={x:Static local_cv:StringToVisibilityConverter.Instance}}">
+                        <TextBlock Text="{Binding FormErrorMessage}" Foreground="#DC2626" FontSize="12"/>
+                    </Border>
+
+                    <!-- Hàng 1: Mã môn & Tên môn -->
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="160"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Mã môn (ID):" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding FormSubjectCode, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Tên môn rèn luyện (*):" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding FormSubjectName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Hàng 2: Thể loại & Đơn vị -->
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="140"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Nhóm tố chất:" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                            <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding FormCategory}" Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Đơn vị tính:" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding FormUnit, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Hàng 3: Các ngưỡng tiêu chuẩn (Giỏi, Khá, Đạt) -->
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Chuẩn Giỏi:" FontSize="12" FontWeight="SemiBold" Foreground="#1E40AF" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding FormExcellentThreshold, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Chuẩn Khá:" FontSize="12" FontWeight="SemiBold" Foreground="#166534" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding FormGoodThreshold, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="4">
+                            <TextBlock Text="Chuẩn Đạt:" FontSize="12" FontWeight="SemiBold" Foreground="#854D0E" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding FormPassThreshold, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Mô tả -->
+                    <StackPanel Margin="0,0,0,16">
+                        <TextBlock Text="Mô tả kỹ thuật &amp; yêu cầu kiểm tra:" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                        <TextBox Text="{Binding FormDescription, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="60" TextWrapping="Wrap"/>
+                    </StackPanel>
+
+                    <CheckBox Content="Thành tích số càng cao càng tốt (ví dụ: số lần hít xà, mét bơi; bỏ chọn nếu là môn tính giây/thời gian chạy)" 
+                              IsChecked="{Binding FormIsHigherBetter}" Margin="0,0,0,20"/>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Hủy Bỏ" Style="{StaticResource SecondaryButtonStyle}" Width="90" Height="36" Margin="0,0,10,0"
+                                Command="{Binding CloseFormCommand}"/>
+                        <Button Content="Lưu Môn Học" Style="{StaticResource PrimaryButtonStyle}" Width="120" Height="36"
+                                Command="{Binding SaveFormCommand}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+        </Grid>
+    </Border>
+</UserControl>
