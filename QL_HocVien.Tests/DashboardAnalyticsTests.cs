@@ -5,12 +5,16 @@ using System.Linq;
 using System.Threading.Tasks;
 using ClosedXML.Excel;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using QL_HocVien.Data;
 using QL_HocVien.Data.Repositories;
+using QL_HocVien.Infrastructure.Factory;
 using QL_HocVien.Models;
 using QL_HocVien.Models.DTOs;
 using QL_HocVien.Models.Filters;
 using QL_HocVien.Services;
+using QL_HocVien.ViewModels;
+using QL_HocVien.Views.Windows;
 using Xunit;
 
 namespace QL_HocVien.Tests
@@ -220,6 +224,162 @@ namespace QL_HocVien.Tests
                 {
                     try { File.Delete(filePath); } catch { }
                 }
+            }
+        }
+
+        [Fact]
+        public void Test_DashboardView_Instantiation_On_STA_Thread()
+        {
+            Exception? exception = null;
+            var thread = new System.Threading.Thread(() =>
+            {
+                try
+                {
+                    if (System.Windows.Application.Current == null)
+                    {
+                        var app = new System.Windows.Application();
+                        app.Resources.MergedDictionaries.Add(new System.Windows.ResourceDictionary
+                        {
+                            Source = new Uri("pack://application:,,,/QL_HocVien;component/Styles/MilitaryTheme.xaml", UriKind.Absolute)
+                        });
+                    }
+                    else
+                    {
+                        bool hasTheme = System.Windows.Application.Current.Resources.MergedDictionaries.Any(d => d.Source != null && d.Source.ToString().Contains("MilitaryTheme"));
+                        if (!hasTheme)
+                        {
+                            System.Windows.Application.Current.Resources.MergedDictionaries.Add(new System.Windows.ResourceDictionary
+                            {
+                                Source = new Uri("pack://application:,,,/QL_HocVien;component/Styles/MilitaryTheme.xaml", UriKind.Absolute)
+                            });
+                        }
+                    }
+
+                    var eventRepo = new TrainingEventRepository(_context);
+                    var eventService = new TrainingEventService(eventRepo);
+                    var fileDialogService = new FileDialogService();
+
+                    var vm = new DashboardViewModel(
+                        _dashboardService,
+                        _recommendationService,
+                        eventService,
+                        _cadetService,
+                        _excelService,
+                        fileDialogService);
+
+                    var view = new QL_HocVien.Views.UserControls.DashboardView { DataContext = vm };
+                    Assert.NotNull(view);
+                }
+                catch (Exception ex)
+                {
+                    exception = ex;
+                }
+            });
+
+            thread.SetApartmentState(System.Threading.ApartmentState.STA);
+            thread.Start();
+            thread.Join(7000);
+
+            if (exception != null)
+            {
+                throw new Exception($"Lỗi khởi tạo DashboardView: {exception.Message}\n{exception.StackTrace}", exception);
+            }
+        }
+
+        [Fact]
+        public void Test_MainWindow_Instantiation_On_STA_Thread()
+        {
+            Exception? exception = null;
+            var thread = new System.Threading.Thread(() =>
+            {
+                try
+                {
+                    var services = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
+                    var dbPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"test_app_{Guid.NewGuid():N}.db");
+                    services.AddDbContext<AppDbContext>(options => options.UseSqlite($"Data Source={dbPath}"));
+
+                    // Repositories
+                    services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+                    services.AddScoped<IUserRepository, UserRepository>();
+                    services.AddScoped<IClassRepository, ClassRepository>();
+                    services.AddScoped<ICadetRepository, CadetRepository>();
+                    services.AddScoped<ISubjectRepository, SubjectRepository>();
+                    services.AddScoped<IPhysicalExamRepository, PhysicalExamRepository>();
+                    services.AddScoped<IOfficerRepository, OfficerRepository>();
+                    services.AddScoped<IRankRepository, RankRepository>();
+                    services.AddScoped<IPositionRepository, PositionRepository>();
+                    services.AddScoped<IUnitRepository, UnitRepository>();
+                    services.AddScoped<IMajorRepository, MajorRepository>();
+                    services.AddScoped<ITrainingEventRepository, TrainingEventRepository>();
+
+                    // Services
+                    services.AddSingleton<IEmailService, EmailService>();
+                    services.AddScoped<IAuthService, AuthService>();
+                    services.AddScoped<IClassService, ClassService>();
+                    services.AddScoped<ICadetService, CadetService>();
+                    services.AddScoped<ISubjectService, SubjectService>();
+                    services.AddScoped<IEvaluationService, EvaluationService>();
+                    services.AddScoped<IPhysicalExamService, PhysicalExamService>();
+                    services.AddScoped<IOfficerService, OfficerService>();
+                    services.AddScoped<ICatalogService, CatalogService>();
+                    services.AddSingleton<IFileDialogService, FileDialogService>();
+                    services.AddScoped<IExcelService, ExcelService>();
+                    services.AddScoped<ITrainingEventService, TrainingEventService>();
+                    services.AddScoped<IAnalyticsService, AnalyticsService>();
+                    services.AddScoped<ITrainingRecommendationService, TrainingRecommendationService>();
+                    services.AddScoped<IDashboardAnalyticsService, DashboardAnalyticsService>();
+                    services.AddAppInfrastructureValidation();
+
+                    // ViewModels
+                    services.AddTransient<LoginViewModel>();
+                    services.AddTransient<RegisterViewModel>();
+                    services.AddTransient<ForgotPasswordViewModel>();
+                    services.AddTransient<MainViewModel>();
+                    services.AddTransient<DashboardViewModel>();
+                    services.AddTransient<OfficerManagementViewModel>();
+                    services.AddTransient<CatalogManagementViewModel>();
+                    services.AddTransient<ClassManagementViewModel>();
+                    services.AddTransient<CadetManagementViewModel>();
+                    services.AddTransient<AddCadetViewModel>();
+                    services.AddTransient<SubjectManagementViewModel>();
+                    services.AddTransient<PhysicalExamViewModel>();
+                    services.AddTransient<ExamAnalyticsViewModel>();
+                    services.AddTransient<TrainingTimelineViewModel>();
+                    services.AddTransient<SettingsViewModel>();
+
+                    // Windows
+                    services.AddTransient<LoginWindow>();
+                    services.AddTransient<QL_HocVien.Views.Windows.MainWindow>();
+
+                    var sp = services.BuildServiceProvider();
+                    using (var scope = sp.CreateScope())
+                    {
+                        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                        DbInitializer.Initialize(db);
+                    }
+
+                    // Test resolving LoginWindow
+                    var loginWindow = sp.GetRequiredService<LoginWindow>();
+                    Assert.NotNull(loginWindow);
+
+                    // Test resolving MainWindow
+                    var mainWindow = sp.GetRequiredService<QL_HocVien.Views.Windows.MainWindow>();
+                    Assert.NotNull(mainWindow);
+                    Assert.NotNull(mainWindow.DataContext);
+                }
+                catch (Exception ex)
+                {
+                    exception = ex;
+                }
+            });
+
+            thread.SetApartmentState(System.Threading.ApartmentState.STA);
+            thread.Start();
+            thread.Join(10000);
+
+            if (exception != null)
+            {
+                throw new Exception($"Lỗi khởi tạo MainWindow: {exception.Message}\n{exception.StackTrace}", exception);
             }
         }
     }

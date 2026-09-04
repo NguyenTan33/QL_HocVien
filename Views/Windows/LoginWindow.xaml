@@ -7,7 +7,7 @@
         xmlns:local_cv="clr-namespace:QL_HocVien.Converters"
         mc:Ignorable="d"
         Title="Quản Lý Học Viên Quân Đội - Đăng Nhập Hệ Thống"
-        Icon="pack://application:,,,/Resources/app_icon.ico"
+        Icon="pack://application:,,,/QL_HocVien;component/Resources/app_icon.ico"
         Height="650" Width="1000"
         WindowStartupLocation="CenterScreen"
         WindowStyle="None"
@@ -50,7 +50,7 @@
                     <Grid Margin="40">
                         <StackPanel VerticalAlignment="Center">
                             <!-- Biểu tượng Huy hiệu quân đội chính quy -->
-                            <Image Source="pack://application:,,,/Resources/app_icon.png" Width="82" Height="82" HorizontalAlignment="Left" Margin="0,0,0,24">
+                            <Image Source="pack://application:,,,/QL_HocVien;component/Resources/app_icon.png" Width="82" Height="82" HorizontalAlignment="Left" Margin="0,0,0,24">
                                 <Image.Effect>
                                     <DropShadowEffect BlurRadius="20" Color="#DC2626" Opacity="0.5" ShadowDepth="4"/>
                                 </Image.Effect>

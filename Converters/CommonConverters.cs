@@ -83,4 +83,29 @@ namespace QL_HocVien.Converters
             throw new NotImplementedException();
         }
     }
+
+    public class StringToBrushConverter : IValueConverter
+    {
+        public static readonly StringToBrushConverter Instance = new();
+        private static readonly System.Windows.Media.BrushConverter _brushConverter = new();
+
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is string s && !string.IsNullOrWhiteSpace(s))
+            {
+                try
+                {
+                    var brush = _brushConverter.ConvertFromString(s) as System.Windows.Media.Brush;
+                    if (brush != null) return brush;
+                }
+                catch { }
+            }
+            return System.Windows.Media.Brushes.Transparent;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }
