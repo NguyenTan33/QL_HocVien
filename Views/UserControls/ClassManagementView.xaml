@@ -170,7 +170,8 @@
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0">
                                 <TextBlock Text="Cán bộ chủ nhiệm / Phụ trách:" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
-                                <TextBox Text="{Binding FormOfficerInCharge, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                                <ComboBox ItemsSource="{Binding AvailableOfficers}" Text="{Binding FormOfficerInCharge, UpdateSourceTrigger=PropertyChanged}" 
+                                          IsEditable="True" Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
                             </StackPanel>
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="Khóa / Niên khóa:" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>

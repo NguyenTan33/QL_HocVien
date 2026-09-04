@@ -20,6 +20,11 @@ namespace QL_HocVien.Tests
         private readonly ICadetRepository _cadetRepository;
         private readonly ISubjectRepository _subjectRepository;
         private readonly IPhysicalExamRepository _examRepository;
+        private readonly IOfficerRepository _officerRepository;
+        private readonly IRankRepository _rankRepository;
+        private readonly IPositionRepository _positionRepository;
+        private readonly IUnitRepository _unitRepository;
+        private readonly IMajorRepository _majorRepository;
         private readonly IEmailService _emailService;
         private readonly IAuthService _authService;
         private readonly IClassService _classService;
@@ -27,6 +32,8 @@ namespace QL_HocVien.Tests
         private readonly ISubjectService _subjectService;
         private readonly IEvaluationService _evaluationService;
         private readonly IPhysicalExamService _examService;
+        private readonly IOfficerService _officerService;
+        private readonly ICatalogService _catalogService;
         private readonly IExcelService _excelService;
         private readonly string _dbName;
 
@@ -45,6 +52,11 @@ namespace QL_HocVien.Tests
             _cadetRepository = new CadetRepository(_context);
             _subjectRepository = new SubjectRepository(_context);
             _examRepository = new PhysicalExamRepository(_context);
+            _officerRepository = new OfficerRepository(_context);
+            _rankRepository = new RankRepository(_context);
+            _positionRepository = new PositionRepository(_context);
+            _unitRepository = new UnitRepository(_context);
+            _majorRepository = new MajorRepository(_context);
             _emailService = new EmailService();
 
             _authService = new AuthService(_userRepository, _cadetRepository, _context, _emailService);
@@ -53,7 +65,20 @@ namespace QL_HocVien.Tests
             _subjectService = new SubjectService(_subjectRepository);
             _evaluationService = new EvaluationService();
             _examService = new PhysicalExamService(_examRepository, _subjectRepository, _evaluationService);
-            _excelService = new ExcelService(_context, _cadetRepository, _classRepository, _subjectRepository, _examRepository, _evaluationService);
+            _officerService = new OfficerService(_officerRepository, _userRepository);
+            _catalogService = new CatalogService(_rankRepository, _positionRepository, _unitRepository, _majorRepository);
+            _excelService = new ExcelService(
+                _context,
+                _cadetRepository,
+                _classRepository,
+                _subjectRepository,
+                _examRepository,
+                _evaluationService,
+                _officerRepository,
+                _rankRepository,
+                _positionRepository,
+                _unitRepository,
+                _majorRepository);
         }
 
         public void Dispose()
@@ -243,6 +268,7 @@ namespace QL_HocVien.Tests
                 Assert.True(importRes.Success, importRes.Message);
                 Assert.True(importRes.CadetsCount > 0);
                 Assert.True(importRes.SubjectsCount > 0);
+                Assert.True(importRes.OfficersCount > 0);
             }
             finally
             {
@@ -348,6 +374,224 @@ namespace QL_HocVien.Tests
             finally
             {
                 if (File.Exists(tempFile)) File.Delete(tempFile);
+            }
+        }
+
+        [Fact]
+        public async Task Test_MilitaryCatalogs_CRUD()
+        {
+            // 1. Kiểm tra seed danh mục tổ chức
+            var ranks = (await _catalogService.GetAllRanksAsync()).ToList();
+            var positions = (await _catalogService.GetAllPositionsAsync()).ToList();
+            var units = (await _catalogService.GetAllUnitsAsync()).ToList();
+            var majors = (await _catalogService.GetAllMajorsAsync()).ToList();
+
+            Assert.True(ranks.Count >= 15, $"Seed cấp bậc phải >= 15 (hiện tại: {ranks.Count})");
+            Assert.True(positions.Count >= 12, $"Seed chức vụ phải >= 12 (hiện tại: {positions.Count})");
+            Assert.True(units.Count >= 6, $"Seed đơn vị phải >= 6 (hiện tại: {units.Count})");
+            Assert.True(majors.Count >= 5, $"Seed chuyên ngành phải >= 5 (hiện tại: {majors.Count})");
+
+            // 2. Thêm Cấp bậc mới
+            var newRank = new MilitaryRank
+            {
+                RankCode = "TH_TUONG",
+                RankName = "Thượng tướng",
+                RankGroup = "Sĩ quan cấp Tướng",
+                DisplayOrder = 18,
+                Description = "Cấp bậc Tướng lĩnh cấp cao"
+            };
+            var addRankRes = await _catalogService.AddRankAsync(newRank);
+            Assert.True(addRankRes.Success, addRankRes.Message);
+            Assert.NotNull(addRankRes.Rank);
+
+            // Tìm kiếm
+            var searchRank = (await _catalogService.SearchRanksAsync("Thượng tướng", null)).ToList();
+            Assert.Single(searchRank);
+
+            // Cập nhật
+            addRankRes.Rank.Description = "Cập nhật mô tả";
+            var updateRankRes = await _catalogService.UpdateRankAsync(addRankRes.Rank);
+            Assert.True(updateRankRes.Success, updateRankRes.Message);
+
+            // Xóa
+            var delRankRes = await _catalogService.DeleteRankAsync(addRankRes.Rank.Id);
+            Assert.True(delRankRes.Success, delRankRes.Message);
+
+            // 3. Thêm Chức vụ mới
+            var newPos = new MilitaryPosition
+            {
+                PositionCode = "PHO_SU_DOAN",
+                PositionName = "Phó Sư đoàn trưởng",
+                PositionGroup = "Chỉ huy Chiến thuật",
+                DisplayOrder = 14,
+                Description = "Chỉ huy cấp Sư đoàn"
+            };
+            var addPosRes = await _catalogService.AddPositionAsync(newPos);
+            Assert.True(addPosRes.Success, addPosRes.Message);
+
+            // Xóa chức vụ
+            var delPosRes = await _catalogService.DeletePositionAsync(addPosRes.Position!.Id);
+            Assert.True(delPosRes.Success, delPosRes.Message);
+
+            // 4. Thêm Đơn vị mới
+            var newUnit = new MilitaryUnit
+            {
+                UnitCode = "TD2",
+                UnitName = "Tiểu đoàn 2",
+                ParentUnit = "Trung đoàn 1",
+                CommanderName = "Đồng chí Thiếu tá Trần Văn A",
+                ContactPhone = "0977112233"
+            };
+            var addUnitRes = await _catalogService.AddUnitAsync(newUnit);
+            Assert.True(addUnitRes.Success, addUnitRes.Message);
+
+            // Xóa đơn vị
+            var delUnitRes = await _catalogService.DeleteUnitAsync(addUnitRes.Unit!.Id);
+            Assert.True(delUnitRes.Success, delUnitRes.Message);
+
+            // 5. Thêm Chuyên ngành mới
+            var newMajor = new MilitaryMajor
+            {
+                MajorCode = "TAC_DIEN",
+                MajorName = "Tác chiến Điện tử",
+                TrainingDuration = "4 năm",
+                Department = "Khoa Vô tuyến Điện tử"
+            };
+            var addMajorRes = await _catalogService.AddMajorAsync(newMajor);
+            Assert.True(addMajorRes.Success, addMajorRes.Message);
+
+            // Xóa chuyên ngành
+            var delMajorRes = await _catalogService.DeleteMajorAsync(addMajorRes.Major!.Id);
+            Assert.True(delMajorRes.Success, delMajorRes.Message);
+
+            // 6. Kiểm tra các dropdown name helpers
+            var rankNames = await _catalogService.GetRankDropdownAsync();
+            var posNames = await _catalogService.GetPositionDropdownAsync();
+            var unitNames = await _catalogService.GetUnitDropdownAsync();
+            var majorNames = await _catalogService.GetMajorDropdownAsync();
+
+            Assert.NotEmpty(rankNames);
+            Assert.NotEmpty(posNames);
+            Assert.NotEmpty(unitNames);
+            Assert.NotEmpty(majorNames);
+        }
+
+        [Fact]
+        public async Task Test_Officer_CRUD_And_Account_Reset()
+        {
+            // 1. Kiểm tra seed cán bộ
+            var officers = (await _officerService.GetAllOfficersAsync()).ToList();
+            Assert.True(officers.Count >= 3, $"Phải seed ít nhất 3 cán bộ (hiện tại: {officers.Count})");
+            Assert.Contains(officers, o => o.OfficerCode == "CB-001");
+
+            // 2. Thêm cán bộ mới kèm cấp tài khoản đăng nhập
+            var newOfficer = new Officer
+            {
+                OfficerCode = "CB-099",
+                FullName = "Nguyễn Văn Chiến Thắng",
+                Rank = "Thiếu tá",
+                Position = "Phó Tiểu đoàn trưởng",
+                Unit = "Tiểu đoàn 1",
+                PhoneNumber = "0911223344",
+                Email = "thang.nv@qdnd.vn",
+                Specialty = "Chỉ huy Tham mưu Binh chủng",
+                DateOfBirth = new DateTime(1988, 5, 15),
+                EnlistmentDate = new DateTime(2006, 9, 1)
+            };
+
+            var addRes = await _officerService.AddOfficerAsync(newOfficer, createLoginAccount: true, rawPassword: "OfficerPass123@");
+            Assert.True(addRes.Success, addRes.Message);
+            Assert.NotNull(addRes.Officer);
+            Assert.NotNull(addRes.Officer.UserId);
+
+            // 3. Đăng nhập thử bằng tài khoản vừa tạo
+            var loginRes = await _authService.LoginAsync("cb-099", "OfficerPass123@");
+            Assert.True(loginRes.Success, "Cán bộ đăng nhập thất bại: " + loginRes.Message);
+            Assert.NotNull(loginRes.User);
+            Assert.Equal("CanBo", loginRes.User.Role);
+
+            // 4. Tìm kiếm cán bộ
+            var searchRes = (await _officerService.SearchOfficersAsync("Chiến Thắng", null, null, null)).ToList();
+            Assert.Single(searchRes);
+            Assert.Equal("CB-099", searchRes[0].OfficerCode);
+
+            // 5. Cập nhật thông tin cán bộ
+            addRes.Officer.FullName = "Nguyễn Văn Chiến Thắng (Đã Cập Nhật)";
+            addRes.Officer.Rank = "Trung tá";
+            var updateRes = await _officerService.UpdateOfficerAsync(addRes.Officer);
+            Assert.True(updateRes.Success, updateRes.Message);
+
+            var updatedOfficer = await _officerService.GetOfficerByIdAsync(addRes.Officer.Id);
+            Assert.NotNull(updatedOfficer);
+            Assert.Equal("Trung tá", updatedOfficer.Rank);
+
+            // 6. Đặt lại mật khẩu cán bộ
+            var resetRes = await _officerService.ResetOfficerPasswordAsync(addRes.Officer.Id, "NewSecretPass456@");
+            Assert.True(resetRes.Success, resetRes.Message);
+
+            // Đăng nhập lại với mật khẩu mới
+            var loginNewRes = await _authService.LoginAsync("cb-099", "NewSecretPass456@");
+            Assert.True(loginNewRes.Success, "Đăng nhập với mật khẩu mới thất bại: " + loginNewRes.Message);
+
+            // 7. Gán cán bộ vào lớp học
+            var classes = (await _classService.GetAllClassesAsync()).ToList();
+            if (classes.Count > 0)
+            {
+                var targetClass = classes[0];
+                targetClass.OfficerId = addRes.Officer.Id;
+                targetClass.OfficerInCharge = $"{addRes.Officer.Rank} {addRes.Officer.FullName}";
+                await _classService.UpdateClassAsync(targetClass);
+
+                var officerWithDetails = await _officerService.GetOfficerWithDetailsAsync(addRes.Officer.Id);
+                Assert.NotNull(officerWithDetails);
+                Assert.NotEmpty(officerWithDetails.ManagedClasses);
+            }
+
+            // 8. Xóa cán bộ -> Lớp phụ trách được gỡ liên kết
+            var delRes = await _officerService.DeleteOfficerAsync(addRes.Officer.Id);
+            Assert.True(delRes.Success, delRes.Message);
+
+            var checkDeleted = await _officerService.GetOfficerByIdAsync(addRes.Officer.Id);
+            Assert.Null(checkDeleted);
+        }
+
+        [Fact]
+        public async Task Test_Excel_Officer_And_Catalog_Export_Import()
+        {
+            var officerFile = Path.Combine(Path.GetTempPath(), $"Officers_Test_{Guid.NewGuid():N}.xlsx");
+            var catalogFile = Path.Combine(Path.GetTempPath(), $"Catalogs_Test_{Guid.NewGuid():N}.xlsx");
+
+            try
+            {
+                // 1. Xuất & Nhập Cán bộ
+                var officers = (await _officerService.GetAllOfficersAsync()).ToList();
+                Assert.NotEmpty(officers);
+
+                var expOffRes = await _excelService.ExportOfficersToExcelAsync(officers, officerFile);
+                Assert.True(expOffRes.Success, expOffRes.Message);
+                Assert.True(File.Exists(officerFile));
+
+                var impOffRes = await _excelService.ImportOfficersFromExcelAsync(officerFile);
+                Assert.True(impOffRes.Success, impOffRes.Message);
+                Assert.NotEmpty(impOffRes.Officers);
+                Assert.Equal(officers.Count, impOffRes.Officers.Count);
+
+                // 2. Xuất & Nhập Danh mục tổ chức (4 sheets)
+                var expCatRes = await _excelService.ExportCatalogsToExcelAsync(catalogFile);
+                Assert.True(expCatRes.Success, expCatRes.Message);
+                Assert.True(File.Exists(catalogFile));
+
+                var impCatRes = await _excelService.ImportCatalogsFromExcelAsync(catalogFile);
+                Assert.True(impCatRes.Success, impCatRes.Message);
+                Assert.True(impCatRes.RanksCount >= 15);
+                Assert.True(impCatRes.PositionsCount >= 12);
+                Assert.True(impCatRes.UnitsCount >= 6);
+                Assert.True(impCatRes.MajorsCount >= 5);
+            }
+            finally
+            {
+                if (File.Exists(officerFile)) File.Delete(officerFile);
+                if (File.Exists(catalogFile)) File.Delete(catalogFile);
             }
         }
     }

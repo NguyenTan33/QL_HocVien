@@ -1,0 +1,335 @@
+<UserControl x:Class="QL_HocVien.Views.UserControls.CatalogManagementView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local_cv="clr-namespace:QL_HocVien.Converters"
+             mc:Ignorable="d" 
+             d:DesignHeight="750" d:DesignWidth="1100">
+    <UserControl.Resources>
+        <local_cv:BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <local_cv:IntEqualsToVisibilityConverter x:Key="IntEqualsToVis"/>
+
+        <Style x:Key="TabHeaderStyle" TargetType="TabItem">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="18,10"/>
+            <Setter Property="Foreground" Value="#64748B"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabItem">
+                        <Border x:Name="TabBorder" Background="Transparent" BorderBrush="Transparent" BorderThickness="0,0,0,3" Margin="0,0,8,0" Padding="{TemplateBinding Padding}" Cursor="Hand">
+                            <ContentPresenter ContentSource="Header" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="TabBorder" Property="BorderBrush" Value="#1E3A8A"/>
+                                <Setter TargetName="TabBorder" Property="Background" Value="#F1F5F9"/>
+                                <Setter Property="Foreground" Value="#1E3A8A"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="TabBorder" Property="Background" Value="#F8FAFC"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Border Padding="24">
+        <Grid>
+            <!-- Giao diện chính -->
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- 1. Tiêu đề & Nút Thao tác -->
+                <Grid Grid.Row="0" Margin="0,0,0,16">
+                    <StackPanel>
+                        <TextBlock Text="DANH MỤC TỔ CHỨC QUÂN SỰ" FontSize="22" FontWeight="Bold" Foreground="#0F172A"/>
+                        <TextBlock Text="Quản lý tập trung 4 danh mục: Cấp bậc quân hàm, Chức vụ quân sự, Đơn vị quản lý và Chuyên ngành đào tạo" 
+                                   FontSize="13" Foreground="#64748B" Margin="0,4,0,0"/>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="📥 Nhập Excel" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"
+                                Command="{Binding ImportExcelCommand}"/>
+                        <Button Content="📤 Xuất Excel" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"
+                                Command="{Binding ExportExcelCommand}"/>
+                        <Button Content="➕ Thêm Mới" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0"
+                                Command="{Binding OpenAddModalCommand}"/>
+                        <Button Content="✏️ Sửa" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"
+                                Command="{Binding OpenEditModalCommand}"/>
+                        <Button Content="🗑️ Xóa" Style="{StaticResource DangerButtonStyle}" Margin="0,0,8,0"
+                                Command="{Binding DeleteCommand}"/>
+                        <Button Content="🔄 Làm Mới" Style="{StaticResource SecondaryButtonStyle}"
+                                Command="{Binding LoadAllDataCommand}"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- 2. Thanh tìm kiếm -->
+                <Border Grid.Row="1" Style="{StaticResource CardBorderStyle}" Margin="0,0,0,16" Padding="14">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="14"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBox Grid.Column="0" Text="{Binding SearchKeyword, UpdateSourceTrigger=PropertyChanged}" 
+                                 Style="{StaticResource ModernTextBoxStyle}" Height="36"
+                                 Tag="Tìm kiếm theo mã, tên, phân loại, mô tả trong danh mục hiện tại..."/>
+
+                        <Button Grid.Column="2" Content="🔍 Tìm Kiếm" Height="36" Style="{StaticResource PrimaryButtonStyle}"
+                                Command="{Binding SearchCommand}"/>
+                    </Grid>
+                </Border>
+
+                <!-- 3. TabControl Multi-Sheet quản lý 4 danh mục -->
+                <TabControl Grid.Row="2" SelectedIndex="{Binding SelectedTabIndex}" Background="Transparent" BorderThickness="0">
+                    
+                    <!-- TAB 1: CẤP BẬC QUÂN HÀM -->
+                    <TabItem Header="🎖️ Cấp Bậc Quân Hàm" Style="{StaticResource TabHeaderStyle}">
+                        <Border Style="{StaticResource CardBorderStyle}" Padding="0" Margin="0,8,0,0">
+                            <DataGrid ItemsSource="{Binding Ranks}" SelectedItem="{Binding SelectedRank}"
+                                      AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
+                                      GridLinesVisibility="Horizontal" HeadersVisibility="Column" Background="Transparent"
+                                      BorderThickness="0" RowHeight="42" SelectionMode="Single">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Mã Cấp Bậc" Binding="{Binding RankCode}" Width="120" FontWeight="SemiBold"/>
+                                    <DataGridTextColumn Header="Tên Cấp Bậc Quân Hàm" Binding="{Binding RankName}" Width="220"/>
+                                    <DataGridTextColumn Header="Nhóm Cấp Bậc" Binding="{Binding RankGroup}" Width="200"/>
+                                    <DataGridTemplateColumn Header="Thứ Tự Hiển Thị" Width="130">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Border Background="#EFF6FF" CornerRadius="12" Padding="8,3" HorizontalAlignment="Center">
+                                                    <TextBlock Text="{Binding DisplayOrder, StringFormat='{}Bậc {0}'}" FontWeight="Bold" Foreground="#1E40AF" FontSize="12"/>
+                                                </Border>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTextColumn Header="Mô Tả / Ghi Chú" Binding="{Binding Description}" Width="*"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Border>
+                    </TabItem>
+
+                    <!-- TAB 2: CHỨC VỤ QUÂN SỰ -->
+                    <TabItem Header="🛡️ Chức Vụ Quân Sự" Style="{StaticResource TabHeaderStyle}">
+                        <Border Style="{StaticResource CardBorderStyle}" Padding="0" Margin="0,8,0,0">
+                            <DataGrid ItemsSource="{Binding Positions}" SelectedItem="{Binding SelectedPosition}"
+                                      AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
+                                      GridLinesVisibility="Horizontal" HeadersVisibility="Column" Background="Transparent"
+                                      BorderThickness="0" RowHeight="42" SelectionMode="Single">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Mã Chức Vụ" Binding="{Binding PositionCode}" Width="120" FontWeight="SemiBold"/>
+                                    <DataGridTextColumn Header="Tên Chức Vụ Quân Sự" Binding="{Binding PositionName}" Width="240"/>
+                                    <DataGridTextColumn Header="Nhóm Chức Vụ" Binding="{Binding PositionGroup}" Width="200"/>
+                                    <DataGridTemplateColumn Header="Thứ Tự Quản Lý" Width="130">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Border Background="#F0FDF4" CornerRadius="12" Padding="8,3" HorizontalAlignment="Center">
+                                                    <TextBlock Text="{Binding DisplayOrder, StringFormat='{}Mức {0}'}" FontWeight="Bold" Foreground="#15803D" FontSize="12"/>
+                                                </Border>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTextColumn Header="Nhiệm Vụ / Mô Tả" Binding="{Binding Description}" Width="*"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Border>
+                    </TabItem>
+
+                    <!-- TAB 3: ĐƠN VỊ QUẢN LÝ -->
+                    <TabItem Header="🚩 Đơn Vị Quản Lý" Style="{StaticResource TabHeaderStyle}">
+                        <Border Style="{StaticResource CardBorderStyle}" Padding="0" Margin="0,8,0,0">
+                            <DataGrid ItemsSource="{Binding Units}" SelectedItem="{Binding SelectedUnit}"
+                                      AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
+                                      GridLinesVisibility="Horizontal" HeadersVisibility="Column" Background="Transparent"
+                                      BorderThickness="0" RowHeight="42" SelectionMode="Single">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Mã Đơn Vị" Binding="{Binding UnitCode}" Width="120" FontWeight="SemiBold"/>
+                                    <DataGridTextColumn Header="Tên Đơn Vị" Binding="{Binding UnitName}" Width="220"/>
+                                    <DataGridTextColumn Header="Đơn Vị Cấp Trên" Binding="{Binding ParentUnit}" Width="180"/>
+                                    <DataGridTextColumn Header="Chỉ Huy Trưởng" Binding="{Binding CommanderName}" Width="180"/>
+                                    <DataGridTextColumn Header="Điện Thoại Liên Hệ" Binding="{Binding ContactPhone}" Width="150"/>
+                                    <DataGridTextColumn Header="Mô Tả / Địa Bàn" Binding="{Binding Description}" Width="*"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Border>
+                    </TabItem>
+
+                    <!-- TAB 4: CHUYÊN NGÀNH ĐÀO TẠO -->
+                    <TabItem Header="🎯 Chuyên Ngành Đào Tạo" Style="{StaticResource TabHeaderStyle}">
+                        <Border Style="{StaticResource CardBorderStyle}" Padding="0" Margin="0,8,0,0">
+                            <DataGrid ItemsSource="{Binding Majors}" SelectedItem="{Binding SelectedMajor}"
+                                      AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
+                                      GridLinesVisibility="Horizontal" HeadersVisibility="Column" Background="Transparent"
+                                      BorderThickness="0" RowHeight="42" SelectionMode="Single">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Mã Ngành" Binding="{Binding MajorCode}" Width="120" FontWeight="SemiBold"/>
+                                    <DataGridTextColumn Header="Tên Chuyên Ngành" Binding="{Binding MajorName}" Width="240"/>
+                                    <DataGridTemplateColumn Header="Thời Gian Đào Tạo" Width="150">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Border Background="#FEF3C7" CornerRadius="12" Padding="8,3" HorizontalAlignment="Center">
+                                                    <TextBlock Text="{Binding TrainingDuration}" FontWeight="Bold" Foreground="#B45309" FontSize="12"/>
+                                                </Border>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTextColumn Header="Khoa / Viện Phụ Trách" Binding="{Binding Department}" Width="200"/>
+                                    <DataGridTextColumn Header="Mục Tiêu Đào Tạo" Binding="{Binding Description}" Width="*"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Border>
+                    </TabItem>
+                </TabControl>
+            </Grid>
+
+            <!-- 4. MODAL DIALOG THÊM / SỬA DANH MỤC -->
+            <Grid Background="#80000000" Visibility="{Binding IsFormVisible, Converter={StaticResource BoolToVis}}">
+                <Border Background="White" CornerRadius="12" Width="560" HorizontalAlignment="Center" VerticalAlignment="Center"
+                        Padding="28" Effect="{DynamicResource CardShadow}">
+                    <StackPanel>
+                        <!-- Tiêu đề Form -->
+                        <TextBlock Text="{Binding FormTitle}" FontSize="18" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,16"/>
+
+                        <!-- Mã & Tên -->
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1*"/>
+                                <ColumnDefinition Width="14"/>
+                                <ColumnDefinition Width="2*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Mã định danh (*):" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                <TextBox Text="{Binding FormCode, UpdateSourceTrigger=PropertyChanged}" 
+                                         IsEnabled="{Binding IsEditing, Converter={x:Static local_cv:InvertedBooleanToVisibilityConverter.Instance}}"
+                                         Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Tên gọi (*):" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                <TextBox Text="{Binding FormName, UpdateSourceTrigger=PropertyChanged}" 
+                                         Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Fields cho Cấp Bậc (Tab 0) -->
+                        <Grid Margin="0,0,0,12" Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntEqualsToVis}, ConverterParameter=0}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="2*"/>
+                                <ColumnDefinition Width="14"/>
+                                <ColumnDefinition Width="1*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Nhóm cấp bậc:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                <TextBox Text="{Binding FormGroup, UpdateSourceTrigger=PropertyChanged}" 
+                                         Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Thứ tự hiển thị:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                <TextBox Text="{Binding FormDisplayOrder, UpdateSourceTrigger=PropertyChanged}" 
+                                         Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Fields cho Chức Vụ (Tab 1) -->
+                        <Grid Margin="0,0,0,12" Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntEqualsToVis}, ConverterParameter=1}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="2*"/>
+                                <ColumnDefinition Width="14"/>
+                                <ColumnDefinition Width="1*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Nhóm chức vụ:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                <TextBox Text="{Binding FormGroup, UpdateSourceTrigger=PropertyChanged}" 
+                                         Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Thứ tự hiển thị:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                <TextBox Text="{Binding FormDisplayOrder, UpdateSourceTrigger=PropertyChanged}" 
+                                         Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Fields cho Đơn Vị (Tab 2) -->
+                        <StackPanel Margin="0,0,0,12" Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntEqualsToVis}, ConverterParameter=2}">
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1*"/>
+                                    <ColumnDefinition Width="14"/>
+                                    <ColumnDefinition Width="1*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Đơn vị cấp trên:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                    <TextBox Text="{Binding FormParentUnit, UpdateSourceTrigger=PropertyChanged}" 
+                                             Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Chỉ huy trưởng:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                    <TextBox Text="{Binding FormCommanderName, UpdateSourceTrigger=PropertyChanged}" 
+                                             Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <StackPanel>
+                                <TextBlock Text="Số điện thoại liên hệ:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                <TextBox Text="{Binding FormContactPhone, UpdateSourceTrigger=PropertyChanged}" 
+                                         Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- Fields cho Chuyên Ngành (Tab 3) -->
+                        <Grid Margin="0,0,0,12" Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntEqualsToVis}, ConverterParameter=3}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1*"/>
+                                <ColumnDefinition Width="14"/>
+                                <ColumnDefinition Width="1*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Thời gian đào tạo:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                <TextBox Text="{Binding FormTrainingDuration, UpdateSourceTrigger=PropertyChanged}" 
+                                         Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Khoa / Viện phụ trách:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                <TextBox Text="{Binding FormDepartment, UpdateSourceTrigger=PropertyChanged}" 
+                                         Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Ghi Chú / Mô Tả (Chung) -->
+                        <StackPanel Margin="0,0,0,20">
+                            <TextBlock Text="Ghi chú / Mô tả chi tiết:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding FormDescription, UpdateSourceTrigger=PropertyChanged}" 
+                                     Style="{StaticResource ModernTextBoxStyle}" Height="64" AcceptsReturn="True" TextWrapping="Wrap"/>
+                        </StackPanel>
+
+                        <!-- Action Buttons -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="Hủy Bỏ" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,0"
+                                    Command="{Binding CloseFormCommand}"/>
+                            <Button Content="💾 Lưu Dữ Liệu" Style="{StaticResource PrimaryButtonStyle}"
+                                    Command="{Binding SaveFormCommand}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Grid>
+    </Border>
+</UserControl>

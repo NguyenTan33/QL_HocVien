@@ -15,6 +15,7 @@ namespace QL_HocVien.ViewModels
         private readonly IAuthService _authService;
         private readonly IExcelService _excelService;
         private readonly IFileDialogService _fileDialogService;
+        private readonly ICatalogService _catalogService;
 
         public ObservableCollection<Cadet> Cadets { get; } = new();
         public ObservableCollection<string> RankList { get; } = new()
@@ -81,13 +82,15 @@ namespace QL_HocVien.ViewModels
             IClassService classService,
             IAuthService authService,
             IExcelService excelService,
-            IFileDialogService fileDialogService)
+            IFileDialogService fileDialogService,
+            ICatalogService catalogService)
         {
             _cadetService = cadetService;
             _classService = classService;
             _authService = authService;
             _excelService = excelService;
             _fileDialogService = fileDialogService;
+            _catalogService = catalogService;
             Title = "Quản Lý Danh Sách Học Viên";
 
             _ = InitializeAsync();
@@ -95,8 +98,35 @@ namespace QL_HocVien.ViewModels
 
         private async Task InitializeAsync()
         {
+            await LoadCatalogDropdownsAsync();
             await LoadClassListAsync();
             await LoadCadetsAsync();
+        }
+
+        private async Task LoadCatalogDropdownsAsync()
+        {
+            try
+            {
+                var ranks = await _catalogService.GetRankDropdownAsync();
+                if (ranks.Any())
+                {
+                    RankList.Clear();
+                    RankList.Add("Tất cả");
+                    foreach (var r in ranks) RankList.Add(r);
+                }
+
+                var units = await _catalogService.GetUnitDropdownAsync();
+                if (units.Any())
+                {
+                    UnitList.Clear();
+                    UnitList.Add("Tất cả");
+                    foreach (var u in units) UnitList.Add(u);
+                }
+            }
+            catch
+            {
+                // Giữ mặc định
+            }
         }
 
         public async Task LoadClassListAsync()

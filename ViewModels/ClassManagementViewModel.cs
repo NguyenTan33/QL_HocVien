@@ -15,6 +15,8 @@ namespace QL_HocVien.ViewModels
         private readonly IClassService _classService;
         private readonly IExcelService _excelService;
         private readonly IFileDialogService _fileDialogService;
+        private readonly ICatalogService _catalogService;
+        private readonly IOfficerService _officerService;
 
         public ObservableCollection<MilitaryClass> Classes { get; } = new();
 
@@ -27,6 +29,8 @@ namespace QL_HocVien.ViewModels
         {
             "Tất cả", "Chỉ huy Tham mưu", "Hậu cần Quân sự", "Kỹ thuật Quân sự", "Trinh sát đặc nhiệm", "Thông tin liên lạc"
         };
+
+        public ObservableCollection<string> AvailableOfficers { get; } = new();
 
         // Tìm kiếm và bộ lọc
         [ObservableProperty]
@@ -84,14 +88,57 @@ namespace QL_HocVien.ViewModels
         public ClassManagementViewModel(
             IClassService classService,
             IExcelService excelService,
-            IFileDialogService fileDialogService)
+            IFileDialogService fileDialogService,
+            ICatalogService catalogService,
+            IOfficerService officerService)
         {
             _classService = classService;
             _excelService = excelService;
             _fileDialogService = fileDialogService;
+            _catalogService = catalogService;
+            _officerService = officerService;
             Title = "Quản Lý Lớp Học Quân Đội";
 
-            _ = LoadClassesAsync();
+            _ = InitializeDataAsync();
+        }
+
+        private async Task InitializeDataAsync()
+        {
+            await LoadDropdownsAsync();
+            await LoadClassesAsync();
+        }
+
+        public async Task LoadDropdownsAsync()
+        {
+            try
+            {
+                var units = await _catalogService.GetUnitDropdownAsync();
+                if (units.Any())
+                {
+                    Units.Clear();
+                    Units.Add("Tất cả");
+                    foreach (var u in units) Units.Add(u);
+                }
+
+                var majors = await _catalogService.GetMajorDropdownAsync();
+                if (majors.Any())
+                {
+                    Majors.Clear();
+                    Majors.Add("Tất cả");
+                    foreach (var m in majors) Majors.Add(m);
+                }
+
+                var officers = await _officerService.GetAllOfficersAsync();
+                AvailableOfficers.Clear();
+                foreach (var off in officers)
+                {
+                    AvailableOfficers.Add($"{off.Rank} {off.FullName}");
+                }
+            }
+            catch
+            {
+                // Fallback to defaults if any exception
+            }
         }
 
         [RelayCommand]

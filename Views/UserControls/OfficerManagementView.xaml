@@ -1,0 +1,327 @@
+<UserControl x:Class="QL_HocVien.Views.UserControls.OfficerManagementView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local_cv="clr-namespace:QL_HocVien.Converters"
+             mc:Ignorable="d" 
+             d:DesignHeight="750" d:DesignWidth="1100">
+    <UserControl.Resources>
+        <local_cv:BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </UserControl.Resources>
+
+    <Border Padding="24">
+        <Grid>
+            <!-- 1. GIAO DIỆN CHÍNH -->
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header & Action Buttons -->
+                <Grid Grid.Row="0" Margin="0,0,0,20">
+                    <StackPanel>
+                        <TextBlock Text="QUẢN LÝ CÁN BỘ QUÂN SỰ" FontSize="22" FontWeight="Bold" Foreground="#0F172A"/>
+                        <TextBlock Text="Hồ sơ cán bộ chỉ huy, quản trị lớp học, phân cấp quân hàm, chức vụ, đơn vị và phân quyền" 
+                                   FontSize="13" Foreground="#64748B" Margin="0,4,0,0"/>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="📥 Nhập Excel" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"
+                                Command="{Binding ImportExcelCommand}"/>
+                        <Button Content="📤 Xuất Excel" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"
+                                Command="{Binding ExportExcelCommand}"/>
+                        <Button Content="🔑 Đặt Lại Mật Khẩu" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"
+                                Command="{Binding OpenResetPasswordDialogCommand}"/>
+                        <Button Content="➕ Thêm Cán Bộ" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0"
+                                Command="{Binding OpenAddFormCommand}"/>
+                        <Button Content="✏️ Sửa" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"
+                                Command="{Binding OpenEditFormCommand}"/>
+                        <Button Content="🗑️ Xóa" Style="{StaticResource DangerButtonStyle}" Margin="0,0,8,0"
+                                Command="{Binding DeleteOfficerCommand}"/>
+                        <Button Content="🔄 Làm Mới" Style="{StaticResource SecondaryButtonStyle}"
+                                Command="{Binding LoadDataCommand}"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Bộ Lọc & Tìm Kiếm -->
+                <Border Grid.Row="1" Style="{StaticResource CardBorderStyle}" Margin="0,0,0,16" Padding="14">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="2*"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="1.2*"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="1.2*"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="1.2*"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Tìm kiếm từ khóa -->
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Tìm kiếm theo mã, tên, SĐT, Email:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding SearchKeyword, UpdateSourceTrigger=PropertyChanged}" 
+                                     Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                        </StackPanel>
+
+                        <!-- Lọc Cấp bậc -->
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Cấp bậc quân hàm:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                            <ComboBox ItemsSource="{Binding FilterRanks}" SelectedItem="{Binding SelectedFilterRank}" 
+                                      Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
+                        </StackPanel>
+
+                        <!-- Lọc Chức vụ -->
+                        <StackPanel Grid.Column="4">
+                            <TextBlock Text="Chức vụ quân sự:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                            <ComboBox ItemsSource="{Binding FilterPositions}" SelectedItem="{Binding SelectedFilterPosition}" 
+                                      Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
+                        </StackPanel>
+
+                        <!-- Lọc Đơn vị -->
+                        <StackPanel Grid.Column="6">
+                            <TextBlock Text="Đơn vị trực thuộc:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                            <ComboBox ItemsSource="{Binding FilterUnits}" SelectedItem="{Binding SelectedFilterUnit}" 
+                                      Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
+                        </StackPanel>
+
+                        <!-- Nút tìm kiếm -->
+                        <Button Grid.Column="8" Content="🔍 Tìm Kiếm / Lọc" VerticalAlignment="Bottom" Height="36" 
+                                Style="{StaticResource PrimaryButtonStyle}" Command="{Binding SearchCommand}"/>
+                    </Grid>
+                </Border>
+
+                <!-- DataGrid Cán Bộ -->
+                <Border Grid.Row="2" Style="{StaticResource CardBorderStyle}" Padding="0">
+                    <DataGrid ItemsSource="{Binding Officers}" SelectedItem="{Binding SelectedOfficer}"
+                              AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
+                              GridLinesVisibility="Horizontal" HeadersVisibility="Column" Background="Transparent"
+                              BorderThickness="0" RowHeight="42" SelectionMode="Single">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Mã Cán Bộ" Binding="{Binding OfficerCode}" Width="110" FontWeight="SemiBold"/>
+                            <DataGridTextColumn Header="Họ và Tên" Binding="{Binding FullName}" Width="190" FontWeight="Bold"/>
+                            <DataGridTemplateColumn Header="Cấp Bậc" Width="130">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Background="#EFF6FF" CornerRadius="12" Padding="8,3" HorizontalAlignment="Center">
+                                            <TextBlock Text="{Binding Rank}" FontWeight="SemiBold" Foreground="#1E40AF" FontSize="12"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Chức Vụ" Width="150">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Background="#F0FDF4" CornerRadius="12" Padding="8,3" HorizontalAlignment="Center">
+                                            <TextBlock Text="{Binding Position}" FontWeight="SemiBold" Foreground="#15803D" FontSize="12"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="Đơn Vị" Binding="{Binding Unit}" Width="130"/>
+                            <DataGridTextColumn Header="Số Điện Thoại" Binding="{Binding PhoneNumber}" Width="120"/>
+                            <DataGridTextColumn Header="Email Liên Hệ" Binding="{Binding Email}" Width="180"/>
+                            <DataGridTextColumn Header="Chuyên Môn" Binding="{Binding Specialty}" Width="140"/>
+                            <DataGridTextColumn Header="Ngày Sinh" Binding="{Binding DateOfBirth, StringFormat='{}{0:dd/MM/yyyy}'}" Width="110"/>
+                            <DataGridTextColumn Header="Ngày Nhập Ngũ" Binding="{Binding EnlistmentDate, StringFormat='{}{0:dd/MM/yyyy}'}" Width="120"/>
+                            <DataGridTemplateColumn Header="Lớp Quản Lý" Width="110">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Background="#FEF3C7" CornerRadius="12" Padding="8,3" HorizontalAlignment="Center">
+                                            <TextBlock Text="{Binding ManagedClasses.Count, StringFormat='{}{0} lớp'}" FontWeight="Bold" Foreground="#B45309" FontSize="12"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="Ghi Chú" Binding="{Binding Notes}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Border>
+            </Grid>
+
+            <!-- 2. MODAL FORM THÊM / SỬA CÁN BỘ -->
+            <Grid Background="#80000000" Visibility="{Binding IsFormVisible, Converter={StaticResource BoolToVis}}">
+                <Border Background="White" CornerRadius="12" Width="680" HorizontalAlignment="Center" VerticalAlignment="Center"
+                        Padding="28" Effect="{DynamicResource CardShadow}">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="600">
+                        <StackPanel>
+                            <!-- Tiêu đề Form -->
+                            <TextBlock Text="{Binding FormTitle}" FontSize="18" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,16"/>
+
+                            <!-- Hàng 1: Mã cán bộ & Họ tên -->
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1*"/>
+                                    <ColumnDefinition Width="14"/>
+                                    <ColumnDefinition Width="2*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Mã cán bộ (*):" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                    <TextBox Text="{Binding FormOfficerCode, UpdateSourceTrigger=PropertyChanged}" 
+                                             IsEnabled="{Binding IsEditing, Converter={x:Static local_cv:InvertedBooleanToVisibilityConverter.Instance}}"
+                                             Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Họ và tên (*):" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                    <TextBox Text="{Binding FormFullName, UpdateSourceTrigger=PropertyChanged}" 
+                                             Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- Hàng 2: Cấp bậc & Chức vụ & Đơn vị -->
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1*"/>
+                                    <ColumnDefinition Width="12"/>
+                                    <ColumnDefinition Width="1*"/>
+                                    <ColumnDefinition Width="12"/>
+                                    <ColumnDefinition Width="1*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Cấp bậc quân hàm:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                    <ComboBox ItemsSource="{Binding FormRanks}" SelectedItem="{Binding FormRank}" 
+                                              Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Chức vụ quân sự:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                    <ComboBox ItemsSource="{Binding FormPositions}" SelectedItem="{Binding FormPosition}" 
+                                              Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="4">
+                                    <TextBlock Text="Đơn vị trực thuộc:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                    <ComboBox ItemsSource="{Binding FormUnits}" SelectedItem="{Binding FormUnit}" 
+                                              Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- Hàng 3: SĐT & Email & Chuyên môn -->
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1*"/>
+                                    <ColumnDefinition Width="12"/>
+                                    <ColumnDefinition Width="1.3*"/>
+                                    <ColumnDefinition Width="12"/>
+                                    <ColumnDefinition Width="1*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Số điện thoại:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                    <TextBox Text="{Binding FormPhoneNumber, UpdateSourceTrigger=PropertyChanged}" 
+                                             Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Email liên hệ:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                    <TextBox Text="{Binding FormEmail, UpdateSourceTrigger=PropertyChanged}" 
+                                             Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="4">
+                                    <TextBlock Text="Chuyên môn nghiệp vụ:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                    <TextBox Text="{Binding FormSpecialty, UpdateSourceTrigger=PropertyChanged}" 
+                                             Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- Hàng 4: Ngày sinh & Ngày nhập ngũ -->
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1*"/>
+                                    <ColumnDefinition Width="14"/>
+                                    <ColumnDefinition Width="1*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Ngày sinh:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                    <DatePicker SelectedDate="{Binding FormDateOfBirth}" Height="36" VerticalContentAlignment="Center"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Ngày nhập ngũ:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                    <DatePicker SelectedDate="{Binding FormEnlistmentDate}" Height="36" VerticalContentAlignment="Center"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- Hàng 5: Ghi chú -->
+                            <StackPanel Margin="0,0,0,14">
+                                <TextBlock Text="Ghi chú thêm:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                <TextBox Text="{Binding FormNotes, UpdateSourceTrigger=PropertyChanged}" 
+                                         Style="{StaticResource ModernTextBoxStyle}" Height="54" AcceptsReturn="True" TextWrapping="Wrap"/>
+                            </StackPanel>
+
+                            <!-- Tùy chọn cấp tài khoản đăng nhập khi Thêm mới -->
+                            <Border Background="#F8FAFC" CornerRadius="8" Padding="12" Margin="0,0,0,16"
+                                    Visibility="{Binding IsEditing, Converter={x:Static local_cv:InvertedBooleanToVisibilityConverter.Instance}}">
+                                <StackPanel>
+                                    <CheckBox Content="Cấp tài khoản đăng nhập hệ thống cho cán bộ này" 
+                                              IsChecked="{Binding FormCreateLoginAccount}" 
+                                              FontWeight="SemiBold" Foreground="#1E3A8A" Margin="0,0,0,8"/>
+
+                                    <Grid Visibility="{Binding FormCreateLoginAccount, Converter={StaticResource BoolToVis}}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="1*"/>
+                                            <ColumnDefinition Width="14"/>
+                                            <ColumnDefinition Width="1*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="Tên tài khoản (Username):" FontSize="11" Foreground="#64748B" Margin="0,0,0,4"/>
+                                            <TextBox Text="{Binding FormUsername, UpdateSourceTrigger=PropertyChanged}" 
+                                                     Style="{StaticResource ModernTextBoxStyle}" Height="32"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="2">
+                                            <TextBlock Text="Mật khẩu khởi tạo:" FontSize="11" Foreground="#64748B" Margin="0,0,0,4"/>
+                                            <TextBox Text="{Binding FormPassword, UpdateSourceTrigger=PropertyChanged}" 
+                                                     Style="{StaticResource ModernTextBoxStyle}" Height="32"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Action Buttons -->
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                <Button Content="Hủy Bỏ" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,0"
+                                        Command="{Binding CloseFormCommand}"/>
+                                <Button Content="💾 Lưu Cán Bộ" Style="{StaticResource PrimaryButtonStyle}"
+                                        Command="{Binding SaveFormCommand}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+            </Grid>
+
+            <!-- 3. MODAL ĐẶT LẠI MẬT KHẨU -->
+            <Grid Background="#80000000" Visibility="{Binding IsResetPasswordDialogVisible, Converter={StaticResource BoolToVis}}">
+                <Border Background="White" CornerRadius="12" Width="440" HorizontalAlignment="Center" VerticalAlignment="Center"
+                        Padding="24" Effect="{DynamicResource CardShadow}">
+                    <StackPanel>
+                        <TextBlock Text="🔑 Đặt Lại Mật Khẩu Cán Bộ" FontSize="18" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,12"/>
+                        <TextBlock Text="Cán bộ được chọn:" FontSize="12" Foreground="#64748B"/>
+                        <TextBlock Text="{Binding ResetOfficerName}" FontSize="14" FontWeight="Bold" Foreground="#0F172A" Margin="0,2,0,14"/>
+
+                        <TextBlock Text="Mật khẩu mới (*):" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                        <TextBox Text="{Binding ResetNewPassword, UpdateSourceTrigger=PropertyChanged}" 
+                                 Style="{StaticResource ModernTextBoxStyle}" Height="36" Margin="0,0,0,20"/>
+
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="Hủy Bỏ" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,0"
+                                    Command="{Binding CloseResetPasswordDialogCommand}"/>
+                            <Button Content="✅ Xác Nhận Đổi" Style="{StaticResource PrimaryButtonStyle}"
+                                    Command="{Binding SaveResetPasswordCommand}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Grid>
+    </Border>
+</UserControl>

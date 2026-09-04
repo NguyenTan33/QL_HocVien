@@ -81,6 +81,20 @@ namespace QL_HocVien.ViewModels
         }
 
         [RelayCommand]
+        public void NavigateToOfficerManagement()
+        {
+            ActiveMenu = "OfficerManagement";
+            CurrentView = _serviceProvider.GetRequiredService<OfficerManagementViewModel>();
+        }
+
+        [RelayCommand]
+        public void NavigateToCatalogManagement()
+        {
+            ActiveMenu = "CatalogManagement";
+            CurrentView = _serviceProvider.GetRequiredService<CatalogManagementViewModel>();
+        }
+
+        [RelayCommand]
         public void NavigateToSettings()
         {
             ActiveMenu = "Settings";

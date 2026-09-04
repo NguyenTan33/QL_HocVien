@@ -61,4 +61,26 @@ namespace QL_HocVien.Converters
             return value is Visibility v && v != Visibility.Visible;
         }
     }
+
+    public class IntEqualsToVisibilityConverter : IValueConverter
+    {
+        public static readonly IntEqualsToVisibilityConverter Instance = new();
+
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is int intVal && parameter != null)
+            {
+                if (int.TryParse(parameter.ToString(), out int targetVal))
+                {
+                    return intVal == targetVal ? Visibility.Visible : Visibility.Collapsed;
+                }
+            }
+            return Visibility.Collapsed;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }

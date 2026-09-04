@@ -93,6 +93,11 @@ namespace QL_HocVien
             services.AddScoped<ICadetRepository, CadetRepository>();
             services.AddScoped<ISubjectRepository, SubjectRepository>();
             services.AddScoped<IPhysicalExamRepository, PhysicalExamRepository>();
+            services.AddScoped<IOfficerRepository, OfficerRepository>();
+            services.AddScoped<IRankRepository, RankRepository>();
+            services.AddScoped<IPositionRepository, PositionRepository>();
+            services.AddScoped<IUnitRepository, UnitRepository>();
+            services.AddScoped<IMajorRepository, MajorRepository>();
 
             // Đăng ký Services (SOLID - SRP, OCP)
             services.AddSingleton<IEmailService, EmailService>();
@@ -102,6 +107,8 @@ namespace QL_HocVien
             services.AddScoped<ISubjectService, SubjectService>();
             services.AddScoped<IEvaluationService, EvaluationService>();
             services.AddScoped<IPhysicalExamService, PhysicalExamService>();
+            services.AddScoped<IOfficerService, OfficerService>();
+            services.AddScoped<ICatalogService, CatalogService>();
             services.AddSingleton<IFileDialogService, FileDialogService>();
             services.AddScoped<IExcelService, ExcelService>();
 
@@ -111,6 +118,8 @@ namespace QL_HocVien
             services.AddTransient<ForgotPasswordViewModel>();
             services.AddTransient<MainViewModel>();
             services.AddTransient<DashboardViewModel>();
+            services.AddTransient<OfficerManagementViewModel>();
+            services.AddTransient<CatalogManagementViewModel>();
             services.AddTransient<ClassManagementViewModel>();
             services.AddTransient<CadetManagementViewModel>();
             services.AddTransient<AddCadetViewModel>();

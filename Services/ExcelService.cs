@@ -19,6 +19,11 @@ namespace QL_HocVien.Services
         private readonly ISubjectRepository _subjectRepository;
         private readonly IPhysicalExamRepository _examRepository;
         private readonly IEvaluationService _evaluationService;
+        private readonly IOfficerRepository _officerRepository;
+        private readonly IRankRepository _rankRepository;
+        private readonly IPositionRepository _positionRepository;
+        private readonly IUnitRepository _unitRepository;
+        private readonly IMajorRepository _majorRepository;
 
         public ExcelService(
             AppDbContext context,
@@ -26,7 +31,12 @@ namespace QL_HocVien.Services
             IClassRepository classRepository,
             ISubjectRepository subjectRepository,
             IPhysicalExamRepository examRepository,
-            IEvaluationService evaluationService)
+            IEvaluationService evaluationService,
+            IOfficerRepository officerRepository,
+            IRankRepository rankRepository,
+            IPositionRepository positionRepository,
+            IUnitRepository unitRepository,
+            IMajorRepository majorRepository)
         {
             _context = context;
             _cadetRepository = cadetRepository;
@@ -34,6 +44,11 @@ namespace QL_HocVien.Services
             _subjectRepository = subjectRepository;
             _examRepository = examRepository;
             _evaluationService = evaluationService;
+            _officerRepository = officerRepository;
+            _rankRepository = rankRepository;
+            _positionRepository = positionRepository;
+            _unitRepository = unitRepository;
+            _majorRepository = majorRepository;
         }
 
         #region 1. XUẤT & NHẬP HỌC VIÊN
@@ -659,7 +674,399 @@ namespace QL_HocVien.Services
         }
         #endregion
 
-        #region 5. XUẤT & NHẬP TOÀN BỘ DỮ LIỆU HỆ THỐNG (FULL BACKUP / RESTORE)
+        #region 5. XUẤT & NHẬP CÁN BỘ QUẢN LÝ
+        public async Task<(bool Success, string Message)> ExportOfficersToExcelAsync(IEnumerable<Officer> officers, string filePath)
+        {
+            try
+            {
+                using var workbook = new XLWorkbook();
+                var ws = workbook.Worksheets.Add("Trang cán bộ");
+
+                ws.Cell("A1").Value = "DANH SÁCH CÁN BỘ QUẢN LÝ QUÂN SỰ";
+                ws.Range("A1:K1").Merge().Style
+                    .Font.SetBold().Font.SetFontSize(16).Font.SetFontColor(XLColor.FromHtml("#1E3A8A"))
+                    .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+
+                ws.Cell("A2").Value = $"Thời điểm xuất dữ liệu: {DateTime.Now:dd/MM/yyyy HH:mm:ss}";
+                ws.Range("A2:K2").Merge().Style.Font.SetItalic().Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+
+                string[] headers = { "STT", "Mã cán bộ", "Họ và tên", "Cấp bậc", "Chức vụ", "Đơn vị", "Số điện thoại", "Email", "Chuyên môn", "Ngày sinh", "Ngày nhập ngũ" };
+                for (int i = 0; i < headers.Length; i++)
+                {
+                    var cell = ws.Cell(4, i + 1);
+                    cell.Value = headers[i];
+                    cell.Style.Font.SetBold().Font.SetFontColor(XLColor.White)
+                        .Fill.SetBackgroundColor(XLColor.FromHtml("#1E3A8A"))
+                        .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center)
+                        .Border.SetOutsideBorder(XLBorderStyleValues.Thin);
+                }
+
+                int row = 5;
+                int stt = 1;
+                foreach (var o in officers)
+                {
+                    ws.Cell(row, 1).Value = stt++;
+                    ws.Cell(row, 2).Value = o.OfficerCode;
+                    ws.Cell(row, 3).Value = o.FullName;
+                    ws.Cell(row, 4).Value = o.Rank;
+                    ws.Cell(row, 5).Value = o.Position;
+                    ws.Cell(row, 6).Value = o.Unit;
+                    ws.Cell(row, 7).Value = o.PhoneNumber;
+                    ws.Cell(row, 8).Value = o.Email;
+                    ws.Cell(row, 9).Value = o.Specialty;
+                    ws.Cell(row, 10).Value = o.DateOfBirth.HasValue ? o.DateOfBirth.Value.ToString("dd/MM/yyyy") : "";
+                    ws.Cell(row, 11).Value = o.EnlistmentDate.HasValue ? o.EnlistmentDate.Value.ToString("dd/MM/yyyy") : "";
+
+                    ws.Range(row, 1, row, 11).Style.Border.SetOutsideBorder(XLBorderStyleValues.Thin)
+                                                   .Border.SetInsideBorder(XLBorderStyleValues.Thin);
+                    row++;
+                }
+
+                ws.Columns().AdjustToContents();
+                workbook.SaveAs(filePath);
+
+                return (true, $"Xuất thành công {stt - 1} cán bộ ra file Excel.");
+            }
+            catch (Exception ex)
+            {
+                return (false, $"Lỗi khi xuất danh sách cán bộ: {ex.Message}");
+            }
+        }
+
+        public async Task<(bool Success, string Message, List<Officer> Officers)> ImportOfficersFromExcelAsync(string filePath)
+        {
+            try
+            {
+                if (!File.Exists(filePath))
+                    return (false, "Tệp không tồn tại.", new List<Officer>());
+
+                using var workbook = new XLWorkbook(filePath);
+                var ws = workbook.Worksheets.FirstOrDefault(w => w.Name.Contains("cán bộ", StringComparison.OrdinalIgnoreCase) || w.Name.Contains("Officer", StringComparison.OrdinalIgnoreCase)) ?? workbook.Worksheets.FirstOrDefault();
+                if (ws == null)
+                    return (false, "Không tìm thấy sheet dữ liệu cán bộ.", new List<Officer>());
+
+                var imported = new List<Officer>();
+                int startRow = 5;
+                for (int r = 1; r <= 10; r++)
+                {
+                    var text = ws.Cell(r, 2).GetString().Trim();
+                    if (text.Equals("Mã cán bộ", StringComparison.OrdinalIgnoreCase) || text.Equals("OfficerCode", StringComparison.OrdinalIgnoreCase))
+                    {
+                        startRow = r + 1;
+                        break;
+                    }
+                }
+
+                int lastRow = ws.LastRowUsed()?.RowNumber() ?? 0;
+                for (int row = startRow; row <= lastRow; row++)
+                {
+                    string code = ws.Cell(row, 2).GetString().Trim();
+                    string name = ws.Cell(row, 3).GetString().Trim();
+                    if (string.IsNullOrWhiteSpace(code) || string.IsNullOrWhiteSpace(name))
+                        continue;
+
+                    string rank = ws.Cell(row, 4).GetString().Trim();
+                    string pos = ws.Cell(row, 5).GetString().Trim();
+                    string unit = ws.Cell(row, 6).GetString().Trim();
+                    string phone = ws.Cell(row, 7).GetString().Trim();
+                    string email = ws.Cell(row, 8).GetString().Trim();
+                    string specialty = ws.Cell(row, 9).GetString().Trim();
+                    string dobStr = ws.Cell(row, 10).GetString().Trim();
+                    string enlistStr = ws.Cell(row, 11).GetString().Trim();
+
+                    DateTime? dob = null;
+                    if (DateTime.TryParse(dobStr, out var d)) dob = d;
+                    DateTime? enlist = null;
+                    if (DateTime.TryParse(enlistStr, out var e)) enlist = e;
+
+                    var existing = await _officerRepository.GetByCodeAsync(code);
+                    if (existing != null)
+                    {
+                        existing.FullName = name;
+                        existing.Rank = rank;
+                        existing.Position = pos;
+                        existing.Unit = unit;
+                        existing.PhoneNumber = phone;
+                        existing.Email = email;
+                        existing.Specialty = specialty;
+                        existing.DateOfBirth = dob;
+                        existing.EnlistmentDate = enlist;
+                        _officerRepository.Update(existing);
+                        imported.Add(existing);
+                    }
+                    else
+                    {
+                        var newOff = new Officer
+                        {
+                            OfficerCode = code,
+                            FullName = name,
+                            Rank = rank,
+                            Position = pos,
+                            Unit = unit,
+                            PhoneNumber = phone,
+                            Email = email,
+                            Specialty = specialty,
+                            DateOfBirth = dob,
+                            EnlistmentDate = enlist
+                        };
+                        await _officerRepository.AddAsync(newOff);
+                        imported.Add(newOff);
+                    }
+                }
+
+                await _officerRepository.SaveChangesAsync();
+                return (true, $"Nhập thành công {imported.Count} cán bộ từ Excel.", imported);
+            }
+            catch (Exception ex)
+            {
+                return (false, $"Lỗi nhập danh sách cán bộ: {ex.Message}", new List<Officer>());
+            }
+        }
+        #endregion
+
+        #region 6. XUẤT & NHẬP DANH MỤC TỔ CHỨC
+        public async Task<(bool Success, string Message)> ExportCatalogsToExcelAsync(string filePath)
+        {
+            try
+            {
+                using var workbook = new XLWorkbook();
+                var ranks = (await _rankRepository.GetAllAsync()).OrderBy(r => r.DisplayOrder).ToList();
+                var positions = (await _positionRepository.GetAllAsync()).OrderBy(p => p.DisplayOrder).ToList();
+                var units = (await _unitRepository.GetAllAsync()).ToList();
+                var majors = (await _majorRepository.GetAllAsync()).ToList();
+
+                // 1. Cấp bậc
+                var wsRank = workbook.Worksheets.Add("Cấp bậc");
+                wsRank.Cell("A1").Value = "DANH MỤC CẤP BẬC QUÂN HÀM";
+                wsRank.Range("A1:E1").Merge().Style.Font.SetBold().Font.SetFontSize(14).Font.SetFontColor(XLColor.FromHtml("#1E3A8A"));
+                string[] rankHeaders = { "STT", "Mã cấp bậc", "Tên cấp bậc", "Nhóm cấp bậc", "Thứ tự hiển thị" };
+                for (int i = 0; i < rankHeaders.Length; i++)
+                {
+                    wsRank.Cell(3, i + 1).Value = rankHeaders[i];
+                    wsRank.Cell(3, i + 1).Style.Font.SetBold().Font.SetFontColor(XLColor.White).Fill.SetBackgroundColor(XLColor.FromHtml("#1E3A8A"));
+                }
+                for (int i = 0; i < ranks.Count; i++)
+                {
+                    wsRank.Cell(i + 4, 1).Value = i + 1;
+                    wsRank.Cell(i + 4, 2).Value = ranks[i].RankCode;
+                    wsRank.Cell(i + 4, 3).Value = ranks[i].RankName;
+                    wsRank.Cell(i + 4, 4).Value = ranks[i].RankGroup;
+                    wsRank.Cell(i + 4, 5).Value = ranks[i].DisplayOrder;
+                }
+                wsRank.Columns().AdjustToContents();
+
+                // 2. Chức vụ
+                var wsPos = workbook.Worksheets.Add("Chức vụ");
+                wsPos.Cell("A1").Value = "DANH MỤC CHỨC VỤ QUÂN SỰ";
+                wsPos.Range("A1:E1").Merge().Style.Font.SetBold().Font.SetFontSize(14).Font.SetFontColor(XLColor.FromHtml("#1E3A8A"));
+                string[] posHeaders = { "STT", "Mã chức vụ", "Tên chức vụ", "Nhóm chức vụ", "Thứ tự hiển thị" };
+                for (int i = 0; i < posHeaders.Length; i++)
+                {
+                    wsPos.Cell(3, i + 1).Value = posHeaders[i];
+                    wsPos.Cell(3, i + 1).Style.Font.SetBold().Font.SetFontColor(XLColor.White).Fill.SetBackgroundColor(XLColor.FromHtml("#1E3A8A"));
+                }
+                for (int i = 0; i < positions.Count; i++)
+                {
+                    wsPos.Cell(i + 4, 1).Value = i + 1;
+                    wsPos.Cell(i + 4, 2).Value = positions[i].PositionCode;
+                    wsPos.Cell(i + 4, 3).Value = positions[i].PositionName;
+                    wsPos.Cell(i + 4, 4).Value = positions[i].PositionGroup;
+                    wsPos.Cell(i + 4, 5).Value = positions[i].DisplayOrder;
+                }
+                wsPos.Columns().AdjustToContents();
+
+                // 3. Đơn vị
+                var wsUnit = workbook.Worksheets.Add("Đơn vị");
+                wsUnit.Cell("A1").Value = "DANH MỤC ĐƠN VỊ QUẢN LÝ";
+                wsUnit.Range("A1:F1").Merge().Style.Font.SetBold().Font.SetFontSize(14).Font.SetFontColor(XLColor.FromHtml("#1E3A8A"));
+                string[] unitHeaders = { "STT", "Mã đơn vị", "Tên đơn vị", "Đơn vị cấp trên", "Người chỉ huy", "Số điện thoại" };
+                for (int i = 0; i < unitHeaders.Length; i++)
+                {
+                    wsUnit.Cell(3, i + 1).Value = unitHeaders[i];
+                    wsUnit.Cell(3, i + 1).Style.Font.SetBold().Font.SetFontColor(XLColor.White).Fill.SetBackgroundColor(XLColor.FromHtml("#1E3A8A"));
+                }
+                for (int i = 0; i < units.Count; i++)
+                {
+                    wsUnit.Cell(i + 4, 1).Value = i + 1;
+                    wsUnit.Cell(i + 4, 2).Value = units[i].UnitCode;
+                    wsUnit.Cell(i + 4, 3).Value = units[i].UnitName;
+                    wsUnit.Cell(i + 4, 4).Value = units[i].ParentUnit;
+                    wsUnit.Cell(i + 4, 5).Value = units[i].CommanderName;
+                    wsUnit.Cell(i + 4, 6).Value = units[i].ContactPhone;
+                }
+                wsUnit.Columns().AdjustToContents();
+
+                // 4. Chuyên ngành
+                var wsMajor = workbook.Worksheets.Add("Chuyên ngành");
+                wsMajor.Cell("A1").Value = "DANH MỤC CHUYÊN NGÀNH ĐÀO TẠO";
+                wsMajor.Range("A1:E1").Merge().Style.Font.SetBold().Font.SetFontSize(14).Font.SetFontColor(XLColor.FromHtml("#1E3A8A"));
+                string[] majorHeaders = { "STT", "Mã chuyên ngành", "Tên chuyên ngành", "Thời gian đào tạo", "Khoa phụ trách" };
+                for (int i = 0; i < majorHeaders.Length; i++)
+                {
+                    wsMajor.Cell(3, i + 1).Value = majorHeaders[i];
+                    wsMajor.Cell(3, i + 1).Style.Font.SetBold().Font.SetFontColor(XLColor.White).Fill.SetBackgroundColor(XLColor.FromHtml("#1E3A8A"));
+                }
+                for (int i = 0; i < majors.Count; i++)
+                {
+                    wsMajor.Cell(i + 4, 1).Value = i + 1;
+                    wsMajor.Cell(i + 4, 2).Value = majors[i].MajorCode;
+                    wsMajor.Cell(i + 4, 3).Value = majors[i].MajorName;
+                    wsMajor.Cell(i + 4, 4).Value = majors[i].TrainingDuration;
+                    wsMajor.Cell(i + 4, 5).Value = majors[i].Department;
+                }
+                wsMajor.Columns().AdjustToContents();
+
+                workbook.SaveAs(filePath);
+                return (true, $"Xuất thành công danh mục tổ chức ({ranks.Count} cấp bậc, {positions.Count} chức vụ, {units.Count} đơn vị, {majors.Count} chuyên ngành) ra file Excel.");
+            }
+            catch (Exception ex)
+            {
+                return (false, $"Lỗi khi xuất danh mục tổ chức: {ex.Message}");
+            }
+        }
+
+        public async Task<(bool Success, string Message, int RanksCount, int PositionsCount, int UnitsCount, int MajorsCount)> ImportCatalogsFromExcelAsync(string filePath)
+        {
+            try
+            {
+                if (!File.Exists(filePath))
+                    return (false, "Tệp không tồn tại.", 0, 0, 0, 0);
+
+                using var workbook = new XLWorkbook(filePath);
+                int rCount = 0, pCount = 0, uCount = 0, mCount = 0;
+
+                // 1. Cấp bậc
+                var wsRank = workbook.Worksheets.FirstOrDefault(w => w.Name.Contains("Cấp bậc", StringComparison.OrdinalIgnoreCase) || w.Name.Contains("Rank", StringComparison.OrdinalIgnoreCase));
+                if (wsRank != null)
+                {
+                    int lastRow = wsRank.LastRowUsed()?.RowNumber() ?? 0;
+                    for (int row = 4; row <= lastRow; row++)
+                    {
+                        string code = wsRank.Cell(row, 2).GetString().Trim();
+                        string name = wsRank.Cell(row, 3).GetString().Trim();
+                        if (string.IsNullOrWhiteSpace(code) || string.IsNullOrWhiteSpace(name)) continue;
+                        string group = wsRank.Cell(row, 4).GetString().Trim();
+                        int order = wsRank.Cell(row, 5).TryGetValue<int>(out var o) ? o : 0;
+
+                        var existing = await _rankRepository.GetByCodeAsync(code);
+                        if (existing != null)
+                        {
+                            existing.RankName = name;
+                            existing.RankGroup = group;
+                            existing.DisplayOrder = order;
+                            _rankRepository.Update(existing);
+                        }
+                        else
+                        {
+                            await _rankRepository.AddAsync(new MilitaryRank { RankCode = code, RankName = name, RankGroup = group, DisplayOrder = order });
+                        }
+                        rCount++;
+                    }
+                    await _rankRepository.SaveChangesAsync();
+                }
+
+                // 2. Chức vụ
+                var wsPos = workbook.Worksheets.FirstOrDefault(w => w.Name.Contains("Chức vụ", StringComparison.OrdinalIgnoreCase) || w.Name.Contains("Position", StringComparison.OrdinalIgnoreCase));
+                if (wsPos != null)
+                {
+                    int lastRow = wsPos.LastRowUsed()?.RowNumber() ?? 0;
+                    for (int row = 4; row <= lastRow; row++)
+                    {
+                        string code = wsPos.Cell(row, 2).GetString().Trim();
+                        string name = wsPos.Cell(row, 3).GetString().Trim();
+                        if (string.IsNullOrWhiteSpace(code) || string.IsNullOrWhiteSpace(name)) continue;
+                        string group = wsPos.Cell(row, 4).GetString().Trim();
+                        int order = wsPos.Cell(row, 5).TryGetValue<int>(out var o) ? o : 0;
+
+                        var existing = await _positionRepository.GetByCodeAsync(code);
+                        if (existing != null)
+                        {
+                            existing.PositionName = name;
+                            existing.PositionGroup = group;
+                            existing.DisplayOrder = order;
+                            _positionRepository.Update(existing);
+                        }
+                        else
+                        {
+                            await _positionRepository.AddAsync(new MilitaryPosition { PositionCode = code, PositionName = name, PositionGroup = group, DisplayOrder = order });
+                        }
+                        pCount++;
+                    }
+                    await _positionRepository.SaveChangesAsync();
+                }
+
+                // 3. Đơn vị
+                var wsUnit = workbook.Worksheets.FirstOrDefault(w => w.Name.Contains("Đơn vị", StringComparison.OrdinalIgnoreCase) || w.Name.Contains("Unit", StringComparison.OrdinalIgnoreCase));
+                if (wsUnit != null)
+                {
+                    int lastRow = wsUnit.LastRowUsed()?.RowNumber() ?? 0;
+                    for (int row = 4; row <= lastRow; row++)
+                    {
+                        string code = wsUnit.Cell(row, 2).GetString().Trim();
+                        string name = wsUnit.Cell(row, 3).GetString().Trim();
+                        if (string.IsNullOrWhiteSpace(code) || string.IsNullOrWhiteSpace(name)) continue;
+                        string parent = wsUnit.Cell(row, 4).GetString().Trim();
+                        string cmdr = wsUnit.Cell(row, 5).GetString().Trim();
+                        string phone = wsUnit.Cell(row, 6).GetString().Trim();
+
+                        var existing = await _unitRepository.GetByCodeAsync(code);
+                        if (existing != null)
+                        {
+                            existing.UnitName = name;
+                            existing.ParentUnit = parent;
+                            existing.CommanderName = cmdr;
+                            existing.ContactPhone = phone;
+                            _unitRepository.Update(existing);
+                        }
+                        else
+                        {
+                            await _unitRepository.AddAsync(new MilitaryUnit { UnitCode = code, UnitName = name, ParentUnit = parent, CommanderName = cmdr, ContactPhone = phone });
+                        }
+                        uCount++;
+                    }
+                    await _unitRepository.SaveChangesAsync();
+                }
+
+                // 4. Chuyên ngành
+                var wsMajor = workbook.Worksheets.FirstOrDefault(w => w.Name.Contains("Chuyên ngành", StringComparison.OrdinalIgnoreCase) || w.Name.Contains("Major", StringComparison.OrdinalIgnoreCase));
+                if (wsMajor != null)
+                {
+                    int lastRow = wsMajor.LastRowUsed()?.RowNumber() ?? 0;
+                    for (int row = 4; row <= lastRow; row++)
+                    {
+                        string code = wsMajor.Cell(row, 2).GetString().Trim();
+                        string name = wsMajor.Cell(row, 3).GetString().Trim();
+                        if (string.IsNullOrWhiteSpace(code) || string.IsNullOrWhiteSpace(name)) continue;
+                        string duration = wsMajor.Cell(row, 4).GetString().Trim();
+                        string dept = wsMajor.Cell(row, 5).GetString().Trim();
+
+                        var existing = await _majorRepository.GetByCodeAsync(code);
+                        if (existing != null)
+                        {
+                            existing.MajorName = name;
+                            existing.TrainingDuration = duration;
+                            existing.Department = dept;
+                            _majorRepository.Update(existing);
+                        }
+                        else
+                        {
+                            await _majorRepository.AddAsync(new MilitaryMajor { MajorCode = code, MajorName = name, TrainingDuration = duration, Department = dept });
+                        }
+                        mCount++;
+                    }
+                    await _majorRepository.SaveChangesAsync();
+                }
+
+                return (true, $"Nhập thành công danh mục: {rCount} cấp bậc, {pCount} chức vụ, {uCount} đơn vị, {mCount} chuyên ngành.", rCount, pCount, uCount, mCount);
+            }
+            catch (Exception ex)
+            {
+                return (false, $"Lỗi nhập danh mục: {ex.Message}", 0, 0, 0, 0);
+            }
+        }
+        #endregion
+
+        #region 7. XUẤT & NHẬP TOÀN BỘ DỮ LIỆU HỆ THỐNG (FULL BACKUP / RESTORE)
         public async Task<(bool Success, string Message)> ExportAllDataToExcelAsync(string filePath)
         {
             try
@@ -668,13 +1075,18 @@ namespace QL_HocVien.Services
                 var cadets = (await _cadetRepository.GetAllAsync()).ToList();
                 var subjects = (await _subjectRepository.GetAllAsync()).ToList();
                 var records = (await _examRepository.GetAllWithDetailsAsync()).ToList();
+                var officers = (await _officerRepository.GetAllAsync()).ToList();
+                var ranks = (await _rankRepository.GetAllAsync()).OrderBy(r => r.DisplayOrder).ToList();
+                var positions = (await _positionRepository.GetAllAsync()).OrderBy(p => p.DisplayOrder).ToList();
+                var units = (await _unitRepository.GetAllAsync()).ToList();
+                var majors = (await _majorRepository.GetAllAsync()).ToList();
                 var failedRecords = records.Where(r => r.Grade == "Không đạt").ToList();
 
                 using var workbook = new XLWorkbook();
 
                 // 1. Sheet Tổng quan (KPI Dashboard)
                 var wsDash = workbook.Worksheets.Add("Trang tổng quan");
-                wsDash.Cell("A1").Value = "BÁO CÁO TỔNG QUAN QUẢN LÝ HỌC VIÊN & RÈN LUYỆN THỂ LỰC";
+                wsDash.Cell("A1").Value = "BÁO CÁO TỔNG QUAN QUẢN LÝ HỌC VIÊN & CÁN BỘ QUÂN ĐỘI";
                 wsDash.Range("A1:F1").Merge().Style.Font.SetBold().Font.SetFontSize(16)
                     .Font.SetFontColor(XLColor.FromHtml("#1E3A8A")).Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
 
@@ -685,34 +1097,63 @@ namespace QL_HocVien.Services
                 wsDash.Cell("B4").Value = classes.Count;
                 wsDash.Cell("A5").Value = "Tổng quân số học viên:";
                 wsDash.Cell("B5").Value = cadets.Count;
-                wsDash.Cell("A6").Value = "Tổng số môn rèn luyện:";
-                wsDash.Cell("B6").Value = subjects.Count;
-                wsDash.Cell("A7").Value = "Tổng số lượt kiểm tra:";
-                wsDash.Cell("B7").Value = records.Count;
+                wsDash.Cell("A6").Value = "Tổng số cán bộ quản lý:";
+                wsDash.Cell("B6").Value = officers.Count;
+                wsDash.Cell("A7").Value = "Tổng số môn rèn luyện:";
+                wsDash.Cell("B7").Value = subjects.Count;
+                wsDash.Cell("A8").Value = "Tổng số lượt kiểm tra:";
+                wsDash.Cell("B8").Value = records.Count;
 
                 double passRate = records.Count > 0 
                     ? Math.Round((double)(records.Count - failedRecords.Count) / records.Count * 100, 1) 
                     : 100.0;
-                wsDash.Cell("A8").Value = "Tỷ lệ đạt chuẩn quân sự:";
-                wsDash.Cell("B8").Value = $"{passRate}%";
+                wsDash.Cell("A9").Value = "Tỷ lệ đạt chuẩn quân sự:";
+                wsDash.Cell("B9").Value = $"{passRate}%";
 
-                wsDash.Cell("A10").Value = "PHÂN LOẠI XẾP LOẠI CHI TIẾT";
-                wsDash.Range("A10:C10").Merge().Style.Font.SetBold().Fill.SetBackgroundColor(XLColor.FromHtml("#F1F5F9"));
+                wsDash.Cell("A11").Value = "PHÂN LOẠI XẾP LOẠI CHI TIẾT";
+                wsDash.Range("A11:C11").Merge().Style.Font.SetBold().Fill.SetBackgroundColor(XLColor.FromHtml("#F1F5F9"));
 
-                wsDash.Cell("A11").Value = "Xuất sắc:";
-                wsDash.Cell("B11").Value = records.Count(r => r.Grade == "Xuất sắc");
-                wsDash.Cell("A12").Value = "Giỏi:";
-                wsDash.Cell("B12").Value = records.Count(r => r.Grade == "Giỏi");
-                wsDash.Cell("A13").Value = "Khá:";
-                wsDash.Cell("B13").Value = records.Count(r => r.Grade == "Khá");
-                wsDash.Cell("A14").Value = "Đạt:";
-                wsDash.Cell("B14").Value = records.Count(r => r.Grade == "Đạt");
-                wsDash.Cell("A15").Value = "Không đạt (Cần rèn luyện lại):";
-                wsDash.Cell("B15").Value = failedRecords.Count;
-                wsDash.Cell("B15").Style.Font.SetFontColor(XLColor.Red);
+                wsDash.Cell("A12").Value = "Xuất sắc:";
+                wsDash.Cell("B12").Value = records.Count(r => r.Grade == "Xuất sắc");
+                wsDash.Cell("A13").Value = "Giỏi:";
+                wsDash.Cell("B13").Value = records.Count(r => r.Grade == "Giỏi");
+                wsDash.Cell("A14").Value = "Khá:";
+                wsDash.Cell("B14").Value = records.Count(r => r.Grade == "Khá");
+                wsDash.Cell("A15").Value = "Đạt:";
+                wsDash.Cell("B15").Value = records.Count(r => r.Grade == "Đạt");
+                wsDash.Cell("A16").Value = "Không đạt (Cần rèn luyện lại):";
+                wsDash.Cell("B16").Value = failedRecords.Count;
+                wsDash.Cell("B16").Style.Font.SetFontColor(XLColor.Red);
                 wsDash.Columns().AdjustToContents();
 
-                // 2. Sheet Lớp học
+                // 2. Sheet Cán bộ
+                var wsOff = workbook.Worksheets.Add("Trang cán bộ");
+                wsOff.Cell("A1").Value = "DANH SÁCH CÁN BỘ QUẢN LÝ QUÂN SỰ";
+                wsOff.Range("A1:K1").Merge().Style.Font.SetBold().Font.SetFontSize(14).Font.SetFontColor(XLColor.FromHtml("#1E3A8A"));
+                string[] oHeaders = { "STT", "Mã cán bộ", "Họ và tên", "Cấp bậc", "Chức vụ", "Đơn vị", "Số điện thoại", "Email", "Chuyên môn", "Ngày sinh", "Ngày nhập ngũ" };
+                for (int i = 0; i < oHeaders.Length; i++)
+                {
+                    wsOff.Cell(3, i + 1).Value = oHeaders[i];
+                    wsOff.Cell(3, i + 1).Style.Font.SetBold().Font.SetFontColor(XLColor.White).Fill.SetBackgroundColor(XLColor.FromHtml("#1E3A8A"));
+                }
+                for (int i = 0; i < officers.Count; i++)
+                {
+                    var o = officers[i];
+                    wsOff.Cell(i + 4, 1).Value = i + 1;
+                    wsOff.Cell(i + 4, 2).Value = o.OfficerCode;
+                    wsOff.Cell(i + 4, 3).Value = o.FullName;
+                    wsOff.Cell(i + 4, 4).Value = o.Rank;
+                    wsOff.Cell(i + 4, 5).Value = o.Position;
+                    wsOff.Cell(i + 4, 6).Value = o.Unit;
+                    wsOff.Cell(i + 4, 7).Value = o.PhoneNumber;
+                    wsOff.Cell(i + 4, 8).Value = o.Email;
+                    wsOff.Cell(i + 4, 9).Value = o.Specialty;
+                    wsOff.Cell(i + 4, 10).Value = o.DateOfBirth.HasValue ? o.DateOfBirth.Value.ToString("dd/MM/yyyy") : "";
+                    wsOff.Cell(i + 4, 11).Value = o.EnlistmentDate.HasValue ? o.EnlistmentDate.Value.ToString("dd/MM/yyyy") : "";
+                }
+                wsOff.Columns().AdjustToContents();
+
+                // 3. Sheet Lớp học
                 var wsClass = workbook.Worksheets.Add("Trang lớp học");
                 wsClass.Cell("A1").Value = "DANH MỤC LỚP HỌC QUÂN ĐỘI";
                 wsClass.Range("A1:H1").Merge().Style.Font.SetBold().Font.SetFontSize(14).Font.SetFontColor(XLColor.FromHtml("#1E3A8A"));
@@ -722,52 +1163,48 @@ namespace QL_HocVien.Services
                     wsClass.Cell(3, i + 1).Value = cHeaders[i];
                     wsClass.Cell(3, i + 1).Style.Font.SetBold().Font.SetFontColor(XLColor.White).Fill.SetBackgroundColor(XLColor.FromHtml("#1E3A8A"));
                 }
-                int cRow = 4;
                 for (int i = 0; i < classes.Count; i++)
                 {
                     var cl = classes[i];
-                    wsClass.Cell(cRow, 1).Value = i + 1;
-                    wsClass.Cell(cRow, 2).Value = cl.ClassCode;
-                    wsClass.Cell(cRow, 3).Value = cl.ClassName;
-                    wsClass.Cell(cRow, 4).Value = cl.Unit;
-                    wsClass.Cell(cRow, 5).Value = cl.Major;
-                    wsClass.Cell(cRow, 6).Value = cl.OfficerInCharge;
-                    wsClass.Cell(cRow, 7).Value = cl.AcademicYear;
-                    wsClass.Cell(cRow, 8).Value = cl.Cadets.Count;
-                    cRow++;
+                    wsClass.Cell(i + 4, 1).Value = i + 1;
+                    wsClass.Cell(i + 4, 2).Value = cl.ClassCode;
+                    wsClass.Cell(i + 4, 3).Value = cl.ClassName;
+                    wsClass.Cell(i + 4, 4).Value = cl.Unit;
+                    wsClass.Cell(i + 4, 5).Value = cl.Major;
+                    wsClass.Cell(i + 4, 6).Value = cl.OfficerInCharge;
+                    wsClass.Cell(i + 4, 7).Value = cl.AcademicYear;
+                    wsClass.Cell(i + 4, 8).Value = cl.Cadets?.Count ?? 0;
                 }
                 wsClass.Columns().AdjustToContents();
 
-                // 3. Sheet Học viên
+                // 4. Sheet Học viên
                 var wsCadet = workbook.Worksheets.Add("Trang học viên");
-                wsCadet.Cell("A1").Value = "DANH SÁCH HỌC VIÊN TOÀN ĐƠN VỊ";
+                wsCadet.Cell("A1").Value = "DANH SÁCH HỌC VIÊN QUÂN ĐỘI";
                 wsCadet.Range("A1:K1").Merge().Style.Font.SetBold().Font.SetFontSize(14).Font.SetFontColor(XLColor.FromHtml("#1E3A8A"));
-                string[] hHeaders = { "STT", "Mã học viên", "Họ và tên", "Cấp bậc", "Chức vụ", "Đơn vị", "Lớp", "Số điện thoại", "Email", "Tuổi", "Giới tính" };
-                for (int i = 0; i < hHeaders.Length; i++)
+                string[] cdHeaders = { "STT", "Mã học viên", "Họ và tên", "Cấp bậc", "Chức vụ", "Đơn vị", "Lớp", "Số điện thoại", "Email", "Tuổi", "Giới tính" };
+                for (int i = 0; i < cdHeaders.Length; i++)
                 {
-                    wsCadet.Cell(3, i + 1).Value = hHeaders[i];
+                    wsCadet.Cell(3, i + 1).Value = cdHeaders[i];
                     wsCadet.Cell(3, i + 1).Style.Font.SetBold().Font.SetFontColor(XLColor.White).Fill.SetBackgroundColor(XLColor.FromHtml("#1E3A8A"));
                 }
-                int rRow = 4;
                 for (int i = 0; i < cadets.Count; i++)
                 {
                     var c = cadets[i];
-                    wsCadet.Cell(rRow, 1).Value = i + 1;
-                    wsCadet.Cell(rRow, 2).Value = c.CadetCode;
-                    wsCadet.Cell(rRow, 3).Value = c.FullName;
-                    wsCadet.Cell(rRow, 4).Value = c.Rank;
-                    wsCadet.Cell(rRow, 5).Value = c.Position;
-                    wsCadet.Cell(rRow, 6).Value = c.Unit;
-                    wsCadet.Cell(rRow, 7).Value = c.ClassName;
-                    wsCadet.Cell(rRow, 8).Value = c.PhoneNumber;
-                    wsCadet.Cell(rRow, 9).Value = c.Email;
-                    wsCadet.Cell(rRow, 10).Value = c.Age ?? 0;
-                    wsCadet.Cell(rRow, 11).Value = c.Gender;
-                    rRow++;
+                    wsCadet.Cell(i + 4, 1).Value = i + 1;
+                    wsCadet.Cell(i + 4, 2).Value = c.CadetCode;
+                    wsCadet.Cell(i + 4, 3).Value = c.FullName;
+                    wsCadet.Cell(i + 4, 4).Value = c.Rank;
+                    wsCadet.Cell(i + 4, 5).Value = c.Position;
+                    wsCadet.Cell(i + 4, 6).Value = c.Unit;
+                    wsCadet.Cell(i + 4, 7).Value = c.ClassName;
+                    wsCadet.Cell(i + 4, 8).Value = c.PhoneNumber;
+                    wsCadet.Cell(i + 4, 9).Value = c.Email;
+                    wsCadet.Cell(i + 4, 10).Value = c.Age ?? 0;
+                    wsCadet.Cell(i + 4, 11).Value = c.Gender;
                 }
                 wsCadet.Columns().AdjustToContents();
 
-                // 4. Sheet Môn học
+                // 5. Sheet Môn học
                 var wsSub = workbook.Worksheets.Add("Trang môn học");
                 wsSub.Cell("A1").Value = "DANH MỤC TIÊU CHUẨN RÈN LUYỆN THỂ LỰC";
                 wsSub.Range("A1:I1").Merge().Style.Font.SetBold().Font.SetFontSize(14).Font.SetFontColor(XLColor.FromHtml("#1E3A8A"));
@@ -777,24 +1214,22 @@ namespace QL_HocVien.Services
                     wsSub.Cell(3, i + 1).Value = sHeaders[i];
                     wsSub.Cell(3, i + 1).Style.Font.SetBold().Font.SetFontColor(XLColor.White).Fill.SetBackgroundColor(XLColor.FromHtml("#1E3A8A"));
                 }
-                int subRow = 4;
                 for (int i = 0; i < subjects.Count; i++)
                 {
                     var s = subjects[i];
-                    wsSub.Cell(subRow, 1).Value = i + 1;
-                    wsSub.Cell(subRow, 2).Value = s.SubjectCode;
-                    wsSub.Cell(subRow, 3).Value = s.SubjectName;
-                    wsSub.Cell(subRow, 4).Value = s.Category;
-                    wsSub.Cell(subRow, 5).Value = s.Unit;
-                    wsSub.Cell(subRow, 6).Value = s.ExcellentThreshold;
-                    wsSub.Cell(subRow, 7).Value = s.GoodThreshold;
-                    wsSub.Cell(subRow, 8).Value = s.PassThreshold;
-                    wsSub.Cell(subRow, 9).Value = s.IsHigherBetter ? "Có" : "Không";
-                    subRow++;
+                    wsSub.Cell(i + 4, 1).Value = i + 1;
+                    wsSub.Cell(i + 4, 2).Value = s.SubjectCode;
+                    wsSub.Cell(i + 4, 3).Value = s.SubjectName;
+                    wsSub.Cell(i + 4, 4).Value = s.Category;
+                    wsSub.Cell(i + 4, 5).Value = s.Unit;
+                    wsSub.Cell(i + 4, 6).Value = s.ExcellentThreshold;
+                    wsSub.Cell(i + 4, 7).Value = s.GoodThreshold;
+                    wsSub.Cell(i + 4, 8).Value = s.PassThreshold;
+                    wsSub.Cell(i + 4, 9).Value = s.IsHigherBetter ? "Có" : "Không";
                 }
                 wsSub.Columns().AdjustToContents();
 
-                // 5. Sheet Kiểm tra thể lực
+                // 6. Sheet Kiểm tra thể lực
                 var wsExam = workbook.Worksheets.Add("Kiểm tra thể lực");
                 wsExam.Cell("A1").Value = "BẢNG KẾT QUẢ KIỂM TRA ĐỊNH KỲ";
                 wsExam.Range("A1:K1").Merge().Style.Font.SetBold().Font.SetFontSize(14).Font.SetFontColor(XLColor.FromHtml("#15803D"));
@@ -804,26 +1239,24 @@ namespace QL_HocVien.Services
                     wsExam.Cell(3, i + 1).Value = eHeaders[i];
                     wsExam.Cell(3, i + 1).Style.Font.SetBold().Font.SetFontColor(XLColor.White).Fill.SetBackgroundColor(XLColor.FromHtml("#15803D"));
                 }
-                int exRow = 4;
                 for (int i = 0; i < records.Count; i++)
                 {
                     var r = records[i];
-                    wsExam.Cell(exRow, 1).Value = i + 1;
-                    wsExam.Cell(exRow, 2).Value = r.Cadet?.CadetCode ?? "";
-                    wsExam.Cell(exRow, 3).Value = r.Cadet?.FullName ?? "";
-                    wsExam.Cell(exRow, 4).Value = r.Cadet?.Unit ?? "";
-                    wsExam.Cell(exRow, 5).Value = r.Cadet?.ClassName ?? "";
-                    wsExam.Cell(exRow, 6).Value = r.Subject?.SubjectCode ?? "";
-                    wsExam.Cell(exRow, 7).Value = r.Subject?.SubjectName ?? "";
-                    wsExam.Cell(exRow, 8).Value = r.ScoreValue;
-                    wsExam.Cell(exRow, 9).Value = r.Grade;
-                    wsExam.Cell(exRow, 10).Value = r.ExamSession;
-                    wsExam.Cell(exRow, 11).Value = r.ExamDate.ToString("dd/MM/yyyy");
-                    exRow++;
+                    wsExam.Cell(i + 4, 1).Value = i + 1;
+                    wsExam.Cell(i + 4, 2).Value = r.Cadet?.CadetCode ?? "";
+                    wsExam.Cell(i + 4, 3).Value = r.Cadet?.FullName ?? "";
+                    wsExam.Cell(i + 4, 4).Value = r.Cadet?.Unit ?? "";
+                    wsExam.Cell(i + 4, 5).Value = r.Cadet?.ClassName ?? "";
+                    wsExam.Cell(i + 4, 6).Value = r.Subject?.SubjectCode ?? "";
+                    wsExam.Cell(i + 4, 7).Value = r.Subject?.SubjectName ?? "";
+                    wsExam.Cell(i + 4, 8).Value = r.ScoreValue;
+                    wsExam.Cell(i + 4, 9).Value = r.Grade;
+                    wsExam.Cell(i + 4, 10).Value = r.ExamSession;
+                    wsExam.Cell(i + 4, 11).Value = r.ExamDate.ToString("dd/MM/yyyy");
                 }
                 wsExam.Columns().AdjustToContents();
 
-                // 6. Sheet Học viên chưa đạt (Rèn luyện bổ sung)
+                // 7. Sheet Học viên chưa đạt (Rèn luyện bổ sung)
                 var wsFail = workbook.Worksheets.Add("Rèn luyện bổ sung");
                 wsFail.Cell("A1").Value = "DANH SÁCH HỌC VIÊN CHƯA ĐẠT CẦN RÈN LUYỆN BỔ SUNG";
                 wsFail.Range("A1:H1").Merge().Style.Font.SetBold().Font.SetFontSize(14).Font.SetFontColor(XLColor.FromHtml("#DC2626"));
@@ -833,24 +1266,103 @@ namespace QL_HocVien.Services
                     wsFail.Cell(3, i + 1).Value = fHeaders[i];
                     wsFail.Cell(3, i + 1).Style.Font.SetBold().Font.SetFontColor(XLColor.White).Fill.SetBackgroundColor(XLColor.FromHtml("#DC2626"));
                 }
-                int fRow = 4;
                 for (int i = 0; i < failedRecords.Count; i++)
                 {
                     var f = failedRecords[i];
-                    wsFail.Cell(fRow, 1).Value = i + 1;
-                    wsFail.Cell(fRow, 2).Value = f.Cadet?.CadetCode ?? "";
-                    wsFail.Cell(fRow, 3).Value = f.Cadet?.FullName ?? "";
-                    wsFail.Cell(fRow, 4).Value = f.Cadet?.Unit ?? "";
-                    wsFail.Cell(fRow, 5).Value = f.Cadet?.ClassName ?? "";
-                    wsFail.Cell(fRow, 6).Value = f.Subject?.SubjectName ?? "";
-                    wsFail.Cell(fRow, 7).Value = f.ScoreValue;
-                    wsFail.Cell(fRow, 8).Value = f.ExamDate.ToString("dd/MM/yyyy");
-                    fRow++;
+                    wsFail.Cell(i + 4, 1).Value = i + 1;
+                    wsFail.Cell(i + 4, 2).Value = f.Cadet?.CadetCode ?? "";
+                    wsFail.Cell(i + 4, 3).Value = f.Cadet?.FullName ?? "";
+                    wsFail.Cell(i + 4, 4).Value = f.Cadet?.Unit ?? "";
+                    wsFail.Cell(i + 4, 5).Value = f.Cadet?.ClassName ?? "";
+                    wsFail.Cell(i + 4, 6).Value = f.Subject?.SubjectName ?? "";
+                    wsFail.Cell(i + 4, 7).Value = f.ScoreValue;
+                    wsFail.Cell(i + 4, 8).Value = f.ExamDate.ToString("dd/MM/yyyy");
                 }
                 wsFail.Columns().AdjustToContents();
 
+                // 8. Sheet Danh mục tổ chức: Cấp bậc
+                var wsRank = workbook.Worksheets.Add("Cấp bậc");
+                wsRank.Cell("A1").Value = "DANH MỤC CẤP BẬC QUÂN HÀM";
+                wsRank.Range("A1:E1").Merge().Style.Font.SetBold().Font.SetFontSize(14).Font.SetFontColor(XLColor.FromHtml("#1E3A8A"));
+                string[] rHeaders = { "STT", "Mã cấp bậc", "Tên cấp bậc", "Nhóm cấp bậc", "Thứ tự hiển thị" };
+                for (int i = 0; i < rHeaders.Length; i++)
+                {
+                    wsRank.Cell(3, i + 1).Value = rHeaders[i];
+                    wsRank.Cell(3, i + 1).Style.Font.SetBold().Font.SetFontColor(XLColor.White).Fill.SetBackgroundColor(XLColor.FromHtml("#1E3A8A"));
+                }
+                for (int i = 0; i < ranks.Count; i++)
+                {
+                    wsRank.Cell(i + 4, 1).Value = i + 1;
+                    wsRank.Cell(i + 4, 2).Value = ranks[i].RankCode;
+                    wsRank.Cell(i + 4, 3).Value = ranks[i].RankName;
+                    wsRank.Cell(i + 4, 4).Value = ranks[i].RankGroup;
+                    wsRank.Cell(i + 4, 5).Value = ranks[i].DisplayOrder;
+                }
+                wsRank.Columns().AdjustToContents();
+
+                // 9. Sheet Chức vụ
+                var wsPos = workbook.Worksheets.Add("Chức vụ");
+                wsPos.Cell("A1").Value = "DANH MỤC CHỨC VỤ QUÂN SỰ";
+                wsPos.Range("A1:E1").Merge().Style.Font.SetBold().Font.SetFontSize(14).Font.SetFontColor(XLColor.FromHtml("#1E3A8A"));
+                string[] pHeaders = { "STT", "Mã chức vụ", "Tên chức vụ", "Nhóm chức vụ", "Thứ tự hiển thị" };
+                for (int i = 0; i < pHeaders.Length; i++)
+                {
+                    wsPos.Cell(3, i + 1).Value = pHeaders[i];
+                    wsPos.Cell(3, i + 1).Style.Font.SetBold().Font.SetFontColor(XLColor.White).Fill.SetBackgroundColor(XLColor.FromHtml("#1E3A8A"));
+                }
+                for (int i = 0; i < positions.Count; i++)
+                {
+                    wsPos.Cell(i + 4, 1).Value = i + 1;
+                    wsPos.Cell(i + 4, 2).Value = positions[i].PositionCode;
+                    wsPos.Cell(i + 4, 3).Value = positions[i].PositionName;
+                    wsPos.Cell(i + 4, 4).Value = positions[i].PositionGroup;
+                    wsPos.Cell(i + 4, 5).Value = positions[i].DisplayOrder;
+                }
+                wsPos.Columns().AdjustToContents();
+
+                // 10. Sheet Đơn vị
+                var wsUnit = workbook.Worksheets.Add("Đơn vị");
+                wsUnit.Cell("A1").Value = "DANH MỤC ĐƠN VỊ QUẢN LÝ";
+                wsUnit.Range("A1:F1").Merge().Style.Font.SetBold().Font.SetFontSize(14).Font.SetFontColor(XLColor.FromHtml("#1E3A8A"));
+                string[] uHeaders = { "STT", "Mã đơn vị", "Tên đơn vị", "Đơn vị cấp trên", "Người chỉ huy", "Số điện thoại" };
+                for (int i = 0; i < uHeaders.Length; i++)
+                {
+                    wsUnit.Cell(3, i + 1).Value = uHeaders[i];
+                    wsUnit.Cell(3, i + 1).Style.Font.SetBold().Font.SetFontColor(XLColor.White).Fill.SetBackgroundColor(XLColor.FromHtml("#1E3A8A"));
+                }
+                for (int i = 0; i < units.Count; i++)
+                {
+                    wsUnit.Cell(i + 4, 1).Value = i + 1;
+                    wsUnit.Cell(i + 4, 2).Value = units[i].UnitCode;
+                    wsUnit.Cell(i + 4, 3).Value = units[i].UnitName;
+                    wsUnit.Cell(i + 4, 4).Value = units[i].ParentUnit;
+                    wsUnit.Cell(i + 4, 5).Value = units[i].CommanderName;
+                    wsUnit.Cell(i + 4, 6).Value = units[i].ContactPhone;
+                }
+                wsUnit.Columns().AdjustToContents();
+
+                // 11. Sheet Chuyên ngành
+                var wsMajor = workbook.Worksheets.Add("Chuyên ngành");
+                wsMajor.Cell("A1").Value = "DANH MỤC CHUYÊN NGÀNH ĐÀO TẠO";
+                wsMajor.Range("A1:E1").Merge().Style.Font.SetBold().Font.SetFontSize(14).Font.SetFontColor(XLColor.FromHtml("#1E3A8A"));
+                string[] mHeaders = { "STT", "Mã chuyên ngành", "Tên chuyên ngành", "Thời gian đào tạo", "Khoa phụ trách" };
+                for (int i = 0; i < mHeaders.Length; i++)
+                {
+                    wsMajor.Cell(3, i + 1).Value = mHeaders[i];
+                    wsMajor.Cell(3, i + 1).Style.Font.SetBold().Font.SetFontColor(XLColor.White).Fill.SetBackgroundColor(XLColor.FromHtml("#1E3A8A"));
+                }
+                for (int i = 0; i < majors.Count; i++)
+                {
+                    wsMajor.Cell(i + 4, 1).Value = i + 1;
+                    wsMajor.Cell(i + 4, 2).Value = majors[i].MajorCode;
+                    wsMajor.Cell(i + 4, 3).Value = majors[i].MajorName;
+                    wsMajor.Cell(i + 4, 4).Value = majors[i].TrainingDuration;
+                    wsMajor.Cell(i + 4, 5).Value = majors[i].Department;
+                }
+                wsMajor.Columns().AdjustToContents();
+
                 workbook.SaveAs(filePath);
-                return (true, $"Xuất toàn bộ dữ liệu thành công ra file Excel ({classes.Count} lớp học, {cadets.Count} học viên, {subjects.Count} môn, {records.Count} lượt kiểm tra trên 6 sheets).");
+                return (true, $"Xuất toàn bộ dữ liệu thành công ra file Excel ({classes.Count} lớp học, {cadets.Count} học viên, {officers.Count} cán bộ, {subjects.Count} môn, {records.Count} lượt kiểm tra trên 11 sheets).");
             }
             catch (Exception ex)
             {
@@ -858,18 +1370,22 @@ namespace QL_HocVien.Services
             }
         }
 
-        public async Task<(bool Success, string Message, int ClassesCount, int CadetsCount, int SubjectsCount, int ExamsCount)> ImportAllDataFromExcelAsync(string filePath)
+        public async Task<(bool Success, string Message, int ClassesCount, int CadetsCount, int SubjectsCount, int ExamsCount, int OfficersCount)> ImportAllDataFromExcelAsync(string filePath)
         {
             try
             {
                 if (!File.Exists(filePath))
-                    return (false, "Tệp không tồn tại.", 0, 0, 0, 0);
+                    return (false, "Tệp không tồn tại.", 0, 0, 0, 0, 0);
 
-                // 1. Nhập lớp học trước
+                // 1. Nhập danh mục tổ chức trước
+                var catResult = await ImportCatalogsFromExcelAsync(filePath);
+                // 2. Nhập cán bộ
+                var offResult = await ImportOfficersFromExcelAsync(filePath);
+                // 3. Nhập lớp học
                 var classResult = await ImportClassesFromExcelAsync(filePath);
-                // 2. Nhập môn học
+                // 4. Nhập môn học
                 var subResult = await ImportSubjectsFromExcelAsync(filePath);
-                // 3. Nhập học viên
+                // 5. Nhập học viên
                 var cadetResult = await ImportCadetsFromExcelAsync(filePath);
                 // 4. Nhập kết quả kiểm tra
                 var examResult = await ImportExamRecordsFromExcelAsync(filePath);
@@ -878,12 +1394,13 @@ namespace QL_HocVien.Services
                 int cCount = cadetResult.Cadets.Count;
                 int sCount = subResult.Subjects.Count;
                 int eCount = examResult.Records.Count;
+                int offCount = offResult.Officers.Count;
 
-                return (true, $"Khôi phục/Nhập toàn bộ thành công: {clCount} lớp học, {cCount} học viên, {sCount} môn học, {eCount} lượt kiểm tra thể lực.", clCount, cCount, sCount, eCount);
+                return (true, $"Khôi phục/Nhập toàn bộ thành công: {clCount} lớp học, {cCount} học viên, {offCount} cán bộ, {sCount} môn học, {eCount} lượt kiểm tra thể lực.", clCount, cCount, sCount, eCount, offCount);
             }
             catch (Exception ex)
             {
-                return (false, $"Lỗi nhập toàn bộ dữ liệu: {ex.Message}", 0, 0, 0, 0);
+                return (false, $"Lỗi nhập toàn bộ dữ liệu: {ex.Message}", 0, 0, 0, 0, 0);
             }
         }
         #endregion

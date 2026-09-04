@@ -36,10 +36,93 @@ namespace QL_HocVien.Data
                 // Bỏ qua nếu bảng đã tồn tại
             }
 
+            // Đảm bảo các bảng Danh mục Tổ chức Quân sự và Cán bộ tồn tại
+            try
+            {
+                context.Database.ExecuteSqlRaw(@"
+                    CREATE TABLE IF NOT EXISTS ""MilitaryRanks"" (
+                        ""Id"" INTEGER NOT NULL CONSTRAINT ""PK_MilitaryRanks"" PRIMARY KEY AUTOINCREMENT,
+                        ""RankCode"" TEXT NOT NULL,
+                        ""RankName"" TEXT NOT NULL,
+                        ""RankGroup"" TEXT NOT NULL,
+                        ""DisplayOrder"" INTEGER NOT NULL,
+                        ""Description"" TEXT NOT NULL,
+                        ""CreatedAt"" TEXT NOT NULL
+                    );
+                    CREATE UNIQUE INDEX IF NOT EXISTS ""IX_MilitaryRanks_RankCode"" ON ""MilitaryRanks"" (""RankCode"");
+
+                    CREATE TABLE IF NOT EXISTS ""MilitaryPositions"" (
+                        ""Id"" INTEGER NOT NULL CONSTRAINT ""PK_MilitaryPositions"" PRIMARY KEY AUTOINCREMENT,
+                        ""PositionCode"" TEXT NOT NULL,
+                        ""PositionName"" TEXT NOT NULL,
+                        ""PositionGroup"" TEXT NOT NULL,
+                        ""DisplayOrder"" INTEGER NOT NULL,
+                        ""Description"" TEXT NOT NULL,
+                        ""CreatedAt"" TEXT NOT NULL
+                    );
+                    CREATE UNIQUE INDEX IF NOT EXISTS ""IX_MilitaryPositions_PositionCode"" ON ""MilitaryPositions"" (""PositionCode"");
+
+                    CREATE TABLE IF NOT EXISTS ""MilitaryUnits"" (
+                        ""Id"" INTEGER NOT NULL CONSTRAINT ""PK_MilitaryUnits"" PRIMARY KEY AUTOINCREMENT,
+                        ""UnitCode"" TEXT NOT NULL,
+                        ""UnitName"" TEXT NOT NULL,
+                        ""ParentUnit"" TEXT NOT NULL,
+                        ""CommanderName"" TEXT NOT NULL,
+                        ""ContactPhone"" TEXT NOT NULL,
+                        ""Description"" TEXT NOT NULL,
+                        ""CreatedAt"" TEXT NOT NULL
+                    );
+                    CREATE UNIQUE INDEX IF NOT EXISTS ""IX_MilitaryUnits_UnitCode"" ON ""MilitaryUnits"" (""UnitCode"");
+
+                    CREATE TABLE IF NOT EXISTS ""MilitaryMajors"" (
+                        ""Id"" INTEGER NOT NULL CONSTRAINT ""PK_MilitaryMajors"" PRIMARY KEY AUTOINCREMENT,
+                        ""MajorCode"" TEXT NOT NULL,
+                        ""MajorName"" TEXT NOT NULL,
+                        ""TrainingDuration"" TEXT NOT NULL,
+                        ""Department"" TEXT NOT NULL,
+                        ""Description"" TEXT NOT NULL,
+                        ""CreatedAt"" TEXT NOT NULL
+                    );
+                    CREATE UNIQUE INDEX IF NOT EXISTS ""IX_MilitaryMajors_MajorCode"" ON ""MilitaryMajors"" (""MajorCode"");
+
+                    CREATE TABLE IF NOT EXISTS ""Officers"" (
+                        ""Id"" INTEGER NOT NULL CONSTRAINT ""PK_Officers"" PRIMARY KEY AUTOINCREMENT,
+                        ""OfficerCode"" TEXT NOT NULL,
+                        ""FullName"" TEXT NOT NULL,
+                        ""Rank"" TEXT NOT NULL,
+                        ""Position"" TEXT NOT NULL,
+                        ""Unit"" TEXT NOT NULL,
+                        ""PhoneNumber"" TEXT NOT NULL,
+                        ""Email"" TEXT NOT NULL,
+                        ""Specialty"" TEXT NOT NULL,
+                        ""DateOfBirth"" TEXT NULL,
+                        ""EnlistmentDate"" TEXT NULL,
+                        ""Notes"" TEXT NOT NULL,
+                        ""CreatedAt"" TEXT NOT NULL,
+                        ""UserId"" INTEGER NULL REFERENCES ""Users""(""Id"") ON DELETE SET NULL
+                    );
+                    CREATE UNIQUE INDEX IF NOT EXISTS ""IX_Officers_OfficerCode"" ON ""Officers"" (""OfficerCode"");
+                ");
+            }
+            catch
+            {
+                // Bỏ qua nếu bảng đã tồn tại
+            }
+
             // Đảm bảo cột ClassId tồn tại trong bảng Cadets
             try
             {
                 context.Database.ExecuteSqlRaw(@"ALTER TABLE ""Cadets"" ADD COLUMN ""ClassId"" INTEGER NULL REFERENCES ""MilitaryClasses""(""Id"") ON DELETE SET NULL;");
+            }
+            catch
+            {
+                // Bỏ qua nếu cột đã tồn tại
+            }
+
+            // Đảm bảo cột OfficerId tồn tại trong bảng MilitaryClasses
+            try
+            {
+                context.Database.ExecuteSqlRaw(@"ALTER TABLE ""MilitaryClasses"" ADD COLUMN ""OfficerId"" INTEGER NULL REFERENCES ""Officers""(""Id"") ON DELETE SET NULL;");
             }
             catch
             {
@@ -184,9 +267,145 @@ namespace QL_HocVien.Data
                 context.SaveChanges();
             }
 
-            // 3. Seed danh mục lớp học quân đội mẫu
+            // 3. Seed Danh mục Cấp bậc quân sự
+            if (!context.MilitaryRanks.Any())
+            {
+                var ranks = new List<MilitaryRank>
+                {
+                    new() { RankCode = "BN", RankName = "Binh nhì", RankGroup = "Hạ sĩ quan - Binh sĩ", DisplayOrder = 1, Description = "Cấp bậc chiến sĩ mới" },
+                    new() { RankCode = "BN1", RankName = "Binh nhất", RankGroup = "Hạ sĩ quan - Binh sĩ", DisplayOrder = 2, Description = "Chiến sĩ đủ niên hạn" },
+                    new() { RankCode = "HS", RankName = "Hạ sĩ", RankGroup = "Hạ sĩ quan - Binh sĩ", DisplayOrder = 3, Description = "Phó tiểu đội trưởng" },
+                    new() { RankCode = "TS", RankName = "Trung sĩ", RankGroup = "Hạ sĩ quan - Binh sĩ", DisplayOrder = 4, Description = "Tiểu đội trưởng" },
+                    new() { RankCode = "ThS", RankName = "Thượng sĩ", RankGroup = "Hạ sĩ quan - Binh sĩ", DisplayOrder = 5, Description = "Học viên năm cuối / Trung đội phó" },
+                    new() { RankCode = "CU", RankName = "Chuẩn úy", RankGroup = "Sĩ quan cấp Úy", DisplayOrder = 6, Description = "Quân nhân chuyên nghiệp" },
+                    new() { RankCode = "TU", RankName = "Thiếu úy", RankGroup = "Sĩ quan cấp Úy", DisplayOrder = 7, Description = "Trung đội trưởng" },
+                    new() { RankCode = "TrU", RankName = "Trung úy", RankGroup = "Sĩ quan cấp Úy", DisplayOrder = 8, Description = "Đại đội phó / Chính trị viên phó" },
+                    new() { RankCode = "ThgU", RankName = "Thượng úy", RankGroup = "Sĩ quan cấp Úy", DisplayOrder = 9, Description = "Đại đội trưởng / Chính trị viên" },
+                    new() { RankCode = "DU", RankName = "Đại úy", RankGroup = "Sĩ quan cấp Úy", DisplayOrder = 10, Description = "Tiểu đoàn phó / Trợ lý cơ quan" },
+                    new() { RankCode = "ThTa", RankName = "Thiếu tá", RankGroup = "Sĩ quan cấp Tá", DisplayOrder = 11, Description = "Tiểu đoàn trưởng / Chủ nhiệm khoa" },
+                    new() { RankCode = "TrTa", RankName = "Trung tá", RankGroup = "Sĩ quan cấp Tá", DisplayOrder = 12, Description = "Trung đoàn phó / Trưởng ban" },
+                    new() { RankCode = "ThgTa", RankName = "Thượng tá", RankGroup = "Sĩ quan cấp Tá", DisplayOrder = 13, Description = "Trung đoàn trưởng / Phó viện trưởng" },
+                    new() { RankCode = "DTa", RankName = "Đại tá", RankGroup = "Sĩ quan cấp Tá", DisplayOrder = 14, Description = "Sư đoàn trưởng / Viện trưởng" },
+                    new() { RankCode = "ThTuong", RankName = "Thiếu tướng", RankGroup = "Sĩ quan cấp Tướng", DisplayOrder = 15, Description = "Tư lệnh / Giám đốc học viện" }
+                };
+                context.MilitaryRanks.AddRange(ranks);
+                context.SaveChanges();
+            }
+
+            // 4. Seed Danh mục Chức vụ quân sự
+            if (!context.MilitaryPositions.Any())
+            {
+                var positions = new List<MilitaryPosition>
+                {
+                    new() { PositionCode = "HV", PositionName = "Học viên", PositionGroup = "Học viên / Chiến sĩ", DisplayOrder = 1, Description = "Học viên đào tạo cơ bản" },
+                    new() { PositionCode = "CS", PositionName = "Chiến sĩ", PositionGroup = "Học viên / Chiến sĩ", DisplayOrder = 2, Description = "Chiến sĩ nghĩa vụ" },
+                    new() { PositionCode = "TDT", PositionName = "Tiểu đội trưởng", PositionGroup = "Cán bộ Phân đội", DisplayOrder = 3, Description = "Chỉ huy tiểu đội" },
+                    new() { PositionCode = "LP", PositionName = "Lớp phó", PositionGroup = "Cán bộ Phân đội", DisplayOrder = 4, Description = "Quản lý nề nếp, học tập của lớp" },
+                    new() { PositionCode = "LT", PositionName = "Lớp trưởng", PositionGroup = "Cán bộ Phân đội", DisplayOrder = 5, Description = "Chỉ huy toàn diện lớp học viên" },
+                    new() { PositionCode = "CTP", PositionName = "Chính trị viên phó", PositionGroup = "Cán bộ Chỉ huy", DisplayOrder = 6, Description = "Phụ trách công tác tư tưởng, thanh niên" },
+                    new() { PositionCode = "CTT", PositionName = "Chính trị viên", PositionGroup = "Cán bộ Chỉ huy", DisplayOrder = 7, Description = "Chủ trì công tác Đảng, công tác chính trị" },
+                    new() { PositionCode = "DDP", PositionName = "Đại đội phó", PositionGroup = "Cán bộ Chỉ huy", DisplayOrder = 8, Description = "Phụ trách huấn luyện quân sự, thể lực" },
+                    new() { PositionCode = "DDT", PositionName = "Đại đội trưởng", PositionGroup = "Cán bộ Chỉ huy", DisplayOrder = 9, Description = "Chỉ huy quân sự đại đội" },
+                    new() { PositionCode = "CBQL", PositionName = "Cán bộ chủ nhiệm lớp", PositionGroup = "Cán bộ Phân đội", DisplayOrder = 10, Description = "Sĩ quan trực tiếp theo dõi, quản lý lớp" },
+                    new() { PositionCode = "GV", PositionName = "Giảng viên quân sự", PositionGroup = "Cán bộ Giảng dạy", DisplayOrder = 11, Description = "Giảng viên khoa chiến thuật, kỹ thuật" },
+                    new() { PositionCode = "TLHL", PositionName = "Trợ lý huấn luyện thể lực", PositionGroup = "Cán bộ Phân đội", DisplayOrder = 12, Description = "Kiểm tra, theo dõi rèn luyện thể lực TT32" }
+                };
+                context.MilitaryPositions.AddRange(positions);
+                context.SaveChanges();
+            }
+
+            // 5. Seed Danh mục Đơn vị quân đội
+            if (!context.MilitaryUnits.Any())
+            {
+                var units = new List<MilitaryUnit>
+                {
+                    new() { UnitCode = "c1", UnitName = "Đại đội 1", ParentUnit = "Tiểu đoàn 1", CommanderName = "Đại úy Nguyễn Văn Hùng", ContactPhone = "0981111001", Description = "Đại đội đào tạo Chỉ huy Tham mưu" },
+                    new() { UnitCode = "c2", UnitName = "Đại đội 2", ParentUnit = "Tiểu đoàn 1", CommanderName = "Đại úy Trần Văn Quân", ContactPhone = "0981111002", Description = "Đại đội đào tạo Hậu cần Quân sự" },
+                    new() { UnitCode = "c3", UnitName = "Đại đội 3", ParentUnit = "Tiểu đoàn 1", CommanderName = "Thiếu tá Lê Hồng Sơn", ContactPhone = "0981111003", Description = "Đại đội đào tạo Kỹ thuật Quân sự" },
+                    new() { UnitCode = "c4", UnitName = "Đại đội 4", ParentUnit = "Tiểu đoàn 1", CommanderName = "Đại úy Phạm Văn Toàn", ContactPhone = "0981111004", Description = "Đại đội đào tạo Trinh sát Đặc nhiệm" },
+                    new() { UnitCode = "d1", UnitName = "Tiểu đoàn 1", ParentUnit = "Trung đoàn 1", CommanderName = "Trung tá Hoàng Minh Tuấn", ContactPhone = "0981111010", Description = "Tiểu đoàn quản lý khóa K26" },
+                    new() { UnitCode = "d2", UnitName = "Tiểu đoàn 2", ParentUnit = "Trung đoàn 1", CommanderName = "Trung tá Vũ Đình Cường", ContactPhone = "0981111020", Description = "Tiểu đoàn quản lý khóa K27" }
+                };
+                context.MilitaryUnits.AddRange(units);
+                context.SaveChanges();
+            }
+
+            // 6. Seed Danh mục Chuyên ngành đào tạo
+            if (!context.MilitaryMajors.Any())
+            {
+                var majors = new List<MilitaryMajor>
+                {
+                    new() { MajorCode = "CHTM", MajorName = "Chỉ huy Tham mưu Lục quân", TrainingDuration = "4 năm", Department = "Khoa Chiến thuật", Description = "Đào tạo sĩ quan chỉ huy tham mưu cấp phân đội" },
+                    new() { MajorCode = "HCQS", MajorName = "Hậu cần Quân sự", TrainingDuration = "4 năm", Department = "Khoa Hậu cần", Description = "Đào tạo nghiệp vụ quân nhu, xăng dầu, doanh trại và vận tải" },
+                    new() { MajorCode = "KTQS", MajorName = "Kỹ thuật Vũ khí - Khí tài", TrainingDuration = "4.5 năm", Department = "Khoa Kỹ thuật", Description = "Đào tạo kỹ sư chỉ huy kỹ thuật khai thác bảo đảm vũ khí" },
+                    new() { MajorCode = "TSDN", MajorName = "Trinh sát Đặc nhiệm", TrainingDuration = "4 năm", Department = "Khoa Trinh sát", Description = "Đào tạo sĩ quan trinh sát cơ động, đặc nhiệm luồn sâu" },
+                    new() { MajorCode = "TTLN", MajorName = "Thông tin Liên lạc", TrainingDuration = "4 năm", Department = "Khoa Thông tin", Description = "Đào tạo chỉ huy bảo đảm mạng lưới thông tin tác chiến" }
+                };
+                context.MilitaryMajors.AddRange(majors);
+                context.SaveChanges();
+            }
+
+            // 7. Seed Cán bộ quân sự mẫu
+            if (!context.Officers.Any())
+            {
+                var canbo01User = context.Users.FirstOrDefault(u => u.Username == "canbo01");
+                var officers = new List<Officer>
+                {
+                    new()
+                    {
+                        OfficerCode = "CB-001",
+                        FullName = "Nguyễn Văn Bình",
+                        Rank = "Thiếu tá",
+                        Position = "Chính trị viên",
+                        Unit = "Đại đội 1",
+                        PhoneNumber = "0981234001",
+                        Email = "binh.nv@mod.gov.vn",
+                        Specialty = "Công tác Đảng, chính trị & Quản lý học viên",
+                        DateOfBirth = new DateTime(1985, 4, 12),
+                        EnlistmentDate = new DateTime(2003, 9, 1),
+                        Notes = "Cán bộ chủ nhiệm phụ trách lớp K26A"
+                    },
+                    new()
+                    {
+                        OfficerCode = "CB-002",
+                        FullName = "Trần Văn Quân",
+                        Rank = "Đại úy",
+                        Position = "Đại đội trưởng",
+                        Unit = "Đại đội 2",
+                        PhoneNumber = "0912345678",
+                        Email = "quan.tv@mod.gov.vn",
+                        Specialty = "Chỉ huy tham mưu & Huấn luyện thể lực",
+                        DateOfBirth = new DateTime(1988, 7, 24),
+                        EnlistmentDate = new DateTime(2006, 9, 1),
+                        UserId = canbo01User?.Id,
+                        Notes = "Cán bộ chủ nhiệm phụ trách lớp K26B"
+                    },
+                    new()
+                    {
+                        OfficerCode = "CB-003",
+                        FullName = "Lê Hồng Sơn",
+                        Rank = "Thiếu tá",
+                        Position = "Trợ lý Huấn luyện",
+                        Unit = "Đại đội 3",
+                        PhoneNumber = "0981234003",
+                        Email = "son.lh@mod.gov.vn",
+                        Specialty = "Khai thác bảo đảm vũ khí & Kiểm tra thể lực",
+                        DateOfBirth = new DateTime(1986, 11, 30),
+                        EnlistmentDate = new DateTime(2004, 9, 1),
+                        Notes = "Cán bộ phụ trách lớp K26C"
+                    }
+                };
+                context.Officers.AddRange(officers);
+                context.SaveChanges();
+            }
+
+            // 8. Seed danh mục lớp học quân đội mẫu
             if (!context.MilitaryClasses.Any())
             {
+                var offBinh = context.Officers.FirstOrDefault(o => o.OfficerCode == "CB-001");
+                var offQuan = context.Officers.FirstOrDefault(o => o.OfficerCode == "CB-002");
+                var offSon = context.Officers.FirstOrDefault(o => o.OfficerCode == "CB-003");
+
                 var classes = new List<MilitaryClass>
                 {
                     new MilitaryClass
@@ -196,6 +415,7 @@ namespace QL_HocVien.Data
                         Unit = "Đại đội 1",
                         Major = "Chỉ huy Tham mưu Lục quân",
                         OfficerInCharge = "Thiếu tá Nguyễn Văn Bình",
+                        OfficerId = offBinh?.Id,
                         AcademicYear = "2023 - 2027",
                         Description = "Đào tạo sĩ quan chỉ huy tham mưu cấp phân đội"
                     },
@@ -206,6 +426,7 @@ namespace QL_HocVien.Data
                         Unit = "Đại đội 2",
                         Major = "Hậu cần Quân sự",
                         OfficerInCharge = "Đại úy Trần Văn Quân",
+                        OfficerId = offQuan?.Id,
                         AcademicYear = "2023 - 2027",
                         Description = "Đào tạo chuyên môn đảm bảo hậu cần, quân nhu, xăng dầu"
                     },
@@ -216,6 +437,7 @@ namespace QL_HocVien.Data
                         Unit = "Đại đội 3",
                         Major = "Kỹ thuật Vũ khí - Khí tài",
                         OfficerInCharge = "Thiếu tá Lê Hồng Sơn",
+                        OfficerId = offSon?.Id,
                         AcademicYear = "2023 - 2027",
                         Description = "Đào tạo kỹ sư chỉ huy kỹ thuật khai thác bảo đảm vũ khí"
                     }

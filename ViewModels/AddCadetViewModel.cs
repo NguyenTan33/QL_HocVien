@@ -12,6 +12,7 @@ namespace QL_HocVien.ViewModels
     {
         private readonly ICadetService _cadetService;
         private readonly IClassService _classService;
+        private readonly ICatalogService _catalogService;
 
         public ObservableCollection<MilitaryClass> AvailableClasses { get; } = new();
 
@@ -85,10 +86,11 @@ namespace QL_HocVien.ViewModels
 
         public event Action? OnCadetSaved;
 
-        public AddCadetViewModel(ICadetService cadetService, IClassService classService)
+        public AddCadetViewModel(ICadetService cadetService, IClassService classService, ICatalogService catalogService)
         {
             _cadetService = cadetService;
             _classService = classService;
+            _catalogService = catalogService;
             Title = "Thêm Mới Học Viên";
 
             _ = InitializeAsync();
@@ -96,8 +98,46 @@ namespace QL_HocVien.ViewModels
 
         private async Task InitializeAsync()
         {
+            await LoadCatalogDropdownsAsync();
             await LoadAvailableClassesAsync();
             await GenerateSuggestedCodeAsync();
+        }
+
+        private async Task LoadCatalogDropdownsAsync()
+        {
+            try
+            {
+                var ranks = await _catalogService.GetRankDropdownAsync();
+                if (ranks.Any())
+                {
+                    RankList.Clear();
+                    foreach (var r in ranks) RankList.Add(r);
+                    if (string.IsNullOrWhiteSpace(SelectedRank) || !RankList.Contains(SelectedRank))
+                        SelectedRank = RankList[0];
+                }
+
+                var units = await _catalogService.GetUnitDropdownAsync();
+                if (units.Any())
+                {
+                    UnitList.Clear();
+                    foreach (var u in units) UnitList.Add(u);
+                    if (string.IsNullOrWhiteSpace(SelectedUnit) || !UnitList.Contains(SelectedUnit))
+                        SelectedUnit = UnitList[0];
+                }
+
+                var positions = await _catalogService.GetPositionDropdownAsync();
+                if (positions.Any())
+                {
+                    PositionList.Clear();
+                    foreach (var p in positions) PositionList.Add(p);
+                    if (string.IsNullOrWhiteSpace(SelectedPosition) || !PositionList.Contains(SelectedPosition))
+                        SelectedPosition = PositionList[0];
+                }
+            }
+            catch
+            {
+                // Giữ giá trị mặc định nếu có ngoại lệ
+            }
         }
 
         public async Task LoadAvailableClassesAsync()
