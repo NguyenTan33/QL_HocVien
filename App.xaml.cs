@@ -99,6 +99,7 @@ namespace QL_HocVien
             services.AddScoped<IPositionRepository, PositionRepository>();
             services.AddScoped<IUnitRepository, UnitRepository>();
             services.AddScoped<IMajorRepository, MajorRepository>();
+            services.AddScoped<ITrainingEventRepository, TrainingEventRepository>();
 
             // Đăng ký Services (SOLID - SRP, OCP)
             services.AddSingleton<IEmailService, EmailService>();
@@ -112,6 +113,8 @@ namespace QL_HocVien
             services.AddScoped<ICatalogService, CatalogService>();
             services.AddSingleton<IFileDialogService, FileDialogService>();
             services.AddScoped<IExcelService, ExcelService>();
+            services.AddScoped<ITrainingEventService, TrainingEventService>();
+            services.AddScoped<IAnalyticsService, AnalyticsService>();
 
             // Đăng ký Infrastructure (Validation Factory & Security Services - OOP & SOLID)
             services.AddAppInfrastructureValidation();
@@ -129,6 +132,8 @@ namespace QL_HocVien
             services.AddTransient<AddCadetViewModel>();
             services.AddTransient<SubjectManagementViewModel>();
             services.AddTransient<PhysicalExamViewModel>();
+            services.AddTransient<ExamAnalyticsViewModel>();
+            services.AddTransient<TrainingTimelineViewModel>();
             services.AddTransient<SettingsViewModel>();
 
             // Đăng ký Windows

@@ -95,6 +95,20 @@ namespace QL_HocVien.ViewModels
         }
 
         [RelayCommand]
+        public void NavigateToExamAnalytics()
+        {
+            ActiveMenu = "ExamAnalytics";
+            CurrentView = _serviceProvider.GetRequiredService<ExamAnalyticsViewModel>();
+        }
+
+        [RelayCommand]
+        public void NavigateToTrainingTimeline()
+        {
+            ActiveMenu = "TrainingTimeline";
+            CurrentView = _serviceProvider.GetRequiredService<TrainingTimelineViewModel>();
+        }
+
+        [RelayCommand]
         public void NavigateToSettings()
         {
             ActiveMenu = "Settings";

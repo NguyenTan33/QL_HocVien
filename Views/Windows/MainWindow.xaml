@@ -44,6 +44,12 @@
         <DataTemplate DataType="{x:Type vm:CatalogManagementViewModel}">
             <views:CatalogManagementView/>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ExamAnalyticsViewModel}">
+            <views:ExamAnalyticsView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:TrainingTimelineViewModel}">
+            <views:TrainingTimelineView/>
+        </DataTemplate>
 
         <!-- Style cho các nút điều hướng Sidebar -->
         <Style x:Key="SidebarNavButtonStyle" TargetType="Button">
@@ -184,7 +190,17 @@
                                     Style="{StaticResource SidebarNavButtonStyle}"
                                     Command="{Binding NavigateToPhysicalExamCommand}"/>
 
-                            <!-- 6. Cài Đặt Hệ Thống -->
+                            <!-- 6. Phân Tích & So Sánh Đợt Thi -->
+                            <Button Content="📈   Phân Tích &amp; So Sánh" 
+                                    Style="{StaticResource SidebarNavButtonStyle}"
+                                    Command="{Binding NavigateToExamAnalyticsCommand}"/>
+
+                            <!-- 7. Lịch Huấn Luyện & Mốc Sự Kiện -->
+                            <Button Content="📅   Lịch Huấn Luyện &amp; Sự Kiện" 
+                                    Style="{StaticResource SidebarNavButtonStyle}"
+                                    Command="{Binding NavigateToTrainingTimelineCommand}"/>
+
+                            <!-- 8. Cài Đặt Hệ Thống -->
                             <Button Content="⚙️   Cài Đặt &amp; SMTP" 
                                     Style="{StaticResource SidebarNavButtonStyle}"
                                     Command="{Binding NavigateToSettingsCommand}"/>

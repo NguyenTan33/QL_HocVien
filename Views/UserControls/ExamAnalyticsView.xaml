@@ -1,0 +1,408 @@
+<UserControl x:Class="QL_HocVien.Views.UserControls.ExamAnalyticsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:cv="clr-namespace:QL_HocVien.Converters"
+             mc:Ignorable="d" 
+             d:DesignHeight="750" d:DesignWidth="1100">
+
+    <UserControl.Resources>
+        <cv:BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </UserControl.Resources>
+
+    <Border Padding="24">
+        <Grid>
+            <Grid.RowDefinitions>
+                <!-- Tiêu đề & Nút thao tác -->
+                <RowDefinition Height="Auto"/>
+                <!-- Thanh chọn đợt thi & Bộ lọc -->
+                <RowDefinition Height="Auto"/>
+                <!-- Thẻ thống kê nhanh KPI -->
+                <RowDefinition Height="Auto"/>
+                <!-- Nội dung các Tab phân cấp -->
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- HÀNG 0: TIÊU ĐỀ & NÚT THAO TÁC -->
+            <Grid Grid.Row="0" Margin="0,0,0,14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,4">
+                    <TextBlock Text="PHÂN TÍCH &amp; SO SÁNH BIẾN ĐỘNG THÀNH TÍCH ĐỢT THI" 
+                               FontSize="19" FontWeight="Bold" Foreground="#0F172A" TextWrapping="Wrap"/>
+                    <TextBlock Text="Đo lường sự tăng trưởng (▲), giữ nguyên (—) hoặc thụt lùi (▼) theo phân cấp từ Đại đội ➔ Lớp/Tiểu đội ➔ Cá nhân theo TT 32/2009" 
+                               FontSize="12" Foreground="#64748B" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                </StackPanel>
+
+                <WrapPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button Content="🔄 Phân Tích Lại" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,4"
+                            Command="{Binding ExecuteComparisonCommand}"/>
+                    <Button Content="📤 Xuất Báo Cáo Excel" Style="{StaticResource SuccessButtonStyle}" Margin="0,0,0,4"
+                            Command="{Binding ExportExcelCommand}"/>
+                </WrapPanel>
+            </Grid>
+
+            <!-- HÀNG 1: CHỌN 2 ĐỢT THI VÀ BỘ LỌC PHÂN CẤP -->
+            <Border Grid.Row="1" Style="{StaticResource CardBorderStyle}" Margin="0,0,0,14" Padding="14">
+                <StackPanel>
+                    <!-- Hàng chọn 2 đợt thi và phân cấp đơn vị -->
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1.4*"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="1.4*"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="1.1*"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="1.1*"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Đợt gốc -->
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Đợt kiểm tra gốc (Baseline):" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                            <ComboBox ItemsSource="{Binding AvailableSessions}" SelectedItem="{Binding SelectedBaselineSession}" Height="34"/>
+                        </StackPanel>
+
+                        <!-- Đợt so sánh -->
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Đợt kiểm tra so sánh:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                            <ComboBox ItemsSource="{Binding AvailableSessions}" SelectedItem="{Binding SelectedCompareSession}" Height="34"/>
+                        </StackPanel>
+
+                        <!-- Đơn vị -->
+                        <StackPanel Grid.Column="4">
+                            <TextBlock Text="Phân cấp Đơn vị:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                            <ComboBox ItemsSource="{Binding UnitOptions}" SelectedItem="{Binding SelectedUnit}" Height="34"/>
+                        </StackPanel>
+
+                        <!-- Lớp / Tiểu đội -->
+                        <StackPanel Grid.Column="6">
+                            <TextBlock Text="Cấp Lớp / Tiểu đội:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                            <ComboBox ItemsSource="{Binding ClassOptions}" SelectedItem="{Binding SelectedClass}" Height="34"/>
+                        </StackPanel>
+
+                        <!-- Nút Thực hiện phân tích -->
+                        <Button Grid.Column="8" Content="🔍 Đối Soát" Style="{StaticResource PrimaryButtonStyle}" 
+                                VerticalAlignment="Bottom" Height="34" Padding="16,0"
+                                Command="{Binding ExecuteComparisonCommand}"/>
+                    </Grid>
+
+                    <!-- Hàng lọc cá nhân và xu hướng -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="2*"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="1.4*"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Tìm học viên theo mã hoặc tên -->
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Tìm kiếm cá nhân (Mã HV hoặc Họ và tên):" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding SearchKeyword, UpdateSourceTrigger=PropertyChanged}" 
+                                     Height="34" VerticalContentAlignment="Center" Padding="8,0">
+                                <TextBox.InputBindings>
+                                    <KeyBinding Key="Enter" Command="{Binding ApplyCadetFilterCommand}"/>
+                                </TextBox.InputBindings>
+                            </TextBox>
+                        </StackPanel>
+
+                        <!-- Lọc theo xu hướng -->
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Lọc xu hướng rèn luyện:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                            <ComboBox ItemsSource="{Binding TrendOptions}" SelectedItem="{Binding SelectedTrend}" Height="34"/>
+                        </StackPanel>
+
+                        <!-- Nút Lọc -->
+                        <Button Grid.Column="4" Content="Lọc Cá Nhân" Style="{StaticResource SecondaryButtonStyle}" 
+                                VerticalAlignment="Bottom" Height="34" Padding="14,0"
+                                Command="{Binding ApplyCadetFilterCommand}"/>
+
+                        <!-- Nút Đặt lại -->
+                        <Button Grid.Column="6" Content="Đặt Lại" Style="{StaticResource SecondaryButtonStyle}" 
+                                VerticalAlignment="Bottom" Height="34" Padding="14,0"
+                                Command="{Binding ResetFiltersCommand}"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- HÀNG 2: THẺ THỐNG KÊ KPI TOÀN DIỆN -->
+            <Grid Grid.Row="2" Margin="0,0,0,14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- KPI 1: Tổng số học viên đối soát -->
+                <Border Grid.Column="0" Style="{StaticResource CardBorderStyle}" Padding="14,10" Background="#FFFFFF">
+                    <StackPanel>
+                        <TextBlock Text="QUÂN SỐ ĐỐI SOÁT" FontSize="11" FontWeight="Bold" Foreground="#64748B"/>
+                        <TextBlock Text="{Binding TotalCadetsEvaluated}" FontSize="22" FontWeight="ExtraBold" Foreground="#0F172A" Margin="0,4,0,0"/>
+                        <TextBlock FontSize="11" Foreground="#475569" Margin="0,2,0,0">
+                            <Run Text="So sánh 2 đợt kiểm tra"/>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <!-- KPI 2: TĂNG TRƯỞNG ▲ -->
+                <Border Grid.Column="2" Style="{StaticResource CardBorderStyle}" Padding="14,10" Background="#F0FDF4" BorderBrush="#86EFAC">
+                    <StackPanel>
+                        <TextBlock Text="TĂNG TRƯỞNG (▲)" FontSize="11" FontWeight="Bold" Foreground="#15803D"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                            <TextBlock Text="{Binding GrowthCount}" FontSize="22" FontWeight="ExtraBold" Foreground="#16A34A"/>
+                            <TextBlock Text=" đ/c" FontSize="14" FontWeight="Bold" Foreground="#16A34A" VerticalAlignment="Bottom" Margin="2,0,0,3"/>
+                        </StackPanel>
+                        <TextBlock FontSize="11" Foreground="#16A34A" FontWeight="SemiBold" Margin="0,2,0,0">
+                            <Run Text="{Binding GrowthPercentage, StringFormat={}{0:F1}% quân số}"/>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <!-- KPI 3: GIỮ NGUYÊN — -->
+                <Border Grid.Column="4" Style="{StaticResource CardBorderStyle}" Padding="14,10" Background="#FFFBEB" BorderBrush="#FDE68A">
+                    <StackPanel>
+                        <TextBlock Text="GIỮ NGUYÊN (—)" FontSize="11" FontWeight="Bold" Foreground="#B45309"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                            <TextBlock Text="{Binding UnchangedCount}" FontSize="22" FontWeight="ExtraBold" Foreground="#D97706"/>
+                            <TextBlock Text=" đ/c" FontSize="14" FontWeight="Bold" Foreground="#D97706" VerticalAlignment="Bottom" Margin="2,0,0,3"/>
+                        </StackPanel>
+                        <TextBlock FontSize="11" Foreground="#D97706" FontWeight="SemiBold" Margin="0,2,0,0">
+                            <Run Text="{Binding UnchangedPercentage, StringFormat={}{0:F1}% quân số}"/>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <!-- KPI 4: THỤT LÙI ▼ -->
+                <Border Grid.Column="6" Style="{StaticResource CardBorderStyle}" Padding="14,10" Background="#FEF2F2" BorderBrush="#FECACA">
+                    <StackPanel>
+                        <TextBlock Text="THỤT LÙI (▼)" FontSize="11" FontWeight="Bold" Foreground="#B91C1C"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                            <TextBlock Text="{Binding RegressionCount}" FontSize="22" FontWeight="ExtraBold" Foreground="#DC2626"/>
+                            <TextBlock Text=" đ/c" FontSize="14" FontWeight="Bold" Foreground="#DC2626" VerticalAlignment="Bottom" Margin="2,0,0,3"/>
+                        </StackPanel>
+                        <TextBlock FontSize="11" Foreground="#DC2626" FontWeight="SemiBold" Margin="0,2,0,0">
+                            <Run Text="{Binding RegressionPercentage, StringFormat={}{0:F1}% quân số}"/>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- HÀNG 3: TAB PHÂN CẤP (ĐẠI ĐỘI -> LỚP -> CÁ NHÂN) -->
+            <Border Grid.Row="3" Style="{StaticResource CardBorderStyle}" Padding="0">
+                <TabControl BorderThickness="0" Background="Transparent" SelectedIndex="{Binding SelectedTabIndex}">
+                    <!-- TAB 1: CẤP ĐẠI ĐỘI & TOÀN ĐƠN VỊ -->
+                    <TabItem Header="🏛️  Cấp Đại Đội &amp; Toàn Đơn Vị" FontSize="13" FontWeight="SemiBold" Padding="16,8">
+                        <Border Padding="12">
+                            <DataGrid ItemsSource="{Binding UnitComparisons}" 
+                                      Style="{StaticResource MilitaryDataGridStyle}" 
+                                      AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
+                                      AlternatingRowBackground="#F8FAFC">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Đơn vị / Đại đội" Binding="{Binding UnitName}" FontWeight="Bold" Width="1.5*"/>
+                                    <DataGridTextColumn Header="Quân số" Binding="{Binding TotalCadets}" Width="0.8*"/>
+                                    <DataGridTextColumn Header="% Đạt Đợt 1" Binding="{Binding BaselinePassRate, StringFormat={}{0:F1}%}" Width="1.1*"/>
+                                    <DataGridTextColumn Header="% Đạt Đợt 2" Binding="{Binding ComparePassRate, StringFormat={}{0:F1}%}" Width="1.1*"/>
+
+                                    <!-- Delta % Đạt -->
+                                    <DataGridTemplateColumn Header="Chênh lệch (Delta)" Width="1.3*">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding PassRateDelta, StringFormat={}{0:+0.0;-0.0;0.0}%}" 
+                                                           FontWeight="Bold" Foreground="{Binding TrendColor}" VerticalAlignment="Center"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+
+                                    <DataGridTextColumn Header="% Giỏi/Khá (1)" Binding="{Binding BaselineExcellentRate, StringFormat={}{0:F1}%}" Width="1.1*"/>
+                                    <DataGridTextColumn Header="% Giỏi/Khá (2)" Binding="{Binding CompareExcellentRate, StringFormat={}{0:F1}%}" Width="1.1*"/>
+
+                                    <DataGridTextColumn Header="Tăng (▲)" Binding="{Binding GrowthCadetsCount}" FontWeight="Bold" Foreground="#16A34A" Width="0.9*"/>
+                                    <DataGridTextColumn Header="Giữ (—)" Binding="{Binding UnchangedCadetsCount}" FontWeight="Bold" Foreground="#D97706" Width="0.9*"/>
+                                    <DataGridTextColumn Header="Giảm (▼)" Binding="{Binding RegressionCadetsCount}" FontWeight="Bold" Foreground="#DC2626" Width="0.9*"/>
+
+                                    <DataGridTextColumn Header="Nhận xét rèn luyện" Binding="{Binding EvaluationComment}" Width="2.5*"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Border>
+                    </TabItem>
+
+                    <!-- TAB 2: CẤP LỚP & TIỂU ĐỘI -->
+                    <TabItem Header="🏫  Cấp Lớp &amp; Phân Đội" FontSize="13" FontWeight="SemiBold" Padding="16,8">
+                        <Border Padding="12">
+                            <DataGrid ItemsSource="{Binding ClassComparisons}" 
+                                      Style="{StaticResource MilitaryDataGridStyle}" 
+                                      AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
+                                      AlternatingRowBackground="#F8FAFC">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Thứ hạng" Binding="{Binding RankInUnit, StringFormat={}Hạng {0}}" FontWeight="Bold" Width="0.9*"/>
+                                    <DataGridTextColumn Header="Lớp / Phân đội" Binding="{Binding ClassName}" FontWeight="Bold" Width="1.8*"/>
+                                    <DataGridTextColumn Header="Đại đội" Binding="{Binding Unit}" Width="1.2*"/>
+                                    <DataGridTextColumn Header="Quân số" Binding="{Binding TotalCadets}" Width="0.8*"/>
+                                    <DataGridTextColumn Header="% Đạt Đợt 1" Binding="{Binding BaselinePassRate, StringFormat={}{0:F1}%}" Width="1.1*"/>
+                                    <DataGridTextColumn Header="% Đạt Đợt 2" Binding="{Binding ComparePassRate, StringFormat={}{0:F1}%}" Width="1.1*"/>
+
+                                    <!-- Delta % Đạt -->
+                                    <DataGridTemplateColumn Header="Chênh lệch (Delta)" Width="1.3*">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding PassRateDelta, StringFormat={}{0:+0.0;-0.0;0.0}%}" 
+                                                           FontWeight="Bold" Foreground="{Binding TrendColor}" VerticalAlignment="Center"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+
+                                    <DataGridTextColumn Header="Tăng (▲)" Binding="{Binding GrowthCadetsCount}" FontWeight="Bold" Foreground="#16A34A" Width="0.9*"/>
+                                    <DataGridTextColumn Header="Giữ (—)" Binding="{Binding UnchangedCadetsCount}" FontWeight="Bold" Foreground="#D97706" Width="0.9*"/>
+                                    <DataGridTextColumn Header="Giảm (▼)" Binding="{Binding RegressionCadetsCount}" FontWeight="Bold" Foreground="#DC2626" Width="0.9*"/>
+
+                                    <!-- Xu hướng -->
+                                    <DataGridTemplateColumn Header="Xu hướng" Width="1.2*">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Border CornerRadius="4" Padding="6,2" HorizontalAlignment="Left" Background="#F1F5F9">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="{Binding TrendSymbol}" FontWeight="Bold" Foreground="{Binding TrendColor}" Margin="0,0,4,0"/>
+                                                        <TextBlock Text="{Binding TrendText}" FontWeight="SemiBold" Foreground="{Binding TrendColor}"/>
+                                                    </StackPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Border>
+                    </TabItem>
+
+                    <!-- TAB 3: CHI TIẾT CÁ NHÂN HỌC VIÊN -->
+                    <TabItem Header="👨‍✈️  Chi Tiết Từng Học Viên" FontSize="13" FontWeight="SemiBold" Padding="16,8">
+                        <Grid Margin="12">
+                            <Grid.ColumnDefinitions>
+                                <!-- Danh sách học viên -->
+                                <ColumnDefinition Width="6*"/>
+                                <ColumnDefinition Width="12"/>
+                                <!-- Chi tiết các môn của học viên -->
+                                <ColumnDefinition Width="4.5*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Bảng học viên bên trái -->
+                            <Border Grid.Column="0" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6">
+                                <DataGrid ItemsSource="{Binding CadetTrends}" 
+                                          SelectedItem="{Binding SelectedCadetTrend}"
+                                          Style="{StaticResource MilitaryDataGridStyle}" 
+                                          AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
+                                          AlternatingRowBackground="#F8FAFC">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Mã HV" Binding="{Binding CadetCode}" FontWeight="Bold" Width="1.1*"/>
+                                        <DataGridTextColumn Header="Họ và tên" Binding="{Binding FullName}" FontWeight="SemiBold" Width="1.6*"/>
+                                        <DataGridTextColumn Header="Cấp bậc" Binding="{Binding Rank}" Width="1*"/>
+                                        <DataGridTextColumn Header="Đơn vị" Binding="{Binding Unit}" Width="1.1*"/>
+                                        <DataGridTextColumn Header="Lớp" Binding="{Binding ClassName}" Width="1.2*"/>
+
+                                        <!-- Xếp loại 1 -> 2 -->
+                                        <DataGridTemplateColumn Header="Xếp loại (Cũ ➔ Mới)" Width="1.7*">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding OverallBaselineGrade}" Foreground="#64748B"/>
+                                                        <TextBlock Text=" ➔ " Foreground="#94A3B8" Margin="2,0"/>
+                                                        <TextBlock Text="{Binding OverallCompareGrade}" FontWeight="Bold" Foreground="#0F172A"/>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+
+                                        <!-- Xu hướng -->
+                                        <DataGridTemplateColumn Header="Biến động" Width="1.4*">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Border CornerRadius="4" Padding="6,2" HorizontalAlignment="Left" Background="#F1F5F9">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Text="{Binding OverallTrendSymbol}" FontWeight="Bold" Foreground="{Binding OverallTrendColor}" Margin="0,0,4,0"/>
+                                                            <TextBlock Text="{Binding OverallTrendText}" FontWeight="Bold" Foreground="{Binding OverallTrendColor}"/>
+                                                        </StackPanel>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </Border>
+
+                            <!-- Bảng chi tiết môn bên phải -->
+                            <Border Grid.Column="2" Style="{StaticResource CardBorderStyle}" Padding="14">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+
+                                    <!-- Tiêu đề thẻ học viên -->
+                                    <Border Grid.Row="0" Margin="0,0,0,10" Padding="0,0,0,8" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1">
+                                        <StackPanel>
+                                            <TextBlock Text="KẾT QUẢ CHI TIẾT TỪNG MÔN THI" FontSize="12" FontWeight="Bold" Foreground="#1E293B"/>
+                                            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                                <TextBlock Text="{Binding SelectedCadetTrend.FullName}" FontWeight="Bold" FontSize="14" Foreground="#0F766E"/>
+                                                <TextBlock Text=" (" Foreground="#64748B" FontSize="13"/>
+                                                <TextBlock Text="{Binding SelectedCadetTrend.CadetCode}" Foreground="#64748B" FontSize="13"/>
+                                                <TextBlock Text=")" Foreground="#64748B" FontSize="13"/>
+                                            </StackPanel>
+                                            <TextBlock Text="{Binding SelectedCadetTrend.SummaryText}" FontSize="11" Foreground="#64748B" Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Bảng các môn -->
+                                    <DataGrid Grid.Row="1" ItemsSource="{Binding SelectedCadetTrend.SubjectTrends}" 
+                                              Style="{StaticResource MilitaryDataGridStyle}" 
+                                              AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
+                                              AlternatingRowBackground="#F8FAFC">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Môn thi" Binding="{Binding SubjectName}" FontWeight="Bold" Width="1.5*"/>
+                                            <DataGridTextColumn Header="Đợt 1" Binding="{Binding BaselineScore}" Width="0.9*"/>
+                                            <DataGridTextColumn Header="Đợt 2" Binding="{Binding CompareScore}" FontWeight="Bold" Width="0.9*"/>
+
+                                            <!-- Chênh lệch Delta -->
+                                            <DataGridTemplateColumn Header="Delta (Δ)" Width="1.1*">
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock Text="{Binding ScoreDelta, StringFormat={}{0:+0.00;-0.00;0.00}}" 
+                                                                   FontWeight="Bold" Foreground="{Binding TrendColor}" VerticalAlignment="Center"/>
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
+
+                                            <!-- Xu hướng môn -->
+                                            <DataGridTemplateColumn Header="Đánh giá" Width="1.3*">
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                            <TextBlock Text="{Binding TrendSymbol}" FontWeight="Bold" Foreground="{Binding TrendColor}" Margin="0,0,4,0"/>
+                                                            <TextBlock Text="{Binding TrendText}" FontWeight="SemiBold" Foreground="{Binding TrendColor}"/>
+                                                        </StackPanel>
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </TabItem>
+                </TabControl>
+            </Border>
+        </Grid>
+    </Border>
+</UserControl>

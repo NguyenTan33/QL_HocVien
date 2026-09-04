@@ -20,6 +20,7 @@ namespace QL_HocVien.Data
         public DbSet<MilitaryUnit> MilitaryUnits => Set<MilitaryUnit>();
         public DbSet<MilitaryMajor> MilitaryMajors => Set<MilitaryMajor>();
         public DbSet<Officer> Officers => Set<Officer>();
+        public DbSet<TrainingEvent> TrainingEvents => Set<TrainingEvent>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -148,6 +149,18 @@ namespace QL_HocVien.Data
             {
                 entity.HasKey(e => e.Id);
                 entity.HasIndex(e => e.Email);
+            });
+
+            // Cấu hình TrainingEvent
+            modelBuilder.Entity<TrainingEvent>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.Category).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.TargetUnit).HasMaxLength(100);
+                entity.Property(e => e.Location).HasMaxLength(200);
+                entity.Property(e => e.Priority).HasMaxLength(50);
+                entity.Property(e => e.Status).HasMaxLength(50);
             });
         }
     }

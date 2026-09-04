@@ -11,6 +11,9 @@ namespace QL_HocVien.ViewModels
         private string _statusMessage = string.Empty;
 
         [ObservableProperty]
+        private string _errorMessage = string.Empty;
+
+        [ObservableProperty]
         private string _title = string.Empty;
     }
 }

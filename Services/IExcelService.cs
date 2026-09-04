@@ -33,6 +33,9 @@ namespace QL_HocVien.Services
         // 7. Toàn bộ hệ thống (Multi-sheet Full Backup & Restore)
         Task<(bool Success, string Message)> ExportAllDataToExcelAsync(string filePath);
         Task<(bool Success, string Message, int ClassesCount, int CadetsCount, int SubjectsCount, int ExamsCount, int OfficersCount)> ImportAllDataFromExcelAsync(string filePath);
+
+        // 8. Báo cáo phân tích so sánh đợt thi
+        Task<(bool Success, string Message)> ExportComparisonToExcelAsync(QL_HocVien.Models.DTOs.ExamComparisonResultDto comparison, string filePath);
     }
 }
 

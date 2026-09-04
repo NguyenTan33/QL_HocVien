@@ -9,6 +9,7 @@ using QL_HocVien.Data;
 using QL_HocVien.Data.Repositories;
 using QL_HocVien.Infrastructure.Security;
 using QL_HocVien.Models;
+using QL_HocVien.Models.DTOs;
 
 namespace QL_HocVien.Services
 {
@@ -1444,6 +1445,207 @@ namespace QL_HocVien.Services
             {
                 return (false, $"Lỗi nhập toàn bộ dữ liệu: {ex.Message}", 0, 0, 0, 0, 0);
             }
+        }
+        #endregion
+
+        #region 8. Báo Cáo Đối Soát & So Sánh Đợt Thi
+        public async Task<(bool Success, string Message)> ExportComparisonToExcelAsync(ExamComparisonResultDto comparison, string filePath)
+        {
+            return await Task.Run(() =>
+            {
+                try
+                {
+                    using var workbook = new XLWorkbook();
+
+                    // ================= Sheet 1: Tổng quan Cấp Đại đội =================
+                    var wsUnit = workbook.Worksheets.Add("1. Tổng Quan & Đại Đội");
+                    wsUnit.ShowGridLines = true;
+
+                    // Tiêu đề
+                    wsUnit.Cell(1, 1).Value = "BÁO CÁO PHÂN TÍCH SO SÁNH KẾT QUẢ RÈN LUYỆN THỂ LỰC";
+                    wsUnit.Range(1, 1, 1, 10).Merge().Style.Font.SetBold().Font.SetFontSize(16).Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+
+                    wsUnit.Cell(2, 1).Value = $"Đợt gốc: {comparison.BaselineSession}   |   Đợt so sánh: {comparison.CompareSession}   |   Ngày xuất: {DateTime.Now:dd/MM/yyyy HH:mm}";
+                    wsUnit.Range(2, 1, 2, 10).Merge().Style.Font.SetItalic().Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+
+                    // Thống kê toàn đơn vị
+                    wsUnit.Cell(4, 1).Value = "THỐNG KÊ BIẾN ĐỘNG TOÀN QUÂN SỐ";
+                    wsUnit.Range(4, 1, 4, 10).Merge().Style.Font.SetBold().Fill.SetBackgroundColor(XLColor.FromHtml("#1E293B")).Font.SetFontColor(XLColor.White);
+
+                    wsUnit.Cell(5, 1).Value = "Tổng quân số đánh giá:";
+                    wsUnit.Cell(5, 2).Value = comparison.TotalEvaluatedCadets;
+                    wsUnit.Cell(5, 3).Value = "Tăng trưởng (▲):";
+                    wsUnit.Cell(5, 4).Value = $"{comparison.OverallGrowthCount} ({comparison.OverallGrowthPercentage:F1}%)";
+                    wsUnit.Cell(5, 4).Style.Font.SetFontColor(XLColor.FromHtml("#16A34A")).Font.SetBold();
+
+                    wsUnit.Cell(5, 5).Value = "Giữ nguyên (—):";
+                    wsUnit.Cell(5, 6).Value = $"{comparison.OverallUnchangedCount} ({comparison.OverallUnchangedPercentage:F1}%)";
+                    wsUnit.Cell(5, 6).Style.Font.SetFontColor(XLColor.FromHtml("#D97706")).Font.SetBold();
+
+                    wsUnit.Cell(5, 7).Value = "Thụt lùi (▼):";
+                    wsUnit.Cell(5, 8).Value = $"{comparison.OverallRegressionCount} ({comparison.OverallRegressionPercentage:F1}%)";
+                    wsUnit.Cell(5, 8).Style.Font.SetFontColor(XLColor.FromHtml("#DC2626")).Font.SetBold();
+
+                    wsUnit.Cell(5, 9).Value = "Delta % Đạt:";
+                    wsUnit.Cell(5, 10).Value = $"{(comparison.PassRateDelta >= 0 ? "+" : "")}{comparison.PassRateDelta:F1}%";
+                    wsUnit.Cell(5, 10).Style.Font.SetBold();
+
+                    // Bảng chi tiết theo từng Đại đội
+                    wsUnit.Cell(7, 1).Value = "BẢNG SO SÁNH THEO TỪNG ĐẠI ĐỘI & ĐƠN VỊ";
+                    wsUnit.Range(7, 1, 7, 10).Merge().Style.Font.SetBold().Fill.SetBackgroundColor(XLColor.FromHtml("#334155")).Font.SetFontColor(XLColor.White);
+
+                    string[] unitHeaders = { "Đơn vị", "Quân số", "% Đạt Đợt 1", "% Đạt Đợt 2", "Chênh lệch (Delta)", "% Giỏi/Khá Đợt 1", "% Giỏi/Khá Đợt 2", "Tăng trưởng (▲)", "Giữ nguyên (—)", "Thụt lùi (▼)" };
+                    for (int i = 0; i < unitHeaders.Length; i++)
+                    {
+                        var cell = wsUnit.Cell(8, i + 1);
+                        cell.Value = unitHeaders[i];
+                        cell.Style.Font.SetBold().Fill.SetBackgroundColor(XLColor.FromHtml("#0F766E")).Font.SetFontColor(XLColor.White).Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                    }
+
+                    int uRow = 9;
+                    foreach (var u in comparison.UnitComparisons)
+                    {
+                        wsUnit.Cell(uRow, 1).Value = u.UnitName;
+                        wsUnit.Cell(uRow, 2).Value = u.TotalCadets;
+                        wsUnit.Cell(uRow, 3).Value = $"{u.BaselinePassRate:F1}%";
+                        wsUnit.Cell(uRow, 4).Value = $"{u.ComparePassRate:F1}%";
+
+                        var deltaCell = wsUnit.Cell(uRow, 5);
+                        deltaCell.Value = $"{(u.PassRateDelta >= 0 ? "+" : "")}{u.PassRateDelta:F1}%";
+                        deltaCell.Style.Font.SetBold().Font.SetFontColor(u.PassRateDelta > 0 ? XLColor.FromHtml("#16A34A") : (u.PassRateDelta < 0 ? XLColor.FromHtml("#DC2626") : XLColor.FromHtml("#64748B")));
+
+                        wsUnit.Cell(uRow, 6).Value = $"{u.BaselineExcellentRate:F1}%";
+                        wsUnit.Cell(uRow, 7).Value = $"{u.CompareExcellentRate:F1}%";
+                        wsUnit.Cell(uRow, 8).Value = u.GrowthCadetsCount;
+                        wsUnit.Cell(uRow, 9).Value = u.UnchangedCadetsCount;
+                        wsUnit.Cell(uRow, 10).Value = u.RegressionCadetsCount;
+
+                        if (uRow % 2 == 0)
+                        {
+                            wsUnit.Range(uRow, 1, uRow, 10).Style.Fill.SetBackgroundColor(XLColor.FromHtml("#F8FAFC"));
+                        }
+                        uRow++;
+                    }
+
+                    wsUnit.Columns().AdjustToContents();
+
+                    // ================= Sheet 2: Cấp Lớp & Phân Đội =================
+                    var wsClass = workbook.Worksheets.Add("2. Cấp Lớp & Phân Đội");
+                    wsClass.ShowGridLines = true;
+
+                    wsClass.Cell(1, 1).Value = "BẢNG SO SÁNH THÀNH TÍCH THEO LỚP & TIỂU ĐỘI";
+                    wsClass.Range(1, 1, 1, 9).Merge().Style.Font.SetBold().Font.SetFontSize(14).Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+
+                    string[] classHeaders = { "Lớp / Tiểu đội", "Đại đội", "Thứ hạng", "Quân số", "% Đạt Đợt 1", "% Đạt Đợt 2", "Chênh lệch (Delta)", "Tăng (▲)", "Giảm (▼)" };
+                    for (int i = 0; i < classHeaders.Length; i++)
+                    {
+                        var cell = wsClass.Cell(3, i + 1);
+                        cell.Value = classHeaders[i];
+                        cell.Style.Font.SetBold().Fill.SetBackgroundColor(XLColor.FromHtml("#1E3A8A")).Font.SetFontColor(XLColor.White).Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                    }
+
+                    int clRow = 4;
+                    foreach (var c in comparison.ClassComparisons)
+                    {
+                        wsClass.Cell(clRow, 1).Value = c.ClassName;
+                        wsClass.Cell(clRow, 2).Value = c.Unit;
+                        wsClass.Cell(clRow, 3).Value = $"Hạng {c.RankInUnit}";
+                        wsClass.Cell(clRow, 4).Value = c.TotalCadets;
+                        wsClass.Cell(clRow, 5).Value = $"{c.BaselinePassRate:F1}%";
+                        wsClass.Cell(clRow, 6).Value = $"{c.ComparePassRate:F1}%";
+                        
+                        var dCell = wsClass.Cell(clRow, 7);
+                        dCell.Value = $"{(c.PassRateDelta >= 0 ? "+" : "")}{c.PassRateDelta:F1}%";
+                        dCell.Style.Font.SetBold().Font.SetFontColor(c.PassRateDelta > 0 ? XLColor.FromHtml("#16A34A") : (c.PassRateDelta < 0 ? XLColor.FromHtml("#DC2626") : XLColor.FromHtml("#64748B")));
+
+                        wsClass.Cell(clRow, 8).Value = c.GrowthCadetsCount;
+                        wsClass.Cell(clRow, 9).Value = c.RegressionCadetsCount;
+
+                        if (clRow % 2 == 1)
+                        {
+                            wsClass.Range(clRow, 1, clRow, 9).Style.Fill.SetBackgroundColor(XLColor.FromHtml("#F8FAFC"));
+                        }
+                        clRow++;
+                    }
+
+                    wsClass.Columns().AdjustToContents();
+
+                    // ================= Sheet 3: Chi Tiết Cá Nhân Học Viên =================
+                    var wsCadet = workbook.Worksheets.Add("3. Chi Tiết Cá Nhân");
+                    wsCadet.ShowGridLines = true;
+
+                    wsCadet.Cell(1, 1).Value = "BẢNG CHI TIẾT BIẾN ĐỘNG THÀNH TÍCH TỪNG CÁ NHÂN HỌC VIÊN";
+                    wsCadet.Range(1, 1, 1, 12).Merge().Style.Font.SetBold().Font.SetFontSize(14).Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+
+                    string[] cadetHeaders = { "STT", "Mã HV", "Họ và tên", "Cấp bậc", "Đơn vị", "Lớp", "Môn kiểm tra", "Điểm Đợt 1", "Điểm Đợt 2", "Chênh lệch (Delta)", "Xếp loại Đợt 1", "Xếp loại Đợt 2", "Xu hướng" };
+                    for (int i = 0; i < cadetHeaders.Length; i++)
+                    {
+                        var cell = wsCadet.Cell(3, i + 1);
+                        cell.Value = cadetHeaders[i];
+                        cell.Style.Font.SetBold().Fill.SetBackgroundColor(XLColor.FromHtml("#15803D")).Font.SetFontColor(XLColor.White).Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                    }
+
+                    int cadRow = 4;
+                    int stt = 1;
+                    foreach (var cadet in comparison.CadetTrends)
+                    {
+                        if (!cadet.SubjectTrends.Any())
+                        {
+                            wsCadet.Cell(cadRow, 1).Value = stt++;
+                            wsCadet.Cell(cadRow, 2).Value = cadet.CadetCode;
+                            wsCadet.Cell(cadRow, 3).Value = cadet.FullName;
+                            wsCadet.Cell(cadRow, 4).Value = cadet.Rank;
+                            wsCadet.Cell(cadRow, 5).Value = cadet.Unit;
+                            wsCadet.Cell(cadRow, 6).Value = cadet.ClassName;
+                            wsCadet.Cell(cadRow, 7).Value = "Chưa có môn so sánh";
+                            wsCadet.Cell(cadRow, 11).Value = cadet.OverallBaselineGrade;
+                            wsCadet.Cell(cadRow, 12).Value = cadet.OverallCompareGrade;
+                            wsCadet.Cell(cadRow, 13).Value = cadet.OverallTrendText;
+                            cadRow++;
+                            continue;
+                        }
+
+                        foreach (var sub in cadet.SubjectTrends)
+                        {
+                            wsCadet.Cell(cadRow, 1).Value = stt++;
+                            wsCadet.Cell(cadRow, 2).Value = cadet.CadetCode;
+                            wsCadet.Cell(cadRow, 3).Value = cadet.FullName;
+                            wsCadet.Cell(cadRow, 4).Value = cadet.Rank;
+                            wsCadet.Cell(cadRow, 5).Value = cadet.Unit;
+                            wsCadet.Cell(cadRow, 6).Value = cadet.ClassName;
+                            wsCadet.Cell(cadRow, 7).Value = sub.SubjectName;
+                            wsCadet.Cell(cadRow, 8).Value = $"{sub.BaselineScore} {sub.Unit}";
+                            wsCadet.Cell(cadRow, 9).Value = $"{sub.CompareScore} {sub.Unit}";
+                            
+                            var cdCell = wsCadet.Cell(cadRow, 10);
+                            cdCell.Value = $"{(sub.ScoreDelta >= 0 ? "+" : "")}{sub.ScoreDelta} {sub.Unit}";
+                            cdCell.Style.Font.SetBold();
+
+                            wsCadet.Cell(cadRow, 11).Value = sub.BaselineGrade;
+                            wsCadet.Cell(cadRow, 12).Value = sub.CompareGrade;
+
+                            var trendCell = wsCadet.Cell(cadRow, 13);
+                            trendCell.Value = $"{sub.TrendSymbol} {sub.TrendText}";
+                            trendCell.Style.Font.SetBold().Font.SetFontColor(sub.Trend == TrendDirection.Growth ? XLColor.FromHtml("#16A34A") : (sub.Trend == TrendDirection.Regression ? XLColor.FromHtml("#DC2626") : XLColor.FromHtml("#D97706")));
+
+                            if (cadRow % 2 == 1)
+                            {
+                                wsCadet.Range(cadRow, 1, cadRow, 13).Style.Fill.SetBackgroundColor(XLColor.FromHtml("#F8FAFC"));
+                            }
+                            cadRow++;
+                        }
+                    }
+
+                    wsCadet.Columns().AdjustToContents();
+
+                    workbook.SaveAs(filePath);
+                    return (true, $"Xuất báo cáo phân tích đối soát đợt thi thành công ra file: {Path.GetFileName(filePath)}");
+                }
+                catch (Exception ex)
+                {
+                    return (false, $"Lỗi khi xuất file Excel: {ex.Message}");
+                }
+            });
         }
         #endregion
     }

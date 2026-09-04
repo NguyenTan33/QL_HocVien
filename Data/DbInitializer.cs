@@ -109,6 +109,30 @@ namespace QL_HocVien.Data
                 // Bỏ qua nếu bảng đã tồn tại
             }
 
+            // Đảm bảo bảng TrainingEvents tồn tại
+            try
+            {
+                context.Database.ExecuteSqlRaw(@"
+                    CREATE TABLE IF NOT EXISTS ""TrainingEvents"" (
+                        ""Id"" INTEGER NOT NULL CONSTRAINT ""PK_TrainingEvents"" PRIMARY KEY AUTOINCREMENT,
+                        ""Title"" TEXT NOT NULL,
+                        ""Category"" TEXT NOT NULL,
+                        ""StartDate"" TEXT NOT NULL,
+                        ""EndDate"" TEXT NOT NULL,
+                        ""TargetUnit"" TEXT NOT NULL,
+                        ""Location"" TEXT NOT NULL,
+                        ""Priority"" TEXT NOT NULL,
+                        ""Status"" TEXT NOT NULL,
+                        ""Description"" TEXT NOT NULL,
+                        ""CreatedAt"" TEXT NOT NULL
+                    );
+                ");
+            }
+            catch
+            {
+                // Bỏ qua nếu bảng đã tồn tại
+            }
+
             // Đảm bảo cột ClassId tồn tại trong bảng Cadets
             try
             {
@@ -545,49 +569,146 @@ namespace QL_HocVien.Data
 
                 context.Cadets.AddRange(cadets);
                 context.SaveChanges();
+            }
 
-                // Seed kết quả kiểm tra mẫu
-                var xdSubject = context.Subjects.FirstOrDefault(s => s.SubjectCode == "XD");
-                var c100Subject = context.Subjects.FirstOrDefault(s => s.SubjectCode == "C100");
-                var cv3000Subject = context.Subjects.FirstOrDefault(s => s.SubjectCode == "CV3000");
-                var firstCadet = cadets[0];
+            // Seed kết quả kiểm tra 2 đợt (Quý 3/2026 và Quý 4/2026) để phục vụ so sánh và phân tích
+            var xdSub = context.Subjects.FirstOrDefault(s => s.SubjectCode == "XD");
+            var c100Sub = context.Subjects.FirstOrDefault(s => s.SubjectCode == "C100");
+            var cv3000Sub = context.Subjects.FirstOrDefault(s => s.SubjectCode == "CV3000");
 
-                if (xdSubject != null && c100Subject != null && cv3000Subject != null)
+            if (xdSub != null && c100Sub != null && cv3000Sub != null)
+            {
+                var allCadets = context.Cadets.Take(4).ToList();
+                if (allCadets.Count >= 4 && !context.PhysicalExamRecords.Any(r => r.ExamSession == "Kiểm tra Quý 4/2026"))
                 {
-                    context.PhysicalExamRecords.AddRange(
-                        new PhysicalExamRecord
-                        {
-                            CadetId = firstCadet.Id,
-                            SubjectId = xdSubject.Id,
-                            ExamDate = DateTime.Today.AddDays(-7),
-                            ExamSession = "Kiểm tra Quý 3/2026",
-                            ScoreValue = 24,
-                            Grade = "Giỏi",
-                            Notes = "Thực hiện đúng kỹ thuật, động tác chuẩn xác"
-                        },
-                        new PhysicalExamRecord
-                        {
-                            CadetId = firstCadet.Id,
-                            SubjectId = c100Subject.Id,
-                            ExamDate = DateTime.Today.AddDays(-7),
-                            ExamSession = "Kiểm tra Quý 3/2026",
-                            ScoreValue = 13.1,
-                            Grade = "Giỏi",
-                            Notes = "Xuất phát nhanh, nước rút tốt"
-                        },
-                        new PhysicalExamRecord
-                        {
-                            CadetId = firstCadet.Id,
-                            SubjectId = cv3000Subject.Id,
-                            ExamDate = DateTime.Today.AddDays(-7),
-                            ExamSession = "Kiểm tra Quý 3/2026",
-                            ScoreValue = 12.3,
-                            Grade = "Giỏi",
-                            Notes = "Thể lực tốt, duy trì tốc độ đều"
-                        }
-                    );
+                    var c1 = allCadets[0]; // Nguyễn Văn An (c1 - K26A) -> TĂNG TRƯỞNG (▲)
+                    var c2 = allCadets[1]; // Lê Thị Bích (c1 - K26A) -> TĂNG TRƯỞNG (▲)
+                    var c3 = allCadets[2]; // Phạm Hoàng Dũng (c2 - K26B) -> GIỮ NGUYÊN (—)
+                    var c4 = allCadets[3]; // Trần Minh Quang (c2 - K26B) -> THỤT LÙI (▼)
+
+                    var examRecords = new List<PhysicalExamRecord>();
+
+                    // Nếu chưa có Quý 3 thì thêm Quý 3
+                    if (!context.PhysicalExamRecords.Any(r => r.ExamSession == "Kiểm tra Quý 3/2026"))
+                    {
+                        var d3 = DateTime.Today.AddDays(-60);
+                        // Cadet 1 - Quý 3
+                        examRecords.Add(new PhysicalExamRecord { CadetId = c1.Id, SubjectId = xdSub.Id, ExamDate = d3, ExamSession = "Kiểm tra Quý 3/2026", ScoreValue = 24, Grade = "Giỏi", Notes = "Động tác chuẩn" });
+                        examRecords.Add(new PhysicalExamRecord { CadetId = c1.Id, SubjectId = c100Sub.Id, ExamDate = d3, ExamSession = "Kiểm tra Quý 3/2026", ScoreValue = 13.1, Grade = "Giỏi", Notes = "Nước rút tốt" });
+                        examRecords.Add(new PhysicalExamRecord { CadetId = c1.Id, SubjectId = cv3000Sub.Id, ExamDate = d3, ExamSession = "Kiểm tra Quý 3/2026", ScoreValue = 12.3, Grade = "Giỏi", Notes = "Duy trì tốc độ đều" });
+
+                        // Cadet 2 - Quý 3
+                        examRecords.Add(new PhysicalExamRecord { CadetId = c2.Id, SubjectId = xdSub.Id, ExamDate = d3, ExamSession = "Kiểm tra Quý 3/2026", ScoreValue = 16, Grade = "Đạt", Notes = "Cần tăng sức kéo xà" });
+                        examRecords.Add(new PhysicalExamRecord { CadetId = c2.Id, SubjectId = c100Sub.Id, ExamDate = d3, ExamSession = "Kiểm tra Quý 3/2026", ScoreValue = 14.8, Grade = "Khá", Notes = "Tốc độ trung bình" });
+                        examRecords.Add(new PhysicalExamRecord { CadetId = c2.Id, SubjectId = cv3000Sub.Id, ExamDate = d3, ExamSession = "Kiểm tra Quý 3/2026", ScoreValue = 14.5, Grade = "Đạt", Notes = "Hơi hụt hơi vòng cuối" });
+
+                        // Cadet 3 - Quý 3
+                        examRecords.Add(new PhysicalExamRecord { CadetId = c3.Id, SubjectId = xdSub.Id, ExamDate = d3, ExamSession = "Kiểm tra Quý 3/2026", ScoreValue = 20, Grade = "Khá", Notes = "Kỹ thuật ổn định" });
+                        examRecords.Add(new PhysicalExamRecord { CadetId = c3.Id, SubjectId = c100Sub.Id, ExamDate = d3, ExamSession = "Kiểm tra Quý 3/2026", ScoreValue = 13.5, Grade = "Giỏi", Notes = "Xuất phát nhanh" });
+                        examRecords.Add(new PhysicalExamRecord { CadetId = c3.Id, SubjectId = cv3000Sub.Id, ExamDate = d3, ExamSession = "Kiểm tra Quý 3/2026", ScoreValue = 13.0, Grade = "Khá", Notes = "Thể lực tốt" });
+
+                        // Cadet 4 - Quý 3
+                        examRecords.Add(new PhysicalExamRecord { CadetId = c4.Id, SubjectId = xdSub.Id, ExamDate = d3, ExamSession = "Kiểm tra Quý 3/2026", ScoreValue = 18, Grade = "Khá", Notes = "Đạt yêu cầu" });
+                        examRecords.Add(new PhysicalExamRecord { CadetId = c4.Id, SubjectId = c100Sub.Id, ExamDate = d3, ExamSession = "Kiểm tra Quý 3/2026", ScoreValue = 13.8, Grade = "Khá", Notes = "Khá tốt" });
+                        examRecords.Add(new PhysicalExamRecord { CadetId = c4.Id, SubjectId = cv3000Sub.Id, ExamDate = d3, ExamSession = "Kiểm tra Quý 3/2026", ScoreValue = 13.5, Grade = "Khá", Notes = "Duy trì được" });
+                    }
+
+                    // Thêm Quý 4/2026:
+                    var d4 = DateTime.Today.AddDays(-7);
+                    // Cadet 1: XD 24 -> 26 (Tăng), C100 13.1 -> 12.8 (Tăng - thời gian giảm), CV3000 12.3 -> 12.0 (Tăng) => TĂNG TRƯỞNG (▲)
+                    examRecords.Add(new PhysicalExamRecord { CadetId = c1.Id, SubjectId = xdSub.Id, ExamDate = d4, ExamSession = "Kiểm tra Quý 4/2026", ScoreValue = 26, Grade = "Xuất sắc", Notes = "Tiến bộ vượt bậc" });
+                    examRecords.Add(new PhysicalExamRecord { CadetId = c1.Id, SubjectId = c100Sub.Id, ExamDate = d4, ExamSession = "Kiểm tra Quý 4/2026", ScoreValue = 12.8, Grade = "Xuất sắc", Notes = "Tốc độ bứt phá" });
+                    examRecords.Add(new PhysicalExamRecord { CadetId = c1.Id, SubjectId = cv3000Sub.Id, ExamDate = d4, ExamSession = "Kiểm tra Quý 4/2026", ScoreValue = 12.0, Grade = "Xuất sắc", Notes = "Sức bền tuyệt vời" });
+
+                    // Cadet 2: XD 16 -> 19 (Tăng), C100 14.8 -> 14.8 (Giữ), CV3000 14.5 -> 13.8 (Tăng) => TĂNG TRƯỞNG (▲)
+                    examRecords.Add(new PhysicalExamRecord { CadetId = c2.Id, SubjectId = xdSub.Id, ExamDate = d4, ExamSession = "Kiểm tra Quý 4/2026", ScoreValue = 19, Grade = "Khá", Notes = "Tiến bộ rõ rệt xà đơn" });
+                    examRecords.Add(new PhysicalExamRecord { CadetId = c2.Id, SubjectId = c100Sub.Id, ExamDate = d4, ExamSession = "Kiểm tra Quý 4/2026", ScoreValue = 14.8, Grade = "Khá", Notes = "Giữ vững phong độ" });
+                    examRecords.Add(new PhysicalExamRecord { CadetId = c2.Id, SubjectId = cv3000Sub.Id, ExamDate = d4, ExamSession = "Kiểm tra Quý 4/2026", ScoreValue = 13.8, Grade = "Khá", Notes = "Cải thiện sức bền chạy dài" });
+
+                    // Cadet 3: XD 20 -> 20 (Giữ), C100 13.5 -> 13.5 (Giữ), CV3000 13.0 -> 13.0 (Giữ) => GIỮ NGUYÊN (—)
+                    examRecords.Add(new PhysicalExamRecord { CadetId = c3.Id, SubjectId = xdSub.Id, ExamDate = d4, ExamSession = "Kiểm tra Quý 4/2026", ScoreValue = 20, Grade = "Khá", Notes = "Phong độ ổn định" });
+                    examRecords.Add(new PhysicalExamRecord { CadetId = c3.Id, SubjectId = c100Sub.Id, ExamDate = d4, ExamSession = "Kiểm tra Quý 4/2026", ScoreValue = 13.5, Grade = "Giỏi", Notes = "Duy trì thành tích tốt" });
+                    examRecords.Add(new PhysicalExamRecord { CadetId = c3.Id, SubjectId = cv3000Sub.Id, ExamDate = d4, ExamSession = "Kiểm tra Quý 4/2026", ScoreValue = 13.0, Grade = "Khá", Notes = "Thể lực đều" });
+
+                    // Cadet 4: XD 18 -> 14 (Giảm), C100 13.8 -> 14.5 (Giảm - thời gian tăng), CV3000 13.5 -> 14.8 (Giảm) => THỤT LÙI (▼)
+                    examRecords.Add(new PhysicalExamRecord { CadetId = c4.Id, SubjectId = xdSub.Id, ExamDate = d4, ExamSession = "Kiểm tra Quý 4/2026", ScoreValue = 14, Grade = "Không đạt", Notes = "Sút giảm thể lực, cần tăng cường rèn luyện" });
+                    examRecords.Add(new PhysicalExamRecord { CadetId = c4.Id, SubjectId = c100Sub.Id, ExamDate = d4, ExamSession = "Kiểm tra Quý 4/2026", ScoreValue = 14.5, Grade = "Đạt", Notes = "Nước rút giảm sút" });
+                    examRecords.Add(new PhysicalExamRecord { CadetId = c4.Id, SubjectId = cv3000Sub.Id, ExamDate = d4, ExamSession = "Kiểm tra Quý 4/2026", ScoreValue = 14.8, Grade = "Đạt", Notes = "Hụt hơi ở đoạn dốc" });
+
+                    context.PhysicalExamRecords.AddRange(examRecords);
                     context.SaveChanges();
                 }
+            }
+
+            // Seed các mốc thời gian huấn luyện và sự kiện quân sự (TrainingEvents)
+            if (!context.TrainingEvents.Any())
+            {
+                var events = new List<TrainingEvent>
+                {
+                    new TrainingEvent
+                    {
+                        Title = "Kiểm tra thể lực định kỳ Quý 4/2026",
+                        Category = "Kiểm tra thể lực",
+                        StartDate = DateTime.Today.AddDays(-7),
+                        EndDate = DateTime.Today.AddDays(-5),
+                        TargetUnit = "Toàn đơn vị",
+                        Location = "Bãi tập thể lực & Thao trường 1",
+                        Priority = "Cao",
+                        Status = "Đã hoàn thành",
+                        Description = "Kiểm tra 4 môn thể lực tiêu chuẩn TT 32/2009 cho toàn thể học viên."
+                    },
+                    new TrainingEvent
+                    {
+                        Title = "Kiểm tra bắn súng AK bài 1 (Ban ngày)",
+                        Category = "Thi cử quân sự",
+                        StartDate = DateTime.Today.AddDays(2),
+                        EndDate = DateTime.Today.AddDays(3),
+                        TargetUnit = "Đại đội 1",
+                        Location = "Trường bắn TB1",
+                        Priority = "Khẩn cấp",
+                        Status = "Đang chuẩn bị",
+                        Description = "Kiểm tra bắn mục tiêu bia số 4, 7, 8 ẩn hiện ban ngày cự ly 100m."
+                    },
+                    new TrainingEvent
+                    {
+                        Title = "Hành quân rèn luyện dã ngoại 25km mang vác nặng",
+                        Category = "Tập luyện / Rèn luyện",
+                        StartDate = DateTime.Today.AddDays(7),
+                        EndDate = DateTime.Today.AddDays(8),
+                        TargetUnit = "Toàn đơn vị",
+                        Location = "Tuyến thao trường dã ngoại Ba Vì",
+                        Priority = "Cao",
+                        Status = "Đang chuẩn bị",
+                        Description = "Hành quân rèn sức bền, mang vũ khí trang bị 25kg, vượt dốc và sông suối."
+                    },
+                    new TrainingEvent
+                    {
+                        Title = "Hội thao Chiến sĩ Khỏe & Vượt vật cản K91",
+                        Category = "Hội thao / Sự kiện",
+                        StartDate = DateTime.Today.AddDays(15),
+                        EndDate = DateTime.Today.AddDays(17),
+                        TargetUnit = "Toàn đơn vị",
+                        Location = "Bãi vật cản K91 & Sân vận động trung tâm",
+                        Priority = "Bình thường",
+                        Status = "Đang chuẩn bị",
+                        Description = "Hội thao thể thao quân sự chào mừng ngày truyền thống học viện."
+                    },
+                    new TrainingEvent
+                    {
+                        Title = "Sát hạch bơi vũ trang 100m vượt sông ngòi",
+                        Category = "Kiểm tra thể lực",
+                        StartDate = DateTime.Today.AddDays(22),
+                        EndDate = DateTime.Today.AddDays(23),
+                        TargetUnit = "Đại đội 2",
+                        Location = "Bể bơi quân sự & Khu vực hồ thao trường",
+                        Priority = "Bình thường",
+                        Status = "Đang chuẩn bị",
+                        Description = "Kiểm tra bơi bao gói vũ khí trang bị đảm bảo an toàn tuyệt đối."
+                    }
+                };
+
+                context.TrainingEvents.AddRange(events);
+                context.SaveChanges();
             }
         }
     }
