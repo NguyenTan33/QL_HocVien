@@ -292,6 +292,73 @@ namespace QL_HocVien.Tests
                 }
             }
         }
+        [Fact]
+        public void Test_ExamAnalyticsView_Instantiation()
+        {
+            Exception? ex = null;
+            var thread = new System.Threading.Thread(() =>
+            {
+                try
+                {
+                    if (System.Windows.Application.Current == null)
+                    {
+                        var app = new System.Windows.Application();
+                        app.Resources.MergedDictionaries.Add(new System.Windows.ResourceDictionary
+                        {
+                            Source = new Uri("pack://application:,,,/QL_HocVien;component/Styles/MilitaryTheme.xaml", UriKind.Absolute)
+                        });
+                    }
+                    var view = new QL_HocVien.Views.UserControls.ExamAnalyticsView();
+                    Assert.NotNull(view);
+                }
+                catch (Exception e)
+                {
+                    ex = e;
+                }
+            });
+            thread.SetApartmentState(System.Threading.ApartmentState.STA);
+            thread.Start();
+            thread.Join();
+
+            if (ex != null)
+            {
+                throw new Exception($"ExamAnalyticsView instantiation failed: {ex.Message} -> Inner: {ex.InnerException?.Message}", ex);
+            }
+        }
+
+        [Fact]
+        public void Test_TrainingTimelineView_Instantiation()
+        {
+            Exception? ex = null;
+            var thread = new System.Threading.Thread(() =>
+            {
+                try
+                {
+                    if (System.Windows.Application.Current == null)
+                    {
+                        var app = new System.Windows.Application();
+                        app.Resources.MergedDictionaries.Add(new System.Windows.ResourceDictionary
+                        {
+                            Source = new Uri("pack://application:,,,/QL_HocVien;component/Styles/MilitaryTheme.xaml", UriKind.Absolute)
+                        });
+                    }
+                    var view = new QL_HocVien.Views.UserControls.TrainingTimelineView();
+                    Assert.NotNull(view);
+                }
+                catch (Exception e)
+                {
+                    ex = e;
+                }
+            });
+            thread.SetApartmentState(System.Threading.ApartmentState.STA);
+            thread.Start();
+            thread.Join();
+
+            if (ex != null)
+            {
+                throw new Exception($"TrainingTimelineView instantiation failed: {ex.Message} -> Inner: {ex.InnerException?.Message}", ex);
+            }
+        }
         #endregion
     }
 }

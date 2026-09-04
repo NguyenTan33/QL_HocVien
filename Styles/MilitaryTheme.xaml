@@ -250,7 +250,7 @@
     <DropShadowEffect x:Key="CardShadow" BlurRadius="20" Color="#000000" Opacity="0.25" ShadowDepth="4"/>
 
     <!-- ==================== DATAGRID QUÂN ĐỘI: ZEBRA STRIPING & HIỆN ĐẠI ==================== -->
-    <Style TargetType="DataGrid">
+    <Style x:Key="MilitaryDataGridStyle" TargetType="DataGrid">
         <Setter Property="Background" Value="White"/>
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="RowHeight" Value="42"/>
@@ -273,6 +273,8 @@
         <Setter Property="FontSize" Value="13"/>
         <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
     </Style>
+
+    <Style TargetType="DataGrid" BasedOn="{StaticResource MilitaryDataGridStyle}"/>
 
     <Style TargetType="DataGridColumnHeader">
         <Setter Property="Background" Value="#E2E8F0"/>
