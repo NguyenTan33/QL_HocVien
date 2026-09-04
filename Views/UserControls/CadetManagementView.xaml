@@ -1,0 +1,196 @@
+<UserControl x:Class="QL_HocVien.Views.UserControls.CadetManagementView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local_cv="clr-namespace:QL_HocVien.Converters"
+             mc:Ignorable="d" 
+             d:DesignHeight="700" d:DesignWidth="950">
+    <Border Padding="24">
+        <Grid>
+            <!-- Vùng nội dung chính -->
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Tiêu đề & Nút Thao tác -->
+            <Grid Grid.Row="0" Margin="0,0,0,20">
+                <StackPanel>
+                    <TextBlock Text="QUẢN LÝ DANH SÁCH HỌC VIÊN" FontSize="22" FontWeight="Bold" Foreground="#0F172A"/>
+                    <TextBlock Text="Tra cứu, cập nhật thông tin học viên, đặt lại mật khẩu và phân loại quân số" FontSize="13" Foreground="#64748B" Margin="0,4,0,0"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="➕ Thêm Học Viên Mới" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,10,0"
+                            Command="{Binding RequestAddNewCommand}"/>
+                    <Button Content="✏️ Sửa Thông Tin" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,0"
+                            Command="{Binding StartEditCommand}"/>
+                    <Button Content="🔑 Đặt Lại Mật Khẩu" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,0"
+                            Command="{Binding OpenResetPasswordCommand}"/>
+                    <Button Content="🗑️ Xóa" Style="{StaticResource DangerButtonStyle}"
+                            Command="{Binding DeleteCadetCommand}"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- Thanh Tìm Kiếm & Bộ Lọc Đa Chiều -->
+            <Border Grid.Row="1" Style="{StaticResource CardBorderStyle}" Margin="0,0,0,16" Padding="14">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="14"/>
+                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="14"/>
+                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="14"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Tìm kiếm -->
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Tìm theo Tên, Mã HV hoặc SĐT:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                        <TextBox Text="{Binding SearchKeyword, UpdateSourceTrigger=PropertyChanged}" 
+                                 Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                    </StackPanel>
+
+                    <!-- Lọc Cấp bậc -->
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="Lọc Cấp bậc:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                        <ComboBox ItemsSource="{Binding RankList}" SelectedItem="{Binding SelectedRank}" 
+                                  Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
+                    </StackPanel>
+
+                    <!-- Lọc Đơn vị -->
+                    <StackPanel Grid.Column="4">
+                        <TextBlock Text="Lọc Đơn vị:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                        <ComboBox ItemsSource="{Binding UnitList}" SelectedItem="{Binding SelectedUnit}" 
+                                  Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
+                    </StackPanel>
+
+                    <!-- Nút Tải lại -->
+                    <Button Grid.Column="6" Content="🔄 Tải lại" VerticalAlignment="Bottom" Height="36" 
+                            Style="{StaticResource SecondaryButtonStyle}" Command="{Binding LoadCadetsCommand}"/>
+                </Grid>
+            </Border>
+
+            <!-- Bảng Dữ Liệu Học Viên -->
+            <Border Grid.Row="2" Style="{StaticResource CardBorderStyle}" Padding="0">
+                <DataGrid ItemsSource="{Binding Cadets}" SelectedItem="{Binding SelectedCadet}"
+                          AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
+                          GridLinesVisibility="Horizontal" HeadersVisibility="Column" Background="Transparent"
+                          BorderThickness="0" RowHeight="42" SelectionMode="Single">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Mã Học Viên" Binding="{Binding CadetCode}" Width="110"/>
+                        <DataGridTextColumn Header="Họ và Tên" Binding="{Binding FullName}" Width="160"/>
+                        <DataGridTextColumn Header="Cấp Bậc" Binding="{Binding Rank}" Width="100"/>
+                        <DataGridTextColumn Header="Chức Vụ" Binding="{Binding Position}" Width="120"/>
+                        <DataGridTextColumn Header="Đơn Vị" Binding="{Binding Unit}" Width="110"/>
+                        <DataGridTextColumn Header="Lớp" Binding="{Binding ClassName}" Width="170"/>
+                        <DataGridTextColumn Header="Số Điện Thoại" Binding="{Binding PhoneNumber}" Width="120"/>
+                        <DataGridTextColumn Header="Tuổi" Binding="{Binding Age}" Width="60"/>
+                        <DataGridTextColumn Header="Giới Tính" Binding="{Binding Gender}" Width="80"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+        </Grid>
+
+        <!-- ==================== MODAL SỬA THÔNG TIN ==================== -->
+        <Grid Background="#7F000000" Visibility="{Binding IsEditing, Converter={x:Static local_cv:BooleanToVisibilityConverter.Instance}}">
+            <Border Background="White" CornerRadius="12" Width="550" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="28">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="25" Color="#000000" Opacity="0.3" ShadowDepth="5"/>
+                </Border.Effect>
+                <StackPanel>
+                    <TextBlock Text="CẬP NHẬT THÔNG TIN HỌC VIÊN" FontSize="18" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,18"/>
+
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Họ và tên:" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding EditFullName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Số điện thoại:" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding EditPhone, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Cấp bậc:" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding EditRank, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Chức vụ:" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding EditPosition, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Đơn vị:" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding EditUnit, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Lớp:" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding EditClassName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <StackPanel Margin="0,0,0,20">
+                        <TextBlock Text="Email liên hệ:" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                        <TextBox Text="{Binding EditEmail, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Hủy Bỏ" Style="{StaticResource SecondaryButtonStyle}" Width="90" Height="36" Margin="0,0,10,0"
+                                Command="{Binding CancelEditCommand}"/>
+                        <Button Content="Lưu Thay Đổi" Style="{StaticResource PrimaryButtonStyle}" Width="120" Height="36"
+                                Command="{Binding SaveEditCommand}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- ==================== MODAL ĐẶT LẠI MẬT KHẨU HỌC VIÊN ==================== -->
+        <Grid Background="#7F000000" Visibility="{Binding IsResetPasswordDialogVisible, Converter={x:Static local_cv:BooleanToVisibilityConverter.Instance}}">
+            <Border Background="White" CornerRadius="12" Width="440" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="24">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="25" Color="#000000" Opacity="0.3" ShadowDepth="5"/>
+                </Border.Effect>
+                <StackPanel>
+                    <TextBlock Text="🔑 ĐẶT LẠI MẬT KHẨU HỌC VIÊN" FontSize="16" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,12"/>
+                    <TextBlock Text="{Binding SelectedCadet.FullName, StringFormat='Đồng chí: {0}'}" FontWeight="SemiBold" Foreground="#1E3A8A" Margin="0,0,0,4"/>
+                    <TextBlock Text="{Binding SelectedCadet.CadetCode, StringFormat='Mã học viên: {0}'}" FontSize="12" Foreground="#64748B" Margin="0,0,0,16"/>
+
+                    <TextBlock Text="Nhập mật khẩu mới cho tài khoản:" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                    <TextBox Text="{Binding NewCadetPassword, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="38" Margin="0,0,0,20"/>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Hủy Bỏ" Style="{StaticResource SecondaryButtonStyle}" Width="90" Height="36" Margin="0,0,10,0"
+                                Command="{Binding CloseResetPasswordCommand}"/>
+                        <Button Content="Xác Nhận Đổi" Style="{StaticResource PrimaryButtonStyle}" Width="120" Height="36"
+                                Command="{Binding ConfirmResetPasswordCommand}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+        </Grid>
+    </Border>
+</UserControl>
