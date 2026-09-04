@@ -1,0 +1,170 @@
+<UserControl x:Class="QL_HocVien.Views.UserControls.DashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="700" d:DesignWidth="900">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24">
+        <StackPanel>
+            <!-- Tiêu đề trang -->
+            <Grid Margin="0,0,0,24">
+                <StackPanel>
+                    <TextBlock Text="BẢNG TỔNG QUAN HỌC VIÊN &amp; RÈN LUYỆN THỂ LỰC" FontSize="22" FontWeight="Bold" Foreground="#0F172A"/>
+                    <TextBlock Text="Theo dõi thống kê số liệu, đánh giá rèn luyện thể lực theo tiêu chuẩn Thông tư 32/2009/TTLT-BQP-BVHTTDL" 
+                               FontSize="13" Foreground="#64748B" Margin="0,4,0,0"/>
+                </StackPanel>
+                <Button Content="🔄 Làm Mới Dữ Liệu" HorizontalAlignment="Right" Style="{StaticResource SecondaryButtonStyle}"
+                        Command="{Binding LoadDashboardDataCommand}"/>
+            </Grid>
+
+            <!-- 4 Thẻ KPI thống kê chính -->
+            <Grid Margin="0,0,0,24">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="16"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="16"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="16"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Card 1: Tổng số học viên -->
+                <Border Grid.Column="0" Style="{StaticResource CardBorderStyle}" Background="#EFF6FF" BorderBrush="#BFDBFE">
+                    <StackPanel>
+                        <TextBlock Text="TỔNG QUÂN SỐ" FontSize="11" FontWeight="Bold" Foreground="#1E40AF"/>
+                        <TextBlock Text="{Binding TotalCadets}" FontSize="32" FontWeight="ExtraBold" Foreground="#1E3A8A" Margin="0,8,0,0"/>
+                        <TextBlock Text="Học viên đang quản lý" FontSize="12" Foreground="#3B82F6" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Card 2: Tổng lượt kiểm tra -->
+                <Border Grid.Column="2" Style="{StaticResource CardBorderStyle}" Background="#F0FDF4" BorderBrush="#BBF7D0">
+                    <StackPanel>
+                        <TextBlock Text="LƯỢT KIỂM TRA" FontSize="11" FontWeight="Bold" Foreground="#166534"/>
+                        <TextBlock Text="{Binding TotalExamRecords}" FontSize="32" FontWeight="ExtraBold" Foreground="#15803D" Margin="0,8,0,0"/>
+                        <TextBlock Text="Đợt kiểm tra đã ghi nhận" FontSize="12" Foreground="#22C55E" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Card 3: Tỷ lệ đạt yêu cầu -->
+                <Border Grid.Column="4" Style="{StaticResource CardBorderStyle}" Background="#FEFCE8" BorderBrush="#FEF08A">
+                    <StackPanel>
+                        <TextBlock Text="TỶ LỆ ĐẠT YÊU CẦU" FontSize="11" FontWeight="Bold" Foreground="#854D0E"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <TextBlock Text="{Binding PassRate}" FontSize="32" FontWeight="ExtraBold" Foreground="#A16207"/>
+                            <TextBlock Text="%" FontSize="20" FontWeight="Bold" Foreground="#A16207" VerticalAlignment="Bottom" Margin="2,0,0,4"/>
+                        </StackPanel>
+                        <TextBlock Text="Đạt tiêu chuẩn quân sự" FontSize="12" Foreground="#CA8A04" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Card 4: Quân số chưa đạt (Cần rèn luyện bổ sung) -->
+                <Border Grid.Column="6" Style="{StaticResource CardBorderStyle}" Background="#FEF2F2" BorderBrush="#FECACA">
+                    <StackPanel>
+                        <TextBlock Text="CHƯA ĐẠT CHUẨN" FontSize="11" FontWeight="Bold" Foreground="#991B1B"/>
+                        <TextBlock Text="{Binding FailCount}" FontSize="32" FontWeight="ExtraBold" Foreground="#DC2626" Margin="0,8,0,0"/>
+                        <TextBlock Text="Cần đưa vào rèn luyện bổ sung" FontSize="12" Foreground="#EF4444" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- Hàng 2: Phân bố Xếp loại Quân sự & Giới thiệu Thông tư 32 -->
+            <Grid Margin="0,0,0,24">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="16"/>
+                    <ColumnDefinition Width="1*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Biểu đồ phân bổ 4 mức xếp loại -->
+                <Border Grid.Column="0" Style="{StaticResource CardBorderStyle}">
+                    <StackPanel>
+                        <TextBlock Text="Phân Bổ Xếp Loại Theo Chuẩn Quân Sự" FontSize="15" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,16"/>
+
+                        <!-- Mức Giỏi & Xuất sắc -->
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="140"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="60"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Xuất sắc &amp; Giỏi:" FontSize="13" Foreground="#334155" VerticalAlignment="Center"/>
+                            <ProgressBar Grid.Column="1" Value="{Binding GoodCount}" Maximum="100" Height="14" Foreground="#2563EB" Background="#E2E8F0"/>
+                            <TextBlock Grid.Column="2" Text="{Binding GoodCount, StringFormat='{}{0} lượt'}" FontSize="13" FontWeight="SemiBold" Foreground="#2563EB" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                        </Grid>
+
+                        <!-- Mức Khá & Đạt -->
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="140"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="60"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Khá &amp; Đạt chuẩn:" FontSize="13" Foreground="#334155" VerticalAlignment="Center"/>
+                            <ProgressBar Grid.Column="1" Value="{Binding PassCount}" Maximum="100" Height="14" Foreground="#16A34A" Background="#E2E8F0"/>
+                            <TextBlock Grid.Column="2" Text="{Binding PassCount, StringFormat='{}{0} lượt'}" FontSize="13" FontWeight="SemiBold" Foreground="#16A34A" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                        </Grid>
+
+                        <!-- Mức Không đạt -->
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="140"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="60"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Không đạt:" FontSize="13" Foreground="#334155" VerticalAlignment="Center"/>
+                            <ProgressBar Grid.Column="1" Value="{Binding FailCount}" Maximum="100" Height="14" Foreground="#DC2626" Background="#E2E8F0"/>
+                            <TextBlock Grid.Column="2" Text="{Binding FailCount, StringFormat='{}{0} lượt'}" FontSize="13" FontWeight="SemiBold" Foreground="#DC2626" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Thẻ thông tin tiêu chuẩn -->
+                <Border Grid.Column="2" Style="{StaticResource CardBorderStyle}" Background="#F8FAFC">
+                    <StackPanel>
+                        <TextBlock Text="Tiêu Chuẩn Rèn Luyện" FontSize="14" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,8"/>
+                        <TextBlock Text="Căn cứ Thông tư 32/2009/TTLT-BQP-BVHTTDL quy định tiêu chuẩn rèn luyện thể lực của Bộ đội Lục quân Việt Nam." 
+                                   FontSize="12" Foreground="#475569" TextWrapping="Wrap" LineHeight="18" Margin="0,0,0,12"/>
+                        <TextBlock Text="• Tố chất sức nhanh: Chạy 100m" FontSize="12" Foreground="#334155" Margin="0,0,0,4"/>
+                        <TextBlock Text="• Tố chất sức mạnh: Xà đơn, xà kép" FontSize="12" Foreground="#334155" Margin="0,0,0,4"/>
+                        <TextBlock Text="• Tố chất sức bền: Chạy VT 3000m" FontSize="12" Foreground="#334155" Margin="0,0,0,4"/>
+                        <TextBlock Text="• Bơi vượt chướng ngại vật" FontSize="12" Foreground="#334155"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- Hàng 3: Danh sách Học viên Cần Rèn Luyện Bổ Sung (Theo biểu mẫu Khảo sát) -->
+            <Border Style="{StaticResource CardBorderStyle}">
+                <StackPanel>
+                    <Grid Margin="0,0,0,16">
+                        <StackPanel>
+                            <TextBlock Text="Danh Sách Học Viên Chưa Đạt - Đưa Vào Kế Hoạch Rèn Luyện Bổ Sung" 
+                                       FontSize="15" FontWeight="Bold" Foreground="#DC2626"/>
+                            <TextBlock Text="Tự động trích xuất các đồng chí chưa đạt yêu cầu trong các đợt kiểm tra theo đề xuất khảo sát" 
+                                       FontSize="12" Foreground="#64748B" Margin="0,2,0,0"/>
+                        </StackPanel>
+                        <TextBlock Text="{Binding FailedRecords.Count, StringFormat='{}{0} trường hợp'}" 
+                                   HorizontalAlignment="Right" VerticalAlignment="Center" FontWeight="Bold" Foreground="#DC2626"/>
+                    </Grid>
+
+                    <DataGrid ItemsSource="{Binding FailedRecords}" AutoGenerateColumns="False" IsReadOnly="True"
+                              GridLinesVisibility="Horizontal" HeadersVisibility="Column" Background="Transparent"
+                              BorderThickness="0" RowHeight="38">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Mã HV" Binding="{Binding Cadet.CadetCode}" Width="110"/>
+                            <DataGridTextColumn Header="Họ và Tên" Binding="{Binding Cadet.FullName}" Width="160"/>
+                            <DataGridTextColumn Header="Đơn Vị" Binding="{Binding Cadet.Unit}" Width="120"/>
+                            <DataGridTextColumn Header="Lớp" Binding="{Binding Cadet.ClassName}" Width="160"/>
+                            <DataGridTextColumn Header="Nội Dung Kiểm Tra" Binding="{Binding Subject.SubjectName}" Width="160"/>
+                            <DataGridTextColumn Header="Thành Tích" Binding="{Binding ScoreValue}" Width="90"/>
+                            <DataGridTextColumn Header="Xếp Loại" Binding="{Binding Grade}" Width="100"/>
+                            <DataGridTextColumn Header="Ngày Kiểm Tra" Binding="{Binding ExamDate, StringFormat='dd/MM/yyyy'}" Width="110"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -1,0 +1,93 @@
+<UserControl x:Class="QL_HocVien.Views.UserControls.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local_cv="clr-namespace:QL_HocVien.Converters"
+             mc:Ignorable="d" 
+             d:DesignHeight="700" d:DesignWidth="900">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24">
+        <StackPanel MaxWidth="750" HorizontalAlignment="Left">
+            <TextBlock Text="CÀI ĐẶT HỆ THỐNG &amp; MÁY CHỦ EMAIL (SMTP)" FontSize="22" FontWeight="Bold" Foreground="#0F172A"/>
+            <TextBlock Text="Cấu hình gửi mã OTP xác thực qua Email và thông số cơ sở dữ liệu SQLite" FontSize="13" Foreground="#64748B" Margin="0,4,0,24"/>
+
+            <Border Background="#F0FDF4" BorderBrush="#86EFAC" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,16"
+                    Visibility="{Binding StatusMessage, Converter={x:Static local_cv:StringToVisibilityConverter.Instance}}">
+                <TextBlock Text="{Binding StatusMessage}" Foreground="#16A34A" FontSize="13" FontWeight="SemiBold"/>
+            </Border>
+
+            <!-- Cấu hình SMTP -->
+            <Border Style="{StaticResource CardBorderStyle}" Padding="24" Margin="0,0,0,20">
+                <StackPanel>
+                    <TextBlock Text="Cấu hình Dịch vụ Gửi Email Xác thực (SMTP)" FontSize="16" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,16"/>
+
+                    <CheckBox Content="Bật chế độ thử nghiệm (Mã OTP sẽ hiển thị thông báo trực tiếp mà không cần gửi qua Internet)" 
+                              IsChecked="{Binding IsTestMode}" FontWeight="SemiBold" Foreground="#15803D" Margin="0,0,0,16"/>
+
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="2*"/>
+                            <ColumnDefinition Width="14"/>
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Máy chủ SMTP (Ví dụ: smtp.gmail.com):" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding SmtpServer, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="38"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Cổng kết nối (Port):" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding SmtpPort, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="38"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="14"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Tên người gửi hiển thị:" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding SenderName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="38"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Email người gửi:" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding SenderEmail, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="38"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="14"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Tài khoản SMTP (Username/Email):" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding SmtpUsername, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="38"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Mật khẩu ứng dụng (App Password):" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding SmtpPassword, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="38"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <CheckBox Content="Kích hoạt mã hóa SSL/TLS" IsChecked="{Binding EnableSsl}" Margin="0,0,0,20"/>
+
+                    <Button Content="💾 Lưu Cấu Hình SMTP" Style="{StaticResource PrimaryButtonStyle}" HorizontalAlignment="Right" Height="40" Width="180"
+                            Command="{Binding SaveSettingsCommand}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Thông tin Cơ sở dữ liệu SQLite -->
+            <Border Style="{StaticResource CardBorderStyle}" Padding="24">
+                <StackPanel>
+                    <TextBlock Text="Cơ Sở Dữ Liệu SQLite Cục Bộ" FontSize="16" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,8"/>
+                    <TextBlock Text="Cơ sở dữ liệu dạng file đơn 'ql_hocvien.db' được lưu trực tiếp tại thư mục chạy chương trình. Dễ dàng sao lưu, di chuyển sang máy tính khác mà không cần cài đặt SQL Server hay cấu hình mạng phức tạp."
+                               FontSize="13" Foreground="#475569" TextWrapping="Wrap" LineHeight="20" Margin="0,0,0,12"/>
+                    <TextBlock Text="{Binding DatabasePath, StringFormat='Tệp tin CSDL: {0}'}" FontSize="13" FontWeight="SemiBold" Foreground="#0F172A"/>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -1,0 +1,171 @@
+<UserControl x:Class="QL_HocVien.Views.UserControls.PhysicalExamView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local_cv="clr-namespace:QL_HocVien.Converters"
+             mc:Ignorable="d" 
+             d:DesignHeight="700" d:DesignWidth="950">
+    <Border Padding="24">
+        <Grid>
+            <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Tiêu đề & Nút Thao tác -->
+            <Grid Grid.Row="0" Margin="0,0,0,20">
+                <StackPanel>
+                    <TextBlock Text="KIỂM TRA &amp; ĐÁNH GIÁ THỂ LỰC QUÂN SỰ" FontSize="22" FontWeight="Bold" Foreground="#0F172A"/>
+                    <TextBlock Text="Nhập kết quả thành tích kiểm tra, tự động chấm điểm và xếp loại theo tiêu chuẩn Thông tư 32" 
+                               FontSize="13" Foreground="#64748B" Margin="0,4,0,0"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="➕ Nhập Điểm Kiểm Tra Mới" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,10,0"
+                            Command="{Binding OpenAddFormCommand}"/>
+                    <Button Content="🗑️ Xóa Bản Ghi" Style="{StaticResource DangerButtonStyle}"
+                            Command="{Binding DeleteRecordCommand}"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- Thanh Tìm Kiếm & Bộ Lọc -->
+            <Border Grid.Row="1" Style="{StaticResource CardBorderStyle}" Margin="0,0,0,16" Padding="14">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="14"/>
+                        <ColumnDefinition Width="1.5*"/>
+                        <ColumnDefinition Width="14"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Tìm kiếm học viên -->
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Tìm kiếm theo Tên hoặc Mã học viên:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                        <TextBox Text="{Binding SearchCadetKeyword, UpdateSourceTrigger=PropertyChanged}" 
+                                 Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                    </StackPanel>
+
+                    <!-- Lọc Xếp loại -->
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="Lọc theo Xếp loại:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                        <ComboBox ItemsSource="{Binding GradeFilters}" SelectedItem="{Binding SelectedGradeFilter}" 
+                                  Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
+                    </StackPanel>
+
+                    <!-- Nút Tải lại -->
+                    <Button Grid.Column="4" Content="🔄 Tải lại" VerticalAlignment="Bottom" Height="36" 
+                            Style="{StaticResource SecondaryButtonStyle}" Command="{Binding LoadRecordsCommand}"/>
+                </Grid>
+            </Border>
+
+            <!-- Bảng Danh Sách Kết Quả Kiểm Tra -->
+            <Border Grid.Row="2" Style="{StaticResource CardBorderStyle}" Padding="0">
+                <DataGrid ItemsSource="{Binding ExamRecords}" SelectedItem="{Binding SelectedRecord}"
+                          AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
+                          GridLinesVisibility="Horizontal" HeadersVisibility="Column" Background="Transparent"
+                          BorderThickness="0" RowHeight="42" SelectionMode="Single">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Mã Học Viên" Binding="{Binding Cadet.CadetCode}" Width="110"/>
+                        <DataGridTextColumn Header="Họ và Tên" Binding="{Binding Cadet.FullName}" Width="160"/>
+                        <DataGridTextColumn Header="Đơn Vị" Binding="{Binding Cadet.Unit}" Width="110"/>
+                        <DataGridTextColumn Header="Môn Kiểm Tra" Binding="{Binding Subject.SubjectName}" Width="170"/>
+                        <DataGridTextColumn Header="Thành Tích" Binding="{Binding ScoreValue}" Width="90"/>
+                        <DataGridTextColumn Header="Đơn Vị Tính" Binding="{Binding Subject.Unit}" Width="90"/>
+                        <DataGridTextColumn Header="Xếp Loại" Binding="{Binding Grade}" Width="110"/>
+                        <DataGridTextColumn Header="Đợt Kiểm Tra" Binding="{Binding ExamSession}" Width="140"/>
+                        <DataGridTextColumn Header="Ngày Kiểm Tra" Binding="{Binding ExamDate, StringFormat='dd/MM/yyyy'}" Width="110"/>
+                        <DataGridTextColumn Header="Ghi Chú Đánh Giá" Binding="{Binding Notes}" Width="*"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+        </Grid>
+
+        <!-- ==================== MODAL NHẬP ĐIỂM KIỂM TRA MỚI ==================== -->
+        <Grid Background="#7F000000" Visibility="{Binding IsFormVisible, Converter={x:Static local_cv:BooleanToVisibilityConverter.Instance}}">
+            <Border Background="White" CornerRadius="12" Width="550" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="28">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="25" Color="#000000" Opacity="0.3" ShadowDepth="5"/>
+                </Border.Effect>
+                <StackPanel>
+                    <TextBlock Text="NHẬP KẾT QUẢ KIỂM TRA THỂ LỰC" FontSize="18" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,4"/>
+                    <TextBlock Text="Hệ thống sẽ tự động đối chiếu tiêu chuẩn Thông tư 32 để xếp loại ngay lập tức" FontSize="12" Foreground="#64748B" Margin="0,0,0,16"/>
+
+                    <!-- Lỗi modal -->
+                    <Border Background="#FEF2F2" BorderBrush="#FCA5A5" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,14"
+                            Visibility="{Binding FormErrorMessage, Converter={x:Static local_cv:StringToVisibilityConverter.Instance}}">
+                        <TextBlock Text="{Binding FormErrorMessage}" Foreground="#DC2626" FontSize="12"/>
+                    </Border>
+
+                    <!-- Chọn Học viên -->
+                    <StackPanel Margin="0,0,0,12">
+                        <TextBlock Text="Chọn Học viên kiểm tra (*):" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                        <ComboBox ItemsSource="{Binding Cadets}" SelectedItem="{Binding FormSelectedCadet}" DisplayMemberPath="FullName"
+                                  Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
+                    </StackPanel>
+
+                    <!-- Chọn Môn học -->
+                    <StackPanel Margin="0,0,0,12">
+                        <TextBlock Text="Nội dung môn kiểm tra (*):" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                        <ComboBox ItemsSource="{Binding Subjects}" SelectedItem="{Binding FormSelectedSubject}" DisplayMemberPath="SubjectName"
+                                  Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
+                    </StackPanel>
+
+                    <!-- Điểm thành tích & Xếp loại tự động preview -->
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="14"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="{Binding FormSelectedSubject.Unit, StringFormat='Thành tích đạt được ({0}):'}" 
+                                       FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding FormScoreValue, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Xếp loại sơ bộ tự động:" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                            <Border Background="#EFF6FF" BorderBrush="#93C5FD" BorderThickness="1" CornerRadius="6" Height="36" Padding="10,0">
+                                <TextBlock Text="{Binding FormPreviewGrade}" FontWeight="Bold" FontSize="14" Foreground="#1E40AF" VerticalAlignment="Center"/>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Đợt kiểm tra & Ngày kiểm tra -->
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="14"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Đợt kiểm tra:" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding FormExamSession, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Ngày kiểm tra:" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                            <DatePicker SelectedDate="{Binding FormExamDate}" Height="36" VerticalContentAlignment="Center"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Ghi chú nhận xét -->
+                    <StackPanel Margin="0,0,0,20">
+                        <TextBlock Text="Nhận xét kỹ thuật động tác:" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                        <TextBox Text="{Binding FormNotes, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="45"/>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Hủy Bỏ" Style="{StaticResource SecondaryButtonStyle}" Width="90" Height="36" Margin="0,0,10,0"
+                                Command="{Binding CloseFormCommand}"/>
+                        <Button Content="Lưu Kết Quả" Style="{StaticResource PrimaryButtonStyle}" Width="120" Height="36"
+                                Command="{Binding SaveRecordCommand}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+        </Grid>
+    </Border>
+</UserControl>
