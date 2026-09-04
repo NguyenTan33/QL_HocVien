@@ -23,12 +23,46 @@ namespace QL_HocVien.ViewModels
         {
             "Tất cả", "Xuất sắc", "Giỏi", "Khá", "Đạt", "Không đạt"
         };
+        public ObservableCollection<string> SubjectFilters { get; } = new() { "Tất cả các môn" };
+        public ObservableCollection<string> SessionFilters { get; } = new()
+        {
+            "Tất cả", "Kiểm tra Quý 1/2026", "Kiểm tra Quý 2/2026", "Kiểm tra Quý 3/2026", "Kiểm tra Quý 4/2026", "Kiểm tra định kỳ"
+        };
+        public ObservableCollection<string> UnitFilters { get; } = new()
+        {
+            "Tất cả", "Đại đội 1", "Đại đội 2", "Đại đội 3", "Đại đội 4", "Tiểu đoàn 1"
+        };
+        public ObservableCollection<string> ClassFilters { get; } = new() { "Tất cả" };
 
         [ObservableProperty]
         private string _searchCadetKeyword = string.Empty;
 
         [ObservableProperty]
         private string _selectedGradeFilter = "Tất cả";
+
+        [ObservableProperty]
+        private string _selectedSubjectFilter = "Tất cả các môn";
+
+        [ObservableProperty]
+        private string _selectedSessionFilter = "Tất cả";
+
+        [ObservableProperty]
+        private string _selectedUnitFilter = "Tất cả";
+
+        [ObservableProperty]
+        private string _selectedClassFilter = "Tất cả";
+
+        [ObservableProperty]
+        private DateTime? _filterFromDate;
+
+        [ObservableProperty]
+        private DateTime? _filterToDate;
+
+        [ObservableProperty]
+        private bool _isAdvancedFilterVisible;
+
+        [ObservableProperty]
+        private int _activeFilterCount;
 
         [ObservableProperty]
         private PhysicalExamRecord? _selectedRecord;
@@ -63,6 +97,8 @@ namespace QL_HocVien.ViewModels
 
         private readonly IExcelService _excelService;
         private readonly IFileDialogService _fileDialogService;
+        private readonly IClassService? _classService;
+        private readonly ICatalogService? _catalogService;
 
         public PhysicalExamViewModel(
             IPhysicalExamService examService,
@@ -70,7 +106,9 @@ namespace QL_HocVien.ViewModels
             ISubjectService subjectService,
             IEvaluationService evaluationService,
             IExcelService excelService,
-            IFileDialogService fileDialogService)
+            IFileDialogService fileDialogService,
+            IClassService? classService = null,
+            ICatalogService? catalogService = null)
         {
             _examService = examService;
             _cadetService = cadetService;
@@ -78,6 +116,8 @@ namespace QL_HocVien.ViewModels
             _evaluationService = evaluationService;
             _excelService = excelService;
             _fileDialogService = fileDialogService;
+            _classService = classService;
+            _catalogService = catalogService;
             Title = "Kiểm Tra Rèn Luyện Thể Lực";
 
             _ = InitializeAsync();
@@ -97,10 +137,63 @@ namespace QL_HocVien.ViewModels
 
             var subjectList = await _subjectService.GetAllSubjectsAsync();
             Subjects.Clear();
-            foreach (var s in subjectList) Subjects.Add(s);
+            SubjectFilters.Clear();
+            SubjectFilters.Add("Tất cả các môn");
+            foreach (var s in subjectList)
+            {
+                Subjects.Add(s);
+                SubjectFilters.Add(s.SubjectName);
+            }
+
+            if (_classService != null)
+            {
+                try
+                {
+                    var classes = await _classService.GetAllClassesAsync();
+                    ClassFilters.Clear();
+                    ClassFilters.Add("Tất cả");
+                    foreach (var c in classes) ClassFilters.Add(c.ClassName);
+                }
+                catch { }
+            }
+
+            if (_catalogService != null)
+            {
+                try
+                {
+                    var units = await _catalogService.GetUnitDropdownAsync();
+                    if (units.Any())
+                    {
+                        UnitFilters.Clear();
+                        UnitFilters.Add("Tất cả");
+                        foreach (var u in units) UnitFilters.Add(u);
+                    }
+                }
+                catch { }
+            }
 
             if (Cadets.Count > 0) FormSelectedCadet = Cadets[0];
             if (Subjects.Count > 0) FormSelectedSubject = Subjects[0];
+        }
+
+        [RelayCommand]
+        public void ToggleAdvancedFilter()
+        {
+            IsAdvancedFilterVisible = !IsAdvancedFilterVisible;
+        }
+
+        [RelayCommand]
+        public void ResetFilters()
+        {
+            SearchCadetKeyword = string.Empty;
+            SelectedGradeFilter = "Tất cả";
+            SelectedSubjectFilter = "Tất cả các môn";
+            SelectedSessionFilter = "Tất cả";
+            SelectedUnitFilter = "Tất cả";
+            SelectedClassFilter = "Tất cả";
+            FilterFromDate = null;
+            FilterToDate = null;
+            _ = LoadRecordsAsync();
         }
 
         [RelayCommand]
@@ -109,13 +202,42 @@ namespace QL_HocVien.ViewModels
             IsBusy = true;
             try
             {
-                var list = await _examService.SearchRecordsAsync(SearchCadetKeyword, null, SelectedGradeFilter, null);
+                int count = 0;
+                if (!string.IsNullOrWhiteSpace(SearchCadetKeyword)) count++;
+                if (SelectedGradeFilter != "Tất cả") count++;
+                if (SelectedSubjectFilter != "Tất cả các môn") count++;
+                if (SelectedSessionFilter != "Tất cả") count++;
+                if (SelectedUnitFilter != "Tất cả") count++;
+                if (SelectedClassFilter != "Tất cả") count++;
+                if (FilterFromDate.HasValue || FilterToDate.HasValue) count++;
+                ActiveFilterCount = count;
+
+                int? subjectId = null;
+                if (SelectedSubjectFilter != "Tất cả các môn")
+                {
+                    var s = Subjects.FirstOrDefault(x => x.SubjectName == SelectedSubjectFilter);
+                    if (s != null) subjectId = s.Id;
+                }
+
+                var criteria = new QL_HocVien.Models.Filters.PhysicalExamFilterCriteria
+                {
+                    CadetKeyword = SearchCadetKeyword,
+                    SubjectId = subjectId,
+                    Grade = SelectedGradeFilter,
+                    ExamSession = SelectedSessionFilter,
+                    Unit = SelectedUnitFilter,
+                    ClassName = SelectedClassFilter,
+                    FromDate = FilterFromDate,
+                    ToDate = FilterToDate
+                };
+
+                var list = await _examService.SearchRecordsAsync(criteria);
                 ExamRecords.Clear();
                 foreach (var r in list)
                 {
                     ExamRecords.Add(r);
                 }
-                StatusMessage = $"Đã tải {ExamRecords.Count} lượt kiểm tra.";
+                StatusMessage = $"Đã tải {ExamRecords.Count} lượt kiểm tra {(ActiveFilterCount > 0 ? $"({ActiveFilterCount} bộ lọc đang áp dụng)" : "")}.";
             }
             catch (Exception ex)
             {
@@ -300,5 +422,11 @@ namespace QL_HocVien.ViewModels
         partial void OnFormScoreValueChanged(double value) => UpdatePreviewGrade();
         partial void OnSearchCadetKeywordChanged(string value) => _ = LoadRecordsAsync();
         partial void OnSelectedGradeFilterChanged(string value) => _ = LoadRecordsAsync();
+        partial void OnSelectedSubjectFilterChanged(string value) => _ = LoadRecordsAsync();
+        partial void OnSelectedSessionFilterChanged(string value) => _ = LoadRecordsAsync();
+        partial void OnSelectedUnitFilterChanged(string value) => _ = LoadRecordsAsync();
+        partial void OnSelectedClassFilterChanged(string value) => _ = LoadRecordsAsync();
+        partial void OnFilterFromDateChanged(DateTime? value) => _ = LoadRecordsAsync();
+        partial void OnFilterToDateChanged(DateTime? value) => _ = LoadRecordsAsync();
     }
 }

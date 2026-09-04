@@ -8,6 +8,7 @@ namespace QL_HocVien.Services
     {
         Task<IEnumerable<Subject>> GetAllSubjectsAsync();
         Task<IEnumerable<Subject>> SearchSubjectsAsync(string? keyword, string? category);
+        Task<IEnumerable<Subject>> SearchSubjectsAsync(QL_HocVien.Models.Filters.SubjectFilterCriteria criteria);
         Task<Subject?> GetSubjectByIdAsync(int id);
         Task<(bool Success, string Message, Subject? Subject)> AddSubjectAsync(Subject subject);
         Task<(bool Success, string Message)> UpdateSubjectAsync(Subject subject);

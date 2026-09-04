@@ -32,6 +32,9 @@ namespace QL_HocVien.Services
         public async Task<IEnumerable<MilitaryRank>> SearchRanksAsync(string? keyword, string? group) =>
             await _rankRepo.SearchRanksAsync(keyword, group);
 
+        public async Task<IEnumerable<MilitaryRank>> SearchRanksAsync(QL_HocVien.Models.Filters.CatalogFilterCriteria criteria) =>
+            await _rankRepo.SearchWithCriteriaAsync(criteria);
+
         public async Task<MilitaryRank?> GetRankByIdAsync(int id) => await _rankRepo.GetByIdAsync(id);
 
         public async Task<(bool Success, string Message, MilitaryRank? Rank)> AddRankAsync(MilitaryRank rank)
@@ -109,6 +112,9 @@ namespace QL_HocVien.Services
 
         public async Task<IEnumerable<MilitaryPosition>> SearchPositionsAsync(string? keyword, string? group) =>
             await _positionRepo.SearchPositionsAsync(keyword, group);
+
+        public async Task<IEnumerable<MilitaryPosition>> SearchPositionsAsync(QL_HocVien.Models.Filters.CatalogFilterCriteria criteria) =>
+            await _positionRepo.SearchWithCriteriaAsync(criteria);
 
         public async Task<MilitaryPosition?> GetPositionByIdAsync(int id) => await _positionRepo.GetByIdAsync(id);
 
@@ -188,6 +194,9 @@ namespace QL_HocVien.Services
         public async Task<IEnumerable<MilitaryUnit>> SearchUnitsAsync(string? keyword, string? parentUnit) =>
             await _unitRepo.SearchUnitsAsync(keyword, parentUnit);
 
+        public async Task<IEnumerable<MilitaryUnit>> SearchUnitsAsync(QL_HocVien.Models.Filters.CatalogFilterCriteria criteria) =>
+            await _unitRepo.SearchWithCriteriaAsync(criteria);
+
         public async Task<MilitaryUnit?> GetUnitByIdAsync(int id) => await _unitRepo.GetByIdAsync(id);
 
         public async Task<(bool Success, string Message, MilitaryUnit? Unit)> AddUnitAsync(MilitaryUnit unit)
@@ -266,6 +275,9 @@ namespace QL_HocVien.Services
 
         public async Task<IEnumerable<MilitaryMajor>> SearchMajorsAsync(string? keyword, string? department) =>
             await _majorRepo.SearchMajorsAsync(keyword, department);
+
+        public async Task<IEnumerable<MilitaryMajor>> SearchMajorsAsync(QL_HocVien.Models.Filters.CatalogFilterCriteria criteria) =>
+            await _majorRepo.SearchWithCriteriaAsync(criteria);
 
         public async Task<MilitaryMajor?> GetMajorByIdAsync(int id) => await _majorRepo.GetByIdAsync(id);
 

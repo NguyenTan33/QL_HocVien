@@ -25,6 +25,11 @@ namespace QL_HocVien.Services
             return await _cadetRepository.SearchCadetsAsync(keyword, rank, unit, className);
         }
 
+        public async Task<IEnumerable<Cadet>> SearchCadetsAsync(QL_HocVien.Models.Filters.CadetFilterCriteria criteria)
+        {
+            return await _cadetRepository.SearchWithCriteriaAsync(criteria);
+        }
+
         public async Task<Cadet?> GetCadetByIdAsync(int id)
         {
             return await _cadetRepository.GetByIdAsync(id);

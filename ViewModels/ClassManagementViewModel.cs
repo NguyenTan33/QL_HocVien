@@ -30,6 +30,16 @@ namespace QL_HocVien.ViewModels
             "Tất cả", "Chỉ huy Tham mưu", "Hậu cần Quân sự", "Kỹ thuật Quân sự", "Trinh sát đặc nhiệm", "Thông tin liên lạc"
         };
 
+        public ObservableCollection<string> AcademicYears { get; } = new()
+        {
+            "Tất cả", "2021 - 2025", "2022 - 2026", "2023 - 2027", "2024 - 2028", "2025 - 2029"
+        };
+
+        public ObservableCollection<string> HasOfficerList { get; } = new()
+        {
+            "Tất cả", "Đã phân công cán bộ", "Chưa phân công cán bộ"
+        };
+
         public ObservableCollection<string> AvailableOfficers { get; } = new();
 
         // Tìm kiếm và bộ lọc
@@ -41,6 +51,24 @@ namespace QL_HocVien.ViewModels
 
         [ObservableProperty]
         private string _selectedMajor = "Tất cả";
+
+        [ObservableProperty]
+        private string _selectedAcademicYear = "Tất cả";
+
+        [ObservableProperty]
+        private string _selectedHasOfficer = "Tất cả";
+
+        [ObservableProperty]
+        private int? _filterMinCadets;
+
+        [ObservableProperty]
+        private int? _filterMaxCadets;
+
+        [ObservableProperty]
+        private bool _isAdvancedFilterVisible;
+
+        [ObservableProperty]
+        private int _activeFilterCount;
 
         [ObservableProperty]
         private MilitaryClass? _selectedClass;
@@ -142,18 +170,60 @@ namespace QL_HocVien.ViewModels
         }
 
         [RelayCommand]
+        public void ToggleAdvancedFilter()
+        {
+            IsAdvancedFilterVisible = !IsAdvancedFilterVisible;
+        }
+
+        [RelayCommand]
+        public void ResetFilters()
+        {
+            SearchKeyword = string.Empty;
+            SelectedUnit = "Tất cả";
+            SelectedMajor = "Tất cả";
+            SelectedAcademicYear = "Tất cả";
+            SelectedHasOfficer = "Tất cả";
+            FilterMinCadets = null;
+            FilterMaxCadets = null;
+            _ = LoadClassesAsync();
+        }
+
+        [RelayCommand]
         public async Task LoadClassesAsync()
         {
             IsBusy = true;
             try
             {
-                var list = await _classService.SearchClassesAsync(SearchKeyword, SelectedUnit, SelectedMajor);
+                int count = 0;
+                if (!string.IsNullOrWhiteSpace(SearchKeyword)) count++;
+                if (SelectedUnit != "Tất cả") count++;
+                if (SelectedMajor != "Tất cả") count++;
+                if (SelectedAcademicYear != "Tất cả") count++;
+                if (SelectedHasOfficer != "Tất cả") count++;
+                if (FilterMinCadets.HasValue || FilterMaxCadets.HasValue) count++;
+                ActiveFilterCount = count;
+
+                bool? hasOfficer = SelectedHasOfficer == "Đã phân công cán bộ" ? true :
+                                  SelectedHasOfficer == "Chưa phân công cán bộ" ? false : null;
+
+                var criteria = new QL_HocVien.Models.Filters.ClassFilterCriteria
+                {
+                    Keyword = SearchKeyword,
+                    Unit = SelectedUnit,
+                    Major = SelectedMajor,
+                    AcademicYear = SelectedAcademicYear,
+                    HasOfficerAssigned = hasOfficer,
+                    MinCadets = FilterMinCadets,
+                    MaxCadets = FilterMaxCadets
+                };
+
+                var list = await _classService.SearchClassesAsync(criteria);
                 Classes.Clear();
                 foreach (var c in list)
                 {
                     Classes.Add(c);
                 }
-                StatusMessage = $"Đang hiển thị {Classes.Count} lớp học.";
+                StatusMessage = $"Đang hiển thị {Classes.Count} lớp học {(ActiveFilterCount > 0 ? $"({ActiveFilterCount} bộ lọc đang áp dụng)" : "")}.";
             }
             catch (Exception ex)
             {
@@ -417,5 +487,13 @@ namespace QL_HocVien.ViewModels
                 IsBusy = false;
             }
         }
+
+        partial void OnSearchKeywordChanged(string value) => _ = LoadClassesAsync();
+        partial void OnSelectedUnitChanged(string value) => _ = LoadClassesAsync();
+        partial void OnSelectedMajorChanged(string value) => _ = LoadClassesAsync();
+        partial void OnSelectedAcademicYearChanged(string value) => _ = LoadClassesAsync();
+        partial void OnSelectedHasOfficerChanged(string value) => _ = LoadClassesAsync();
+        partial void OnFilterMinCadetsChanged(int? value) => _ = LoadClassesAsync();
+        partial void OnFilterMaxCadetsChanged(int? value) => _ = LoadClassesAsync();
     }
 }

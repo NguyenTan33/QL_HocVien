@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using QL_HocVien.Data;
 using QL_HocVien.Data.Repositories;
 using QL_HocVien.Models;
+using QL_HocVien.Models.Filters;
 using QL_HocVien.Services;
 using Xunit;
 
@@ -592,6 +593,217 @@ namespace QL_HocVien.Tests
             {
                 if (File.Exists(officerFile)) File.Delete(officerFile);
                 if (File.Exists(catalogFile)) File.Delete(catalogFile);
+            }
+        }
+
+        [Fact]
+        public async Task Test_Cadet_Advanced_Filtering_MultiCriteria()
+        {
+            var allCadets = (await _cadetService.GetAllCadetsAsync()).ToList();
+            Assert.NotEmpty(allCadets);
+
+            // 1. Filter by Gender and Unit
+            var criteria1 = new CadetFilterCriteria
+            {
+                Gender = "Nam",
+                Unit = allCadets[0].Unit
+            };
+            var result1 = (await _cadetService.SearchCadetsAsync(criteria1)).ToList();
+            Assert.All(result1, c =>
+            {
+                Assert.Equal("Nam", c.Gender);
+                Assert.Equal(allCadets[0].Unit, c.Unit);
+            });
+
+            // 2. Filter by Age Range
+            var criteria2 = new CadetFilterCriteria
+            {
+                MinAge = 18,
+                MaxAge = 25
+            };
+            var result2 = (await _cadetService.SearchCadetsAsync(criteria2)).ToList();
+            var today = DateTime.Today;
+            Assert.All(result2, c =>
+            {
+                Assert.NotNull(c.DateOfBirth);
+                int age = today.Year - c.DateOfBirth.Value.Year;
+                if (c.DateOfBirth.Value.Date > today.AddYears(-age)) age--;
+                Assert.True(age >= 18 && age <= 25);
+            });
+
+            // 3. Filter by HasAccount
+            var criteria3 = new CadetFilterCriteria
+            {
+                HasAccount = true
+            };
+            var result3 = (await _cadetService.SearchCadetsAsync(criteria3)).ToList();
+            Assert.All(result3, c => Assert.NotNull(c.UserId));
+        }
+
+        [Fact]
+        public async Task Test_Officer_Advanced_Filtering_MultiCriteria()
+        {
+            var allOfficers = (await _officerService.GetAllOfficersAsync()).ToList();
+            Assert.NotEmpty(allOfficers);
+
+            // 1. Filter by Rank & Unit
+            var sample = allOfficers[0];
+            var criteria1 = new OfficerFilterCriteria
+            {
+                Rank = sample.Rank,
+                Unit = sample.Unit
+            };
+            var result1 = (await _officerService.SearchOfficersAsync(criteria1)).ToList();
+            Assert.All(result1, o =>
+            {
+                Assert.Equal(sample.Rank, o.Rank);
+                Assert.Equal(sample.Unit, o.Unit);
+            });
+
+            // 2. Filter by HasAccount
+            var criteria2 = new OfficerFilterCriteria
+            {
+                HasAccount = true
+            };
+            var result2 = (await _officerService.SearchOfficersAsync(criteria2)).ToList();
+            Assert.All(result2, o => Assert.NotNull(o.UserId));
+        }
+
+        [Fact]
+        public async Task Test_Class_Advanced_Filtering_MultiCriteria()
+        {
+            var allClasses = (await _classService.GetAllClassesAsync()).ToList();
+            Assert.NotEmpty(allClasses);
+
+            var sample = allClasses[0];
+            // 1. Filter by Unit and Major
+            var criteria1 = new ClassFilterCriteria
+            {
+                Unit = sample.Unit,
+                Major = sample.Major
+            };
+            var result1 = (await _classService.SearchClassesAsync(criteria1)).ToList();
+            Assert.All(result1, c =>
+            {
+                Assert.Equal(sample.Unit, c.Unit);
+                Assert.Equal(sample.Major, c.Major);
+            });
+
+            // 2. Filter by AcademicYear
+            if (!string.IsNullOrEmpty(sample.AcademicYear))
+            {
+                var criteria2 = new ClassFilterCriteria
+                {
+                    AcademicYear = sample.AcademicYear
+                };
+                var result2 = (await _classService.SearchClassesAsync(criteria2)).ToList();
+                Assert.All(result2, c => Assert.Equal(sample.AcademicYear, c.AcademicYear));
+            }
+        }
+
+        [Fact]
+        public async Task Test_Subject_Advanced_Filtering_MultiCriteria()
+        {
+            var allSubjects = (await _subjectService.GetAllSubjectsAsync()).ToList();
+            Assert.NotEmpty(allSubjects);
+
+            // 1. Filter by Category and IsHigherBetter
+            var criteria1 = new SubjectFilterCriteria
+            {
+                Category = allSubjects[0].Category,
+                IsHigherBetter = allSubjects[0].IsHigherBetter
+            };
+            var result1 = (await _subjectService.SearchSubjectsAsync(criteria1)).ToList();
+            Assert.All(result1, s =>
+            {
+                Assert.Equal(allSubjects[0].Category, s.Category);
+                Assert.Equal(allSubjects[0].IsHigherBetter, s.IsHigherBetter);
+            });
+
+            // 2. Filter by SubjectCode
+            var criteria2 = new SubjectFilterCriteria
+            {
+                SubjectCode = allSubjects[0].SubjectCode
+            };
+            var result2 = (await _subjectService.SearchSubjectsAsync(criteria2)).ToList();
+            Assert.Contains(result2, s => s.SubjectCode == allSubjects[0].SubjectCode);
+        }
+
+        [Fact]
+        public async Task Test_PhysicalExam_Advanced_Filtering_MultiCriteria()
+        {
+            var allRecords = (await _examService.GetAllRecordsAsync()).ToList();
+            if (allRecords.Count > 0)
+            {
+                var sample = allRecords[0];
+                var criteria1 = new PhysicalExamFilterCriteria
+                {
+                    SubjectId = sample.SubjectId,
+                    Grade = sample.Grade
+                };
+                var result1 = (await _examService.SearchRecordsAsync(criteria1)).ToList();
+                Assert.All(result1, r =>
+                {
+                    Assert.Equal(sample.SubjectId, r.SubjectId);
+                    Assert.Equal(sample.Grade, r.Grade);
+                });
+            }
+            else
+            {
+                var result = await _examService.SearchRecordsAsync(new PhysicalExamFilterCriteria());
+                Assert.NotNull(result);
+            }
+        }
+
+        [Fact]
+        public async Task Test_Catalog_Advanced_Filtering_MultiCriteria()
+        {
+            // 1. Test Ranks with Group
+            var ranks = (await _catalogService.GetAllRanksAsync()).ToList();
+            Assert.NotEmpty(ranks);
+            var rankCriteria = new CatalogFilterCriteria
+            {
+                Group = ranks[0].RankGroup
+            };
+            var rankResult = (await _catalogService.SearchRanksAsync(rankCriteria)).ToList();
+            Assert.All(rankResult, r => Assert.Equal(ranks[0].RankGroup, r.RankGroup));
+
+            // 2. Test Positions with Group
+            var positions = (await _catalogService.GetAllPositionsAsync()).ToList();
+            Assert.NotEmpty(positions);
+            var posCriteria = new CatalogFilterCriteria
+            {
+                Group = positions[0].PositionGroup
+            };
+            var posResult = (await _catalogService.SearchPositionsAsync(posCriteria)).ToList();
+            Assert.All(posResult, p => Assert.Equal(positions[0].PositionGroup, p.PositionGroup));
+
+            // 3. Test Units with ParentUnit
+            var units = (await _catalogService.GetAllUnitsAsync()).ToList();
+            Assert.NotEmpty(units);
+            var unitWithParent = units.FirstOrDefault(u => !string.IsNullOrEmpty(u.ParentUnit));
+            if (unitWithParent != null)
+            {
+                var unitCriteria = new CatalogFilterCriteria
+                {
+                    ParentUnit = unitWithParent.ParentUnit
+                };
+                var unitResult = (await _catalogService.SearchUnitsAsync(unitCriteria)).ToList();
+                Assert.All(unitResult, u => Assert.Equal(unitWithParent.ParentUnit, u.ParentUnit));
+            }
+
+            // 4. Test Majors with Department
+            var majors = (await _catalogService.GetAllMajorsAsync()).ToList();
+            Assert.NotEmpty(majors);
+            var majorWithDept = majors.FirstOrDefault(m => !string.IsNullOrEmpty(m.Department));
+            if (majorWithDept != null)
+            {
+                var majorCriteria = new CatalogFilterCriteria
+                {
+                    Department = majorWithDept.Department
+                };
+                var majorResult = (await _catalogService.SearchMajorsAsync(majorCriteria)).ToList();
+                Assert.All(majorResult, m => Assert.Equal(majorWithDept.Department, m.Department));
             }
         }
     }

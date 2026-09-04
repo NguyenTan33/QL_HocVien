@@ -11,5 +11,6 @@ namespace QL_HocVien.Data.Repositories
         Task<IEnumerable<PhysicalExamRecord>> GetAllWithDetailsAsync();
         Task<IEnumerable<PhysicalExamRecord>> GetFailedRecordsAsync();
         Task<IEnumerable<PhysicalExamRecord>> SearchRecordsAsync(string? cadetKeyword, int? subjectId, string? grade, string? session);
+        Task<IEnumerable<PhysicalExamRecord>> SearchWithCriteriaAsync(QL_HocVien.Models.Filters.PhysicalExamFilterCriteria criteria);
     }
 }

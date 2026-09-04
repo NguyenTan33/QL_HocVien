@@ -9,6 +9,7 @@ namespace QL_HocVien.Services
         // 1. Cấp bậc
         Task<IEnumerable<MilitaryRank>> GetAllRanksAsync();
         Task<IEnumerable<MilitaryRank>> SearchRanksAsync(string? keyword, string? group);
+        Task<IEnumerable<MilitaryRank>> SearchRanksAsync(QL_HocVien.Models.Filters.CatalogFilterCriteria criteria);
         Task<MilitaryRank?> GetRankByIdAsync(int id);
         Task<(bool Success, string Message, MilitaryRank? Rank)> AddRankAsync(MilitaryRank rank);
         Task<(bool Success, string Message)> UpdateRankAsync(MilitaryRank rank);
@@ -19,6 +20,7 @@ namespace QL_HocVien.Services
         // 2. Chức vụ
         Task<IEnumerable<MilitaryPosition>> GetAllPositionsAsync();
         Task<IEnumerable<MilitaryPosition>> SearchPositionsAsync(string? keyword, string? group);
+        Task<IEnumerable<MilitaryPosition>> SearchPositionsAsync(QL_HocVien.Models.Filters.CatalogFilterCriteria criteria);
         Task<MilitaryPosition?> GetPositionByIdAsync(int id);
         Task<(bool Success, string Message, MilitaryPosition? Position)> AddPositionAsync(MilitaryPosition position);
         Task<(bool Success, string Message)> UpdatePositionAsync(MilitaryPosition position);
@@ -29,6 +31,7 @@ namespace QL_HocVien.Services
         // 3. Đơn vị
         Task<IEnumerable<MilitaryUnit>> GetAllUnitsAsync();
         Task<IEnumerable<MilitaryUnit>> SearchUnitsAsync(string? keyword, string? parentUnit);
+        Task<IEnumerable<MilitaryUnit>> SearchUnitsAsync(QL_HocVien.Models.Filters.CatalogFilterCriteria criteria);
         Task<MilitaryUnit?> GetUnitByIdAsync(int id);
         Task<(bool Success, string Message, MilitaryUnit? Unit)> AddUnitAsync(MilitaryUnit unit);
         Task<(bool Success, string Message)> UpdateUnitAsync(MilitaryUnit unit);
@@ -39,6 +42,7 @@ namespace QL_HocVien.Services
         // 4. Chuyên ngành
         Task<IEnumerable<MilitaryMajor>> GetAllMajorsAsync();
         Task<IEnumerable<MilitaryMajor>> SearchMajorsAsync(string? keyword, string? department);
+        Task<IEnumerable<MilitaryMajor>> SearchMajorsAsync(QL_HocVien.Models.Filters.CatalogFilterCriteria criteria);
         Task<MilitaryMajor?> GetMajorByIdAsync(int id);
         Task<(bool Success, string Message, MilitaryMajor? Major)> AddMajorAsync(MilitaryMajor major);
         Task<(bool Success, string Message)> UpdateMajorAsync(MilitaryMajor major);

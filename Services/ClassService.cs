@@ -25,6 +25,11 @@ namespace QL_HocVien.Services
             return await _classRepository.SearchClassesAsync(keyword, unit, major);
         }
 
+        public async Task<IEnumerable<MilitaryClass>> SearchClassesAsync(QL_HocVien.Models.Filters.ClassFilterCriteria criteria)
+        {
+            return await _classRepository.SearchWithCriteriaAsync(criteria);
+        }
+
         public async Task<MilitaryClass?> GetClassByIdAsync(int id)
         {
             return await _classRepository.GetByIdAsync(id);

@@ -14,18 +14,59 @@ namespace QL_HocVien.Data.Repositories
 
         public async Task<IEnumerable<Subject>> SearchSubjectsAsync(string? keyword, string? category)
         {
+            return await SearchWithCriteriaAsync(new QL_HocVien.Models.Filters.SubjectFilterCriteria
+            {
+                Keyword = keyword,
+                Category = category ?? "Tất cả"
+            });
+        }
+
+        public async Task<IEnumerable<Subject>> SearchWithCriteriaAsync(QL_HocVien.Models.Filters.SubjectFilterCriteria criteria)
+        {
             var query = _context.Subjects.AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(keyword))
+            if (criteria == null)
             {
-                var kw = keyword.Trim().ToLower();
-                query = query.Where(s => s.SubjectName.ToLower().Contains(kw) ||
-                                         s.SubjectCode.ToLower().Contains(kw));
+                return await query.OrderBy(s => s.SubjectCode).ToListAsync();
             }
 
-            if (!string.IsNullOrWhiteSpace(category) && category != "Tất cả")
+            // 0. Từ khóa chung (Mã hoặc Tên)
+            if (!string.IsNullOrWhiteSpace(criteria.Keyword))
             {
-                query = query.Where(s => s.Category == category);
+                var kw = criteria.Keyword.Trim().ToLower();
+                query = query.Where(s => s.SubjectCode.ToLower().Contains(kw) || s.SubjectName.ToLower().Contains(kw));
+            }
+
+            // 1. Mã môn
+            if (!string.IsNullOrWhiteSpace(criteria.SubjectCode))
+            {
+                var code = criteria.SubjectCode.Trim().ToLower();
+                query = query.Where(s => s.SubjectCode.ToLower().Contains(code));
+            }
+
+            // 2. Tên môn
+            if (!string.IsNullOrWhiteSpace(criteria.SubjectName))
+            {
+                var name = criteria.SubjectName.Trim().ToLower();
+                query = query.Where(s => s.SubjectName.ToLower().Contains(name));
+            }
+
+            // 3. Phân loại nhóm tố chất
+            if (!string.IsNullOrWhiteSpace(criteria.Category) && criteria.Category != "Tất cả")
+            {
+                query = query.Where(s => s.Category == criteria.Category);
+            }
+
+            // 4. Đơn vị tính
+            if (!string.IsNullOrWhiteSpace(criteria.Unit) && criteria.Unit != "Tất cả")
+            {
+                query = query.Where(s => s.Unit == criteria.Unit);
+            }
+
+            // 5. Quy luật thành tích (càng cao càng tốt / càng thấp càng tốt)
+            if (criteria.IsHigherBetter.HasValue)
+            {
+                query = query.Where(s => s.IsHigherBetter == criteria.IsHigherBetter.Value);
             }
 
             return await query.OrderBy(s => s.SubjectCode).ToListAsync();

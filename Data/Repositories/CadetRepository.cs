@@ -15,29 +15,110 @@ namespace QL_HocVien.Data.Repositories
 
         public async Task<IEnumerable<Cadet>> SearchCadetsAsync(string? keyword, string? rank, string? unit, string? className)
         {
-            var query = _context.Cadets.AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(keyword))
+            return await SearchWithCriteriaAsync(new QL_HocVien.Models.Filters.CadetFilterCriteria
             {
-                var kw = keyword.Trim().ToLower();
+                Keyword = keyword,
+                Rank = rank ?? "Tất cả",
+                Unit = unit ?? "Tất cả",
+                ClassName = className ?? "Tất cả"
+            });
+        }
+
+        public async Task<IEnumerable<Cadet>> SearchWithCriteriaAsync(QL_HocVien.Models.Filters.CadetFilterCriteria criteria)
+        {
+            var query = _context.Cadets
+                .Include(c => c.ExamRecords)
+                .AsQueryable();
+
+            if (criteria == null)
+            {
+                return await query.OrderByDescending(c => c.Id).ToListAsync();
+            }
+
+            // 1. Từ khóa: Tên, Mã HV, SĐT, Email
+            if (!string.IsNullOrWhiteSpace(criteria.Keyword))
+            {
+                var kw = criteria.Keyword.Trim().ToLower();
                 query = query.Where(c => c.FullName.ToLower().Contains(kw) ||
                                          c.CadetCode.ToLower().Contains(kw) ||
-                                         c.PhoneNumber.Contains(kw));
+                                         c.PhoneNumber.Contains(kw) ||
+                                         c.Email.ToLower().Contains(kw));
             }
 
-            if (!string.IsNullOrWhiteSpace(rank) && rank != "Tất cả")
+            // 2. Cấp bậc
+            if (!string.IsNullOrWhiteSpace(criteria.Rank) && criteria.Rank != "Tất cả")
             {
-                query = query.Where(c => c.Rank == rank);
+                query = query.Where(c => c.Rank == criteria.Rank);
             }
 
-            if (!string.IsNullOrWhiteSpace(unit) && unit != "Tất cả")
+            // 3. Đơn vị
+            if (!string.IsNullOrWhiteSpace(criteria.Unit) && criteria.Unit != "Tất cả")
             {
-                query = query.Where(c => c.Unit == unit);
+                query = query.Where(c => c.Unit == criteria.Unit);
             }
 
-            if (!string.IsNullOrWhiteSpace(className) && className != "Tất cả")
+            // 4. Lớp học
+            if (!string.IsNullOrWhiteSpace(criteria.ClassName) && criteria.ClassName != "Tất cả")
             {
-                query = query.Where(c => c.ClassName == className);
+                query = query.Where(c => c.ClassName == criteria.ClassName);
+            }
+
+            // 5. Chức vụ
+            if (!string.IsNullOrWhiteSpace(criteria.Position) && criteria.Position != "Tất cả")
+            {
+                query = query.Where(c => c.Position == criteria.Position);
+            }
+
+            // 6. Giới tính
+            if (!string.IsNullOrWhiteSpace(criteria.Gender) && criteria.Gender != "Tất cả")
+            {
+                query = query.Where(c => c.Gender == criteria.Gender);
+            }
+
+            // 7. Độ tuổi tối thiểu
+            if (criteria.MinAge.HasValue)
+            {
+                query = query.Where(c => c.Age >= criteria.MinAge.Value);
+            }
+
+            // 8. Độ tuổi tối đa
+            if (criteria.MaxAge.HasValue)
+            {
+                query = query.Where(c => c.Age <= criteria.MaxAge.Value);
+            }
+
+            // 9. Trạng thái tài khoản người dùng
+            if (criteria.HasAccount.HasValue)
+            {
+                if (criteria.HasAccount.Value)
+                {
+                    query = query.Where(c => c.UserId != null);
+                }
+                else
+                {
+                    query = query.Where(c => c.UserId == null);
+                }
+            }
+
+            // 10. Xếp loại rèn luyện thể lực
+            if (!string.IsNullOrWhiteSpace(criteria.FitnessGrade) && criteria.FitnessGrade != "Tất cả")
+            {
+                if (criteria.FitnessGrade == "Chưa kiểm tra")
+                {
+                    query = query.Where(c => !c.ExamRecords.Any());
+                }
+                else if (criteria.FitnessGrade == "Đạt chuẩn")
+                {
+                    query = query.Where(c => c.ExamRecords.Any(r => r.Grade == "Xuất sắc" || r.Grade == "Giỏi" || r.Grade == "Khá" || r.Grade == "Đạt"));
+                }
+                else if (criteria.FitnessGrade == "Không đạt")
+                {
+                    query = query.Where(c => c.ExamRecords.Any(r => r.Grade == "Không đạt"));
+                }
+                else
+                {
+                    query = query.Where(c => c.ExamRecords.Any(r => r.Grade == criteria.FitnessGrade));
+                }
             }
 
             return await query.OrderByDescending(c => c.Id).ToListAsync();

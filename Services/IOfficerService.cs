@@ -8,6 +8,7 @@ namespace QL_HocVien.Services
     {
         Task<IEnumerable<Officer>> GetAllOfficersAsync();
         Task<IEnumerable<Officer>> SearchOfficersAsync(string? keyword, string? rank, string? unit, string? position);
+        Task<IEnumerable<Officer>> SearchOfficersAsync(QL_HocVien.Models.Filters.OfficerFilterCriteria criteria);
         Task<Officer?> GetOfficerByIdAsync(int id);
         Task<Officer?> GetOfficerWithDetailsAsync(int id);
         Task<(bool Success, string Message, Officer? Officer)> AddOfficerAsync(Officer officer, bool createLoginAccount = false, string? rawPassword = null);

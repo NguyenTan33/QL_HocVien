@@ -21,11 +21,49 @@ namespace QL_HocVien.ViewModels
         public ObservableCollection<MilitaryUnit> Units { get; } = new();
         public ObservableCollection<MilitaryMajor> Majors { get; } = new();
 
+        public ObservableCollection<string> RankGroups { get; } = new()
+        {
+            "Tất cả", "Hạ sĩ quan - Binh sĩ", "Sĩ quan cấp Úy", "Sĩ quan cấp Tá", "Sĩ quan cấp Tướng"
+        };
+
+        public ObservableCollection<string> PositionGroups { get; } = new()
+        {
+            "Tất cả", "Học viên / Chiến sĩ", "Cán bộ Phân đội", "Cán bộ Chỉ huy", "Cán bộ Giảng dạy"
+        };
+
+        public ObservableCollection<string> ParentUnitFilters { get; } = new()
+        {
+            "Tất cả", "Đại đội 1", "Tiểu đoàn 1", "Trung đoàn 1", "Học viện"
+        };
+
+        public ObservableCollection<string> DepartmentFilters { get; } = new()
+        {
+            "Tất cả", "Khoa Chiến thuật", "Khoa Binh chủng", "Khoa Quân sự chung", "Khoa Chỉ huy Tham mưu", "Khoa Hậu cần - Kỹ thuật"
+        };
+
         [ObservableProperty]
         private int _selectedTabIndex = 0;
 
         [ObservableProperty]
         private string _searchKeyword = string.Empty;
+
+        [ObservableProperty]
+        private string _selectedRankGroup = "Tất cả";
+
+        [ObservableProperty]
+        private string _selectedPositionGroup = "Tất cả";
+
+        [ObservableProperty]
+        private string _selectedParentUnitFilter = "Tất cả";
+
+        [ObservableProperty]
+        private string _selectedDepartmentFilter = "Tất cả";
+
+        [ObservableProperty]
+        private bool _isAdvancedFilterVisible;
+
+        [ObservableProperty]
+        private int _activeFilterCount;
 
         [ObservableProperty]
         private MilitaryRank? _selectedRank;
@@ -130,36 +168,81 @@ namespace QL_HocVien.ViewModels
         }
 
         [RelayCommand]
+        public void ToggleAdvancedFilter()
+        {
+            IsAdvancedFilterVisible = !IsAdvancedFilterVisible;
+        }
+
+        [RelayCommand]
+        public void ResetFilters()
+        {
+            SearchKeyword = string.Empty;
+            SelectedRankGroup = "Tất cả";
+            SelectedPositionGroup = "Tất cả";
+            SelectedParentUnitFilter = "Tất cả";
+            SelectedDepartmentFilter = "Tất cả";
+            _ = SearchAsync();
+        }
+
+        [RelayCommand]
         public async Task SearchAsync()
         {
             IsBusy = true;
             try
             {
+                int count = 0;
+                if (!string.IsNullOrWhiteSpace(SearchKeyword)) count++;
+                if (SelectedRankGroup != "Tất cả" && SelectedTabIndex == 0) count++;
+                if (SelectedPositionGroup != "Tất cả" && SelectedTabIndex == 1) count++;
+                if (SelectedParentUnitFilter != "Tất cả" && SelectedTabIndex == 2) count++;
+                if (SelectedDepartmentFilter != "Tất cả" && SelectedTabIndex == 3) count++;
+                ActiveFilterCount = count;
+
                 switch (SelectedTabIndex)
                 {
                     case 0: // Cấp bậc
-                        var rList = await _catalogService.SearchRanksAsync(SearchKeyword, null);
+                        var rCriteria = new QL_HocVien.Models.Filters.CatalogFilterCriteria
+                        {
+                            Keyword = SearchKeyword,
+                            Group = SelectedRankGroup
+                        };
+                        var rList = await _catalogService.SearchRanksAsync(rCriteria);
                         Ranks.Clear();
                         foreach (var r in rList) Ranks.Add(r);
-                        StatusMessage = $"Tìm thấy {Ranks.Count} cấp bậc.";
+                        StatusMessage = $"Tìm thấy {Ranks.Count} cấp bậc {(ActiveFilterCount > 0 ? $"({ActiveFilterCount} bộ lọc đang áp dụng)" : "")}.";
                         break;
                     case 1: // Chức vụ
-                        var pList = await _catalogService.SearchPositionsAsync(SearchKeyword, null);
+                        var pCriteria = new QL_HocVien.Models.Filters.CatalogFilterCriteria
+                        {
+                            Keyword = SearchKeyword,
+                            Group = SelectedPositionGroup
+                        };
+                        var pList = await _catalogService.SearchPositionsAsync(pCriteria);
                         Positions.Clear();
                         foreach (var p in pList) Positions.Add(p);
-                        StatusMessage = $"Tìm thấy {Positions.Count} chức vụ.";
+                        StatusMessage = $"Tìm thấy {Positions.Count} chức vụ {(ActiveFilterCount > 0 ? $"({ActiveFilterCount} bộ lọc đang áp dụng)" : "")}.";
                         break;
                     case 2: // Đơn vị
-                        var uList = await _catalogService.SearchUnitsAsync(SearchKeyword, null);
+                        var uCriteria = new QL_HocVien.Models.Filters.CatalogFilterCriteria
+                        {
+                            Keyword = SearchKeyword,
+                            ParentUnit = SelectedParentUnitFilter
+                        };
+                        var uList = await _catalogService.SearchUnitsAsync(uCriteria);
                         Units.Clear();
                         foreach (var u in uList) Units.Add(u);
-                        StatusMessage = $"Tìm thấy {Units.Count} đơn vị.";
+                        StatusMessage = $"Tìm thấy {Units.Count} đơn vị {(ActiveFilterCount > 0 ? $"({ActiveFilterCount} bộ lọc đang áp dụng)" : "")}.";
                         break;
                     case 3: // Chuyên ngành
-                        var mList = await _catalogService.SearchMajorsAsync(SearchKeyword, null);
+                        var mCriteria = new QL_HocVien.Models.Filters.CatalogFilterCriteria
+                        {
+                            Keyword = SearchKeyword,
+                            Department = SelectedDepartmentFilter
+                        };
+                        var mList = await _catalogService.SearchMajorsAsync(mCriteria);
                         Majors.Clear();
                         foreach (var m in mList) Majors.Add(m);
-                        StatusMessage = $"Tìm thấy {Majors.Count} chuyên ngành.";
+                        StatusMessage = $"Tìm thấy {Majors.Count} chuyên ngành {(ActiveFilterCount > 0 ? $"({ActiveFilterCount} bộ lọc đang áp dụng)" : "")}.";
                         break;
                 }
             }
@@ -527,5 +610,12 @@ namespace QL_HocVien.ViewModels
             FormTrainingDuration = string.Empty;
             FormDepartment = string.Empty;
         }
+
+        partial void OnSearchKeywordChanged(string value) => _ = SearchAsync();
+        partial void OnSelectedTabIndexChanged(int value) => _ = SearchAsync();
+        partial void OnSelectedRankGroupChanged(string value) => _ = SearchAsync();
+        partial void OnSelectedPositionGroupChanged(string value) => _ = SearchAsync();
+        partial void OnSelectedParentUnitFilterChanged(string value) => _ = SearchAsync();
+        partial void OnSelectedDepartmentFilterChanged(string value) => _ = SearchAsync();
     }
 }

@@ -27,6 +27,16 @@ namespace QL_HocVien.ViewModels
             "Tất cả", "Đại đội 1", "Đại đội 2", "Đại đội 3", "Đại đội 4", "Trung đội 1", "Trung đội 2", "Trung đội 3"
         };
         public ObservableCollection<string> ClassList { get; } = new() { "Tất cả" };
+        public ObservableCollection<string> PositionList { get; } = new()
+        {
+            "Tất cả", "Học viên", "Chiến sĩ", "Tiểu đội trưởng", "Lớp phó", "Lớp trưởng"
+        };
+        public ObservableCollection<string> GenderList { get; } = new() { "Tất cả", "Nam", "Nữ" };
+        public ObservableCollection<string> HasAccountList { get; } = new() { "Tất cả", "Đã có tài khoản", "Chưa có tài khoản" };
+        public ObservableCollection<string> FitnessGradeList { get; } = new()
+        {
+            "Tất cả", "Đạt chuẩn", "Không đạt", "Xuất sắc", "Giỏi", "Khá", "Đạt", "Chưa kiểm tra"
+        };
 
         [ObservableProperty]
         private string _searchKeyword = string.Empty;
@@ -39,6 +49,30 @@ namespace QL_HocVien.ViewModels
 
         [ObservableProperty]
         private string _selectedClass = "Tất cả";
+
+        [ObservableProperty]
+        private string _selectedPosition = "Tất cả";
+
+        [ObservableProperty]
+        private string _selectedGender = "Tất cả";
+
+        [ObservableProperty]
+        private int? _filterMinAge;
+
+        [ObservableProperty]
+        private int? _filterMaxAge;
+
+        [ObservableProperty]
+        private string _selectedHasAccount = "Tất cả";
+
+        [ObservableProperty]
+        private string _selectedFitnessGrade = "Tất cả";
+
+        [ObservableProperty]
+        private bool _isAdvancedFilterVisible;
+
+        [ObservableProperty]
+        private int _activeFilterCount;
 
         [ObservableProperty]
         private Cadet? _selectedCadet;
@@ -122,6 +156,14 @@ namespace QL_HocVien.ViewModels
                     UnitList.Add("Tất cả");
                     foreach (var u in units) UnitList.Add(u);
                 }
+
+                var positions = await _catalogService.GetPositionDropdownAsync();
+                if (positions.Any())
+                {
+                    PositionList.Clear();
+                    PositionList.Add("Tất cả");
+                    foreach (var p in positions) PositionList.Add(p);
+                }
             }
             catch
             {
@@ -148,19 +190,69 @@ namespace QL_HocVien.ViewModels
         }
 
         [RelayCommand]
+        public void ToggleAdvancedFilter()
+        {
+            IsAdvancedFilterVisible = !IsAdvancedFilterVisible;
+        }
+
+        [RelayCommand]
+        public void ResetFilters()
+        {
+            SearchKeyword = string.Empty;
+            SelectedRank = "Tất cả";
+            SelectedUnit = "Tất cả";
+            SelectedClass = "Tất cả";
+            SelectedPosition = "Tất cả";
+            SelectedGender = "Tất cả";
+            FilterMinAge = null;
+            FilterMaxAge = null;
+            SelectedHasAccount = "Tất cả";
+            SelectedFitnessGrade = "Tất cả";
+            _ = LoadCadetsAsync();
+        }
+
+        [RelayCommand]
         public async Task LoadCadetsAsync()
         {
             IsBusy = true;
             try
             {
-                var filterClass = SelectedClass != "Tất cả" ? SelectedClass : null;
-                var list = await _cadetService.SearchCadetsAsync(SearchKeyword, SelectedRank, SelectedUnit, filterClass);
+                int count = 0;
+                if (!string.IsNullOrWhiteSpace(SearchKeyword)) count++;
+                if (SelectedRank != "Tất cả") count++;
+                if (SelectedUnit != "Tất cả") count++;
+                if (SelectedClass != "Tất cả") count++;
+                if (SelectedPosition != "Tất cả") count++;
+                if (SelectedGender != "Tất cả") count++;
+                if (FilterMinAge.HasValue || FilterMaxAge.HasValue) count++;
+                if (SelectedHasAccount != "Tất cả") count++;
+                if (SelectedFitnessGrade != "Tất cả") count++;
+                ActiveFilterCount = count;
+
+                bool? hasAccount = SelectedHasAccount == "Đã có tài khoản" ? true :
+                                   SelectedHasAccount == "Chưa có tài khoản" ? false : null;
+
+                var criteria = new QL_HocVien.Models.Filters.CadetFilterCriteria
+                {
+                    Keyword = SearchKeyword,
+                    Rank = SelectedRank,
+                    Unit = SelectedUnit,
+                    ClassName = SelectedClass,
+                    Position = SelectedPosition,
+                    Gender = SelectedGender,
+                    MinAge = FilterMinAge,
+                    MaxAge = FilterMaxAge,
+                    HasAccount = hasAccount,
+                    FitnessGrade = SelectedFitnessGrade
+                };
+
+                var list = await _cadetService.SearchCadetsAsync(criteria);
                 Cadets.Clear();
                 foreach (var cadet in list)
                 {
                     Cadets.Add(cadet);
                 }
-                StatusMessage = $"Đã tải {Cadets.Count} học viên.";
+                StatusMessage = $"Đã tải {Cadets.Count} học viên {(ActiveFilterCount > 0 ? $"({ActiveFilterCount} bộ lọc đang áp dụng)" : "")}.";
             }
             catch (Exception ex)
             {
@@ -363,5 +455,12 @@ namespace QL_HocVien.ViewModels
         partial void OnSearchKeywordChanged(string value) => _ = LoadCadetsAsync();
         partial void OnSelectedRankChanged(string value) => _ = LoadCadetsAsync();
         partial void OnSelectedUnitChanged(string value) => _ = LoadCadetsAsync();
+        partial void OnSelectedClassChanged(string value) => _ = LoadCadetsAsync();
+        partial void OnSelectedPositionChanged(string value) => _ = LoadCadetsAsync();
+        partial void OnSelectedGenderChanged(string value) => _ = LoadCadetsAsync();
+        partial void OnFilterMinAgeChanged(int? value) => _ = LoadCadetsAsync();
+        partial void OnFilterMaxAgeChanged(int? value) => _ = LoadCadetsAsync();
+        partial void OnSelectedHasAccountChanged(string value) => _ = LoadCadetsAsync();
+        partial void OnSelectedFitnessGradeChanged(string value) => _ = LoadCadetsAsync();
     }
 }

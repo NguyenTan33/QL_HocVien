@@ -46,53 +46,107 @@
                     </StackPanel>
                 </Grid>
 
-                <!-- Bộ Lọc & Tìm Kiếm -->
+                <!-- Bộ Lọc Nâng Cao Đa Tiêu Chí -->
                 <Border Grid.Row="1" Style="{StaticResource CardBorderStyle}" Margin="0,0,0,16" Padding="14">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="2*"/>
-                            <ColumnDefinition Width="12"/>
-                            <ColumnDefinition Width="1.2*"/>
-                            <ColumnDefinition Width="12"/>
-                            <ColumnDefinition Width="1.2*"/>
-                            <ColumnDefinition Width="12"/>
-                            <ColumnDefinition Width="1.2*"/>
-                            <ColumnDefinition Width="12"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <!-- Hàng lọc cơ bản -->
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="2*"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="1.1*"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="1.1*"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="1.1*"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
 
-                        <!-- Tìm kiếm từ khóa -->
-                        <StackPanel Grid.Column="0">
-                            <TextBlock Text="Tìm kiếm theo mã, tên, SĐT, Email:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
-                            <TextBox Text="{Binding SearchKeyword, UpdateSourceTrigger=PropertyChanged}" 
-                                     Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
-                        </StackPanel>
+                            <!-- Tìm kiếm từ khóa -->
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Tìm kiếm theo mã, tên, SĐT, Email:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                <TextBox Text="{Binding SearchKeyword, UpdateSourceTrigger=PropertyChanged}" 
+                                         Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                            </StackPanel>
 
-                        <!-- Lọc Cấp bậc -->
-                        <StackPanel Grid.Column="2">
-                            <TextBlock Text="Cấp bậc quân hàm:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
-                            <ComboBox ItemsSource="{Binding FilterRanks}" SelectedItem="{Binding SelectedFilterRank}" 
-                                      Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
-                        </StackPanel>
+                            <!-- Lọc Cấp bậc -->
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Cấp bậc quân hàm:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                <ComboBox ItemsSource="{Binding FilterRanks}" SelectedItem="{Binding SelectedFilterRank}" 
+                                          Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
+                            </StackPanel>
 
-                        <!-- Lọc Chức vụ -->
-                        <StackPanel Grid.Column="4">
-                            <TextBlock Text="Chức vụ quân sự:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
-                            <ComboBox ItemsSource="{Binding FilterPositions}" SelectedItem="{Binding SelectedFilterPosition}" 
-                                      Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
-                        </StackPanel>
+                            <!-- Lọc Chức vụ -->
+                            <StackPanel Grid.Column="4">
+                                <TextBlock Text="Chức vụ quân sự:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                <ComboBox ItemsSource="{Binding FilterPositions}" SelectedItem="{Binding SelectedFilterPosition}" 
+                                          Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
+                            </StackPanel>
 
-                        <!-- Lọc Đơn vị -->
-                        <StackPanel Grid.Column="6">
-                            <TextBlock Text="Đơn vị trực thuộc:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
-                            <ComboBox ItemsSource="{Binding FilterUnits}" SelectedItem="{Binding SelectedFilterUnit}" 
-                                      Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
-                        </StackPanel>
+                            <!-- Lọc Đơn vị -->
+                            <StackPanel Grid.Column="6">
+                                <TextBlock Text="Đơn vị trực thuộc:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                <ComboBox ItemsSource="{Binding FilterUnits}" SelectedItem="{Binding SelectedFilterUnit}" 
+                                          Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
+                            </StackPanel>
 
-                        <!-- Nút tìm kiếm -->
-                        <Button Grid.Column="8" Content="🔍 Tìm Kiếm / Lọc" VerticalAlignment="Bottom" Height="36" 
-                                Style="{StaticResource PrimaryButtonStyle}" Command="{Binding SearchCommand}"/>
-                    </Grid>
+                            <!-- Nút Lọc Nâng Cao -->
+                            <Button Grid.Column="8" Content="⚙️ Lọc Nâng Cao" VerticalAlignment="Bottom" Height="36" 
+                                    Style="{StaticResource SecondaryButtonStyle}" Command="{Binding ToggleAdvancedFilterCommand}"/>
+
+                            <!-- Nút Xóa Lọc -->
+                            <Button Grid.Column="10" Content="✕ Xóa Lọc" VerticalAlignment="Bottom" Height="36" 
+                                    Style="{StaticResource DangerButtonStyle}" Command="{Binding ResetFiltersCommand}"/>
+                        </Grid>
+
+                        <!-- Khung mở rộng: Lọc Nâng Cao Cán Bộ -->
+                        <Border Visibility="{Binding IsAdvancedFilterVisible, Converter={x:Static local_cv:BooleanToVisibilityConverter.Instance}}"
+                                Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,12,0,0">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" Text="🎯 BỘ LỌC NÂNG CAO CÁN BỘ (Chuyên môn / Nhiệm vụ, Tài khoản &amp; Phụ trách lớp học)" 
+                                           FontSize="12" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,10"/>
+
+                                <Grid Grid.Row="1">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="2*"/>
+                                        <ColumnDefinition Width="14"/>
+                                        <ColumnDefinition Width="1.5*"/>
+                                        <ColumnDefinition Width="14"/>
+                                        <ColumnDefinition Width="1.5*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Lọc Chuyên môn -->
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Chuyên môn / Lĩnh vực huấn luyện phụ trách:" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" Margin="0,0,0,3"/>
+                                        <TextBox Text="{Binding FilterSpecialty, UpdateSourceTrigger=PropertyChanged}" 
+                                                 Style="{StaticResource ModernTextBoxStyle}" Height="34" Tag="Ví dụ: Chỉ huy, Huấn luyện, Bắn súng..."/>
+                                    </StackPanel>
+
+                                    <!-- Lọc Tài khoản -->
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Trạng thái tài khoản đăng nhập:" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" Margin="0,0,0,3"/>
+                                        <ComboBox ItemsSource="{Binding HasAccountList}" SelectedItem="{Binding SelectedHasAccount}" 
+                                                  Style="{StaticResource ModernComboBoxStyle}" Height="34"/>
+                                    </StackPanel>
+
+                                    <!-- Lọc Phụ trách lớp -->
+                                    <StackPanel Grid.Column="4">
+                                        <TextBlock Text="Tình trạng chủ nhiệm lớp học:" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" Margin="0,0,0,3"/>
+                                        <ComboBox ItemsSource="{Binding HasAssignedClassesList}" SelectedItem="{Binding SelectedHasAssignedClasses}" 
+                                                  Style="{StaticResource ModernComboBoxStyle}" Height="34"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
                 </Border>
 
                 <!-- DataGrid Cán Bộ -->

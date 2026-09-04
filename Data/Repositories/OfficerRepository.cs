@@ -15,14 +15,31 @@ namespace QL_HocVien.Data.Repositories
 
         public async Task<IEnumerable<Officer>> SearchOfficersAsync(string? keyword, string? rank, string? unit, string? position)
         {
+            return await SearchWithCriteriaAsync(new QL_HocVien.Models.Filters.OfficerFilterCriteria
+            {
+                Keyword = keyword,
+                Rank = rank ?? "Tất cả",
+                Unit = unit ?? "Tất cả",
+                Position = position ?? "Tất cả"
+            });
+        }
+
+        public async Task<IEnumerable<Officer>> SearchWithCriteriaAsync(QL_HocVien.Models.Filters.OfficerFilterCriteria criteria)
+        {
             var query = _context.Officers
                 .Include(o => o.ManagedClasses)
                 .Include(o => o.User)
                 .AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(keyword))
+            if (criteria == null)
             {
-                var kw = keyword.Trim().ToLower();
+                return await query.OrderByDescending(o => o.Id).ToListAsync();
+            }
+
+            // 1. Từ khóa: Mã CB, Họ tên, SĐT, Email, Chuyên môn
+            if (!string.IsNullOrWhiteSpace(criteria.Keyword))
+            {
+                var kw = criteria.Keyword.Trim().ToLower();
                 query = query.Where(o => o.OfficerCode.ToLower().Contains(kw) ||
                                          o.FullName.ToLower().Contains(kw) ||
                                          o.PhoneNumber.Contains(kw) ||
@@ -30,19 +47,55 @@ namespace QL_HocVien.Data.Repositories
                                          o.Specialty.ToLower().Contains(kw));
             }
 
-            if (!string.IsNullOrWhiteSpace(rank) && rank != "Tất cả")
+            // 2. Cấp bậc
+            if (!string.IsNullOrWhiteSpace(criteria.Rank) && criteria.Rank != "Tất cả")
             {
-                query = query.Where(o => o.Rank == rank);
+                query = query.Where(o => o.Rank == criteria.Rank);
             }
 
-            if (!string.IsNullOrWhiteSpace(unit) && unit != "Tất cả")
+            // 3. Đơn vị
+            if (!string.IsNullOrWhiteSpace(criteria.Unit) && criteria.Unit != "Tất cả")
             {
-                query = query.Where(o => o.Unit == unit);
+                query = query.Where(o => o.Unit == criteria.Unit);
             }
 
-            if (!string.IsNullOrWhiteSpace(position) && position != "Tất cả")
+            // 4. Chức vụ
+            if (!string.IsNullOrWhiteSpace(criteria.Position) && criteria.Position != "Tất cả")
             {
-                query = query.Where(o => o.Position == position);
+                query = query.Where(o => o.Position == criteria.Position);
+            }
+
+            // 5. Chuyên môn lọc riêng
+            if (!string.IsNullOrWhiteSpace(criteria.Specialty))
+            {
+                var spec = criteria.Specialty.Trim().ToLower();
+                query = query.Where(o => o.Specialty.ToLower().Contains(spec));
+            }
+
+            // 6. Trạng thái tài khoản đăng nhập
+            if (criteria.HasAccount.HasValue)
+            {
+                if (criteria.HasAccount.Value)
+                {
+                    query = query.Where(o => o.UserId != null);
+                }
+                else
+                {
+                    query = query.Where(o => o.UserId == null);
+                }
+            }
+
+            // 7. Đang chủ nhiệm / phụ trách lớp học
+            if (criteria.HasAssignedClasses.HasValue)
+            {
+                if (criteria.HasAssignedClasses.Value)
+                {
+                    query = query.Where(o => o.ManagedClasses.Any());
+                }
+                else
+                {
+                    query = query.Where(o => !o.ManagedClasses.Any());
+                }
             }
 
             return await query.OrderByDescending(o => o.Id).ToListAsync();

@@ -8,6 +8,7 @@ namespace QL_HocVien.Services
     {
         Task<IEnumerable<Cadet>> GetAllCadetsAsync();
         Task<IEnumerable<Cadet>> SearchCadetsAsync(string? keyword, string? rank, string? unit, string? className);
+        Task<IEnumerable<Cadet>> SearchCadetsAsync(QL_HocVien.Models.Filters.CadetFilterCriteria criteria);
         Task<Cadet?> GetCadetByIdAsync(int id);
         Task<Cadet?> GetCadetWithRecordsAsync(int id);
         Task<(bool Success, string Message, Cadet? Cadet)> AddCadetAsync(Cadet cadet);

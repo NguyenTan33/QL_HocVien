@@ -42,6 +42,11 @@ namespace QL_HocVien.Services
             return await _examRepository.SearchRecordsAsync(cadetKeyword, subjectId, grade, session);
         }
 
+        public async Task<IEnumerable<PhysicalExamRecord>> SearchRecordsAsync(QL_HocVien.Models.Filters.PhysicalExamFilterCriteria criteria)
+        {
+            return await _examRepository.SearchWithCriteriaAsync(criteria);
+        }
+
         public async Task<(bool Success, string Message, PhysicalExamRecord? Record)> AddExamRecordAsync(PhysicalExamRecord record)
         {
             if (record.CadetId <= 0)

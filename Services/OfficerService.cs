@@ -27,6 +27,11 @@ namespace QL_HocVien.Services
             return await _officerRepo.SearchOfficersAsync(keyword, rank, unit, position);
         }
 
+        public async Task<IEnumerable<Officer>> SearchOfficersAsync(QL_HocVien.Models.Filters.OfficerFilterCriteria criteria)
+        {
+            return await _officerRepo.SearchWithCriteriaAsync(criteria);
+        }
+
         public async Task<Officer?> GetOfficerByIdAsync(int id)
         {
             return await _officerRepo.GetByIdAsync(id);

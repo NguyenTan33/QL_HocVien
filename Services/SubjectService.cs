@@ -24,6 +24,11 @@ namespace QL_HocVien.Services
             return await _subjectRepository.SearchSubjectsAsync(keyword, category);
         }
 
+        public async Task<IEnumerable<Subject>> SearchSubjectsAsync(QL_HocVien.Models.Filters.SubjectFilterCriteria criteria)
+        {
+            return await _subjectRepository.SearchWithCriteriaAsync(criteria);
+        }
+
         public async Task<Subject?> GetSubjectByIdAsync(int id)
         {
             return await _subjectRepository.GetByIdAsync(id);

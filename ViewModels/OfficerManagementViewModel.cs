@@ -21,6 +21,8 @@ namespace QL_HocVien.ViewModels
         public ObservableCollection<string> FilterRanks { get; } = new() { "Tất cả" };
         public ObservableCollection<string> FilterUnits { get; } = new() { "Tất cả" };
         public ObservableCollection<string> FilterPositions { get; } = new() { "Tất cả" };
+        public ObservableCollection<string> HasAccountList { get; } = new() { "Tất cả", "Đã cấp tài khoản", "Chưa cấp tài khoản" };
+        public ObservableCollection<string> HasAssignedClassesList { get; } = new() { "Tất cả", "Đang chủ nhiệm lớp", "Chưa chủ nhiệm lớp" };
 
         public ObservableCollection<string> FormRanks { get; } = new();
         public ObservableCollection<string> FormUnits { get; } = new();
@@ -38,6 +40,21 @@ namespace QL_HocVien.ViewModels
 
         [ObservableProperty]
         private string _selectedFilterPosition = "Tất cả";
+
+        [ObservableProperty]
+        private string _filterSpecialty = string.Empty;
+
+        [ObservableProperty]
+        private string _selectedHasAccount = "Tất cả";
+
+        [ObservableProperty]
+        private string _selectedHasAssignedClasses = "Tất cả";
+
+        [ObservableProperty]
+        private bool _isAdvancedFilterVisible;
+
+        [ObservableProperty]
+        private int _activeFilterCount;
 
         [ObservableProperty]
         private Officer? _selectedOfficer;
@@ -172,16 +189,58 @@ namespace QL_HocVien.ViewModels
         }
 
         [RelayCommand]
+        public void ToggleAdvancedFilter()
+        {
+            IsAdvancedFilterVisible = !IsAdvancedFilterVisible;
+        }
+
+        [RelayCommand]
+        public void ResetFilters()
+        {
+            SearchKeyword = string.Empty;
+            SelectedFilterRank = "Tất cả";
+            SelectedFilterUnit = "Tất cả";
+            SelectedFilterPosition = "Tất cả";
+            FilterSpecialty = string.Empty;
+            SelectedHasAccount = "Tất cả";
+            SelectedHasAssignedClasses = "Tất cả";
+            _ = SearchAsync();
+        }
+
+        [RelayCommand]
         public async Task SearchAsync()
         {
             IsBusy = true;
             try
             {
-                var list = await _officerService.SearchOfficersAsync(
-                    SearchKeyword,
-                    SelectedFilterRank,
-                    SelectedFilterUnit,
-                    SelectedFilterPosition);
+                int count = 0;
+                if (!string.IsNullOrWhiteSpace(SearchKeyword)) count++;
+                if (SelectedFilterRank != "Tất cả") count++;
+                if (SelectedFilterUnit != "Tất cả") count++;
+                if (SelectedFilterPosition != "Tất cả") count++;
+                if (!string.IsNullOrWhiteSpace(FilterSpecialty)) count++;
+                if (SelectedHasAccount != "Tất cả") count++;
+                if (SelectedHasAssignedClasses != "Tất cả") count++;
+                ActiveFilterCount = count;
+
+                bool? hasAccount = SelectedHasAccount == "Đã cấp tài khoản" ? true :
+                                   SelectedHasAccount == "Chưa cấp tài khoản" ? false : null;
+
+                bool? hasAssignedClasses = SelectedHasAssignedClasses == "Đang chủ nhiệm lớp" ? true :
+                                           SelectedHasAssignedClasses == "Chưa chủ nhiệm lớp" ? false : null;
+
+                var criteria = new QL_HocVien.Models.Filters.OfficerFilterCriteria
+                {
+                    Keyword = SearchKeyword,
+                    Rank = SelectedFilterRank,
+                    Position = SelectedFilterPosition,
+                    Unit = SelectedFilterUnit,
+                    Specialty = FilterSpecialty,
+                    HasAccount = hasAccount,
+                    HasAssignedClasses = hasAssignedClasses
+                };
+
+                var list = await _officerService.SearchOfficersAsync(criteria);
 
                 Officers.Clear();
                 foreach (var off in list)
@@ -189,7 +248,7 @@ namespace QL_HocVien.ViewModels
                     Officers.Add(off);
                 }
 
-                StatusMessage = $"Tìm thấy {Officers.Count} cán bộ quân sự.";
+                StatusMessage = $"Tìm thấy {Officers.Count} cán bộ quân sự {(ActiveFilterCount > 0 ? $"({ActiveFilterCount} bộ lọc đang áp dụng)" : "")}.";
             }
             catch (Exception ex)
             {
@@ -493,5 +552,13 @@ namespace QL_HocVien.ViewModels
             FormUsername = string.Empty;
             FormPassword = string.Empty;
         }
+
+        partial void OnSearchKeywordChanged(string value) => _ = SearchAsync();
+        partial void OnSelectedFilterRankChanged(string value) => _ = SearchAsync();
+        partial void OnSelectedFilterPositionChanged(string value) => _ = SearchAsync();
+        partial void OnSelectedFilterUnitChanged(string value) => _ = SearchAsync();
+        partial void OnFilterSpecialtyChanged(string value) => _ = SearchAsync();
+        partial void OnSelectedHasAccountChanged(string value) => _ = SearchAsync();
+        partial void OnSelectedHasAssignedClassesChanged(string value) => _ = SearchAsync();
     }
 }

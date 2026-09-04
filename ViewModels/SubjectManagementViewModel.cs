@@ -18,6 +18,14 @@ namespace QL_HocVien.ViewModels
         {
             "Tất cả", "Sức nhanh", "Sức mạnh", "Sức bền", "Bài tập tổng hợp", "Bơi tự do"
         };
+        public ObservableCollection<string> FilterUnits { get; } = new()
+        {
+            "Tất cả", "lần", "giây", "phút:giây", "mét", "điểm"
+        };
+        public ObservableCollection<string> RuleOptions { get; } = new()
+        {
+            "Tất cả", "Chỉ số cao hơn tốt hơn (Lực/Lần)", "Thời gian ít hơn tốt hơn (Chạy)"
+        };
 
         // Lọc nâng cao: Lọc theo Tên và Lọc theo ID / Mã môn
         [ObservableProperty]
@@ -28,6 +36,18 @@ namespace QL_HocVien.ViewModels
 
         [ObservableProperty]
         private string _selectedCategory = "Tất cả";
+
+        [ObservableProperty]
+        private string _selectedUnit = "Tất cả";
+
+        [ObservableProperty]
+        private string _selectedRule = "Tất cả";
+
+        [ObservableProperty]
+        private bool _isAdvancedFilterVisible;
+
+        [ObservableProperty]
+        private int _activeFilterCount;
 
         [ObservableProperty]
         private Subject? _selectedSubject;
@@ -86,40 +106,45 @@ namespace QL_HocVien.ViewModels
         }
 
         [RelayCommand]
+        public void ToggleAdvancedFilter()
+        {
+            IsAdvancedFilterVisible = !IsAdvancedFilterVisible;
+        }
+
+        [RelayCommand]
         public async Task LoadSubjectsAsync()
         {
             IsBusy = true;
             try
             {
-                var all = await _subjectService.GetAllSubjectsAsync();
-                var filtered = all.AsEnumerable();
+                int count = 0;
+                if (!string.IsNullOrWhiteSpace(FilterSubjectCode)) count++;
+                if (!string.IsNullOrWhiteSpace(FilterSubjectName)) count++;
+                if (SelectedCategory != "Tất cả") count++;
+                if (SelectedUnit != "Tất cả") count++;
+                if (SelectedRule != "Tất cả") count++;
+                ActiveFilterCount = count;
 
-                // Lọc nâng cao theo Mã/ID môn
-                if (!string.IsNullOrWhiteSpace(FilterSubjectCode))
-                {
-                    var code = FilterSubjectCode.Trim().ToLower();
-                    filtered = filtered.Where(s => s.SubjectCode.ToLower().Contains(code) || s.Id.ToString() == code);
-                }
+                bool? isHigherBetter = SelectedRule.Contains("cao hơn") ? true :
+                                       SelectedRule.Contains("ít hơn") ? false : null;
 
-                // Lọc nâng cao theo Tên môn
-                if (!string.IsNullOrWhiteSpace(FilterSubjectName))
+                var criteria = new QL_HocVien.Models.Filters.SubjectFilterCriteria
                 {
-                    var name = FilterSubjectName.Trim().ToLower();
-                    filtered = filtered.Where(s => s.SubjectName.ToLower().Contains(name));
-                }
+                    SubjectCode = FilterSubjectCode,
+                    SubjectName = FilterSubjectName,
+                    Category = SelectedCategory,
+                    Unit = SelectedUnit,
+                    IsHigherBetter = isHigherBetter
+                };
 
-                // Lọc theo thể loại
-                if (!string.IsNullOrWhiteSpace(SelectedCategory) && SelectedCategory != "Tất cả")
-                {
-                    filtered = filtered.Where(s => s.Category == SelectedCategory);
-                }
+                var list = await _subjectService.SearchSubjectsAsync(criteria);
 
                 Subjects.Clear();
-                foreach (var item in filtered)
+                foreach (var item in list)
                 {
                     Subjects.Add(item);
                 }
-                StatusMessage = $"Hiển thị {Subjects.Count} môn học.";
+                StatusMessage = $"Hiển thị {Subjects.Count} môn học {(ActiveFilterCount > 0 ? $"({ActiveFilterCount} bộ lọc đang áp dụng)" : "")}.";
             }
             catch (Exception ex)
             {
@@ -295,6 +320,8 @@ namespace QL_HocVien.ViewModels
             FilterSubjectCode = string.Empty;
             FilterSubjectName = string.Empty;
             SelectedCategory = "Tất cả";
+            SelectedUnit = "Tất cả";
+            SelectedRule = "Tất cả";
             _ = LoadSubjectsAsync();
         }
 
@@ -350,5 +377,7 @@ namespace QL_HocVien.ViewModels
         partial void OnFilterSubjectCodeChanged(string value) => _ = LoadSubjectsAsync();
         partial void OnFilterSubjectNameChanged(string value) => _ = LoadSubjectsAsync();
         partial void OnSelectedCategoryChanged(string value) => _ = LoadSubjectsAsync();
+        partial void OnSelectedUnitChanged(string value) => _ = LoadSubjectsAsync();
+        partial void OnSelectedRuleChanged(string value) => _ = LoadSubjectsAsync();
     }
 }

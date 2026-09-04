@@ -7,6 +7,7 @@ namespace QL_HocVien.Data.Repositories
     public interface IOfficerRepository : IRepository<Officer>
     {
         Task<IEnumerable<Officer>> SearchOfficersAsync(string? keyword, string? rank, string? unit, string? position);
+        Task<IEnumerable<Officer>> SearchWithCriteriaAsync(QL_HocVien.Models.Filters.OfficerFilterCriteria criteria);
         Task<Officer?> GetByCodeAsync(string officerCode);
         Task<Officer?> GetOfficerWithDetailsAsync(int id);
         Task<bool> ExistsByCodeAsync(string officerCode);
