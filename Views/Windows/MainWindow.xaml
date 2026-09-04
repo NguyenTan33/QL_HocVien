@@ -7,6 +7,7 @@
         xmlns:views="clr-namespace:QL_HocVien.Views.UserControls"
         mc:Ignorable="d"
         Title="Hệ Thống Quản Lý Học Viên Quân Đội - Tiêu Chuẩn Thể Lực TT32"
+        Icon="pack://application:,,,/Resources/app_icon.ico"
         Height="800" Width="1280"
         MinHeight="680" MinWidth="1050"
         WindowStartupLocation="CenterScreen"
@@ -132,9 +133,7 @@
                     <Border Grid.Row="0" Padding="20,20,20,16" BorderBrush="#1E293B" BorderThickness="0,0,0,1">
                         <StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                <Border Width="38" Height="38" CornerRadius="19" Background="#DC2626" Margin="0,0,12,0">
-                                    <TextBlock Text="★" FontSize="20" Foreground="#FBBF24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                </Border>
+                                <Image Source="pack://application:,,,/Resources/app_icon.png" Width="38" Height="38" Margin="0,0,12,0"/>
                                 <StackPanel VerticalAlignment="Center">
                                     <TextBlock Text="QL HỌC VIÊN" FontWeight="ExtraBold" FontSize="15" Foreground="White"/>
                                     <TextBlock Text="QUÂN SỰ &amp; THỂ LỰC" FontSize="11" FontWeight="Bold" Foreground="#60A5FA"/>

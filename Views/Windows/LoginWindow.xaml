@@ -7,6 +7,7 @@
         xmlns:local_cv="clr-namespace:QL_HocVien.Converters"
         mc:Ignorable="d"
         Title="Quản Lý Học Viên Quân Đội - Đăng Nhập Hệ Thống"
+        Icon="pack://application:,,,/Resources/app_icon.ico"
         Height="650" Width="1000"
         WindowStartupLocation="CenterScreen"
         WindowStyle="None"
@@ -48,13 +49,12 @@
 
                     <Grid Margin="40">
                         <StackPanel VerticalAlignment="Center">
-                            <!-- Biểu tượng Ngôi sao vàng & Huy hiệu quân đội -->
-                            <Border Width="80" Height="80" CornerRadius="40" Background="#DC2626" HorizontalAlignment="Left" Margin="0,0,0,24">
-                                <Border.Effect>
-                                    <DropShadowEffect BlurRadius="15" Color="#DC2626" Opacity="0.5" ShadowDepth="0"/>
-                                </Border.Effect>
-                                <TextBlock Text="★" FontSize="46" Foreground="#FBBF24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
+                            <!-- Biểu tượng Huy hiệu quân đội chính quy -->
+                            <Image Source="pack://application:,,,/Resources/app_icon.png" Width="82" Height="82" HorizontalAlignment="Left" Margin="0,0,0,24">
+                                <Image.Effect>
+                                    <DropShadowEffect BlurRadius="20" Color="#DC2626" Opacity="0.5" ShadowDepth="4"/>
+                                </Image.Effect>
+                            </Image>
 
                             <TextBlock Text="QUÂN ĐỘI NHÂN DÂN" FontSize="14" FontWeight="Bold" Foreground="#FBBF24"/>
                             <TextBlock Text="VIỆT NAM" FontSize="14" FontWeight="Bold" Foreground="#FBBF24" Margin="0,2,0,12"/>
