@@ -10,6 +10,7 @@ using QL_HocVien.Data.Repositories;
 using QL_HocVien.Infrastructure.Security;
 using QL_HocVien.Models;
 using QL_HocVien.Models.DTOs;
+using System.Text.RegularExpressions;
 
 namespace QL_HocVien.Services
 {
@@ -66,34 +67,52 @@ namespace QL_HocVien.Services
             return (true, string.Empty);
         }
 
+        private static string CleanCellText(string? text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return string.Empty;
+            var sanitized = text.Replace("\r", " ").Replace("\n", " ");
+            return Regex.Replace(sanitized, @"\s+", " ").Trim();
+        }
+
         #region 1. XUẤT & NHẬP HỌC VIÊN
         public async Task<(bool Success, string Message)> ExportCadetsToExcelAsync(IEnumerable<Cadet> cadets, string filePath)
         {
             try
             {
                 using var workbook = new XLWorkbook();
-                var ws = workbook.Worksheets.Add("Trang học viên");
+                var ws = workbook.Worksheets.Add("Danh sách học viên");
 
-                // Tiêu đề lớn
-                ws.Cell("A1").Value = "DANH SÁCH HỌC VIÊN QUÂN ĐỘI";
-                ws.Range("A1:L1").Merge().Style
-                    .Font.SetBold().Font.SetFontSize(16).Font.SetFontColor(XLColor.FromHtml("#1E3A8A"))
+                // Tiêu đề
+                ws.Cell(1, 1).Value = "DANH SÁCH HỌC VIÊN - HỌC VIỆN QUÂN SỰ";
+                ws.Range(1, 1, 1, 12).Merge().Style
+                    .Font.SetBold(true)
+                    .Font.SetFontSize(14)
+                    .Font.SetFontColor(XLColor.FromHtml("#0F766E"))
                     .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
 
-                ws.Cell("A2").Value = $"Thời điểm xuất dữ liệu: {DateTime.Now:dd/MM/yyyy HH:mm:ss}";
-                ws.Range("A2:L2").Merge().Style.Font.SetItalic().Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                ws.Cell(2, 1).Value = $"Ngày xuất: {DateTime.Now:dd/MM/yyyy HH:mm}";
+                ws.Range(2, 1, 2, 12).Merge().Style
+                    .Font.SetItalic(true)
+                    .Font.SetFontSize(10)
+                    .Font.SetFontColor(XLColor.FromHtml("#64748B"))
+                    .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
 
-                // Hàng Header
+                // Header
                 string[] headers = { "STT", "Mã học viên", "Họ và tên", "Cấp bậc", "Chức vụ", "Đơn vị", "Lớp", "Số điện thoại", "Email", "Ngày sinh", "Tuổi", "Giới tính" };
                 for (int i = 0; i < headers.Length; i++)
                 {
                     var cell = ws.Cell(4, i + 1);
                     cell.Value = headers[i];
-                    cell.Style.Font.SetBold().Font.SetFontColor(XLColor.White)
-                        .Fill.SetBackgroundColor(XLColor.FromHtml("#1E3A8A"))
+                    cell.Style
+                        .Font.SetBold(true)
+                        .Font.SetFontColor(XLColor.White)
+                        .Fill.SetBackgroundColor(XLColor.FromHtml("#0F766E"))
                         .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center)
-                        .Border.SetOutsideBorder(XLBorderStyleValues.Thin);
+                        .Alignment.SetVertical(XLAlignmentVerticalValues.Center)
+                        .Border.SetOutsideBorder(XLBorderStyleValues.Thin)
+                        .Border.SetOutsideBorderColor(XLColor.FromHtml("#0D5E56"));
                 }
+                ws.Row(4).Height = 28;
 
                 int row = 5;
                 int stt = 1;
@@ -105,26 +124,41 @@ namespace QL_HocVien.Services
                     ws.Cell(row, 4).Value = c.Rank;
                     ws.Cell(row, 5).Value = c.Position;
                     ws.Cell(row, 6).Value = c.Unit;
-                    ws.Cell(row, 7).Value = c.ClassName;
+                    ws.Cell(row, 7).Value = c.ClassName ?? (c.MilitaryClass?.ClassName ?? "");
                     ws.Cell(row, 8).Value = c.PhoneNumber;
                     ws.Cell(row, 9).Value = c.Email;
                     ws.Cell(row, 10).Value = c.DateOfBirth.HasValue ? c.DateOfBirth.Value.ToString("dd/MM/yyyy") : "";
-                    ws.Cell(row, 11).Value = c.Age ?? 0;
+                    ws.Cell(row, 11).Value = c.Age;
                     ws.Cell(row, 12).Value = c.Gender;
 
-                    ws.Range(row, 1, row, 12).Style.Border.SetOutsideBorder(XLBorderStyleValues.Thin)
-                                                   .Border.SetInsideBorder(XLBorderStyleValues.Thin);
+                    var dataRow = ws.Range(row, 1, row, 12);
+                    dataRow.Style.Border.SetOutsideBorder(XLBorderStyleValues.Thin)
+                                  .Border.SetOutsideBorderColor(XLColor.FromHtml("#E2E8F0"))
+                                  .Border.SetInsideBorder(XLBorderStyleValues.Thin)
+                                  .Border.SetInsideBorderColor(XLColor.FromHtml("#E2E8F0"));
+
+                    if (row % 2 == 0)
+                    {
+                        dataRow.Style.Fill.SetBackgroundColor(XLColor.FromHtml("#F8FAFC"));
+                    }
+
+                    ws.Cell(row, 1).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                    ws.Cell(row, 2).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                    ws.Cell(row, 4).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                    ws.Cell(row, 10).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                    ws.Cell(row, 11).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                    ws.Cell(row, 12).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+
                     row++;
                 }
 
                 ws.Columns().AdjustToContents();
                 workbook.SaveAs(filePath);
-
-                return (true, $"Xuất thành công {stt - 1} học viên ra file Excel.");
+                return (true, $"Đã xuất thành công {stt - 1} học viên ra tệp Excel.");
             }
             catch (Exception ex)
             {
-                return (false, $"Lỗi khi xuất file Excel: {ex.Message}");
+                return (false, $"Lỗi xuất tệp Excel: {ex.Message}");
             }
         }
 
@@ -151,12 +185,85 @@ namespace QL_HocVien.Services
                 int headerRow = 1;
                 for (int r = 1; r <= 15; r++)
                 {
-                    var textRow = string.Join(" ", ws.Row(r).Cells().Select(c => c.GetString()));
-                    if (textRow.Contains("Họ và tên") || textRow.Contains("Mã học viên"))
+                    var textRow = string.Join(" ", ws.Row(r).Cells().Select(c => CleanCellText(c.GetString())));
+                    if (textRow.Contains("Họ và tên") || textRow.Contains("Mã học viên") || textRow.Contains("Họ tên") || textRow.Contains("CadetCode"))
                     {
                         headerRow = r;
                         break;
                     }
+                }
+
+                // Dynamic Header-Based Mapping: Tự động phát hiện chỉ số cột theo tiêu đề ô
+                int colCode = -1, colFullName = -1, colRank = -1, colPosition = -1, colUnit = -1;
+                int colClassName = -1, colPhone = -1, colEmail = -1, colDob = -1, colAge = -1, colGender = -1;
+
+                foreach (var cell in ws.Row(headerRow).CellsUsed())
+                {
+                    var title = CleanCellText(cell.GetString()).ToLowerInvariant();
+                    int c = cell.Address.ColumnNumber;
+
+                    if (title.Contains("mã") || title.Contains("cadetcode") || title.Contains("số hiệu") || title.Contains("shsv") || title.Contains("ms"))
+                    {
+                        if (colCode == -1) colCode = c;
+                    }
+                    else if (title.Contains("họ") || title.Contains("tên") || title.Contains("fullname"))
+                    {
+                        if (colFullName == -1) colFullName = c;
+                    }
+                    else if (title.Contains("cấp bậc") || title.Contains("quân hàm") || title.Equals("rank"))
+                    {
+                        if (colRank == -1) colRank = c;
+                    }
+                    else if (title.Contains("chức vụ") || title.Contains("chức danh") || title.Equals("position"))
+                    {
+                        if (colPosition == -1) colPosition = c;
+                    }
+                    else if (title.Contains("đơn vị") || title.Contains("đại đội") || title.Contains("trung đội") || title.Contains("tiểu đoàn") || title.Equals("unit"))
+                    {
+                        if (colUnit == -1) colUnit = c;
+                    }
+                    else if (title.Contains("lớp") || title.Equals("class") || title.Contains("classname"))
+                    {
+                        if (colClassName == -1) colClassName = c;
+                    }
+                    else if (title.Contains("thoại") || title.Contains("sđt") || title.Contains("phone") || title.Contains("tel"))
+                    {
+                        if (colPhone == -1) colPhone = c;
+                    }
+                    else if (title.Contains("mail"))
+                    {
+                        if (colEmail == -1) colEmail = c;
+                    }
+                    else if (title.Contains("sinh") || title.Contains("dob") || title.Contains("birth"))
+                    {
+                        if (colDob == -1) colDob = c;
+                    }
+                    else if (title.Contains("tuổi") || title.Equals("age"))
+                    {
+                        if (colAge == -1) colAge = c;
+                    }
+                    else if (title.Contains("giới tính") || title.Contains("nam/nữ") || title.Equals("gender"))
+                    {
+                        if (colGender == -1) colGender = c;
+                    }
+                }
+
+                // Fallback nếu không xác định được vị trí họ tên
+                if (colFullName == -1)
+                {
+                    var firstTitle = CleanCellText(ws.Cell(headerRow, 1).GetString()).ToLowerInvariant();
+                    bool firstIsStt = firstTitle.Contains("stt") || firstTitle.Contains("tt") || firstTitle.Contains("no");
+                    colCode = firstIsStt ? 2 : 1;
+                    colFullName = firstIsStt ? 3 : 2;
+                    if (colRank == -1) colRank = firstIsStt ? 4 : 3;
+                    if (colPosition == -1) colPosition = firstIsStt ? 5 : 4;
+                    if (colUnit == -1) colUnit = firstIsStt ? 6 : 5;
+                    if (colClassName == -1) colClassName = firstIsStt ? 7 : 6;
+                    if (colPhone == -1) colPhone = firstIsStt ? 8 : 7;
+                    if (colEmail == -1) colEmail = firstIsStt ? 9 : 8;
+                    if (colDob == -1) colDob = firstIsStt ? 10 : 9;
+                    if (colAge == -1) colAge = firstIsStt ? 11 : 10;
+                    if (colGender == -1) colGender = firstIsStt ? 12 : 11;
                 }
 
                 int lastRow = ws.LastRowUsed()?.RowNumber() ?? headerRow;
@@ -167,29 +274,33 @@ namespace QL_HocVien.Services
                 for (int r = headerRow + 1; r <= lastRow; r++)
                 {
                     var row = ws.Row(r);
-                    // Đọc các cột
-                    string code = row.Cell(2).GetString().Trim();
-                    string fullName = row.Cell(3).GetString().Trim();
+                    // Đọc các cột theo mapping động và làm sạch khoảng trắng/xuống dòng
+                    string code = colCode > 0 ? CleanCellText(row.Cell(colCode).GetString()) : string.Empty;
+                    string fullName = colFullName > 0 ? CleanCellText(row.Cell(colFullName).GetString()) : string.Empty;
 
-                    // Nếu mã rỗng hoặc chỉ có số STT mà không có họ tên thì bỏ qua
+                    // Nếu họ tên rỗng thì bỏ qua
                     if (string.IsNullOrWhiteSpace(fullName)) continue;
                     if (string.IsNullOrWhiteSpace(code))
                     {
                         code = $"HV-{DateTime.Today.Year}-{r:D3}";
                     }
 
-                    string rank = row.Cell(4).GetString().Trim();
-                    string pos = row.Cell(5).GetString().Trim();
-                    string unit = row.Cell(6).GetString().Trim();
-                    string className = row.Cell(7).GetString().Trim();
-                    string phone = row.Cell(8).GetString().Trim();
-                    string email = row.Cell(9).GetString().Trim();
-                    string dobStr = row.Cell(10).GetString().Trim();
+                    string rank = colRank > 0 ? CleanCellText(row.Cell(colRank).GetString()) : string.Empty;
+                    string pos = colPosition > 0 ? CleanCellText(row.Cell(colPosition).GetString()) : string.Empty;
+                    string unit = colUnit > 0 ? CleanCellText(row.Cell(colUnit).GetString()) : string.Empty;
+                    string className = colClassName > 0 ? CleanCellText(row.Cell(colClassName).GetString()) : string.Empty;
+                    string phone = colPhone > 0 ? CleanCellText(row.Cell(colPhone).GetString()) : string.Empty;
+                    string email = colEmail > 0 ? CleanCellText(row.Cell(colEmail).GetString()) : string.Empty;
+                    string dobStr = colDob > 0 ? CleanCellText(row.Cell(colDob).GetString()) : string.Empty;
                     DateTime? dob = null;
                     if (DateTime.TryParse(dobStr, out var d)) dob = d;
                     
-                    int.TryParse(row.Cell(11).GetString().Trim(), out int age);
-                    string gender = row.Cell(12).GetString().Trim();
+                    int age = 0;
+                    if (colAge > 0)
+                    {
+                        int.TryParse(CleanCellText(row.Cell(colAge).GetString()), out age);
+                    }
+                    string gender = colGender > 0 ? CleanCellText(row.Cell(colGender).GetString()) : "Nam";
                     if (string.IsNullOrWhiteSpace(gender)) gender = "Nam";
 
                     var matchedClass = allClasses.FirstOrDefault(c => 
@@ -233,7 +344,7 @@ namespace QL_HocVien.Services
                             ClassId = matchedClass?.Id,
                             ClassName = matchedClass?.ClassName ?? (!string.IsNullOrWhiteSpace(className) ? className : "K26A"),
                             PhoneNumber = !string.IsNullOrWhiteSpace(phone) ? phone : $"09{new Random().Next(10000000, 99999999)}",
-                            Email = !string.IsNullOrWhiteSpace(email) ? email : $"{code.ToLower().Replace("-", "")}@hocvien.edu.vn",
+                            Email = !string.IsNullOrWhiteSpace(email) ? email : $"{code.ToLower().Replace("-", "").Replace(" ", "")}@hocvien.edu.vn",
                             DateOfBirth = dob,
                             Age = age > 0 ? age : 21,
                             Gender = gender,
@@ -328,14 +439,73 @@ namespace QL_HocVien.Services
                 if (ws == null) return (false, "Không tìm thấy sheet môn học.", list);
 
                 int headerRow = 1;
-                for (int r = 1; r <= 10; r++)
+                for (int r = 1; r <= 15; r++)
                 {
-                    var textRow = string.Join(" ", ws.Row(r).Cells().Select(c => c.GetString()));
-                    if (textRow.Contains("Mã môn") || textRow.Contains("Tên môn"))
+                    var textRow = string.Join(" ", ws.Row(r).Cells().Select(c => CleanCellText(c.GetString())));
+                    if (textRow.Contains("Mã môn") || textRow.Contains("Tên môn") || textRow.Contains("SubjectCode"))
                     {
                         headerRow = r;
                         break;
                     }
+                }
+
+                int colCode = -1, colName = -1, colCat = -1, colUnit = -1;
+                int colExc = -1, colGood = -1, colPass = -1, colHigher = -1, colDesc = -1;
+
+                foreach (var cell in ws.Row(headerRow).CellsUsed())
+                {
+                    var title = CleanCellText(cell.GetString()).ToLowerInvariant();
+                    int c = cell.Address.ColumnNumber;
+
+                    if (title.Contains("mã môn") || title.Contains("subjectcode"))
+                    {
+                        if (colCode == -1) colCode = c;
+                    }
+                    else if (title.Contains("tên môn") || title.Contains("subjectname") || (title.Contains("môn") && !title.Contains("mã")))
+                    {
+                        if (colName == -1) colName = c;
+                    }
+                    else if (title.Contains("loại") || title.Contains("nhóm") || title.Contains("danh mục") || title.Contains("category"))
+                    {
+                        if (colCat == -1) colCat = c;
+                    }
+                    else if (title.Contains("đơn vị tính") || title.Contains("đvt") || title.Equals("đơn vị") || title.Equals("unit"))
+                    {
+                        if (colUnit == -1) colUnit = c;
+                    }
+                    else if (title.Contains("giỏi") || title.Contains("excellent"))
+                    {
+                        if (colExc == -1) colExc = c;
+                    }
+                    else if (title.Contains("khá") || title.Contains("good"))
+                    {
+                        if (colGood == -1) colGood = c;
+                    }
+                    else if (title.Contains("đạt") || title.Contains("pass"))
+                    {
+                        if (colPass == -1) colPass = c;
+                    }
+                    else if (title.Contains("càng cao") || title.Contains("higher"))
+                    {
+                        if (colHigher == -1) colHigher = c;
+                    }
+                    else if (title.Contains("mô tả") || title.Contains("ghi chú") || title.Contains("desc"))
+                    {
+                        if (colDesc == -1) colDesc = c;
+                    }
+                }
+
+                if (colCode == -1 && colName == -1)
+                {
+                    colCode = 2;
+                    colName = 3;
+                    colCat = 4;
+                    colUnit = 5;
+                    colExc = 6;
+                    colGood = 7;
+                    colPass = 8;
+                    colHigher = 9;
+                    colDesc = 10;
                 }
 
                 int lastRow = ws.LastRowUsed()?.RowNumber() ?? headerRow;
@@ -345,18 +515,20 @@ namespace QL_HocVien.Services
                 for (int r = headerRow + 1; r <= lastRow; r++)
                 {
                     var row = ws.Row(r);
-                    string code = row.Cell(2).GetString().Trim();
-                    string name = row.Cell(3).GetString().Trim();
+                    string code = colCode > 0 ? CleanCellText(row.Cell(colCode).GetString()) : string.Empty;
+                    string name = colName > 0 ? CleanCellText(row.Cell(colName).GetString()) : string.Empty;
                     if (string.IsNullOrWhiteSpace(code) || string.IsNullOrWhiteSpace(name)) continue;
 
-                    string cat = row.Cell(4).GetString().Trim();
-                    string unit = row.Cell(5).GetString().Trim();
-                    double.TryParse(row.Cell(6).GetString(), out double exc);
-                    double.TryParse(row.Cell(7).GetString(), out double good);
-                    double.TryParse(row.Cell(8).GetString(), out double pass);
-                    string higher = row.Cell(9).GetString().Trim().ToLower();
+                    string cat = colCat > 0 ? CleanCellText(row.Cell(colCat).GetString()) : "Tiêu chuẩn rèn luyện";
+                    string unit = colUnit > 0 ? CleanCellText(row.Cell(colUnit).GetString()) : "Lần";
+                    double exc = 0, good = 0, pass = 0;
+                    if (colExc > 0) double.TryParse(CleanCellText(row.Cell(colExc).GetString()), out exc);
+                    if (colGood > 0) double.TryParse(CleanCellText(row.Cell(colGood).GetString()), out good);
+                    if (colPass > 0) double.TryParse(CleanCellText(row.Cell(colPass).GetString()), out pass);
+
+                    string higher = colHigher > 0 ? CleanCellText(row.Cell(colHigher).GetString()).ToLowerInvariant() : "có";
                     bool isHigher = higher == "có" || higher == "yes" || higher == "true" || higher == "1";
-                    string desc = row.Cell(10).GetString().Trim();
+                    string desc = colDesc > 0 ? CleanCellText(row.Cell(colDesc).GetString()) : string.Empty;
 
                     var existing = await _subjectRepository.GetByCodeAsync(code);
                     if (existing != null)
@@ -477,18 +649,53 @@ namespace QL_HocVien.Services
                 if (ws == null) return (false, "Không tìm thấy sheet kiểm tra thể lực.", list);
 
                 int headerRow = 1;
-                for (int r = 1; r <= 10; r++)
+                for (int r = 1; r <= 15; r++)
                 {
-                    var textRow = string.Join(" ", ws.Row(r).Cells().Select(c => c.GetString()));
-                    if (textRow.Contains("Mã học viên") || textRow.Contains("Mã môn") || textRow.Contains("Thành tích"))
+                    var textRow = string.Join(" ", ws.Row(r).Cells().Select(c => CleanCellText(c.GetString())));
+                    if (textRow.Contains("Mã học viên") || textRow.Contains("Mã môn") || textRow.Contains("Thành tích") || textRow.Contains("CadetCode"))
                     {
                         headerRow = r;
                         break;
                     }
                 }
 
-                var allCadets = (await _cadetRepository.GetAllAsync()).ToDictionary(c => c.CadetCode.ToLower().Trim());
-                var allSubjects = (await _subjectRepository.GetAllAsync()).ToDictionary(s => s.SubjectCode.ToLower().Trim());
+                int colCadetCode = -1, colSubjectCode = -1, colScore = -1, colSession = -1, colDate = -1;
+
+                foreach (var cell in ws.Row(headerRow).CellsUsed())
+                {
+                    var title = CleanCellText(cell.GetString()).ToLowerInvariant();
+                    int c = cell.Address.ColumnNumber;
+
+                    if (title.Contains("mã học viên") || title.Contains("cadetcode") || title.Contains("mã hv") || (title.Contains("mã") && !title.Contains("môn")))
+                    {
+                        if (colCadetCode == -1) colCadetCode = c;
+                    }
+                    else if (title.Contains("mã môn") || title.Contains("subjectcode") || (title.Contains("môn") && title.Contains("mã")))
+                    {
+                        if (colSubjectCode == -1) colSubjectCode = c;
+                    }
+                    else if (title.Contains("thành tích") || title.Contains("điểm") || title.Contains("kết quả") || title.Contains("score"))
+                    {
+                        if (colScore == -1) colScore = c;
+                    }
+                    else if (title.Contains("đợt") || title.Contains("session") || title.Contains("kỳ kiểm tra"))
+                    {
+                        if (colSession == -1) colSession = c;
+                    }
+                    else if (title.Contains("ngày") || title.Contains("date") || title.Contains("thời gian"))
+                    {
+                        if (colDate == -1) colDate = c;
+                    }
+                }
+
+                if (colCadetCode == -1) colCadetCode = 2;
+                if (colSubjectCode == -1) colSubjectCode = 6;
+                if (colScore == -1) colScore = 8;
+                if (colSession == -1) colSession = 10;
+                if (colDate == -1) colDate = 11;
+
+                var allCadets = (await _cadetRepository.GetAllAsync()).ToDictionary(c => CleanCellText(c.CadetCode).ToLowerInvariant());
+                var allSubjects = (await _subjectRepository.GetAllAsync()).ToDictionary(s => CleanCellText(s.SubjectCode).ToLowerInvariant());
 
                 int lastRow = ws.LastRowUsed()?.RowNumber() ?? headerRow;
                 int added = 0;
@@ -496,15 +703,20 @@ namespace QL_HocVien.Services
                 for (int r = headerRow + 1; r <= lastRow; r++)
                 {
                     var row = ws.Row(r);
-                    string cadetCode = row.Cell(2).GetString().Trim().ToLower();
-                    string subjectCode = row.Cell(6).GetString().Trim().ToLower();
+                    string cadetCode = colCadetCode > 0 ? CleanCellText(row.Cell(colCadetCode).GetString()).ToLowerInvariant() : string.Empty;
+                    string subjectCode = colSubjectCode > 0 ? CleanCellText(row.Cell(colSubjectCode).GetString()).ToLowerInvariant() : string.Empty;
 
+                    if (string.IsNullOrWhiteSpace(cadetCode) || string.IsNullOrWhiteSpace(subjectCode)) continue;
                     if (!allCadets.TryGetValue(cadetCode, out var cadet)) continue;
                     if (!allSubjects.TryGetValue(subjectCode, out var subject)) continue;
 
-                    double.TryParse(row.Cell(8).GetString(), out double score);
-                    string session = row.Cell(10).GetString().Trim();
-                    string dateStr = row.Cell(11).GetString().Trim();
+                    double score = 0;
+                    if (colScore > 0)
+                    {
+                        double.TryParse(CleanCellText(row.Cell(colScore).GetString()), out score);
+                    }
+                    string session = colSession > 0 ? CleanCellText(row.Cell(colSession).GetString()) : "Kiểm tra định kỳ";
+                    string dateStr = colDate > 0 ? CleanCellText(row.Cell(colDate).GetString()) : string.Empty;
                     DateTime examDate = DateTime.Today;
                     if (DateTime.TryParse(dateStr, out var d)) examDate = d;
 
@@ -781,33 +993,104 @@ namespace QL_HocVien.Services
                     return (false, "Không tìm thấy sheet dữ liệu cán bộ.", new List<Officer>());
 
                 var imported = new List<Officer>();
-                int startRow = 5;
-                for (int r = 1; r <= 10; r++)
+                int headerRow = 1;
+                for (int r = 1; r <= 15; r++)
                 {
-                    var text = ws.Cell(r, 2).GetString().Trim();
-                    if (text.Equals("Mã cán bộ", StringComparison.OrdinalIgnoreCase) || text.Equals("OfficerCode", StringComparison.OrdinalIgnoreCase))
+                    var textRow = string.Join(" ", ws.Row(r).Cells().Select(c => CleanCellText(c.GetString())));
+                    if (textRow.Contains("Mã cán bộ") || textRow.Contains("OfficerCode") || textRow.Contains("Họ và tên") || textRow.Contains("Họ tên"))
                     {
-                        startRow = r + 1;
+                        headerRow = r;
                         break;
                     }
                 }
 
-                int lastRow = ws.LastRowUsed()?.RowNumber() ?? 0;
-                for (int row = startRow; row <= lastRow; row++)
+                int colCode = -1, colName = -1, colRank = -1, colPos = -1, colUnit = -1;
+                int colPhone = -1, colEmail = -1, colSpec = -1, colDob = -1, colEnlist = -1;
+
+                foreach (var cell in ws.Row(headerRow).CellsUsed())
                 {
-                    string code = ws.Cell(row, 2).GetString().Trim();
-                    string name = ws.Cell(row, 3).GetString().Trim();
-                    if (string.IsNullOrWhiteSpace(code) || string.IsNullOrWhiteSpace(name))
+                    var title = CleanCellText(cell.GetString()).ToLowerInvariant();
+                    int c = cell.Address.ColumnNumber;
+
+                    if (title.Contains("mã") || title.Contains("officer") || title.Contains("shcb"))
+                    {
+                        if (colCode == -1) colCode = c;
+                    }
+                    else if (title.Contains("họ") || title.Contains("tên") || title.Contains("fullname"))
+                    {
+                        if (colName == -1) colName = c;
+                    }
+                    else if (title.Contains("cấp bậc") || title.Contains("quân hàm") || title.Equals("rank"))
+                    {
+                        if (colRank == -1) colRank = c;
+                    }
+                    else if (title.Contains("chức vụ") || title.Contains("chức danh") || title.Equals("position"))
+                    {
+                        if (colPos == -1) colPos = c;
+                    }
+                    else if (title.Contains("đơn vị") || title.Contains("đại đội") || title.Contains("tiểu đoàn") || title.Equals("unit"))
+                    {
+                        if (colUnit == -1) colUnit = c;
+                    }
+                    else if (title.Contains("thoại") || title.Contains("sđt") || title.Contains("phone"))
+                    {
+                        if (colPhone == -1) colPhone = c;
+                    }
+                    else if (title.Contains("mail"))
+                    {
+                        if (colEmail == -1) colEmail = c;
+                    }
+                    else if (title.Contains("chuyên ngành") || title.Contains("chuyên môn") || title.Contains("specialty"))
+                    {
+                        if (colSpec == -1) colSpec = c;
+                    }
+                    else if (title.Contains("ngày sinh") || title.Contains("sinh") || title.Contains("dob"))
+                    {
+                        if (colDob == -1) colDob = c;
+                    }
+                    else if (title.Contains("nhập ngũ") || title.Contains("enlist"))
+                    {
+                        if (colEnlist == -1) colEnlist = c;
+                    }
+                }
+
+                if (colName == -1)
+                {
+                    var firstTitle = CleanCellText(ws.Cell(headerRow, 1).GetString()).ToLowerInvariant();
+                    bool firstIsStt = firstTitle.Contains("stt") || firstTitle.Contains("tt") || firstTitle.Contains("no");
+                    colCode = firstIsStt ? 2 : 1;
+                    colName = firstIsStt ? 3 : 2;
+                    if (colRank == -1) colRank = firstIsStt ? 4 : 3;
+                    if (colPos == -1) colPos = firstIsStt ? 5 : 4;
+                    if (colUnit == -1) colUnit = firstIsStt ? 6 : 5;
+                    if (colPhone == -1) colPhone = firstIsStt ? 7 : 6;
+                    if (colEmail == -1) colEmail = firstIsStt ? 8 : 7;
+                    if (colSpec == -1) colSpec = firstIsStt ? 9 : 8;
+                    if (colDob == -1) colDob = firstIsStt ? 10 : 9;
+                    if (colEnlist == -1) colEnlist = firstIsStt ? 11 : 10;
+                }
+
+                int lastRow = ws.LastRowUsed()?.RowNumber() ?? 0;
+                for (int row = headerRow + 1; row <= lastRow; row++)
+                {
+                    string code = colCode > 0 ? CleanCellText(ws.Cell(row, colCode).GetString()) : string.Empty;
+                    string name = colName > 0 ? CleanCellText(ws.Cell(row, colName).GetString()) : string.Empty;
+                    if (string.IsNullOrWhiteSpace(name))
                         continue;
 
-                    string rank = ws.Cell(row, 4).GetString().Trim();
-                    string pos = ws.Cell(row, 5).GetString().Trim();
-                    string unit = ws.Cell(row, 6).GetString().Trim();
-                    string phone = ws.Cell(row, 7).GetString().Trim();
-                    string email = ws.Cell(row, 8).GetString().Trim();
-                    string specialty = ws.Cell(row, 9).GetString().Trim();
-                    string dobStr = ws.Cell(row, 10).GetString().Trim();
-                    string enlistStr = ws.Cell(row, 11).GetString().Trim();
+                    if (string.IsNullOrWhiteSpace(code))
+                    {
+                        code = $"CB-{DateTime.Today.Year}-{row:D3}";
+                    }
+
+                    string rank = colRank > 0 ? CleanCellText(ws.Cell(row, colRank).GetString()) : "Thiếu úy";
+                    string pos = colPos > 0 ? CleanCellText(ws.Cell(row, colPos).GetString()) : "Cán bộ";
+                    string unit = colUnit > 0 ? CleanCellText(ws.Cell(row, colUnit).GetString()) : "Đại đội 1";
+                    string phone = colPhone > 0 ? CleanCellText(ws.Cell(row, colPhone).GetString()) : string.Empty;
+                    string email = colEmail > 0 ? CleanCellText(ws.Cell(row, colEmail).GetString()) : string.Empty;
+                    string specialty = colSpec > 0 ? CleanCellText(ws.Cell(row, colSpec).GetString()) : "Chỉ huy tham mưu";
+                    string dobStr = colDob > 0 ? CleanCellText(ws.Cell(row, colDob).GetString()) : string.Empty;
+                    string enlistStr = colEnlist > 0 ? CleanCellText(ws.Cell(row, colEnlist).GetString()) : string.Empty;
 
                     DateTime? dob = null;
                     if (DateTime.TryParse(dobStr, out var d)) dob = d;

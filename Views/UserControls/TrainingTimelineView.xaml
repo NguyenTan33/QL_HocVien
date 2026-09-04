@@ -40,6 +40,24 @@
                 </StackPanel>
 
                 <WrapPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <!-- Nút chuyển đổi Cuốn Lịch Tháng vs Dòng Thời Gian -->
+                    <Button Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,4"
+                            Command="{Binding SwitchToCalendarViewCommand}"
+                            Visibility="{Binding IsCalendarViewVisible, Converter={StaticResource InvBoolToVis}}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="📅 " FontSize="13"/>
+                            <TextBlock Text="Xem Cuốn Lịch Tháng" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,4"
+                            Command="{Binding SwitchToTimelineViewCommand}"
+                            Visibility="{Binding IsCalendarViewVisible, Converter={StaticResource BoolToVis}}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="📜 " FontSize="13"/>
+                            <TextBlock Text="Dòng Thời Gian Dọc" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Button>
+
                     <Button Content="🔄 Tải Lại Lịch" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,4"
                             Command="{Binding LoadEventsCommand}"/>
                     <Button Content="➕ Thêm Mốc Sự Kiện" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,0,4"
@@ -142,8 +160,9 @@
                     <ColumnDefinition Width="380"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- CỘT BÊN TRÁI: DÒNG THỜI GIAN (TIMELINE) -->
-                <Border Grid.Column="0" Style="{StaticResource CardBorderStyle}" Padding="16" Margin="0,0,14,0">
+                <!-- CỘT BÊN TRÁI 1: DÒNG THỜI GIAN DỌC (TIMELINE) -->
+                <Border Grid.Column="0" Style="{StaticResource CardBorderStyle}" Padding="16" Margin="0,0,14,0"
+                        Visibility="{Binding IsCalendarViewVisible, Converter={StaticResource InvBoolToVis}}">
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <ItemsControl ItemsSource="{Binding Events}">
                             <ItemsControl.ItemTemplate>
@@ -251,104 +270,406 @@
                     </ScrollViewer>
                 </Border>
 
-                <!-- CỘT BÊN PHẢI: FORM THÊM / SỬA MỐC SỰ KIỆN -->
-                <Border Grid.Column="1" Style="{StaticResource CardBorderStyle}" Padding="18">
-                    <ScrollViewer VerticalScrollBarVisibility="Auto">
-                        <StackPanel>
-                            <!-- Tiêu đề Form -->
-                            <TextBlock Text="{Binding FormHeader}" FontSize="14" FontWeight="Bold" Foreground="#0F766E" Margin="0,0,0,12"/>
+                <!-- CỘT BÊN TRÁI 2: CUỐN LỊCH THÁNG KIỂU ĐIỆN THOẠI (PHONE-STYLE MONTHLY CALENDAR) -->
+                <Border Grid.Column="0" Style="{StaticResource CardBorderStyle}" Padding="16" Margin="0,0,14,0"
+                        Visibility="{Binding IsCalendarViewVisible, Converter={StaticResource BoolToVis}}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <!-- Header điều hướng Tháng / Năm -->
+                            <RowDefinition Height="Auto"/>
+                            <!-- Tiêu đề 7 thứ trong tuần -->
+                            <RowDefinition Height="Auto"/>
+                            <!-- Lưới 42 ô ngày (6 tuần x 7 ngày) -->
+                            <RowDefinition Height="*"/>
+                            <!-- Chú thích màu sắc sự kiện -->
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
 
-                            <!-- Tiêu đề sự kiện -->
-                            <StackPanel Margin="0,0,0,10">
-                                <TextBlock Text="Tiêu đề mốc sự kiện / kiểm tra (*):" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
-                                <TextBox Text="{Binding EditTitle, UpdateSourceTrigger=PropertyChanged}" Height="34" VerticalContentAlignment="Center" Padding="6,0"/>
-                            </StackPanel>
-
-                            <!-- Phân loại -->
-                            <StackPanel Margin="0,0,0,10">
-                                <TextBlock Text="Loại sự kiện huấn luyện (*):" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
-                                <ComboBox SelectedItem="{Binding EditCategory}" Height="34">
-                                    <ComboBoxItem Content="Kiểm tra thể lực" IsSelected="True"/>
-                                    <ComboBoxItem Content="Thi cử quân sự"/>
-                                    <ComboBoxItem Content="Tập luyện / Rèn luyện"/>
-                                    <ComboBoxItem Content="Hội thao / Sự kiện"/>
-                                </ComboBox>
-                            </StackPanel>
-
-                            <!-- Đơn vị áp dụng -->
-                            <StackPanel Margin="0,0,0,10">
-                                <TextBlock Text="Đơn vị / Đối tượng áp dụng:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
-                                <ComboBox ItemsSource="{Binding UnitOptions}" SelectedItem="{Binding EditTargetUnit}" Height="34"/>
-                            </StackPanel>
-
-                            <!-- Thời gian bắt đầu & kết thúc -->
-                            <Grid Margin="0,0,0,10">
+                        <!-- HÀNG 0: HEADER ĐIỀU HƯỚNG THÁNG / NĂM -->
+                        <Border Grid.Row="0" Background="#F1F5F9" CornerRadius="8" Padding="12,8" Margin="0,0,0,12">
+                            <Grid>
                                 <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="10"/>
-                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
 
-                                <StackPanel Grid.Column="0">
-                                    <TextBlock Text="Ngày bắt đầu:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
-                                    <DatePicker SelectedDate="{Binding EditStartDate}" Height="34"/>
+                                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                    <Button Content="◀ Tháng Trước" Style="{StaticResource SecondaryButtonStyle}" 
+                                            Padding="10,4" Margin="0,0,6,0"
+                                            Command="{Binding PreviousMonthCommand}"/>
+                                    <Button Content="Hôm Nay" Style="{StaticResource SecondaryButtonStyle}" 
+                                            Padding="10,4"
+                                            Command="{Binding TodayCommand}"/>
                                 </StackPanel>
 
-                                <StackPanel Grid.Column="2">
-                                    <TextBlock Text="Ngày kết thúc:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
-                                    <DatePicker SelectedDate="{Binding EditEndDate}" Height="34"/>
-                                </StackPanel>
+                                <TextBlock Grid.Column="1" Text="{Binding MonthYearTitle}" 
+                                           FontSize="16" FontWeight="ExtraBold" Foreground="#0F766E" 
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+                                <Button Grid.Column="2" Content="Tháng Sau ▶" Style="{StaticResource SecondaryButtonStyle}" 
+                                        Padding="10,4"
+                                        Command="{Binding NextMonthCommand}"/>
                             </Grid>
+                        </Border>
 
-                            <!-- Địa điểm / Thao trường -->
-                            <StackPanel Margin="0,0,0,10">
-                                <TextBlock Text="Địa điểm / Thao trường:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
-                                <TextBox Text="{Binding EditLocation, UpdateSourceTrigger=PropertyChanged}" Height="34" VerticalContentAlignment="Center" Padding="6,0"/>
-                            </StackPanel>
+                        <!-- HÀNG 1: TIÊU ĐỀ 7 THỨ TRONG TUẦN -->
+                        <UniformGrid Grid.Row="1" Columns="7" Margin="0,0,0,6">
+                            <Border Background="#0F766E" CornerRadius="4" Margin="2" Padding="0,6">
+                                <TextBlock Text="THỨ HAI" FontSize="11" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                            </Border>
+                            <Border Background="#0F766E" CornerRadius="4" Margin="2" Padding="0,6">
+                                <TextBlock Text="THỨ BA" FontSize="11" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                            </Border>
+                            <Border Background="#0F766E" CornerRadius="4" Margin="2" Padding="0,6">
+                                <TextBlock Text="THỨ TƯ" FontSize="11" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                            </Border>
+                            <Border Background="#0F766E" CornerRadius="4" Margin="2" Padding="0,6">
+                                <TextBlock Text="THỨ NĂM" FontSize="11" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                            </Border>
+                            <Border Background="#0F766E" CornerRadius="4" Margin="2" Padding="0,6">
+                                <TextBlock Text="THỨ SÁU" FontSize="11" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                            </Border>
+                            <Border Background="#0D5E56" CornerRadius="4" Margin="2" Padding="0,6">
+                                <TextBlock Text="THỨ BẢY" FontSize="11" FontWeight="Bold" Foreground="#FEF08A" HorizontalAlignment="Center"/>
+                            </Border>
+                            <Border Background="#B91C1C" CornerRadius="4" Margin="2" Padding="0,6">
+                                <TextBlock Text="CHỦ NHẬT" FontSize="11" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                            </Border>
+                        </UniformGrid>
 
-                            <!-- Mức độ ưu tiên & Trạng thái -->
-                            <Grid Margin="0,0,0,10">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="10"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
+                        <!-- HÀNG 2: LƯỚI 42 Ô NGÀY TRÊN CUỐN LỊCH -->
+                        <ItemsControl Grid.Row="2" ItemsSource="{Binding CalendarDays}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Rows="6" Columns="7"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <!-- Từng ô ngày trên cuốn lịch -->
+                                    <Border Margin="2" CornerRadius="6" Cursor="Hand" ToolTip="{Binding FullTooltip}">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="#FFFFFF"/>
+                                                <Setter Property="BorderBrush" Value="#E2E8F0"/>
+                                                <Setter Property="BorderThickness" Value="1"/>
+                                                <Style.Triggers>
+                                                    <!-- Ngày không thuộc tháng này -->
+                                                    <DataTrigger Binding="{Binding IsCurrentMonth}" Value="False">
+                                                        <Setter Property="Background" Value="#F8FAFC"/>
+                                                        <Setter Property="Opacity" Value="0.4"/>
+                                                    </DataTrigger>
+                                                    <!-- Ngày được chọn -->
+                                                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                        <Setter Property="BorderBrush" Value="#0F766E"/>
+                                                        <Setter Property="BorderThickness" Value="2.5"/>
+                                                        <Setter Property="Background" Value="#F0FDFA"/>
+                                                    </DataTrigger>
+                                                    <!-- Ngày hôm nay -->
+                                                    <DataTrigger Binding="{Binding IsToday}" Value="True">
+                                                        <Setter Property="Background" Value="#FEF3C7"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
 
-                                <StackPanel Grid.Column="0">
-                                    <TextBlock Text="Mức độ ưu tiên:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
-                                    <ComboBox ItemsSource="{Binding PriorityOptions}" SelectedItem="{Binding EditPriority}" Height="34"/>
+                                        <Border.InputBindings>
+                                            <MouseBinding MouseAction="LeftClick" 
+                                                          Command="{Binding DataContext.SelectCalendarDayCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                          CommandParameter="{Binding}"/>
+                                        </Border.InputBindings>
+
+                                        <Grid Margin="4,3">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="*"/>
+                                            </Grid.RowDefinitions>
+
+                                            <!-- Hàng số ngày & Huy hiệu Hôm nay -->
+                                            <DockPanel Grid.Row="0" LastChildFill="False">
+                                                <TextBlock Text="{Binding DayNumber}" DockPanel.Dock="Left"
+                                                           FontSize="13" FontWeight="Bold">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Foreground" Value="#0F172A"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsCurrentMonth}" Value="False">
+                                                                    <Setter Property="Foreground" Value="#94A3B8"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                                    <Setter Property="Foreground" Value="#0F766E"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+
+                                                <Border DockPanel.Dock="Right" CornerRadius="3" Background="#D97706" Padding="4,1" Margin="2,0,0,0"
+                                                        Visibility="{Binding IsToday, Converter={StaticResource BoolToVis}}">
+                                                    <TextBlock Text="Nay" FontSize="9" FontWeight="Bold" Foreground="White"/>
+                                                </Border>
+                                            </DockPanel>
+
+                                            <!-- Hàng ĐÁNH DẤU SỰ KIỆN TRÊN CUỐN LỊCH -->
+                                            <StackPanel Grid.Row="1" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,2,0,0">
+                                                <!-- Chấm tròn màu chỉ thị (Indicator dots) -->
+                                                <WrapPanel HorizontalAlignment="Center" Margin="0,0,0,2">
+                                                    <Ellipse Width="7" Height="7" Fill="#DC2626" Margin="1"
+                                                             Visibility="{Binding HasExamEvent, Converter={StaticResource BoolToVis}}"
+                                                             ToolTip="Thi cử quân sự"/>
+                                                    <Ellipse Width="7" Height="7" Fill="#0F766E" Margin="1"
+                                                             Visibility="{Binding HasFitnessEvent, Converter={StaticResource BoolToVis}}"
+                                                             ToolTip="Kiểm tra thể lực"/>
+                                                    <Ellipse Width="7" Height="7" Fill="#16A34A" Margin="1"
+                                                             Visibility="{Binding HasPracticeEvent, Converter={StaticResource BoolToVis}}"
+                                                             ToolTip="Tập luyện / Rèn luyện"/>
+                                                    <Ellipse Width="7" Height="7" Fill="#2563EB" Margin="1"
+                                                             Visibility="{Binding HasSportsEvent, Converter={StaticResource BoolToVis}}"
+                                                             ToolTip="Hội thao / Sự kiện"/>
+                                                </WrapPanel>
+
+                                                <!-- Tên sự kiện vắn tắt -->
+                                                <Border CornerRadius="3" Padding="4,1" Margin="0,1,0,0"
+                                                        Background="#0F766E"
+                                                        Visibility="{Binding HasEvents, Converter={StaticResource BoolToVis}}">
+                                                    <TextBlock Text="{Binding EventSummaryText}" FontSize="9" FontWeight="SemiBold" Foreground="White"
+                                                               TextTrimming="CharacterEllipsis" MaxWidth="80" HorizontalAlignment="Center"/>
+                                                </Border>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <!-- HÀNG 3: CHÚ THÍCH MÀU SẮC ĐÁNH DẤU SỰ KIỆN -->
+                        <Border Grid.Row="3" Background="#F8FAFC" CornerRadius="6" Padding="8,6" Margin="0,8,0,0">
+                            <WrapPanel HorizontalAlignment="Center">
+                                <TextBlock Text="Đánh dấu ngày có sự kiện: " FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,8,0"/>
+
+                                <Ellipse Width="8" Height="8" Fill="#DC2626" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Thi cử quân sự" FontSize="11" Foreground="#1E293B" Margin="0,0,12,0" VerticalAlignment="Center"/>
+
+                                <Ellipse Width="8" Height="8" Fill="#0F766E" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Kiểm tra thể lực" FontSize="11" Foreground="#1E293B" Margin="0,0,12,0" VerticalAlignment="Center"/>
+
+                                <Ellipse Width="8" Height="8" Fill="#16A34A" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Tập luyện / Rèn luyện" FontSize="11" Foreground="#1E293B" Margin="0,0,12,0" VerticalAlignment="Center"/>
+
+                                <Ellipse Width="8" Height="8" Fill="#2563EB" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Hội thao / Sự kiện" FontSize="11" Foreground="#1E293B" VerticalAlignment="Center"/>
+                            </WrapPanel>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <!-- CỘT BÊN PHẢI: FORM BIÊN TẬP HOẶC CHI TIẾT NGÀY ĐƯỢC CHỌN -->
+                <Border Grid.Column="1" Style="{StaticResource CardBorderStyle}" Padding="18">
+                    <Grid>
+                        <!-- 1. FORM THÊM / SỬA MỐC SỰ KIỆN (Hiển thị khi IsFormVisible == True) -->
+                        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                      Visibility="{Binding IsFormVisible, Converter={StaticResource BoolToVis}}">
+                            <StackPanel>
+                                <!-- Tiêu đề Form -->
+                                <TextBlock Text="{Binding FormHeader}" FontSize="14" FontWeight="Bold" Foreground="#0F766E" Margin="0,0,0,12"/>
+
+                                <!-- Tiêu đề sự kiện -->
+                                <StackPanel Margin="0,0,0,10">
+                                    <TextBlock Text="Tiêu đề mốc sự kiện / kiểm tra (*):" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                    <TextBox Text="{Binding EditTitle, UpdateSourceTrigger=PropertyChanged}" Height="34" VerticalContentAlignment="Center" Padding="6,0"/>
                                 </StackPanel>
 
-                                <StackPanel Grid.Column="2">
-                                    <TextBlock Text="Trạng thái:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
-                                    <ComboBox SelectedItem="{Binding EditStatus}" Height="34">
-                                        <ComboBoxItem Content="Đang chuẩn bị" IsSelected="True"/>
-                                        <ComboBoxItem Content="Đang diễn ra"/>
-                                        <ComboBoxItem Content="Đã hoàn thành"/>
-                                        <ComboBoxItem Content="Tạm hoãn"/>
+                                <!-- Phân loại -->
+                                <StackPanel Margin="0,0,0,10">
+                                    <TextBlock Text="Loại sự kiện huấn luyện (*):" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                    <ComboBox SelectedItem="{Binding EditCategory}" Height="34">
+                                        <ComboBoxItem Content="Kiểm tra thể lực" IsSelected="True"/>
+                                        <ComboBoxItem Content="Thi cử quân sự"/>
+                                        <ComboBoxItem Content="Tập luyện / Rèn luyện"/>
+                                        <ComboBoxItem Content="Hội thao / Sự kiện"/>
                                     </ComboBox>
                                 </StackPanel>
-                            </Grid>
 
-                            <!-- Nội dung / Kế hoạch chi tiết -->
-                            <StackPanel Margin="0,0,0,14">
-                                <TextBlock Text="Nội dung, chỉ thị chi tiết:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
-                                <TextBox Text="{Binding EditDescription, UpdateSourceTrigger=PropertyChanged}" 
-                                         Height="80" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" Padding="6"/>
+                                <!-- Đơn vị áp dụng -->
+                                <StackPanel Margin="0,0,0,10">
+                                    <TextBlock Text="Đơn vị / Đối tượng áp dụng:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                    <ComboBox ItemsSource="{Binding UnitOptions}" SelectedItem="{Binding EditTargetUnit}" Height="34"/>
+                                </StackPanel>
+
+                                <!-- Thời gian bắt đầu & kết thúc -->
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="10"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Ngày bắt đầu:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                        <DatePicker SelectedDate="{Binding EditStartDate}" Height="34"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Ngày kết thúc:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                        <DatePicker SelectedDate="{Binding EditEndDate}" Height="34"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <!-- Địa điểm / Thao trường -->
+                                <StackPanel Margin="0,0,0,10">
+                                    <TextBlock Text="Địa điểm / Thao trường:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                    <TextBox Text="{Binding EditLocation, UpdateSourceTrigger=PropertyChanged}" Height="34" VerticalContentAlignment="Center" Padding="6,0"/>
+                                </StackPanel>
+
+                                <!-- Mức độ ưu tiên & Trạng thái -->
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="10"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Mức độ ưu tiên:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                        <ComboBox ItemsSource="{Binding PriorityOptions}" SelectedItem="{Binding EditPriority}" Height="34"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Trạng thái:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                        <ComboBox SelectedItem="{Binding EditStatus}" Height="34">
+                                            <ComboBoxItem Content="Đang chuẩn bị" IsSelected="True"/>
+                                            <ComboBoxItem Content="Đang diễn ra"/>
+                                            <ComboBoxItem Content="Đã hoàn thành"/>
+                                            <ComboBoxItem Content="Tạm hoãn"/>
+                                        </ComboBox>
+                                    </StackPanel>
+                                </Grid>
+
+                                <!-- Nội dung / Kế hoạch chi tiết -->
+                                <StackPanel Margin="0,0,0,14">
+                                    <TextBlock Text="Nội dung, chỉ thị chi tiết:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                    <TextBox Text="{Binding EditDescription, UpdateSourceTrigger=PropertyChanged}" 
+                                             Height="80" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" Padding="6"/>
+                                </StackPanel>
+
+                                <!-- Các nút Lưu và Hủy -->
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <Button Content="✕ Hủy" Style="{StaticResource SecondaryButtonStyle}" 
+                                            Padding="14,8" Margin="0,0,8,0"
+                                            Command="{Binding CloseFormCommand}"/>
+
+                                    <Button Content="💾 Lưu Mốc Sự Kiện" Style="{StaticResource PrimaryButtonStyle}" 
+                                            Padding="16,8"
+                                            Command="{Binding SaveEventCommand}"/>
+                                </StackPanel>
                             </StackPanel>
+                        </ScrollViewer>
 
-                            <!-- Các nút Lưu và Hủy -->
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                <Button Content="✕ Hủy" Style="{StaticResource SecondaryButtonStyle}" 
-                                        Padding="14,8" Margin="0,0,8,0"
-                                        Command="{Binding CloseFormCommand}"/>
+                        <!-- 2. CHI TIẾT SỰ KIỆN THEO NGÀY ĐÃ CHỌN (Hiển thị khi IsFormVisible == False) -->
+                        <Grid Visibility="{Binding IsFormVisible, Converter={StaticResource InvBoolToVis}}">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
 
-                                <Button Content="💾 Lưu Mốc Sự Kiện" Style="{StaticResource PrimaryButtonStyle}" 
-                                        Padding="16,8"
-                                        Command="{Binding SaveEventCommand}"/>
-                            </StackPanel>
-                        </StackPanel>
-                    </ScrollViewer>
+                            <!-- Tiêu đề ngày chọn -->
+                            <Border Grid.Row="0" Background="#F1F5F9" CornerRadius="8" Padding="12,10" Margin="0,0,0,10">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding SelectedDayTitle}" FontSize="13" FontWeight="Bold" Foreground="#0F766E" TextWrapping="Wrap"/>
+                                    <TextBlock Text="Danh sách các mốc sự kiện &amp; rèn luyện" FontSize="11" Foreground="#64748B" Margin="0,2,0,0"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Danh sách sự kiện ngày chọn -->
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                <StackPanel>
+                                    <!-- Danh sách các sự kiện -->
+                                    <ItemsControl ItemsSource="{Binding SelectedDayEvents}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border CornerRadius="6" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" Padding="10" Margin="0,0,0,8">
+                                                    <Grid>
+                                                        <Grid.RowDefinitions>
+                                                            <RowDefinition Height="Auto"/>
+                                                            <RowDefinition Height="Auto"/>
+                                                            <RowDefinition Height="Auto"/>
+                                                            <RowDefinition Height="Auto"/>
+                                                        </Grid.RowDefinitions>
+
+                                                        <!-- Category & Trạng thái -->
+                                                        <WrapPanel Grid.Row="0" Margin="0,0,0,6">
+                                                            <Border CornerRadius="3" Padding="6,2" Background="#0F766E" Margin="0,0,4,2">
+                                                                <TextBlock Text="{Binding Category}" Foreground="White" FontSize="10" FontWeight="Bold"/>
+                                                            </Border>
+                                                            <Border CornerRadius="3" Padding="6,2" Background="#DCFCE7" Margin="0,0,4,2">
+                                                                <TextBlock Text="{Binding Status}" Foreground="#16A34A" FontSize="10" FontWeight="Bold"/>
+                                                            </Border>
+                                                            <Border CornerRadius="3" Padding="6,2" Background="#FEE2E2" Margin="0,0,4,2">
+                                                                <TextBlock Text="{Binding Priority}" Foreground="#DC2626" FontSize="10" FontWeight="Bold"/>
+                                                            </Border>
+                                                        </WrapPanel>
+
+                                                        <!-- Tiêu đề -->
+                                                        <TextBlock Grid.Row="1" Text="{Binding Title}" FontSize="13" FontWeight="Bold" Foreground="#0F172A" TextWrapping="Wrap" Margin="0,0,0,4"/>
+
+                                                        <!-- Chi tiết -->
+                                                        <StackPanel Grid.Row="2" Margin="0,0,0,6">
+                                                            <TextBlock Text="{Binding TargetUnit, StringFormat='Đơn vị: {0}'}" FontSize="11" Foreground="#475569"/>
+                                                            <TextBlock Text="{Binding Location, StringFormat='Địa điểm: {0}'}" FontSize="11" Foreground="#475569"/>
+                                                            <TextBlock Text="{Binding Description}" FontSize="11" Foreground="#64748B" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                                        </StackPanel>
+
+                                                        <!-- Nút thao tác -->
+                                                        <WrapPanel Grid.Row="3" HorizontalAlignment="Right">
+                                                            <Button Content="✓ Đổi Hoàn Thành" Style="{StaticResource SecondaryButtonStyle}" 
+                                                                    Padding="8,2" Margin="0,0,4,0" FontSize="10"
+                                                                    Command="{Binding DataContext.ToggleCompleteCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                                    CommandParameter="{Binding}"/>
+                                                            <Button Content="✏️ Sửa" Style="{StaticResource SecondaryButtonStyle}" 
+                                                                    Padding="8,2" Margin="0,0,4,0" FontSize="10"
+                                                                    Command="{Binding DataContext.OpenEditFormCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                                    CommandParameter="{Binding}"/>
+                                                            <Button Content="🗑️" Style="{StaticResource DangerButtonStyle}" 
+                                                                    Padding="8,2" FontSize="10"
+                                                                    Command="{Binding DataContext.DeleteEventCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                                    CommandParameter="{Binding}"/>
+                                                        </WrapPanel>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+
+                                    <!-- Nếu ngày này không có sự kiện nào -->
+                                    <Border Background="#F8FAFC" CornerRadius="6" BorderBrush="#E2E8F0" BorderThickness="1" Padding="14" Margin="0,4,0,0">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding SelectedDayEvents.Count}" Value="0">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <StackPanel HorizontalAlignment="Center">
+                                            <TextBlock Text="☕ Ngày này chưa có sự kiện huấn luyện nào." FontSize="12" Foreground="#64748B" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                                            <Button Content="➕ Thêm Sự Kiện Cho Ngày Này" Style="{StaticResource PrimaryButtonStyle}" 
+                                                    FontSize="11" Padding="12,6" HorizontalAlignment="Center"
+                                                    Command="{Binding AddEventForSelectedDayCommand}"/>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </ScrollViewer>
+
+                            <!-- Nút tạo sự kiện mới ở dưới cùng -->
+                            <Button Grid.Row="2" Content="➕ Thêm Mốc Sự Kiện Mới" Style="{StaticResource PrimaryButtonStyle}" 
+                                    Margin="0,10,0,0" Padding="12,6" HorizontalAlignment="Stretch"
+                                    Command="{Binding OpenAddFormCommand}"/>
+                        </Grid>
+                    </Grid>
                 </Border>
             </Grid>
         </Grid>

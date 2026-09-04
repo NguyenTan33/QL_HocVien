@@ -6,6 +6,7 @@ using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QL_HocVien.Models;
+using QL_HocVien.Models.DTOs;
 using QL_HocVien.Services;
 
 namespace QL_HocVien.ViewModels
@@ -109,6 +110,28 @@ namespace QL_HocVien.ViewModels
         [ObservableProperty]
         private int _urgentEventsCount;
 
+        // Chế độ xem: Timeline dọc vs Lịch tháng điện thoại
+        [ObservableProperty]
+        private bool _isCalendarViewVisible = false;
+
+        [ObservableProperty]
+        private DateTime _currentMonthDate = DateTime.Today;
+
+        [ObservableProperty]
+        private string _monthYearTitle = $"THÁNG {DateTime.Today.Month:D2}/{DateTime.Today.Year}";
+
+        [ObservableProperty]
+        private ObservableCollection<CalendarDayItemDto> _calendarDays = new();
+
+        [ObservableProperty]
+        private CalendarDayItemDto? _selectedCalendarDay;
+
+        [ObservableProperty]
+        private ObservableCollection<TrainingEvent> _selectedDayEvents = new();
+
+        [ObservableProperty]
+        private string _selectedDayTitle = $"Sự kiện ngày {DateTime.Today:dd/MM/yyyy}";
+
         public TrainingTimelineViewModel(
             ITrainingEventService eventService,
             ICatalogService catalogService)
@@ -172,6 +195,8 @@ namespace QL_HocVien.ViewModels
                 {
                     SelectedEvent = Events[0];
                 }
+
+                GenerateCalendarGrid();
             }
             catch (Exception ex)
             {
@@ -384,5 +409,144 @@ namespace QL_HocVien.ViewModels
             SelectedStatus = "Tất cả";
             await LoadEventsAsync();
         }
+
+        #region PHONE-STYLE MONTHLY CALENDAR COMMANDS & LOGIC
+
+        [RelayCommand]
+        public void ToggleViewMode()
+        {
+            IsCalendarViewVisible = !IsCalendarViewVisible;
+            if (IsCalendarViewVisible)
+            {
+                GenerateCalendarGrid();
+            }
+        }
+
+        [RelayCommand]
+        public void SwitchToTimelineView()
+        {
+            IsCalendarViewVisible = false;
+        }
+
+        [RelayCommand]
+        public void SwitchToCalendarView()
+        {
+            IsCalendarViewVisible = true;
+            GenerateCalendarGrid();
+        }
+
+        [RelayCommand]
+        public void PreviousMonth()
+        {
+            CurrentMonthDate = CurrentMonthDate.AddMonths(-1);
+            MonthYearTitle = $"THÁNG {CurrentMonthDate.Month:D2}/{CurrentMonthDate.Year}";
+            GenerateCalendarGrid();
+        }
+
+        [RelayCommand]
+        public void NextMonth()
+        {
+            CurrentMonthDate = CurrentMonthDate.AddMonths(1);
+            MonthYearTitle = $"THÁNG {CurrentMonthDate.Month:D2}/{CurrentMonthDate.Year}";
+            GenerateCalendarGrid();
+        }
+
+        [RelayCommand]
+        public void Today()
+        {
+            CurrentMonthDate = DateTime.Today;
+            MonthYearTitle = $"THÁNG {CurrentMonthDate.Month:D2}/{CurrentMonthDate.Year}";
+            GenerateCalendarGrid(selectToday: true);
+        }
+
+        [RelayCommand]
+        public void SelectCalendarDay(CalendarDayItemDto? day)
+        {
+            if (day == null) return;
+
+            foreach (var d in CalendarDays)
+            {
+                d.IsSelected = (d == day);
+            }
+
+            SelectedCalendarDay = day;
+            SelectedDayTitle = $"Sự kiện ngày {day.Date:dd/MM/yyyy} ({GetVietnameseDayOfWeek(day.Date.DayOfWeek)})";
+
+            SelectedDayEvents.Clear();
+            foreach (var evt in day.Events.OrderBy(e => e.StartDate))
+            {
+                SelectedDayEvents.Add(evt);
+            }
+        }
+
+        [RelayCommand]
+        public void AddEventForSelectedDay()
+        {
+            DateTime targetDate = SelectedCalendarDay?.Date ?? DateTime.Today;
+            OpenAddForm();
+            EditStartDate = targetDate;
+            EditEndDate = targetDate;
+        }
+
+        public void GenerateCalendarGrid(bool selectToday = false)
+        {
+            var firstDayOfMonth = new DateTime(CurrentMonthDate.Year, CurrentMonthDate.Month, 1);
+            int diff = ((int)firstDayOfMonth.DayOfWeek + 6) % 7; // Thứ 2 = 0, ..., Chủ Nhật = 6
+            DateTime startDate = firstDayOfMonth.AddDays(-diff);
+
+            CalendarDays.Clear();
+            var allEvents = Events.ToList();
+
+            CalendarDayItemDto? dayToSelect = null;
+
+            for (int i = 0; i < 42; i++)
+            {
+                var date = startDate.AddDays(i);
+                var dayItem = new CalendarDayItemDto
+                {
+                    Date = date,
+                    IsCurrentMonth = date.Month == CurrentMonthDate.Month,
+                    IsSelected = false,
+                    Events = allEvents.Where(e => date.Date >= e.StartDate.Date && date.Date <= e.EndDate.Date).ToList()
+                };
+
+                if (selectToday && date.Date == DateTime.Today)
+                {
+                    dayToSelect = dayItem;
+                }
+                else if (!selectToday && SelectedCalendarDay != null && date.Date == SelectedCalendarDay.Date)
+                {
+                    dayToSelect = dayItem;
+                }
+
+                CalendarDays.Add(dayItem);
+            }
+
+            if (dayToSelect == null)
+            {
+                dayToSelect = CalendarDays.FirstOrDefault(d => d.Date.Date == DateTime.Today && d.IsCurrentMonth) 
+                              ?? CalendarDays.FirstOrDefault(d => d.Date.Date == firstDayOfMonth.Date)
+                              ?? CalendarDays.FirstOrDefault();
+            }
+
+            if (dayToSelect != null)
+            {
+                SelectCalendarDay(dayToSelect);
+            }
+        }
+
+        private static string GetVietnameseDayOfWeek(DayOfWeek dow) => dow switch
+        {
+            DayOfWeek.Monday => "Thứ Hai",
+            DayOfWeek.Tuesday => "Thứ Ba",
+            DayOfWeek.Wednesday => "Thứ Tư",
+            DayOfWeek.Thursday => "Thứ Năm",
+            DayOfWeek.Friday => "Thứ Sáu",
+            DayOfWeek.Saturday => "Thứ Bảy",
+            DayOfWeek.Sunday => "Chủ Nhật",
+            _ => string.Empty
+        };
+
+        #endregion
     }
 }
