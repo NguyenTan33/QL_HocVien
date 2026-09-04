@@ -17,26 +17,30 @@
             </Grid.RowDefinitions>
 
             <!-- Tiêu đề & Nút Thao tác -->
-            <Grid Grid.Row="0" Margin="0,0,0,20">
-                <StackPanel>
-                    <TextBlock Text="QUẢN LÝ DANH SÁCH HỌC VIÊN" FontSize="22" FontWeight="Bold" Foreground="#0F172A"/>
-                    <TextBlock Text="Tra cứu, cập nhật thông tin học viên, đặt lại mật khẩu và phân loại quân số" FontSize="13" Foreground="#64748B" Margin="0,4,0,0"/>
+            <Grid Grid.Row="0" Margin="0,0,0,16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,6">
+                    <TextBlock Text="QUẢN LÝ DANH SÁCH HỌC VIÊN" FontSize="20" FontWeight="Bold" Foreground="#0F172A" TextWrapping="Wrap"/>
+                    <TextBlock Text="Tra cứu, cập nhật thông tin học viên, đặt lại mật khẩu và phân loại quân số" FontSize="13" Foreground="#64748B" Margin="0,4,0,0" TextWrapping="Wrap"/>
                 </StackPanel>
 
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Content="📥 Nhập Excel" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,0"
+                <WrapPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button Content="📥 Nhập Excel" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,6"
                             Command="{Binding ImportExcelCommand}"/>
-                    <Button Content="📤 Xuất Excel" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,0"
+                    <Button Content="📤 Xuất Excel" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,6"
                             Command="{Binding ExportExcelCommand}"/>
-                    <Button Content="➕ Thêm Học Viên" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,10,0"
+                    <Button Content="➕ Thêm Học Viên" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,6"
                             Command="{Binding RequestAddNewCommand}"/>
-                    <Button Content="✏️ Sửa" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,0"
+                    <Button Content="✏️ Sửa" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,6"
                             Command="{Binding StartEditCommand}"/>
-                    <Button Content="🔑 Đổi MK" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,0"
+                    <Button Content="🔑 Đổi MK" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,6"
                             Command="{Binding OpenResetPasswordCommand}"/>
-                    <Button Content="🗑️ Xóa" Style="{StaticResource DangerButtonStyle}"
+                    <Button Content="🗑️ Xóa" Style="{StaticResource DangerButtonStyle}" Margin="0,0,0,6"
                             Command="{Binding DeleteCadetCommand}"/>
-                </StackPanel>
+                </WrapPanel>
             </Grid>
 
             <!-- Thanh Tìm Kiếm & Bộ Lọc Nâng Cao Đa Chiều -->
@@ -174,18 +178,22 @@
             <Border Grid.Row="2" Style="{StaticResource CardBorderStyle}" Padding="0">
                 <DataGrid ItemsSource="{Binding Cadets}" SelectedItem="{Binding SelectedCadet}"
                           AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
-                          GridLinesVisibility="Horizontal" HeadersVisibility="Column" Background="Transparent"
-                          BorderThickness="0" RowHeight="42" SelectionMode="Single">
+                          GridLinesVisibility="Horizontal" HeadersVisibility="Column" Background="White"
+                          BorderThickness="0" RowHeight="42" SelectionMode="Single"
+                          AlternationCount="2"
+                          ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                          ScrollViewer.VerticalScrollBarVisibility="Auto"
+                          ScrollViewer.CanContentScroll="True">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Mã Học Viên" Binding="{Binding CadetCode}" Width="110"/>
-                        <DataGridTextColumn Header="Họ và Tên" Binding="{Binding FullName}" Width="160"/>
-                        <DataGridTextColumn Header="Cấp Bậc" Binding="{Binding Rank}" Width="100"/>
-                        <DataGridTextColumn Header="Chức Vụ" Binding="{Binding Position}" Width="120"/>
-                        <DataGridTextColumn Header="Đơn Vị" Binding="{Binding Unit}" Width="110"/>
-                        <DataGridTextColumn Header="Lớp" Binding="{Binding ClassName}" Width="170"/>
+                        <DataGridTextColumn Header="Họ và Tên" Binding="{Binding FullName}" Width="170"/>
+                        <DataGridTextColumn Header="Cấp Bậc" Binding="{Binding Rank}" Width="110"/>
+                        <DataGridTextColumn Header="Chức Vụ" Binding="{Binding Position}" Width="130"/>
+                        <DataGridTextColumn Header="Đơn Vị" Binding="{Binding Unit}" Width="120"/>
+                        <DataGridTextColumn Header="Lớp" Binding="{Binding ClassName}" MinWidth="150" Width="*"/>
                         <DataGridTextColumn Header="Số Điện Thoại" Binding="{Binding PhoneNumber}" Width="120"/>
-                        <DataGridTextColumn Header="Tuổi" Binding="{Binding Age}" Width="60"/>
-                        <DataGridTextColumn Header="Giới Tính" Binding="{Binding Gender}" Width="80"/>
+                        <DataGridTextColumn Header="Tuổi" Binding="{Binding Age}" Width="70"/>
+                        <DataGridTextColumn Header="Giới Tính" Binding="{Binding Gender}" Width="90"/>
                     </DataGrid.Columns>
                 </DataGrid>
             </Border>

@@ -246,4 +246,79 @@
         </Setter>
     </Style>
 
+    <!-- Hiệu ứng đổ bóng CardShadow dùng chung -->
+    <DropShadowEffect x:Key="CardShadow" BlurRadius="20" Color="#000000" Opacity="0.25" ShadowDepth="4"/>
+
+    <!-- ==================== DATAGRID QUÂN ĐỘI: ZEBRA STRIPING & HIỆN ĐẠI ==================== -->
+    <Style TargetType="DataGrid">
+        <Setter Property="Background" Value="White"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="RowHeight" Value="42"/>
+        <Setter Property="AlternationCount" Value="2"/>
+        <Setter Property="RowBackground" Value="#FFFFFF"/>
+        <Setter Property="AlternatingRowBackground" Value="#F1F5F9"/>
+        <Setter Property="GridLinesVisibility" Value="Horizontal"/>
+        <Setter Property="HorizontalGridLinesBrush" Value="#E2E8F0"/>
+        <Setter Property="VerticalGridLinesBrush" Value="Transparent"/>
+        <Setter Property="AutoGenerateColumns" Value="False"/>
+        <Setter Property="IsReadOnly" Value="True"/>
+        <Setter Property="CanUserAddRows" Value="False"/>
+        <Setter Property="CanUserDeleteRows" Value="False"/>
+        <Setter Property="CanUserResizeRows" Value="False"/>
+        <Setter Property="SelectionMode" Value="Single"/>
+        <Setter Property="SelectionUnit" Value="FullRow"/>
+        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto"/>
+        <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
+        <Setter Property="ScrollViewer.CanContentScroll" Value="True"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+    </Style>
+
+    <Style TargetType="DataGridColumnHeader">
+        <Setter Property="Background" Value="#E2E8F0"/>
+        <Setter Property="Foreground" Value="#0F172A"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Padding" Value="12,10"/>
+        <Setter Property="BorderThickness" Value="0,0,1,1.5"/>
+        <Setter Property="BorderBrush" Value="#CBD5E1"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        <Setter Property="SeparatorBrush" Value="#CBD5E1"/>
+    </Style>
+
+    <Style TargetType="DataGridRow">
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Style.Triggers>
+            <Trigger Property="ItemsControl.AlternationIndex" Value="0">
+                <Setter Property="Background" Value="#FFFFFF"/>
+            </Trigger>
+            <Trigger Property="ItemsControl.AlternationIndex" Value="1">
+                <Setter Property="Background" Value="#F1F5F9"/>
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="#E0F2FE"/>
+            </Trigger>
+            <Trigger Property="IsSelected" Value="True">
+                <Setter Property="Background" Value="#DBEAFE"/>
+                <Setter Property="Foreground" Value="#1E3A8A"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style TargetType="DataGridCell">
+        <Setter Property="Padding" Value="12,0"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Style.Triggers>
+            <Trigger Property="IsSelected" Value="True">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Foreground" Value="#1E3A8A"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
 </ResourceDictionary>

@@ -65,12 +65,12 @@
                             <TextBlock Text="Phần mềm quản lý hồ sơ học viên quân sự, theo dõi kiểm tra rèn luyện thể lực theo quy chuẩn Thông tư 32/2009/TTLT-BQP-BVHTTDL."
                                        FontSize="13" TextWrapping="Wrap" Foreground="#CBD5E1" LineHeight="20" Margin="0,0,0,24"/>
 
-                            <Border Background="#1E293B" CornerRadius="8" Padding="12" Opacity="0.85">
+                            <Border Background="#1E293B" CornerRadius="8" Padding="14" Opacity="0.9">
                                 <StackPanel>
-                                    <TextBlock Text="✓ Cơ sở dữ liệu SQLite cục bộ bảo mật" FontSize="12" Foreground="#94A3B8" Margin="0,0,0,4"/>
-                                    <TextBlock Text="✓ Chuẩn hóa OOP &amp; Kiến trúc SOLID" FontSize="12" Foreground="#94A3B8" Margin="0,0,0,4"/>
-                                    <TextBlock Text="✓ Đăng nhập bằng Tên tài khoản hoặc SĐT" FontSize="12" Foreground="#94A3B8" Margin="0,0,0,4"/>
-                                    <TextBlock Text="✓ Đặt lại mật khẩu OTP xác thực qua Email" FontSize="12" Foreground="#94A3B8"/>
+                                    <TextBlock Text="✓ Kỷ luật là sức mạnh của Quân đội" FontSize="12" FontWeight="SemiBold" Foreground="#F8FAFC" Margin="0,0,0,6"/>
+                                    <TextBlock Text="✓ Quản lý chính quy, thống nhất, bảo mật tuyệt đối" FontSize="12" Foreground="#CBD5E1" Margin="0,0,0,6"/>
+                                    <TextBlock Text="✓ Tiêu chuẩn rèn luyện thể lực Thông tư 32/2009/TTLT-BQP" FontSize="12" Foreground="#CBD5E1" Margin="0,0,0,6"/>
+                                    <TextBlock Text="✓ Số hóa toàn diện hồ sơ học viên &amp; cán bộ chỉ huy" FontSize="12" Foreground="#CBD5E1"/>
                                 </StackPanel>
                             </Border>
                         </StackPanel>

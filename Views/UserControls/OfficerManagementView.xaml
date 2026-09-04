@@ -21,29 +21,33 @@
                 </Grid.RowDefinitions>
 
                 <!-- Header & Action Buttons -->
-                <Grid Grid.Row="0" Margin="0,0,0,20">
-                    <StackPanel>
-                        <TextBlock Text="QUẢN LÝ CÁN BỘ QUÂN SỰ" FontSize="22" FontWeight="Bold" Foreground="#0F172A"/>
+                <Grid Grid.Row="0" Margin="0,0,0,16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,6">
+                        <TextBlock Text="QUẢN LÝ CÁN BỘ QUÂN SỰ" FontSize="20" FontWeight="Bold" Foreground="#0F172A" TextWrapping="Wrap"/>
                         <TextBlock Text="Hồ sơ cán bộ chỉ huy, quản trị lớp học, phân cấp quân hàm, chức vụ, đơn vị và phân quyền" 
-                                   FontSize="13" Foreground="#64748B" Margin="0,4,0,0"/>
+                                   FontSize="13" Foreground="#64748B" Margin="0,4,0,0" TextWrapping="Wrap"/>
                     </StackPanel>
 
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button Content="📥 Nhập Excel" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"
+                    <WrapPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <Button Content="📥 Nhập Excel" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,6"
                                 Command="{Binding ImportExcelCommand}"/>
-                        <Button Content="📤 Xuất Excel" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"
+                        <Button Content="📤 Xuất Excel" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,6"
                                 Command="{Binding ExportExcelCommand}"/>
-                        <Button Content="🔑 Đặt Lại Mật Khẩu" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"
+                        <Button Content="🔑 Đặt Lại Mật Khẩu" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,6"
                                 Command="{Binding OpenResetPasswordDialogCommand}"/>
-                        <Button Content="➕ Thêm Cán Bộ" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0"
+                        <Button Content="➕ Thêm Cán Bộ" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,6"
                                 Command="{Binding OpenAddFormCommand}"/>
-                        <Button Content="✏️ Sửa" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"
+                        <Button Content="✏️ Sửa" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,6"
                                 Command="{Binding OpenEditFormCommand}"/>
-                        <Button Content="🗑️ Xóa" Style="{StaticResource DangerButtonStyle}" Margin="0,0,8,0"
+                        <Button Content="🗑️ Xóa" Style="{StaticResource DangerButtonStyle}" Margin="0,0,8,6"
                                 Command="{Binding DeleteOfficerCommand}"/>
-                        <Button Content="🔄 Làm Mới" Style="{StaticResource SecondaryButtonStyle}"
+                        <Button Content="🔄 Làm Mới" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,0,6"
                                 Command="{Binding LoadDataCommand}"/>
-                    </StackPanel>
+                    </WrapPanel>
                 </Grid>
 
                 <!-- Bộ Lọc Nâng Cao Đa Tiêu Chí -->
@@ -153,8 +157,12 @@
                 <Border Grid.Row="2" Style="{StaticResource CardBorderStyle}" Padding="0">
                     <DataGrid ItemsSource="{Binding Officers}" SelectedItem="{Binding SelectedOfficer}"
                               AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
-                              GridLinesVisibility="Horizontal" HeadersVisibility="Column" Background="Transparent"
-                              BorderThickness="0" RowHeight="42" SelectionMode="Single">
+                              GridLinesVisibility="Horizontal" HeadersVisibility="Column" Background="White"
+                              BorderThickness="0" RowHeight="42" SelectionMode="Single"
+                              AlternationCount="2"
+                              ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                              ScrollViewer.VerticalScrollBarVisibility="Auto"
+                              ScrollViewer.CanContentScroll="True">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Mã Cán Bộ" Binding="{Binding OfficerCode}" Width="110" FontWeight="SemiBold"/>
                             <DataGridTextColumn Header="Họ và Tên" Binding="{Binding FullName}" Width="190" FontWeight="Bold"/>
@@ -191,7 +199,7 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="Ghi Chú" Binding="{Binding Notes}" Width="*"/>
+                            <DataGridTextColumn Header="Ghi Chú" Binding="{Binding Notes}" MinWidth="160" Width="*"/>
                         </DataGrid.Columns>
                     </DataGrid>
                 </Border>

@@ -9,7 +9,7 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24">
         <StackPanel MaxWidth="750" HorizontalAlignment="Left">
             <TextBlock Text="CÀI ĐẶT HỆ THỐNG &amp; MÁY CHỦ EMAIL (SMTP)" FontSize="22" FontWeight="Bold" Foreground="#0F172A"/>
-            <TextBlock Text="Cấu hình gửi mã OTP xác thực qua Email và thông số cơ sở dữ liệu SQLite" FontSize="13" Foreground="#64748B" Margin="0,4,0,24"/>
+            <TextBlock Text="Cấu hình dịch vụ gửi mã xác thực OTP qua Email phục vụ cấp lại mật khẩu tài khoản" FontSize="13" Foreground="#64748B" Margin="0,4,0,24"/>
 
             <Border Background="#F0FDF4" BorderBrush="#86EFAC" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,16"
                     Visibility="{Binding StatusMessage, Converter={x:Static local_cv:StringToVisibilityConverter.Instance}}">
@@ -76,16 +76,6 @@
 
                     <Button Content="💾 Lưu Cấu Hình SMTP" Style="{StaticResource PrimaryButtonStyle}" HorizontalAlignment="Right" Height="40" Width="180"
                             Command="{Binding SaveSettingsCommand}"/>
-                </StackPanel>
-            </Border>
-
-            <!-- Thông tin Cơ sở dữ liệu SQLite -->
-            <Border Style="{StaticResource CardBorderStyle}" Padding="24">
-                <StackPanel>
-                    <TextBlock Text="Cơ Sở Dữ Liệu SQLite Cục Bộ" FontSize="16" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,8"/>
-                    <TextBlock Text="Cơ sở dữ liệu dạng file đơn 'ql_hocvien.db' được lưu trực tiếp tại thư mục chạy chương trình. Dễ dàng sao lưu, di chuyển sang máy tính khác mà không cần cài đặt SQL Server hay cấu hình mạng phức tạp."
-                               FontSize="13" Foreground="#475569" TextWrapping="Wrap" LineHeight="20" Margin="0,0,0,12"/>
-                    <TextBlock Text="{Binding DatabasePath, StringFormat='Tệp tin CSDL: {0}'}" FontSize="13" FontWeight="SemiBold" Foreground="#0F172A"/>
                 </StackPanel>
             </Border>
         </StackPanel>

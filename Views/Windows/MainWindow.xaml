@@ -168,17 +168,12 @@
                                     Style="{StaticResource SidebarNavButtonStyle}"
                                     Command="{Binding NavigateToClassManagementCommand}"/>
 
-                            <!-- 5. Thêm Học Viên -->
-                            <Button Content="➕   Thêm Học Viên" 
-                                    Style="{StaticResource SidebarNavButtonStyle}"
-                                    Command="{Binding NavigateToAddCadetCommand}"/>
-
-                            <!-- 6. Danh Mục Tổ Chức (Cấp bậc, Chức vụ, Đơn vị, Chuyên ngành) -->
+                            <!-- 5. Danh Mục Tổ Chức (Cấp bậc, Chức vụ, Đơn vị, Chuyên ngành) -->
                             <Button Content="📑   Danh Mục Tổ Chức" 
                                     Style="{StaticResource SidebarNavButtonStyle}"
                                     Command="{Binding NavigateToCatalogManagementCommand}"/>
 
-                            <!-- 7. Quản Lý Môn Học -->
+                            <!-- 6. Quản Lý Môn Học -->
                             <Button Content="📚   Quản Lý Môn Học" 
                                     Style="{StaticResource SidebarNavButtonStyle}"
                                     Command="{Binding NavigateToSubjectManagementCommand}"/>

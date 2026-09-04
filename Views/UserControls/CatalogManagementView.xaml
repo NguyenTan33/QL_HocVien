@@ -49,26 +49,30 @@
 
                 <!-- 1. Tiêu đề & Nút Thao tác -->
                 <Grid Grid.Row="0" Margin="0,0,0,16">
-                    <StackPanel>
-                        <TextBlock Text="DANH MỤC TỔ CHỨC QUÂN SỰ" FontSize="22" FontWeight="Bold" Foreground="#0F172A"/>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,6">
+                        <TextBlock Text="DANH MỤC TỔ CHỨC QUÂN SỰ" FontSize="20" FontWeight="Bold" Foreground="#0F172A" TextWrapping="Wrap"/>
                         <TextBlock Text="Quản lý tập trung 4 danh mục: Cấp bậc quân hàm, Chức vụ quân sự, Đơn vị quản lý và Chuyên ngành đào tạo" 
-                                   FontSize="13" Foreground="#64748B" Margin="0,4,0,0"/>
+                                   FontSize="13" Foreground="#64748B" Margin="0,4,0,0" TextWrapping="Wrap"/>
                     </StackPanel>
 
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button Content="📥 Nhập Excel" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"
+                    <WrapPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <Button Content="📥 Nhập Excel" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,6"
                                 Command="{Binding ImportExcelCommand}"/>
-                        <Button Content="📤 Xuất Excel" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"
+                        <Button Content="📤 Xuất Excel" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,6"
                                 Command="{Binding ExportExcelCommand}"/>
-                        <Button Content="➕ Thêm Mới" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0"
+                        <Button Content="➕ Thêm Mới" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,6"
                                 Command="{Binding OpenAddModalCommand}"/>
-                        <Button Content="✏️ Sửa" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"
+                        <Button Content="✏️ Sửa" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,6"
                                 Command="{Binding OpenEditModalCommand}"/>
-                        <Button Content="🗑️ Xóa" Style="{StaticResource DangerButtonStyle}" Margin="0,0,8,0"
+                        <Button Content="🗑️ Xóa" Style="{StaticResource DangerButtonStyle}" Margin="0,0,8,6"
                                 Command="{Binding DeleteCommand}"/>
-                        <Button Content="🔄 Làm Mới" Style="{StaticResource SecondaryButtonStyle}"
+                        <Button Content="🔄 Làm Mới" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,0,6"
                                 Command="{Binding LoadAllDataCommand}"/>
-                    </StackPanel>
+                    </WrapPanel>
                 </Grid>
 
                 <!-- 2. Thanh tìm kiếm và bộ lọc nâng cao -->
@@ -157,14 +161,18 @@
 
                 <!-- 3. TabControl Multi-Sheet quản lý 4 danh mục -->
                 <TabControl Grid.Row="2" SelectedIndex="{Binding SelectedTabIndex}" Background="Transparent" BorderThickness="0">
-                    
+
                     <!-- TAB 1: CẤP BẬC QUÂN HÀM -->
                     <TabItem Header="🎖️ Cấp Bậc Quân Hàm" Style="{StaticResource TabHeaderStyle}">
                         <Border Style="{StaticResource CardBorderStyle}" Padding="0" Margin="0,8,0,0">
                             <DataGrid ItemsSource="{Binding Ranks}" SelectedItem="{Binding SelectedRank}"
                                       AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
-                                      GridLinesVisibility="Horizontal" HeadersVisibility="Column" Background="Transparent"
-                                      BorderThickness="0" RowHeight="42" SelectionMode="Single">
+                                      GridLinesVisibility="Horizontal" HeadersVisibility="Column" Background="White"
+                                      BorderThickness="0" RowHeight="42" SelectionMode="Single"
+                                      AlternationCount="2"
+                                      ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                      ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                      ScrollViewer.CanContentScroll="True">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Mã Cấp Bậc" Binding="{Binding RankCode}" Width="120" FontWeight="SemiBold"/>
                                     <DataGridTextColumn Header="Tên Cấp Bậc Quân Hàm" Binding="{Binding RankName}" Width="220"/>
@@ -178,7 +186,7 @@
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTextColumn Header="Mô Tả / Ghi Chú" Binding="{Binding Description}" Width="*"/>
+                                    <DataGridTextColumn Header="Mô Tả / Ghi Chú" Binding="{Binding Description}" MinWidth="160" Width="*"/>
                                 </DataGrid.Columns>
                             </DataGrid>
                         </Border>
@@ -189,8 +197,12 @@
                         <Border Style="{StaticResource CardBorderStyle}" Padding="0" Margin="0,8,0,0">
                             <DataGrid ItemsSource="{Binding Positions}" SelectedItem="{Binding SelectedPosition}"
                                       AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
-                                      GridLinesVisibility="Horizontal" HeadersVisibility="Column" Background="Transparent"
-                                      BorderThickness="0" RowHeight="42" SelectionMode="Single">
+                                      GridLinesVisibility="Horizontal" HeadersVisibility="Column" Background="White"
+                                      BorderThickness="0" RowHeight="42" SelectionMode="Single"
+                                      AlternationCount="2"
+                                      ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                      ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                      ScrollViewer.CanContentScroll="True">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Mã Chức Vụ" Binding="{Binding PositionCode}" Width="120" FontWeight="SemiBold"/>
                                     <DataGridTextColumn Header="Tên Chức Vụ Quân Sự" Binding="{Binding PositionName}" Width="240"/>
@@ -204,7 +216,7 @@
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTextColumn Header="Nhiệm Vụ / Mô Tả" Binding="{Binding Description}" Width="*"/>
+                                    <DataGridTextColumn Header="Nhiệm Vụ / Mô Tả" Binding="{Binding Description}" MinWidth="160" Width="*"/>
                                 </DataGrid.Columns>
                             </DataGrid>
                         </Border>
@@ -215,15 +227,19 @@
                         <Border Style="{StaticResource CardBorderStyle}" Padding="0" Margin="0,8,0,0">
                             <DataGrid ItemsSource="{Binding Units}" SelectedItem="{Binding SelectedUnit}"
                                       AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
-                                      GridLinesVisibility="Horizontal" HeadersVisibility="Column" Background="Transparent"
-                                      BorderThickness="0" RowHeight="42" SelectionMode="Single">
+                                      GridLinesVisibility="Horizontal" HeadersVisibility="Column" Background="White"
+                                      BorderThickness="0" RowHeight="42" SelectionMode="Single"
+                                      AlternationCount="2"
+                                      ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                      ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                      ScrollViewer.CanContentScroll="True">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Mã Đơn Vị" Binding="{Binding UnitCode}" Width="120" FontWeight="SemiBold"/>
                                     <DataGridTextColumn Header="Tên Đơn Vị" Binding="{Binding UnitName}" Width="220"/>
                                     <DataGridTextColumn Header="Đơn Vị Cấp Trên" Binding="{Binding ParentUnit}" Width="180"/>
                                     <DataGridTextColumn Header="Chỉ Huy Trưởng" Binding="{Binding CommanderName}" Width="180"/>
                                     <DataGridTextColumn Header="Điện Thoại Liên Hệ" Binding="{Binding ContactPhone}" Width="150"/>
-                                    <DataGridTextColumn Header="Mô Tả / Địa Bàn" Binding="{Binding Description}" Width="*"/>
+                                    <DataGridTextColumn Header="Mô Tả / Địa Bàn" Binding="{Binding Description}" MinWidth="160" Width="*"/>
                                 </DataGrid.Columns>
                             </DataGrid>
                         </Border>
@@ -234,8 +250,12 @@
                         <Border Style="{StaticResource CardBorderStyle}" Padding="0" Margin="0,8,0,0">
                             <DataGrid ItemsSource="{Binding Majors}" SelectedItem="{Binding SelectedMajor}"
                                       AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
-                                      GridLinesVisibility="Horizontal" HeadersVisibility="Column" Background="Transparent"
-                                      BorderThickness="0" RowHeight="42" SelectionMode="Single">
+                                      GridLinesVisibility="Horizontal" HeadersVisibility="Column" Background="White"
+                                      BorderThickness="0" RowHeight="42" SelectionMode="Single"
+                                      AlternationCount="2"
+                                      ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                      ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                      ScrollViewer.CanContentScroll="True">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Mã Ngành" Binding="{Binding MajorCode}" Width="120" FontWeight="SemiBold"/>
                                     <DataGridTextColumn Header="Tên Chuyên Ngành" Binding="{Binding MajorName}" Width="240"/>
@@ -249,7 +269,7 @@
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
                                     <DataGridTextColumn Header="Khoa / Viện Phụ Trách" Binding="{Binding Department}" Width="200"/>
-                                    <DataGridTextColumn Header="Mục Tiêu Đào Tạo" Binding="{Binding Description}" Width="*"/>
+                                    <DataGridTextColumn Header="Mục Tiêu Đào Tạo" Binding="{Binding Description}" MinWidth="160" Width="*"/>
                                 </DataGrid.Columns>
                             </DataGrid>
                         </Border>

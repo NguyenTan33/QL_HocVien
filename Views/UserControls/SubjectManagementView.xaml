@@ -16,25 +16,29 @@
             </Grid.RowDefinitions>
 
             <!-- Tiêu đề & Nút Thao tác -->
-            <Grid Grid.Row="0" Margin="0,0,0,20">
-                <StackPanel>
-                    <TextBlock Text="QUẢN LÝ MÔN HỌC &amp; TIÊU CHUẨN RÈN LUYỆN THỂ LỰC" FontSize="22" FontWeight="Bold" Foreground="#0F172A"/>
+            <Grid Grid.Row="0" Margin="0,0,0,16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,6">
+                    <TextBlock Text="QUẢN LÝ MÔN HỌC &amp; TIÊU CHUẨN RÈN LUYỆN THỂ LỰC" FontSize="20" FontWeight="Bold" Foreground="#0F172A" TextWrapping="Wrap"/>
                     <TextBlock Text="Danh mục các môn rèn luyện, chuẩn đánh giá theo Thông tư 32/2009/TTLT-BQP-BVHTTDL" 
-                               FontSize="13" Foreground="#64748B" Margin="0,4,0,0"/>
+                               FontSize="13" Foreground="#64748B" Margin="0,4,0,0" TextWrapping="Wrap"/>
                 </StackPanel>
 
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Content="📥 Nhập Excel" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,0"
+                <WrapPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button Content="📥 Nhập Excel" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,6"
                             Command="{Binding ImportExcelCommand}"/>
-                    <Button Content="📤 Xuất Excel" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,0"
+                    <Button Content="📤 Xuất Excel" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,6"
                             Command="{Binding ExportExcelCommand}"/>
-                    <Button Content="➕ Thêm Môn Học" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,10,0"
+                    <Button Content="➕ Thêm Môn Học" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,6"
                             Command="{Binding OpenAddFormCommand}"/>
-                    <Button Content="✏️ Sửa" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,0"
+                    <Button Content="✏️ Sửa" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,6"
                             Command="{Binding OpenEditFormCommand}"/>
-                    <Button Content="🗑️ Xóa" Style="{StaticResource DangerButtonStyle}"
+                    <Button Content="🗑️ Xóa" Style="{StaticResource DangerButtonStyle}" Margin="0,0,0,6"
                             Command="{Binding DeleteSubjectCommand}"/>
-                </StackPanel>
+                </WrapPanel>
             </Grid>
 
             <!-- Khung Lọc Nâng Cao Theo Tên và ID / Mã Môn Học -->
@@ -127,8 +131,12 @@
             <Border Grid.Row="2" Style="{StaticResource CardBorderStyle}" Padding="0">
                 <DataGrid ItemsSource="{Binding Subjects}" SelectedItem="{Binding SelectedSubject}"
                           AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
-                          GridLinesVisibility="Horizontal" HeadersVisibility="Column" Background="Transparent"
-                          BorderThickness="0" RowHeight="42" SelectionMode="Single">
+                          GridLinesVisibility="Horizontal" HeadersVisibility="Column" Background="White"
+                          BorderThickness="0" RowHeight="42" SelectionMode="Single"
+                          AlternationCount="2"
+                          ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                          ScrollViewer.VerticalScrollBarVisibility="Auto"
+                          ScrollViewer.CanContentScroll="True">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Mã Môn (ID)" Binding="{Binding SubjectCode}" Width="120"/>
                         <DataGridTextColumn Header="Tên Môn Học" Binding="{Binding SubjectName}" Width="220"/>
@@ -137,7 +145,7 @@
                         <DataGridTextColumn Header="Chuẩn Giỏi" Binding="{Binding ExcellentThreshold}" Width="100"/>
                         <DataGridTextColumn Header="Chuẩn Khá" Binding="{Binding GoodThreshold}" Width="100"/>
                         <DataGridTextColumn Header="Chuẩn Đạt" Binding="{Binding PassThreshold}" Width="100"/>
-                        <DataGridTextColumn Header="Mô Tả Chi Tiết" Binding="{Binding Description}" Width="*"/>
+                        <DataGridTextColumn Header="Mô Tả Chi Tiết" Binding="{Binding Description}" MinWidth="180" Width="*"/>
                     </DataGrid.Columns>
                 </DataGrid>
             </Border>
