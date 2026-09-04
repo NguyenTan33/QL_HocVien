@@ -115,6 +115,8 @@ namespace QL_HocVien
             services.AddScoped<IExcelService, ExcelService>();
             services.AddScoped<ITrainingEventService, TrainingEventService>();
             services.AddScoped<IAnalyticsService, AnalyticsService>();
+            services.AddScoped<ITrainingRecommendationService, TrainingRecommendationService>();
+            services.AddScoped<IDashboardAnalyticsService, DashboardAnalyticsService>();
 
             // Đăng ký Infrastructure (Validation Factory & Security Services - OOP & SOLID)
             services.AddAppInfrastructureValidation();

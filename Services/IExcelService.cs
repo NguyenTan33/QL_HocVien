@@ -36,6 +36,16 @@ namespace QL_HocVien.Services
 
         // 8. Báo cáo phân tích so sánh đợt thi
         Task<(bool Success, string Message)> ExportComparisonToExcelAsync(QL_HocVien.Models.DTOs.ExamComparisonResultDto comparison, string filePath);
+
+        // 9. Báo cáo Tổng quan & Đề xuất Huấn luyện AI
+        Task<(bool Success, string Message)> ExportDashboardExecutiveReportAsync(
+            string filePath,
+            QL_HocVien.Models.DTOs.DashboardSummaryDto summary,
+            IEnumerable<QL_HocVien.Models.DTOs.UnitLeaderboardDto> units,
+            IEnumerable<QL_HocVien.Models.DTOs.SubjectPerformanceDto> subjects,
+            QL_HocVien.Models.DTOs.TrainingRecommendationSummaryDto aiRecommendations,
+            IEnumerable<PhysicalExamRecord> failedRecords,
+            IEnumerable<QL_HocVien.Models.DTOs.CadetHonorDto> honoredCadets);
     }
 }
 

@@ -1931,5 +1931,293 @@ namespace QL_HocVien.Services
             });
         }
         #endregion
+
+        #region 9. BÁO CÁO TỔNG QUAN & ĐỀ XUẤT HUẤN LUYỆN AI
+        public async Task<(bool Success, string Message)> ExportDashboardExecutiveReportAsync(
+            string filePath,
+            QL_HocVien.Models.DTOs.DashboardSummaryDto summary,
+            IEnumerable<QL_HocVien.Models.DTOs.UnitLeaderboardDto> units,
+            IEnumerable<QL_HocVien.Models.DTOs.SubjectPerformanceDto> subjects,
+            QL_HocVien.Models.DTOs.TrainingRecommendationSummaryDto aiRecommendations,
+            IEnumerable<PhysicalExamRecord> failedRecords,
+            IEnumerable<QL_HocVien.Models.DTOs.CadetHonorDto> honoredCadets)
+        {
+            return await Task.Run(() =>
+            {
+                try
+                {
+                    using var workbook = new XLWorkbook();
+
+                    // ==========================================
+                    // SHEET 1: TỔNG QUAN & CHỈ TIÊU ĐƠN VỊ
+                    // ==========================================
+                    var ws1 = workbook.Worksheets.Add("Tổng Quan & Thi Đua");
+                    ws1.Cell("A1").Value = "BÁO CÁO TỔNG QUAN CHỈ ĐẠO HUẤN LUYỆN & RÈN LUYỆN THỂ LỰC";
+                    ws1.Range("A1:G1").Merge().Style
+                        .Font.SetBold().Font.SetFontSize(16).Font.SetFontColor(XLColor.FromHtml("#0F172A"))
+                        .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+
+                    ws1.Cell("A2").Value = $"Ngày xuất báo cáo: {DateTime.Now:dd/MM/yyyy HH:mm} - Hệ Thống Quản Lý Học Viên Quân Đội";
+                    ws1.Range("A2:G2").Merge().Style
+                        .Font.SetItalic().Font.SetFontSize(11).Font.SetFontColor(XLColor.FromHtml("#64748B"))
+                        .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+
+                    // Khối KPI Tổng thể
+                    ws1.Cell("A4").Value = "I. CHỈ SỐ RÈN LUYỆN TỔNG THỂ";
+                    ws1.Range("A4:G4").Merge().Style.Font.SetBold().Font.SetFontSize(12).Font.SetFontColor(XLColor.FromHtml("#1E3A8A"));
+
+                    string[] kpiHeaders = { "Tổng Quân Số", "Lượt Kiểm Tra", "Tỷ Lệ Đạt Chuẩn", "Tỷ Lệ Giỏi/XS", "Chưa Đạt Chuẩn", "Đánh Giá Toàn Viện" };
+                    for (int i = 0; i < kpiHeaders.Length; i++)
+                    {
+                        var cell = ws1.Cell(5, i + 1);
+                        cell.Value = kpiHeaders[i];
+                        cell.Style.Font.SetBold().Font.SetFontColor(XLColor.White)
+                            .Fill.SetBackgroundColor(XLColor.FromHtml("#1E3A8A"))
+                            .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                    }
+
+                    ws1.Cell(6, 1).Value = $"{summary.TotalCadets} đ/c";
+                    ws1.Cell(6, 2).Value = $"{summary.TotalExamRecords} lượt";
+                    ws1.Cell(6, 3).Value = $"{summary.OverallPassRate:F1}%";
+                    ws1.Cell(6, 4).Value = $"{summary.EliteRate:F1}%";
+                    ws1.Cell(6, 5).Value = $"{summary.FailCount} lượt ({summary.FailRate:F1}%)";
+                    ws1.Cell(6, 6).Value = summary.OverallRatingLabel;
+
+                    ws1.Range("A6:F6").Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center)
+                                            .Font.SetBold().Font.SetFontSize(11)
+                                            .Border.SetOutsideBorder(XLBorderStyleValues.Thin)
+                                            .Border.SetInsideBorder(XLBorderStyleValues.Thin);
+
+                    // Bảng Xếp hạng Đại đội
+                    ws1.Cell("A8").Value = "II. BẢNG XẾP HẠNG THI ĐUA RÈN LUYỆN CÁC ĐẠI ĐỘI / ĐƠN VỊ";
+                    ws1.Range("A8:G8").Merge().Style.Font.SetBold().Font.SetFontSize(12).Font.SetFontColor(XLColor.FromHtml("#15803D"));
+
+                    string[] unitHeaders = { "Hạng", "Đơn Vị / Đại Đội", "Quân Số", "Lượt Kiểm Tra", "Tỷ Lệ Đạt (%)", "Tỷ Lệ Giỏi (%)", "Xếp Loại Đơn Vị" };
+                    for (int i = 0; i < unitHeaders.Length; i++)
+                    {
+                        var cell = ws1.Cell(9, i + 1);
+                        cell.Value = unitHeaders[i];
+                        cell.Style.Font.SetBold().Font.SetFontColor(XLColor.White)
+                            .Fill.SetBackgroundColor(XLColor.FromHtml("#15803D"))
+                            .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                    }
+
+                    int uRow = 10;
+                    foreach (var u in units)
+                    {
+                        ws1.Cell(uRow, 1).Value = u.RankMedal;
+                        ws1.Cell(uRow, 2).Value = u.UnitName;
+                        ws1.Cell(uRow, 3).Value = u.TotalCadets;
+                        ws1.Cell(uRow, 4).Value = u.TotalExamRecords;
+                        ws1.Cell(uRow, 5).Value = $"{u.PassRate:F1}%";
+                        ws1.Cell(uRow, 6).Value = $"{u.EliteRate:F1}%";
+                        ws1.Cell(uRow, 7).Value = u.EvaluationStatus;
+
+                        ws1.Range(uRow, 1, uRow, 7).Style.Border.SetOutsideBorder(XLBorderStyleValues.Thin)
+                                                        .Border.SetInsideBorder(XLBorderStyleValues.Thin);
+
+                        if (uRow % 2 == 1) ws1.Range(uRow, 1, uRow, 7).Style.Fill.SetBackgroundColor(XLColor.FromHtml("#F8FAFC"));
+                        ws1.Cell(uRow, 1).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        ws1.Cell(uRow, 3).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        ws1.Cell(uRow, 4).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        ws1.Cell(uRow, 5).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        ws1.Cell(uRow, 6).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        uRow++;
+                    }
+
+                    // Bảng Độ khó Môn thể lực
+                    int sHeaderRow = uRow + 2;
+                    ws1.Cell(sHeaderRow, 1).Value = "III. PHÂN TÍCH TỶ LỆ ĐẠT & ĐỘ KHÓ CÁC MÔN KIỂM TRA";
+                    ws1.Range(sHeaderRow, 1, sHeaderRow, 6).Merge().Style.Font.SetBold().Font.SetFontSize(12).Font.SetFontColor(XLColor.FromHtml("#B45309"));
+
+                    string[] subHeaders = { "Mã Môn", "Tên Môn Kiểm Tra", "Tổng Lượt Thi", "Tỷ Lệ Đạt (%)", "Tỷ Lệ Chưa Đạt (%)", "Mức Độ Rủi Ro / Đánh Giá" };
+                    for (int i = 0; i < subHeaders.Length; i++)
+                    {
+                        var cell = ws1.Cell(sHeaderRow + 1, i + 1);
+                        cell.Value = subHeaders[i];
+                        cell.Style.Font.SetBold().Font.SetFontColor(XLColor.White)
+                            .Fill.SetBackgroundColor(XLColor.FromHtml("#D97706"))
+                            .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                    }
+
+                    int sRow = sHeaderRow + 2;
+                    foreach (var s in subjects)
+                    {
+                        ws1.Cell(sRow, 1).Value = s.SubjectCode;
+                        ws1.Cell(sRow, 2).Value = s.SubjectName;
+                        ws1.Cell(sRow, 3).Value = s.TotalTested;
+                        ws1.Cell(sRow, 4).Value = $"{s.PassRate:F1}%";
+                        ws1.Cell(sRow, 5).Value = $"{s.FailRate:F1}%";
+                        ws1.Cell(sRow, 6).Value = s.DifficultyLevel;
+
+                        ws1.Range(sRow, 1, sRow, 6).Style.Border.SetOutsideBorder(XLBorderStyleValues.Thin)
+                                                        .Border.SetInsideBorder(XLBorderStyleValues.Thin);
+
+                        if (sRow % 2 == 1) ws1.Range(sRow, 1, sRow, 6).Style.Fill.SetBackgroundColor(XLColor.FromHtml("#F8FAFC"));
+                        ws1.Cell(sRow, 1).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        ws1.Cell(sRow, 3).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        ws1.Cell(sRow, 4).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        ws1.Cell(sRow, 5).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        sRow++;
+                    }
+
+                    ws1.Columns().AdjustToContents();
+
+                    // ==========================================
+                    // SHEET 2: ĐỀ XUẤT HUẤN LUYỆN AI THÔNG MINH
+                    // ==========================================
+                    var ws2 = workbook.Worksheets.Add("Đề Xuất Huấn Luyện AI");
+                    ws2.Cell("A1").Value = "CHỈ ĐẠO & PHÁC ĐỒ HUẤN LUYỆN THỂ LỰC QUÂN ĐỘI THÔNG MINH";
+                    ws2.Range("A1:G1").Merge().Style
+                        .Font.SetBold().Font.SetFontSize(16).Font.SetFontColor(XLColor.FromHtml("#4338CA"))
+                        .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+
+                    ws2.Cell("A3").Value = "1. ĐÁNH GIÁ CHIẾN LƯỢC & ĐỀ XUẤT PHÂN BỔ THỜI GIAN:";
+                    ws2.Range("A3:G3").Merge().Style.Font.SetBold().Font.SetFontSize(12).Font.SetFontColor(XLColor.FromHtml("#1E3A8A"));
+
+                    ws2.Cell("A4").Value = aiRecommendations.StrategicDirective.ExecutiveSummary;
+                    ws2.Range("A4:G4").Merge().Style.Font.SetItalic().Font.SetFontSize(11);
+
+                    ws2.Cell("A5").Value = $"• Phân bổ quỹ thời gian: {aiRecommendations.StrategicDirective.TimeAllocationDirective}";
+                    ws2.Range("A5:G5").Merge().Style.Font.SetFontSize(11);
+
+                    ws2.Cell("A6").Value = $"• Phục hồi & dinh dưỡng: {aiRecommendations.StrategicDirective.RecoveryAndNutritionAdvice}";
+                    ws2.Range("A6:G6").Merge().Style.Font.SetFontSize(11);
+
+                    ws2.Cell("A8").Value = "2. PHÁC ĐỒ HUẤN LUYỆN CHUYÊN SÂU THEO TỪNG NHÓM TỐ CHẤT THỂ LỰC QUÂN SỰ:";
+                    ws2.Range("A8:G8").Merge().Style.Font.SetBold().Font.SetFontSize(12).Font.SetFontColor(XLColor.FromHtml("#4338CA"));
+
+                    string[] aiHeaders = { "Nhóm Tố Chất Thể Lực", "Nội Dung Môn", "Tỷ Lệ Chưa Đạt", "Mức Độ Ưu Tiên", "Phân Tích Điểm Nghẽn Kỹ Thuật", "Phác Đồ Bài Tập Khoa Học", "Lịch Huấn Luyện Tuần" };
+                    for (int i = 0; i < aiHeaders.Length; i++)
+                    {
+                        var cell = ws2.Cell(9, i + 1);
+                        cell.Value = aiHeaders[i];
+                        cell.Style.Font.SetBold().Font.SetFontColor(XLColor.White)
+                            .Fill.SetBackgroundColor(XLColor.FromHtml("#4338CA"))
+                            .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                    }
+
+                    int aiRow = 10;
+                    foreach (var c in aiRecommendations.ComponentPrescriptions)
+                    {
+                        ws2.Cell(aiRow, 1).Value = c.ComponentName;
+                        ws2.Cell(aiRow, 2).Value = c.TargetSubjects;
+                        ws2.Cell(aiRow, 3).Value = $"{c.FailRate:F1}% ({c.AffectedCadetsCount} đ/c)";
+                        ws2.Cell(aiRow, 4).Value = c.UrgencyLevel;
+                        ws2.Cell(aiRow, 5).Value = c.CoreWeaknessAnalysis;
+                        ws2.Cell(aiRow, 6).Value = c.ScientificTrainingProtocol;
+                        ws2.Cell(aiRow, 7).Value = c.WeeklyScheduleRecommendation;
+
+                        ws2.Range(aiRow, 1, aiRow, 7).Style.Border.SetOutsideBorder(XLBorderStyleValues.Thin)
+                                                           .Border.SetInsideBorder(XLBorderStyleValues.Thin);
+
+                        ws2.Cell(aiRow, 1).Style.Font.SetBold();
+                        ws2.Cell(aiRow, 3).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        ws2.Cell(aiRow, 4).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center).Font.SetBold();
+
+                        if (aiRow % 2 == 1) ws2.Range(aiRow, 1, aiRow, 7).Style.Fill.SetBackgroundColor(XLColor.FromHtml("#F5F3FF"));
+                        aiRow++;
+                    }
+
+                    ws2.Columns().AdjustToContents();
+
+                    // ==========================================
+                    // SHEET 3: DANH SÁCH CẦN BỒI DƯỠNG THỂ LỰC
+                    // ==========================================
+                    var ws3 = workbook.Worksheets.Add("DS Cần Bồi Dưỡng Thể Lực");
+                    ws3.Cell("A1").Value = "DANH SÁCH HỌC VIÊN CHƯA ĐẠT CHUẨN - ĐƯA VÀO KẾ HOẠCH BỒI DƯỠNG CẤP TỐC";
+                    ws3.Range("A1:H1").Merge().Style
+                        .Font.SetBold().Font.SetFontSize(15).Font.SetFontColor(XLColor.FromHtml("#B91C1C"))
+                        .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+
+                    string[] failHeaders = { "STT", "Mã HV", "Họ và Tên", "Đơn Vị", "Lớp", "Nội Dung Chưa Đạt", "Thành Tích", "Phác Đồ Bồi Dưỡng & Thời Hạn" };
+                    for (int i = 0; i < failHeaders.Length; i++)
+                    {
+                        var cell = ws3.Cell(3, i + 1);
+                        cell.Value = failHeaders[i];
+                        cell.Style.Font.SetBold().Font.SetFontColor(XLColor.White)
+                            .Fill.SetBackgroundColor(XLColor.FromHtml("#DC2626"))
+                            .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                    }
+
+                    int fRow = 4;
+                    int fStt = 1;
+                    foreach (var fr in failedRecords)
+                    {
+                        ws3.Cell(fRow, 1).Value = fStt++;
+                        ws3.Cell(fRow, 2).Value = fr.Cadet?.CadetCode ?? "";
+                        ws3.Cell(fRow, 3).Value = fr.Cadet?.FullName ?? "";
+                        ws3.Cell(fRow, 4).Value = fr.Cadet?.Unit ?? "";
+                        ws3.Cell(fRow, 5).Value = fr.Cadet?.ClassName ?? (fr.Cadet?.MilitaryClass?.ClassName ?? "");
+                        ws3.Cell(fRow, 6).Value = fr.Subject?.SubjectName ?? "";
+                        ws3.Cell(fRow, 7).Value = fr.ScoreValue;
+                        ws3.Cell(fRow, 8).Value = "Tập bổ trợ thể lực chuyên biệt; kiểm tra sát hạch lại sau 30 ngày";
+
+                        ws3.Range(fRow, 1, fRow, 8).Style.Border.SetOutsideBorder(XLBorderStyleValues.Thin)
+                                                         .Border.SetInsideBorder(XLBorderStyleValues.Thin);
+
+                        if (fRow % 2 == 1) ws3.Range(fRow, 1, fRow, 8).Style.Fill.SetBackgroundColor(XLColor.FromHtml("#FEF2F2"));
+                        ws3.Cell(fRow, 1).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        ws3.Cell(fRow, 2).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        ws3.Cell(fRow, 7).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        fRow++;
+                    }
+
+                    ws3.Columns().AdjustToContents();
+
+                    // ==========================================
+                    // SHEET 4: BIỂU DƯƠNG HỌC VIÊN XUẤT SẮC
+                    // ==========================================
+                    var ws4 = workbook.Worksheets.Add("DS Biểu Dương Khen Thưởng");
+                    ws4.Cell("A1").Value = "BẢNG VÀNG BIỂU DƯƠNG HỌC VIÊN RÈN LUYỆN THỂ LỰC XUẤT SẮC & KIỆN TƯỚNG";
+                    ws4.Range("A1:H1").Merge().Style
+                        .Font.SetBold().Font.SetFontSize(15).Font.SetFontColor(XLColor.FromHtml("#15803D"))
+                        .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+
+                    string[] honorHeaders = { "STT", "Mã HV", "Họ và Tên", "Cấp Bậc", "Đơn Vị", "Lớp", "Danh Hiệu Biểu Dương", "Nội Dung Tiêu Biểu" };
+                    for (int i = 0; i < honorHeaders.Length; i++)
+                    {
+                        var cell = ws4.Cell(3, i + 1);
+                        cell.Value = honorHeaders[i];
+                        cell.Style.Font.SetBold().Font.SetFontColor(XLColor.White)
+                            .Fill.SetBackgroundColor(XLColor.FromHtml("#16A34A"))
+                            .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                    }
+
+                    int hRow = 4;
+                    int hStt = 1;
+                    foreach (var h in honoredCadets)
+                    {
+                        ws4.Cell(hRow, 1).Value = hStt++;
+                        ws4.Cell(hRow, 2).Value = h.CadetCode;
+                        ws4.Cell(hRow, 3).Value = h.FullName;
+                        ws4.Cell(hRow, 4).Value = h.Rank;
+                        ws4.Cell(hRow, 5).Value = h.Unit;
+                        ws4.Cell(hRow, 6).Value = h.ClassName;
+                        ws4.Cell(hRow, 7).Value = h.HonorTitle;
+                        ws4.Cell(hRow, 8).Value = $"{h.BestSubject} ({h.BestScore})";
+
+                        ws4.Range(hRow, 1, hRow, 8).Style.Border.SetOutsideBorder(XLBorderStyleValues.Thin)
+                                                         .Border.SetInsideBorder(XLBorderStyleValues.Thin);
+
+                        if (hRow % 2 == 1) ws4.Range(hRow, 1, hRow, 8).Style.Fill.SetBackgroundColor(XLColor.FromHtml("#F0FDF4"));
+                        ws4.Cell(hRow, 1).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        ws4.Cell(hRow, 2).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        ws4.Cell(hRow, 7).Style.Font.SetBold().Font.SetFontColor(XLColor.FromHtml("#15803D"));
+                        hRow++;
+                    }
+
+                    ws4.Columns().AdjustToContents();
+
+                    workbook.SaveAs(filePath);
+                    return (true, $"Xuất báo cáo tổng quan & đề xuất huấn luyện AI thành công: {Path.GetFileName(filePath)}");
+                }
+                catch (Exception ex)
+                {
+                    return (false, $"Lỗi xuất báo cáo tổng quan: {ex.Message}");
+                }
+            });
+        }
+        #endregion
     }
 }
