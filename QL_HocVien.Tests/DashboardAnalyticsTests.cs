@@ -267,7 +267,13 @@ namespace QL_HocVien.Tests
                         _excelService,
                         fileDialogService);
 
+                    vm.InitializeDashboardAsync().GetAwaiter().GetResult();
+
                     var view = new QL_HocVien.Views.UserControls.DashboardView { DataContext = vm };
+                    view.Measure(new System.Windows.Size(1280, 1000));
+                    view.Arrange(new System.Windows.Rect(0, 0, 1280, 1000));
+                    view.UpdateLayout();
+
                     Assert.NotNull(view);
                 }
                 catch (Exception ex)
@@ -366,6 +372,10 @@ namespace QL_HocVien.Tests
                     var mainWindow = sp.GetRequiredService<QL_HocVien.Views.Windows.MainWindow>();
                     Assert.NotNull(mainWindow);
                     Assert.NotNull(mainWindow.DataContext);
+
+                    mainWindow.Measure(new System.Windows.Size(1280, 800));
+                    mainWindow.Arrange(new System.Windows.Rect(0, 0, 1280, 800));
+                    mainWindow.UpdateLayout();
                 }
                 catch (Exception ex)
                 {

@@ -15,12 +15,47 @@ namespace QL_HocVien.Models.DTOs
         public int PassCount { get; set; }
         public int FailCount { get; set; }
 
-        public double ExcellentRate => TotalExamRecords > 0 ? Math.Round((double)ExcellentCount / TotalExamRecords * 100, 1) : 0;
-        public double GoodRate => TotalExamRecords > 0 ? Math.Round((double)GoodCount / TotalExamRecords * 100, 1) : 0;
-        public double PassRateOnly => TotalExamRecords > 0 ? Math.Round((double)PassCount / TotalExamRecords * 100, 1) : 0;
-        public double OverallPassRate => TotalExamRecords > 0 ? Math.Round((double)(TotalExamRecords - FailCount) / TotalExamRecords * 100, 1) : 100;
-        public double FailRate => TotalExamRecords > 0 ? Math.Round((double)FailCount / TotalExamRecords * 100, 1) : 0;
-        public double EliteRate => Math.Round(ExcellentRate + GoodRate, 1);
+        public double ExcellentRate
+        {
+            get => TotalExamRecords > 0 ? Math.Round((double)ExcellentCount / TotalExamRecords * 100, 1) : 0;
+            set { }
+        }
+
+        public double GoodRate
+        {
+            get => TotalExamRecords > 0 ? Math.Round((double)GoodCount / TotalExamRecords * 100, 1) : 0;
+            set { }
+        }
+
+        public double PassRateOnly
+        {
+            get => TotalExamRecords > 0 ? Math.Round((double)PassCount / TotalExamRecords * 100, 1) : 0;
+            set { }
+        }
+
+        public double OverallPassRate
+        {
+            get => TotalExamRecords > 0 ? Math.Round((double)(TotalExamRecords - FailCount) / TotalExamRecords * 100, 1) : 100;
+            set { }
+        }
+
+        public double PassRate
+        {
+            get => OverallPassRate;
+            set { }
+        }
+
+        public double FailRate
+        {
+            get => TotalExamRecords > 0 ? Math.Round((double)FailCount / TotalExamRecords * 100, 1) : 0;
+            set { }
+        }
+
+        public double EliteRate
+        {
+            get => Math.Round(ExcellentRate + GoodRate, 1);
+            set { }
+        }
 
         public string OverallRatingLabel
         {
@@ -32,6 +67,7 @@ namespace QL_HocVien.Models.DTOs
                 if (OverallPassRate >= 80) return "Đơn vị Đạt Yêu Cầu";
                 return "Cần Tăng Cường Huấn Luyện";
             }
+            set { }
         }
 
         public string OverallRatingColor
@@ -43,6 +79,7 @@ namespace QL_HocVien.Models.DTOs
                 if (OverallPassRate >= 80) return "#D97706";
                 return "#DC2626";
             }
+            set { }
         }
     }
 }

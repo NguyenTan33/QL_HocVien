@@ -274,7 +274,7 @@
                             <!-- Thanh trực quan tỷ lệ đạt chuẩn -->
                             <Border Height="22" CornerRadius="11" Background="#FEE2E2" SnapsToDevicePixels="True" Margin="0,0,0,12" ClipToBounds="True">
                                 <Grid>
-                                    <ProgressBar Value="{Binding PassRate}" Maximum="100" Height="22" 
+                                    <ProgressBar Value="{Binding PassRate, Mode=OneWay}" Maximum="100" Height="22" 
                                                  Background="Transparent" Foreground="#16A34A" BorderThickness="0"/>
                                     <TextBlock Text="{Binding PassRate, StringFormat='TỔNG TỶ LỆ ĐẠT CHUẨN: {0:F1}%'}" 
                                                FontSize="11" FontWeight="Bold" Foreground="#FFFFFF" 
@@ -365,7 +365,7 @@
 
                                             <!-- Thanh ngang biểu thị tỷ lệ Đạt -->
                                             <Grid Grid.Column="2" VerticalAlignment="Center" Margin="6,0,10,0">
-                                                <ProgressBar Value="{Binding PassRate}" Maximum="100" Height="10" 
+                                                <ProgressBar Value="{Binding PassRate, Mode=OneWay}" Maximum="100" Height="10" 
                                                              Foreground="{Binding StatusColor, Converter={StaticResource StringToBrush}}" Background="#E2E8F0" BorderThickness="0"/>
                                             </Grid>
 
@@ -409,7 +409,7 @@
                                                            Foreground="{Binding BarColor, Converter={StaticResource StringToBrush}}" HorizontalAlignment="Right"/>
                                             </Grid>
 
-                                            <ProgressBar Value="{Binding PassRate}" Maximum="100" Height="8" 
+                                            <ProgressBar Value="{Binding PassRate, Mode=OneWay}" Maximum="100" Height="8" 
                                                          Foreground="{Binding BarColor, Converter={StaticResource StringToBrush}}" Background="#CBD5E1" Margin="0,6,0,6"/>
 
                                             <Grid>

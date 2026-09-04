@@ -12,16 +12,29 @@ namespace QL_HocVien.Models.DTOs
         public int EliteCount { get; set; }
         public int FailedCount { get; set; }
 
-        public double PassRate => TotalExamRecords > 0 ? Math.Round((double)PassedCount / TotalExamRecords * 100, 1) : 0;
-        public double EliteRate => TotalExamRecords > 0 ? Math.Round((double)EliteCount / TotalExamRecords * 100, 1) : 0;
-
-        public string RankMedal => Rank switch
+        public double PassRate
         {
-            1 => "🥇",
-            2 => "🥈",
-            3 => "🥉",
-            _ => $"#{Rank}"
-        };
+            get => TotalExamRecords > 0 ? Math.Round((double)PassedCount / TotalExamRecords * 100, 1) : 0;
+            set { }
+        }
+
+        public double EliteRate
+        {
+            get => TotalExamRecords > 0 ? Math.Round((double)EliteCount / TotalExamRecords * 100, 1) : 0;
+            set { }
+        }
+
+        public string RankMedal
+        {
+            get => Rank switch
+            {
+                1 => "🥇",
+                2 => "🥈",
+                3 => "🥉",
+                _ => $"#{Rank}"
+            };
+            set { }
+        }
 
         public string EvaluationStatus
         {
@@ -32,22 +45,31 @@ namespace QL_HocVien.Models.DTOs
                 if (PassRate >= 78) return "Đạt Yêu Cầu";
                 return "Cần Chấn Chỉnh";
             }
+            set { }
         }
 
-        public string StatusColor => PassRate switch
+        public string StatusColor
         {
-            >= 90 => "#16A34A",
-            >= 80 => "#2563EB",
-            >= 70 => "#D97706",
-            _ => "#DC2626"
-        };
+            get => PassRate switch
+            {
+                >= 90 => "#16A34A",
+                >= 80 => "#2563EB",
+                >= 70 => "#D97706",
+                _ => "#DC2626"
+            };
+            set { }
+        }
 
-        public string StatusBackground => PassRate switch
+        public string StatusBackground
         {
-            >= 90 => "#DCFCE7",
-            >= 80 => "#DBEAFE",
-            >= 70 => "#FEF3C7",
-            _ => "#FEE2E2"
-        };
+            get => PassRate switch
+            {
+                >= 90 => "#DCFCE7",
+                >= 80 => "#DBEAFE",
+                >= 70 => "#FEF3C7",
+                _ => "#FEE2E2"
+            };
+            set { }
+        }
     }
 }
