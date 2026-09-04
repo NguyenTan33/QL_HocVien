@@ -22,6 +22,9 @@
         <DataTemplate DataType="{x:Type vm:CadetManagementViewModel}">
             <views:CadetManagementView/>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ClassManagementViewModel}">
+            <views:ClassManagementView/>
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:AddCadetViewModel}">
             <views:AddCadetView/>
         </DataTemplate>
@@ -149,12 +152,17 @@
                                     Style="{StaticResource SidebarNavButtonStyle}"
                                     Command="{Binding NavigateToCadetManagementCommand}"/>
 
-                            <!-- 3. Thêm Học Viên -->
+                            <!-- 3. Quản Lý Lớp Học -->
+                            <Button Content="🏫   Quản Lý Lớp Học" 
+                                    Style="{StaticResource SidebarNavButtonStyle}"
+                                    Command="{Binding NavigateToClassManagementCommand}"/>
+
+                            <!-- 4. Thêm Học Viên -->
                             <Button Content="➕   Thêm Học Viên" 
                                     Style="{StaticResource SidebarNavButtonStyle}"
                                     Command="{Binding NavigateToAddCadetCommand}"/>
 
-                            <!-- 4. Quản Lý Môn Học -->
+                            <!-- 5. Quản Lý Môn Học -->
                             <Button Content="📚   Quản Lý Môn Học" 
                                     Style="{StaticResource SidebarNavButtonStyle}"
                                     Command="{Binding NavigateToSubjectManagementCommand}"/>

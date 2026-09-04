@@ -16,11 +16,13 @@ namespace QL_HocVien.Tests
     {
         private readonly AppDbContext _context;
         private readonly IUserRepository _userRepository;
+        private readonly IClassRepository _classRepository;
         private readonly ICadetRepository _cadetRepository;
         private readonly ISubjectRepository _subjectRepository;
         private readonly IPhysicalExamRepository _examRepository;
         private readonly IEmailService _emailService;
         private readonly IAuthService _authService;
+        private readonly IClassService _classService;
         private readonly ICadetService _cadetService;
         private readonly ISubjectService _subjectService;
         private readonly IEvaluationService _evaluationService;
@@ -39,17 +41,19 @@ namespace QL_HocVien.Tests
             DbInitializer.Initialize(_context);
 
             _userRepository = new UserRepository(_context);
+            _classRepository = new ClassRepository(_context);
             _cadetRepository = new CadetRepository(_context);
             _subjectRepository = new SubjectRepository(_context);
             _examRepository = new PhysicalExamRepository(_context);
             _emailService = new EmailService();
 
             _authService = new AuthService(_userRepository, _cadetRepository, _context, _emailService);
+            _classService = new ClassService(_classRepository);
             _cadetService = new CadetService(_cadetRepository);
             _subjectService = new SubjectService(_subjectRepository);
             _evaluationService = new EvaluationService();
             _examService = new PhysicalExamService(_examRepository, _subjectRepository, _evaluationService);
-            _excelService = new ExcelService(_context, _cadetRepository, _subjectRepository, _examRepository, _evaluationService);
+            _excelService = new ExcelService(_context, _cadetRepository, _classRepository, _subjectRepository, _examRepository, _evaluationService);
         }
 
         public void Dispose()
@@ -239,6 +243,107 @@ namespace QL_HocVien.Tests
                 Assert.True(importRes.Success, importRes.Message);
                 Assert.True(importRes.CadetsCount > 0);
                 Assert.True(importRes.SubjectsCount > 0);
+            }
+            finally
+            {
+                if (File.Exists(tempFile)) File.Delete(tempFile);
+            }
+        }
+
+        [Fact]
+        public async Task Test_MilitaryClass_CRUD_And_Cadet_Association()
+        {
+            // 1. Kiểm tra seed lớp học
+            var classes = (await _classService.GetAllClassesAsync()).ToList();
+            Assert.True(classes.Count >= 3, "Phải có ít nhất 3 lớp được seed.");
+            Assert.Contains(classes, c => c.ClassCode == "K26A");
+
+            // 2. Kiểm tra học viên seed đã liên kết với lớp
+            var classK26A = classes.First(c => c.ClassCode == "K26A");
+            var k26AWithCadets = await _classService.GetClassWithCadetsAsync(classK26A.Id);
+            Assert.NotNull(k26AWithCadets);
+            Assert.True(k26AWithCadets.Cadets.Count >= 1, "Lớp K26A phải có học viên liên kết.");
+
+            // 3. Thêm lớp mới
+            var newClass = new MilitaryClass
+            {
+                ClassCode = "K26D",
+                ClassName = "K26D - Trinh sát Đặc nhiệm",
+                Unit = "Đại đội 4",
+                Major = "Trinh sát đặc nhiệm",
+                OfficerInCharge = "Thiếu tá Nguyễn Văn Bình",
+                AcademicYear = "2024 - 2028",
+                Description = "Lớp đào tạo trinh sát cơ động"
+            };
+            var addRes = await _classService.AddClassAsync(newClass);
+            Assert.True(addRes.Success, addRes.Message);
+            Assert.NotNull(addRes.Class);
+
+            // 4. Thử thêm trùng mã lớp -> phải báo lỗi
+            var dupClass = new MilitaryClass
+            {
+                ClassCode = "K26D",
+                ClassName = "Lớp trùng mã",
+                Unit = "Đại đội 1"
+            };
+            var dupRes = await _classService.AddClassAsync(dupClass);
+            Assert.False(dupRes.Success, "Không được phép thêm trùng mã lớp.");
+
+            // 5. Tìm kiếm lớp học
+            var searchByKw = await _classService.SearchClassesAsync("Trinh sát", "Tất cả", "Tất cả");
+            Assert.Single(searchByKw);
+            Assert.Equal("K26D", searchByKw.First().ClassCode);
+
+            // 6. Cập nhật lớp học
+            addRes.Class.Description = "Cập nhật mô tả chuyên sâu";
+            var updateRes = await _classService.UpdateClassAsync(addRes.Class);
+            Assert.True(updateRes.Success, updateRes.Message);
+
+            // 7. Thêm học viên vào lớp mới này
+            var cadet = new Cadet
+            {
+                CadetCode = "HV-CLASS-TEST-01",
+                FullName = "Trần Trinh Sát",
+                ClassId = addRes.Class.Id,
+                ClassName = addRes.Class.ClassName,
+                Unit = "Đại đội 4",
+                PhoneNumber = "0987654321"
+            };
+            var addCadetRes = await _cadetService.AddCadetAsync(cadet);
+            Assert.True(addCadetRes.Success);
+
+            // Kiểm tra quân số lớp đã tăng
+            var updatedClassWithCadets = await _classService.GetClassWithCadetsAsync(addRes.Class.Id);
+            Assert.NotNull(updatedClassWithCadets);
+            Assert.Single(updatedClassWithCadets.Cadets);
+
+            // 8. Xóa lớp học -> học viên vẫn còn nguyên trong hệ thống
+            var delRes = await _classService.DeleteClassAsync(addRes.Class.Id);
+            Assert.True(delRes.Success, delRes.Message);
+
+            var checkCadetStillExists = await _cadetService.GetCadetByIdAsync(cadet.Id);
+            Assert.NotNull(checkCadetStillExists);
+        }
+
+        [Fact]
+        public async Task Test_Excel_Class_Export_And_Import()
+        {
+            var tempFile = Path.Combine(Path.GetTempPath(), $"Classes_Test_{Guid.NewGuid():N}.xlsx");
+            try
+            {
+                var classes = (await _classService.GetAllClassesAsync()).ToList();
+                Assert.NotEmpty(classes);
+
+                // Xuất Excel danh sách lớp
+                var exportRes = await _excelService.ExportClassesToExcelAsync(classes, tempFile);
+                Assert.True(exportRes.Success, exportRes.Message);
+                Assert.True(File.Exists(tempFile));
+
+                // Nhập lại từ Excel
+                var importRes = await _excelService.ImportClassesFromExcelAsync(tempFile);
+                Assert.True(importRes.Success, importRes.Message);
+                Assert.NotEmpty(importRes.Classes);
+                Assert.Equal(classes.Count, importRes.Classes.Count);
             }
             finally
             {

@@ -15,6 +15,7 @@ namespace QL_HocVien.Services
     {
         private readonly AppDbContext _context;
         private readonly ICadetRepository _cadetRepository;
+        private readonly IClassRepository _classRepository;
         private readonly ISubjectRepository _subjectRepository;
         private readonly IPhysicalExamRepository _examRepository;
         private readonly IEvaluationService _evaluationService;
@@ -22,12 +23,14 @@ namespace QL_HocVien.Services
         public ExcelService(
             AppDbContext context,
             ICadetRepository cadetRepository,
+            IClassRepository classRepository,
             ISubjectRepository subjectRepository,
             IPhysicalExamRepository examRepository,
             IEvaluationService evaluationService)
         {
             _context = context;
             _cadetRepository = cadetRepository;
+            _classRepository = classRepository;
             _subjectRepository = subjectRepository;
             _examRepository = examRepository;
             _evaluationService = evaluationService;
@@ -125,6 +128,7 @@ namespace QL_HocVien.Services
                 int lastRow = ws.LastRowUsed()?.RowNumber() ?? headerRow;
                 int addedCount = 0;
                 int updatedCount = 0;
+                var allClasses = (await _classRepository.GetAllAsync()).ToList();
 
                 for (int r = headerRow + 1; r <= lastRow; r++)
                 {
@@ -154,6 +158,10 @@ namespace QL_HocVien.Services
                     string gender = row.Cell(12).GetString().Trim();
                     if (string.IsNullOrWhiteSpace(gender)) gender = "Nam";
 
+                    var matchedClass = allClasses.FirstOrDefault(c => 
+                        c.ClassName.Equals(className, StringComparison.OrdinalIgnoreCase) || 
+                        c.ClassCode.Equals(className, StringComparison.OrdinalIgnoreCase));
+
                     var existing = await _cadetRepository.GetByCodeAsync(code);
                     if (existing != null)
                     {
@@ -161,7 +169,15 @@ namespace QL_HocVien.Services
                         if (!string.IsNullOrWhiteSpace(rank)) existing.Rank = rank;
                         if (!string.IsNullOrWhiteSpace(pos)) existing.Position = pos;
                         if (!string.IsNullOrWhiteSpace(unit)) existing.Unit = unit;
-                        if (!string.IsNullOrWhiteSpace(className)) existing.ClassName = className;
+                        if (matchedClass != null)
+                        {
+                            existing.ClassId = matchedClass.Id;
+                            existing.ClassName = matchedClass.ClassName;
+                        }
+                        else if (!string.IsNullOrWhiteSpace(className))
+                        {
+                            existing.ClassName = className;
+                        }
                         if (!string.IsNullOrWhiteSpace(phone)) existing.PhoneNumber = phone;
                         if (!string.IsNullOrWhiteSpace(email)) existing.Email = email;
                         if (dob.HasValue) existing.DateOfBirth = dob;
@@ -180,7 +196,8 @@ namespace QL_HocVien.Services
                             Rank = !string.IsNullOrWhiteSpace(rank) ? rank : "Binh nhì",
                             Position = !string.IsNullOrWhiteSpace(pos) ? pos : "Học viên",
                             Unit = !string.IsNullOrWhiteSpace(unit) ? unit : "Đại đội 1",
-                            ClassName = !string.IsNullOrWhiteSpace(className) ? className : "K26A",
+                            ClassId = matchedClass?.Id,
+                            ClassName = matchedClass?.ClassName ?? (!string.IsNullOrWhiteSpace(className) ? className : "K26A"),
                             PhoneNumber = !string.IsNullOrWhiteSpace(phone) ? phone : $"09{new Random().Next(10000000, 99999999)}",
                             Email = !string.IsNullOrWhiteSpace(email) ? email : $"{code.ToLower().Replace("-", "")}@hocvien.edu.vn",
                             DateOfBirth = dob,
@@ -477,11 +494,177 @@ namespace QL_HocVien.Services
         }
         #endregion
 
-        #region 4. XUẤT & NHẬP TOÀN BỘ DỮ LIỆU HỆ THỐNG (FULL BACKUP / RESTORE)
+        #region 4. XUẤT & NHẬP LỚP HỌC
+        public async Task<(bool Success, string Message)> ExportClassesToExcelAsync(IEnumerable<MilitaryClass> classes, string filePath)
+        {
+            try
+            {
+                using var workbook = new XLWorkbook();
+                var ws = workbook.Worksheets.Add("Trang lớp học");
+
+                ws.Cell("A1").Value = "DANH SÁCH LỚP HỌC QUÂN ĐỘI";
+                ws.Range("A1:I1").Merge().Style
+                    .Font.SetBold().Font.SetFontSize(16).Font.SetFontColor(XLColor.FromHtml("#1E3A8A"))
+                    .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+
+                ws.Cell("A2").Value = $"Thời điểm xuất dữ liệu: {DateTime.Now:dd/MM/yyyy HH:mm:ss}";
+                ws.Range("A2:I2").Merge().Style.Font.SetItalic().Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+
+                string[] headers = { "STT", "Mã lớp", "Tên lớp", "Đơn vị quản lý", "Chuyên ngành", "Cán bộ quản lý", "Khóa học", "Quân số", "Mô tả" };
+                for (int i = 0; i < headers.Length; i++)
+                {
+                    var cell = ws.Cell(4, i + 1);
+                    cell.Value = headers[i];
+                    cell.Style.Font.SetBold().Font.SetFontColor(XLColor.White)
+                        .Fill.SetBackgroundColor(XLColor.FromHtml("#1E3A8A"))
+                        .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center)
+                        .Border.SetOutsideBorder(XLBorderStyleValues.Thin);
+                }
+
+                int row = 5;
+                int stt = 1;
+                foreach (var c in classes)
+                {
+                    ws.Cell(row, 1).Value = stt++;
+                    ws.Cell(row, 2).Value = c.ClassCode;
+                    ws.Cell(row, 3).Value = c.ClassName;
+                    ws.Cell(row, 4).Value = c.Unit;
+                    ws.Cell(row, 5).Value = c.Major;
+                    ws.Cell(row, 6).Value = c.OfficerInCharge;
+                    ws.Cell(row, 7).Value = c.AcademicYear;
+                    ws.Cell(row, 8).Value = c.Cadets?.Count ?? 0;
+                    ws.Cell(row, 9).Value = c.Description;
+
+                    ws.Range(row, 1, row, 9).Style.Border.SetOutsideBorder(XLBorderStyleValues.Thin)
+                                                   .Border.SetInsideBorder(XLBorderStyleValues.Thin);
+                    row++;
+                }
+
+                ws.Columns().AdjustToContents();
+                workbook.SaveAs(filePath);
+
+                return (true, $"Xuất thành công {stt - 1} lớp học ra file Excel.");
+            }
+            catch (Exception ex)
+            {
+                return (false, $"Lỗi khi xuất file Excel: {ex.Message}");
+            }
+        }
+
+        public async Task<(bool Success, string Message, List<MilitaryClass> Classes)> ImportClassesFromExcelAsync(string filePath)
+        {
+            var importedList = new List<MilitaryClass>();
+            try
+            {
+                if (!File.Exists(filePath))
+                    return (false, "Tệp không tồn tại.", importedList);
+
+                using var workbook = new XLWorkbook(filePath);
+                var ws = workbook.Worksheet("Trang lớp học") 
+                    ?? workbook.Worksheets.FirstOrDefault(w => w.Name.ToLower().Contains("lớp") || w.Name.ToLower().Contains("class")) 
+                    ?? workbook.Worksheets.FirstOrDefault();
+                if (ws == null)
+                    return (false, "Không tìm thấy trang tính phù hợp trong tệp Excel.", importedList);
+
+                int headerRowIndex = 1;
+                for (int r = 1; r <= 10; r++)
+                {
+                    for (int c = 1; c <= 10; c++)
+                    {
+                        var val = ws.Cell(r, c).GetString().Trim().ToLower();
+                        if (val.Contains("mã lớp") || val == "classcode" || val == "mã lớp học")
+                        {
+                            headerRowIndex = r;
+                            break;
+                        }
+                    }
+                    if (headerRowIndex > 1) break;
+                }
+
+                int colCode = 2, colName = 3, colUnit = 4, colMajor = 5, colOfficer = 6, colYear = 7, colDesc = 9;
+                for (int c = 1; c <= 15; c++)
+                {
+                    var title = ws.Cell(headerRowIndex, c).GetString().Trim().ToLower();
+                    if (title.Contains("mã lớp")) colCode = c;
+                    else if (title.Contains("tên lớp")) colName = c;
+                    else if (title.Contains("đơn vị")) colUnit = c;
+                    else if (title.Contains("chuyên ngành")) colMajor = c;
+                    else if (title.Contains("cán bộ") || title.Contains("quản lý") || title.Contains("chủ nhiệm")) colOfficer = c;
+                    else if (title.Contains("khóa") || title.Contains("niên khóa")) colYear = c;
+                    else if (title.Contains("mô tả") || title.Contains("ghi chú")) colDesc = c;
+                }
+
+                int lastRow = ws.LastRowUsed()?.RowNumber() ?? 0;
+                int addedCount = 0;
+                int updatedCount = 0;
+
+                for (int r = headerRowIndex + 1; r <= lastRow; r++)
+                {
+                    var code = ws.Cell(r, colCode).GetString().Trim().ToUpper();
+                    if (string.IsNullOrWhiteSpace(code)) continue;
+
+                    var name = ws.Cell(r, colName).GetString().Trim();
+                    if (string.IsNullOrWhiteSpace(name))
+                    {
+                        name = code;
+                    }
+
+                    var unit = ws.Cell(r, colUnit).GetString().Trim();
+                    var major = ws.Cell(r, colMajor).GetString().Trim();
+                    var officer = ws.Cell(r, colOfficer).GetString().Trim();
+                    var year = ws.Cell(r, colYear).GetString().Trim();
+                    var desc = ws.Cell(r, colDesc).GetString().Trim();
+
+                    var existing = await _classRepository.GetByCodeAsync(code);
+                    if (existing != null)
+                    {
+                        existing.ClassName = name;
+                        if (!string.IsNullOrWhiteSpace(unit)) existing.Unit = unit;
+                        if (!string.IsNullOrWhiteSpace(major)) existing.Major = major;
+                        if (!string.IsNullOrWhiteSpace(officer)) existing.OfficerInCharge = officer;
+                        if (!string.IsNullOrWhiteSpace(year)) existing.AcademicYear = year;
+                        if (!string.IsNullOrWhiteSpace(desc)) existing.Description = desc;
+
+                        _classRepository.Update(existing);
+                        updatedCount++;
+                        importedList.Add(existing);
+                    }
+                    else
+                    {
+                        var newClass = new MilitaryClass
+                        {
+                            ClassCode = code,
+                            ClassName = name,
+                            Unit = string.IsNullOrWhiteSpace(unit) ? "Đại đội 1" : unit,
+                            Major = string.IsNullOrWhiteSpace(major) ? "Chỉ huy Tham mưu" : major,
+                            OfficerInCharge = officer,
+                            AcademicYear = string.IsNullOrWhiteSpace(year) ? "2023 - 2027" : year,
+                            Description = desc,
+                            CreatedAt = DateTime.Now
+                        };
+
+                        await _classRepository.AddAsync(newClass);
+                        addedCount++;
+                        importedList.Add(newClass);
+                    }
+                }
+
+                await _classRepository.SaveChangesAsync();
+                return (true, $"Nhập dữ liệu lớp học thành công: Thêm mới {addedCount} lớp, Cập nhật {updatedCount} lớp.", importedList);
+            }
+            catch (Exception ex)
+            {
+                return (false, $"Lỗi xử lý tệp Excel lớp học: {ex.Message}", importedList);
+            }
+        }
+        #endregion
+
+        #region 5. XUẤT & NHẬP TOÀN BỘ DỮ LIỆU HỆ THỐNG (FULL BACKUP / RESTORE)
         public async Task<(bool Success, string Message)> ExportAllDataToExcelAsync(string filePath)
         {
             try
             {
+                var classes = (await _classRepository.GetAllWithCadetsAsync()).ToList();
                 var cadets = (await _cadetRepository.GetAllAsync()).ToList();
                 var subjects = (await _subjectRepository.GetAllAsync()).ToList();
                 var records = (await _examRepository.GetAllWithDetailsAsync()).ToList();
@@ -498,42 +681,71 @@ namespace QL_HocVien.Services
                 wsDash.Cell("A3").Value = "CHỈ SỐ TỔNG HỢP TOÀN ĐƠN VỊ";
                 wsDash.Range("A3:C3").Merge().Style.Font.SetBold().Fill.SetBackgroundColor(XLColor.FromHtml("#F1F5F9"));
 
-                wsDash.Cell("A4").Value = "Tổng quân số học viên:";
-                wsDash.Cell("B4").Value = cadets.Count;
-                wsDash.Cell("A5").Value = "Tổng số môn rèn luyện:";
-                wsDash.Cell("B5").Value = subjects.Count;
-                wsDash.Cell("A6").Value = "Tổng số lượt kiểm tra:";
-                wsDash.Cell("B6").Value = records.Count;
+                wsDash.Cell("A4").Value = "Tổng số lớp học quân sự:";
+                wsDash.Cell("B4").Value = classes.Count;
+                wsDash.Cell("A5").Value = "Tổng quân số học viên:";
+                wsDash.Cell("B5").Value = cadets.Count;
+                wsDash.Cell("A6").Value = "Tổng số môn rèn luyện:";
+                wsDash.Cell("B6").Value = subjects.Count;
+                wsDash.Cell("A7").Value = "Tổng số lượt kiểm tra:";
+                wsDash.Cell("B7").Value = records.Count;
 
                 double passRate = records.Count > 0 
                     ? Math.Round((double)(records.Count - failedRecords.Count) / records.Count * 100, 1) 
                     : 100.0;
-                wsDash.Cell("A7").Value = "Tỷ lệ đạt chuẩn quân sự:";
-                wsDash.Cell("B7").Value = $"{passRate}%";
+                wsDash.Cell("A8").Value = "Tỷ lệ đạt chuẩn quân sự:";
+                wsDash.Cell("B8").Value = $"{passRate}%";
 
-                wsDash.Cell("A9").Value = "PHÂN LOẠI XẾP LOẠI CHI TIẾT";
-                wsDash.Range("A9:C9").Merge().Style.Font.SetBold().Fill.SetBackgroundColor(XLColor.FromHtml("#F1F5F9"));
+                wsDash.Cell("A10").Value = "PHÂN LOẠI XẾP LOẠI CHI TIẾT";
+                wsDash.Range("A10:C10").Merge().Style.Font.SetBold().Fill.SetBackgroundColor(XLColor.FromHtml("#F1F5F9"));
 
-                wsDash.Cell("A10").Value = "Xuất sắc:";
-                wsDash.Cell("B10").Value = records.Count(r => r.Grade == "Xuất sắc");
-                wsDash.Cell("A11").Value = "Giỏi:";
-                wsDash.Cell("B11").Value = records.Count(r => r.Grade == "Giỏi");
-                wsDash.Cell("A12").Value = "Khá:";
-                wsDash.Cell("B12").Value = records.Count(r => r.Grade == "Khá");
-                wsDash.Cell("A13").Value = "Đạt:";
-                wsDash.Cell("B13").Value = records.Count(r => r.Grade == "Đạt");
-                wsDash.Cell("A14").Value = "Không đạt (Cần rèn luyện thêm):";
-                wsDash.Cell("B14").Value = failedRecords.Count;
+                wsDash.Cell("A11").Value = "Xuất sắc:";
+                wsDash.Cell("B11").Value = records.Count(r => r.Grade == "Xuất sắc");
+                wsDash.Cell("A12").Value = "Giỏi:";
+                wsDash.Cell("B12").Value = records.Count(r => r.Grade == "Giỏi");
+                wsDash.Cell("A13").Value = "Khá:";
+                wsDash.Cell("B13").Value = records.Count(r => r.Grade == "Khá");
+                wsDash.Cell("A14").Value = "Đạt:";
+                wsDash.Cell("B14").Value = records.Count(r => r.Grade == "Đạt");
+                wsDash.Cell("A15").Value = "Không đạt (Cần rèn luyện lại):";
+                wsDash.Cell("B15").Value = failedRecords.Count;
+                wsDash.Cell("B15").Style.Font.SetFontColor(XLColor.Red);
                 wsDash.Columns().AdjustToContents();
 
-                // 2. Sheet Học viên
+                // 2. Sheet Lớp học
+                var wsClass = workbook.Worksheets.Add("Trang lớp học");
+                wsClass.Cell("A1").Value = "DANH MỤC LỚP HỌC QUÂN ĐỘI";
+                wsClass.Range("A1:H1").Merge().Style.Font.SetBold().Font.SetFontSize(14).Font.SetFontColor(XLColor.FromHtml("#1E3A8A"));
+                string[] cHeaders = { "STT", "Mã lớp", "Tên lớp", "Đơn vị quản lý", "Chuyên ngành", "Cán bộ quản lý", "Khóa học", "Quân số" };
+                for (int i = 0; i < cHeaders.Length; i++)
+                {
+                    wsClass.Cell(3, i + 1).Value = cHeaders[i];
+                    wsClass.Cell(3, i + 1).Style.Font.SetBold().Font.SetFontColor(XLColor.White).Fill.SetBackgroundColor(XLColor.FromHtml("#1E3A8A"));
+                }
+                int cRow = 4;
+                for (int i = 0; i < classes.Count; i++)
+                {
+                    var cl = classes[i];
+                    wsClass.Cell(cRow, 1).Value = i + 1;
+                    wsClass.Cell(cRow, 2).Value = cl.ClassCode;
+                    wsClass.Cell(cRow, 3).Value = cl.ClassName;
+                    wsClass.Cell(cRow, 4).Value = cl.Unit;
+                    wsClass.Cell(cRow, 5).Value = cl.Major;
+                    wsClass.Cell(cRow, 6).Value = cl.OfficerInCharge;
+                    wsClass.Cell(cRow, 7).Value = cl.AcademicYear;
+                    wsClass.Cell(cRow, 8).Value = cl.Cadets.Count;
+                    cRow++;
+                }
+                wsClass.Columns().AdjustToContents();
+
+                // 3. Sheet Học viên
                 var wsCadet = workbook.Worksheets.Add("Trang học viên");
                 wsCadet.Cell("A1").Value = "DANH SÁCH HỌC VIÊN TOÀN ĐƠN VỊ";
                 wsCadet.Range("A1:K1").Merge().Style.Font.SetBold().Font.SetFontSize(14).Font.SetFontColor(XLColor.FromHtml("#1E3A8A"));
-                string[] cHeaders = { "STT", "Mã học viên", "Họ và tên", "Cấp bậc", "Chức vụ", "Đơn vị", "Lớp", "Số điện thoại", "Email", "Tuổi", "Giới tính" };
-                for (int i = 0; i < cHeaders.Length; i++)
+                string[] hHeaders = { "STT", "Mã học viên", "Họ và tên", "Cấp bậc", "Chức vụ", "Đơn vị", "Lớp", "Số điện thoại", "Email", "Tuổi", "Giới tính" };
+                for (int i = 0; i < hHeaders.Length; i++)
                 {
-                    wsCadet.Cell(3, i + 1).Value = cHeaders[i];
+                    wsCadet.Cell(3, i + 1).Value = hHeaders[i];
                     wsCadet.Cell(3, i + 1).Style.Font.SetBold().Font.SetFontColor(XLColor.White).Fill.SetBackgroundColor(XLColor.FromHtml("#1E3A8A"));
                 }
                 int rRow = 4;
@@ -555,7 +767,7 @@ namespace QL_HocVien.Services
                 }
                 wsCadet.Columns().AdjustToContents();
 
-                // 3. Sheet Môn học
+                // 4. Sheet Môn học
                 var wsSub = workbook.Worksheets.Add("Trang môn học");
                 wsSub.Cell("A1").Value = "DANH MỤC TIÊU CHUẨN RÈN LUYỆN THỂ LỰC";
                 wsSub.Range("A1:I1").Merge().Style.Font.SetBold().Font.SetFontSize(14).Font.SetFontColor(XLColor.FromHtml("#1E3A8A"));
@@ -582,7 +794,7 @@ namespace QL_HocVien.Services
                 }
                 wsSub.Columns().AdjustToContents();
 
-                // 4. Sheet Kiểm tra thể lực
+                // 5. Sheet Kiểm tra thể lực
                 var wsExam = workbook.Worksheets.Add("Kiểm tra thể lực");
                 wsExam.Cell("A1").Value = "BẢNG KẾT QUẢ KIỂM TRA ĐỊNH KỲ";
                 wsExam.Range("A1:K1").Merge().Style.Font.SetBold().Font.SetFontSize(14).Font.SetFontColor(XLColor.FromHtml("#15803D"));
@@ -611,7 +823,7 @@ namespace QL_HocVien.Services
                 }
                 wsExam.Columns().AdjustToContents();
 
-                // 5. Sheet Học viên chưa đạt (Rèn luyện bổ sung)
+                // 6. Sheet Học viên chưa đạt (Rèn luyện bổ sung)
                 var wsFail = workbook.Worksheets.Add("Rèn luyện bổ sung");
                 wsFail.Cell("A1").Value = "DANH SÁCH HỌC VIÊN CHƯA ĐẠT CẦN RÈN LUYỆN BỔ SUNG";
                 wsFail.Range("A1:H1").Merge().Style.Font.SetBold().Font.SetFontSize(14).Font.SetFontColor(XLColor.FromHtml("#DC2626"));
@@ -638,7 +850,7 @@ namespace QL_HocVien.Services
                 wsFail.Columns().AdjustToContents();
 
                 workbook.SaveAs(filePath);
-                return (true, $"Xuất toàn bộ dữ liệu thành công ra file Excel ({cadets.Count} học viên, {subjects.Count} môn, {records.Count} lượt kiểm tra trên 5 sheets).");
+                return (true, $"Xuất toàn bộ dữ liệu thành công ra file Excel ({classes.Count} lớp học, {cadets.Count} học viên, {subjects.Count} môn, {records.Count} lượt kiểm tra trên 6 sheets).");
             }
             catch (Exception ex)
             {
@@ -646,29 +858,32 @@ namespace QL_HocVien.Services
             }
         }
 
-        public async Task<(bool Success, string Message, int CadetsCount, int SubjectsCount, int ExamsCount)> ImportAllDataFromExcelAsync(string filePath)
+        public async Task<(bool Success, string Message, int ClassesCount, int CadetsCount, int SubjectsCount, int ExamsCount)> ImportAllDataFromExcelAsync(string filePath)
         {
             try
             {
                 if (!File.Exists(filePath))
-                    return (false, "Tệp không tồn tại.", 0, 0, 0);
+                    return (false, "Tệp không tồn tại.", 0, 0, 0, 0);
 
-                // 1. Nhập môn học trước
+                // 1. Nhập lớp học trước
+                var classResult = await ImportClassesFromExcelAsync(filePath);
+                // 2. Nhập môn học
                 var subResult = await ImportSubjectsFromExcelAsync(filePath);
-                // 2. Nhập học viên
+                // 3. Nhập học viên
                 var cadetResult = await ImportCadetsFromExcelAsync(filePath);
-                // 3. Nhập kết quả kiểm tra
+                // 4. Nhập kết quả kiểm tra
                 var examResult = await ImportExamRecordsFromExcelAsync(filePath);
 
+                int clCount = classResult.Classes.Count;
                 int cCount = cadetResult.Cadets.Count;
                 int sCount = subResult.Subjects.Count;
                 int eCount = examResult.Records.Count;
 
-                return (true, $"Khôi phục/Nhập toàn bộ thành công: {cCount} học viên, {sCount} môn học, {eCount} lượt kiểm tra thể lực.", cCount, sCount, eCount);
+                return (true, $"Khôi phục/Nhập toàn bộ thành công: {clCount} lớp học, {cCount} học viên, {sCount} môn học, {eCount} lượt kiểm tra thể lực.", clCount, cCount, sCount, eCount);
             }
             catch (Exception ex)
             {
-                return (false, $"Lỗi nhập toàn bộ dữ liệu: {ex.Message}", 0, 0, 0);
+                return (false, $"Lỗi nhập toàn bộ dữ liệu: {ex.Message}", 0, 0, 0, 0);
             }
         }
         #endregion

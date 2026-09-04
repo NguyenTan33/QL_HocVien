@@ -1,0 +1,374 @@
+using System;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Windows;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using QL_HocVien.Models;
+using QL_HocVien.Services;
+
+namespace QL_HocVien.ViewModels
+{
+    public partial class ClassManagementViewModel : ViewModelBase
+    {
+        private readonly IClassService _classService;
+        private readonly IExcelService _excelService;
+        private readonly IFileDialogService _fileDialogService;
+
+        public ObservableCollection<MilitaryClass> Classes { get; } = new();
+
+        public ObservableCollection<string> Units { get; } = new()
+        {
+            "Tất cả", "Đại đội 1", "Đại đội 2", "Đại đội 3", "Đại đội 4", "Tiểu đoàn 1"
+        };
+
+        public ObservableCollection<string> Majors { get; } = new()
+        {
+            "Tất cả", "Chỉ huy Tham mưu", "Hậu cần Quân sự", "Kỹ thuật Quân sự", "Trinh sát đặc nhiệm", "Thông tin liên lạc"
+        };
+
+        // Tìm kiếm và bộ lọc
+        [ObservableProperty]
+        private string _searchKeyword = string.Empty;
+
+        [ObservableProperty]
+        private string _selectedUnit = "Tất cả";
+
+        [ObservableProperty]
+        private string _selectedMajor = "Tất cả";
+
+        [ObservableProperty]
+        private MilitaryClass? _selectedClass;
+
+        // Form Modal Thêm / Sửa
+        [ObservableProperty]
+        private bool _isFormVisible;
+
+        [ObservableProperty]
+        private bool _isEditing;
+
+        [ObservableProperty]
+        private string _formClassCode = string.Empty;
+
+        [ObservableProperty]
+        private string _formClassName = string.Empty;
+
+        [ObservableProperty]
+        private string _formUnit = "Đại đội 1";
+
+        [ObservableProperty]
+        private string _formMajor = "Chỉ huy Tham mưu";
+
+        [ObservableProperty]
+        private string _formOfficerInCharge = string.Empty;
+
+        [ObservableProperty]
+        private string _formAcademicYear = "2023 - 2027";
+
+        [ObservableProperty]
+        private string _formDescription = string.Empty;
+
+        [ObservableProperty]
+        private string _formErrorMessage = string.Empty;
+
+        // Modal Danh sách học viên thuộc lớp
+        [ObservableProperty]
+        private bool _isCadetListVisible;
+
+        [ObservableProperty]
+        private MilitaryClass? _viewingClass;
+
+        public ObservableCollection<Cadet> ClassCadets { get; } = new();
+
+        public ClassManagementViewModel(
+            IClassService classService,
+            IExcelService excelService,
+            IFileDialogService fileDialogService)
+        {
+            _classService = classService;
+            _excelService = excelService;
+            _fileDialogService = fileDialogService;
+            Title = "Quản Lý Lớp Học Quân Đội";
+
+            _ = LoadClassesAsync();
+        }
+
+        [RelayCommand]
+        public async Task LoadClassesAsync()
+        {
+            IsBusy = true;
+            try
+            {
+                var list = await _classService.SearchClassesAsync(SearchKeyword, SelectedUnit, SelectedMajor);
+                Classes.Clear();
+                foreach (var c in list)
+                {
+                    Classes.Add(c);
+                }
+                StatusMessage = $"Đang hiển thị {Classes.Count} lớp học.";
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Lỗi tải dữ liệu lớp học: {ex.Message}";
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        [RelayCommand]
+        private void OpenAddForm()
+        {
+            IsEditing = false;
+            FormClassCode = string.Empty;
+            FormClassName = string.Empty;
+            FormUnit = "Đại đội 1";
+            FormMajor = "Chỉ huy Tham mưu";
+            FormOfficerInCharge = string.Empty;
+            FormAcademicYear = "2023 - 2027";
+            FormDescription = string.Empty;
+            FormErrorMessage = string.Empty;
+            IsFormVisible = true;
+        }
+
+        [RelayCommand]
+        private void OpenEditForm(MilitaryClass? targetClass = null)
+        {
+            var c = targetClass ?? SelectedClass;
+            if (c == null)
+            {
+                StatusMessage = "Vui lòng chọn lớp học cần chỉnh sửa.";
+                return;
+            }
+
+            SelectedClass = c;
+            IsEditing = true;
+            FormClassCode = c.ClassCode;
+            FormClassName = c.ClassName;
+            FormUnit = c.Unit;
+            FormMajor = c.Major;
+            FormOfficerInCharge = c.OfficerInCharge;
+            FormAcademicYear = c.AcademicYear;
+            FormDescription = c.Description;
+            FormErrorMessage = string.Empty;
+            IsFormVisible = true;
+        }
+
+        [RelayCommand]
+        private void CloseForm()
+        {
+            IsFormVisible = false;
+        }
+
+        [RelayCommand]
+        private async Task SaveFormAsync()
+        {
+            FormErrorMessage = string.Empty;
+
+            if (string.IsNullOrWhiteSpace(FormClassCode))
+            {
+                FormErrorMessage = "Vui lòng nhập Mã lớp học.";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(FormClassName))
+            {
+                FormErrorMessage = "Vui lòng nhập Tên lớp học.";
+                return;
+            }
+
+            IsBusy = true;
+            try
+            {
+                if (IsEditing && SelectedClass != null)
+                {
+                    SelectedClass.ClassCode = FormClassCode.Trim().ToUpper();
+                    SelectedClass.ClassName = FormClassName.Trim();
+                    SelectedClass.Unit = FormUnit;
+                    SelectedClass.Major = FormMajor;
+                    SelectedClass.OfficerInCharge = FormOfficerInCharge.Trim();
+                    SelectedClass.AcademicYear = FormAcademicYear.Trim();
+                    SelectedClass.Description = FormDescription.Trim();
+
+                    var result = await _classService.UpdateClassAsync(SelectedClass);
+                    if (result.Success)
+                    {
+                        IsFormVisible = false;
+                        await LoadClassesAsync();
+                        StatusMessage = result.Message;
+                    }
+                    else
+                    {
+                        FormErrorMessage = result.Message;
+                    }
+                }
+                else
+                {
+                    var newClass = new MilitaryClass
+                    {
+                        ClassCode = FormClassCode.Trim().ToUpper(),
+                        ClassName = FormClassName.Trim(),
+                        Unit = FormUnit,
+                        Major = FormMajor,
+                        OfficerInCharge = FormOfficerInCharge.Trim(),
+                        AcademicYear = FormAcademicYear.Trim(),
+                        Description = FormDescription.Trim()
+                    };
+
+                    var result = await _classService.AddClassAsync(newClass);
+                    if (result.Success)
+                    {
+                        IsFormVisible = false;
+                        await LoadClassesAsync();
+                        StatusMessage = result.Message;
+                    }
+                    else
+                    {
+                        FormErrorMessage = result.Message;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                FormErrorMessage = $"Lỗi: {ex.Message}";
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        [RelayCommand]
+        private async Task DeleteClassAsync(MilitaryClass? targetClass = null)
+        {
+            var c = targetClass ?? SelectedClass;
+            if (c == null)
+            {
+                StatusMessage = "Vui lòng chọn lớp học cần xóa.";
+                return;
+            }
+
+            var confirm = MessageBox.Show(
+                $"Bạn có chắc chắn muốn xóa lớp học '{c.ClassName}' (Mã: {c.ClassCode})?\n" +
+                $"Quân số hiện tại: {c.Cadets.Count} học viên.\n" +
+                "Các học viên sẽ không bị xóa mà được chuyển trạng thái lớp tự do.",
+                "Xác nhận xóa lớp học",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (confirm != MessageBoxResult.Yes)
+                return;
+
+            IsBusy = true;
+            try
+            {
+                var result = await _classService.DeleteClassAsync(c.Id);
+                StatusMessage = result.Message;
+                await LoadClassesAsync();
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Lỗi khi xóa lớp: {ex.Message}";
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        [RelayCommand]
+        private async Task ViewClassCadetsAsync(MilitaryClass? targetClass = null)
+        {
+            var c = targetClass ?? SelectedClass;
+            if (c == null)
+            {
+                StatusMessage = "Vui lòng chọn lớp học để xem quân số.";
+                return;
+            }
+
+            IsBusy = true;
+            try
+            {
+                var detailed = await _classService.GetClassWithCadetsAsync(c.Id);
+                ViewingClass = detailed ?? c;
+                ClassCadets.Clear();
+                if (detailed?.Cadets != null)
+                {
+                    foreach (var cadet in detailed.Cadets)
+                    {
+                        ClassCadets.Add(cadet);
+                    }
+                }
+                IsCadetListVisible = true;
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Lỗi tải học viên của lớp: {ex.Message}";
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        [RelayCommand]
+        private void CloseCadetList()
+        {
+            IsCadetListVisible = false;
+            ViewingClass = null;
+            ClassCadets.Clear();
+        }
+
+        [RelayCommand]
+        private async Task ExportExcelAsync()
+        {
+            var fileName = $"DanhSach_LopHoc_{DateTime.Today:yyyyMMdd}.xlsx";
+            var filePath = _fileDialogService.ShowSaveFileDialog(fileName, "Excel Files (*.xlsx)|*.xlsx", "Xuất danh sách lớp học ra Excel");
+            if (string.IsNullOrWhiteSpace(filePath)) return;
+
+            IsBusy = true;
+            try
+            {
+                var list = await _classService.GetAllClassesAsync();
+                var result = await _excelService.ExportClassesToExcelAsync(list, filePath);
+                StatusMessage = result.Message;
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Lỗi xuất Excel: {ex.Message}";
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        [RelayCommand]
+        private async Task ImportExcelAsync()
+        {
+            var filePath = _fileDialogService.ShowOpenFileDialog("Excel Files (*.xlsx)|*.xlsx|All Files (*.*)|*.*", "Chọn tệp Excel danh sách lớp học");
+            if (string.IsNullOrWhiteSpace(filePath)) return;
+
+            IsBusy = true;
+            try
+            {
+                var result = await _excelService.ImportClassesFromExcelAsync(filePath);
+                StatusMessage = result.Message;
+                if (result.Success)
+                {
+                    await LoadClassesAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Lỗi nhập Excel: {ex.Message}";
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+    }
+}

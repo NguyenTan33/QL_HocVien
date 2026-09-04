@@ -150,9 +150,53 @@ namespace QL_HocVien.Data
                 context.SaveChanges();
             }
 
-            // 3. Seed học viên mẫu
+            // 3. Seed danh mục lớp học quân đội mẫu
+            if (!context.MilitaryClasses.Any())
+            {
+                var classes = new List<MilitaryClass>
+                {
+                    new MilitaryClass
+                    {
+                        ClassCode = "K26A",
+                        ClassName = "K26A - Chỉ huy Tham mưu",
+                        Unit = "Đại đội 1",
+                        Major = "Chỉ huy Tham mưu Lục quân",
+                        OfficerInCharge = "Thiếu tá Nguyễn Văn Bình",
+                        AcademicYear = "2023 - 2027",
+                        Description = "Đào tạo sĩ quan chỉ huy tham mưu cấp phân đội"
+                    },
+                    new MilitaryClass
+                    {
+                        ClassCode = "K26B",
+                        ClassName = "K26B - Hậu cần Quân sự",
+                        Unit = "Đại đội 2",
+                        Major = "Hậu cần Quân sự",
+                        OfficerInCharge = "Đại úy Trần Văn Quân",
+                        AcademicYear = "2023 - 2027",
+                        Description = "Đào tạo chuyên môn đảm bảo hậu cần, quân nhu, xăng dầu"
+                    },
+                    new MilitaryClass
+                    {
+                        ClassCode = "K26C",
+                        ClassName = "K26C - Kỹ thuật Quân sự",
+                        Unit = "Đại đội 3",
+                        Major = "Kỹ thuật Vũ khí - Khí tài",
+                        OfficerInCharge = "Thiếu tá Lê Hồng Sơn",
+                        AcademicYear = "2023 - 2027",
+                        Description = "Đào tạo kỹ sư chỉ huy kỹ thuật khai thác bảo đảm vũ khí"
+                    }
+                };
+
+                context.MilitaryClasses.AddRange(classes);
+                context.SaveChanges();
+            }
+
+            // 4. Seed học viên mẫu
             if (!context.Cadets.Any())
             {
+                var classK26A = context.MilitaryClasses.FirstOrDefault(c => c.ClassCode == "K26A");
+                var classK26B = context.MilitaryClasses.FirstOrDefault(c => c.ClassCode == "K26B");
+
                 var cadets = new List<Cadet>
                 {
                     new Cadet
@@ -162,7 +206,8 @@ namespace QL_HocVien.Data
                         Rank = "Trung sĩ",
                         Position = "Lớp trưởng",
                         Unit = "Đại đội 1",
-                        ClassName = "K26A - Chỉ huy Tham mưu",
+                        ClassId = classK26A?.Id,
+                        ClassName = classK26A?.ClassName ?? "K26A - Chỉ huy Tham mưu",
                         PhoneNumber = "0971000001",
                         Email = "an.nv@hocvien.edu.vn",
                         DateOfBirth = new DateTime(2003, 5, 15),
@@ -176,7 +221,8 @@ namespace QL_HocVien.Data
                         Rank = "Hạ sĩ",
                         Position = "Lớp phó",
                         Unit = "Đại đội 1",
-                        ClassName = "K26A - Chỉ huy Tham mưu",
+                        ClassId = classK26A?.Id,
+                        ClassName = classK26A?.ClassName ?? "K26A - Chỉ huy Tham mưu",
                         PhoneNumber = "0971000002",
                         Email = "bich.lt@hocvien.edu.vn",
                         DateOfBirth = new DateTime(2004, 8, 20),
@@ -190,7 +236,8 @@ namespace QL_HocVien.Data
                         Rank = "Binh nhất",
                         Position = "Chiến sĩ",
                         Unit = "Đại đội 2",
-                        ClassName = "K26B - Hậu cần Quân sự",
+                        ClassId = classK26B?.Id,
+                        ClassName = classK26B?.ClassName ?? "K26B - Hậu cần Quân sự",
                         PhoneNumber = "0971000003",
                         Email = "dung.ph@hocvien.edu.vn",
                         DateOfBirth = new DateTime(2004, 1, 10),
@@ -204,7 +251,8 @@ namespace QL_HocVien.Data
                         Rank = "Binh nhì",
                         Position = "Chiến sĩ",
                         Unit = "Đại đội 2",
-                        ClassName = "K26B - Hậu cần Quân sự",
+                        ClassId = classK26B?.Id,
+                        ClassName = classK26B?.ClassName ?? "K26B - Hậu cần Quân sự",
                         PhoneNumber = "0971000004",
                         Email = "quang.tm@hocvien.edu.vn",
                         DateOfBirth = new DateTime(2005, 11, 28),

@@ -18,8 +18,12 @@ namespace QL_HocVien.Services
         Task<(bool Success, string Message)> ExportExamRecordsToExcelAsync(IEnumerable<PhysicalExamRecord> records, string filePath);
         Task<(bool Success, string Message, List<PhysicalExamRecord> Records)> ImportExamRecordsFromExcelAsync(string filePath);
 
-        // 4. Toàn bộ hệ thống (Multi-sheet Full Backup & Restore)
+        // 4. Lớp học
+        Task<(bool Success, string Message)> ExportClassesToExcelAsync(IEnumerable<MilitaryClass> classes, string filePath);
+        Task<(bool Success, string Message, List<MilitaryClass> Classes)> ImportClassesFromExcelAsync(string filePath);
+
+        // 5. Toàn bộ hệ thống (Multi-sheet Full Backup & Restore)
         Task<(bool Success, string Message)> ExportAllDataToExcelAsync(string filePath);
-        Task<(bool Success, string Message, int CadetsCount, int SubjectsCount, int ExamsCount)> ImportAllDataFromExcelAsync(string filePath);
+        Task<(bool Success, string Message, int ClassesCount, int CadetsCount, int SubjectsCount, int ExamsCount)> ImportAllDataFromExcelAsync(string filePath);
     }
 }

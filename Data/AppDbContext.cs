@@ -10,6 +10,7 @@ namespace QL_HocVien.Data
         }
 
         public DbSet<User> Users => Set<User>();
+        public DbSet<MilitaryClass> MilitaryClasses => Set<MilitaryClass>();
         public DbSet<Cadet> Cadets => Set<Cadet>();
         public DbSet<Subject> Subjects => Set<Subject>();
         public DbSet<PhysicalExamRecord> PhysicalExamRecords => Set<PhysicalExamRecord>();
@@ -30,6 +31,15 @@ namespace QL_HocVien.Data
                 entity.Property(e => e.Email).IsRequired().HasMaxLength(100);
             });
 
+            // Cấu hình MilitaryClass
+            modelBuilder.Entity<MilitaryClass>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.ClassCode).IsUnique();
+                entity.Property(e => e.ClassCode).IsRequired().HasMaxLength(30);
+                entity.Property(e => e.ClassName).IsRequired().HasMaxLength(100);
+            });
+
             // Cấu hình Cadet
             modelBuilder.Entity<Cadet>(entity =>
             {
@@ -41,6 +51,11 @@ namespace QL_HocVien.Data
                 entity.HasOne(e => e.User)
                       .WithMany()
                       .HasForeignKey(e => e.UserId)
+                      .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasOne(e => e.MilitaryClass)
+                      .WithMany(m => m.Cadets)
+                      .HasForeignKey(e => e.ClassId)
                       .OnDelete(DeleteBehavior.SetNull);
             });
 

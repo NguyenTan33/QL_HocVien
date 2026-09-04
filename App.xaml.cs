@@ -67,6 +67,7 @@ namespace QL_HocVien
             // Đăng ký Repositories (SOLID - DIP, ISP)
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IClassRepository, ClassRepository>();
             services.AddScoped<ICadetRepository, CadetRepository>();
             services.AddScoped<ISubjectRepository, SubjectRepository>();
             services.AddScoped<IPhysicalExamRepository, PhysicalExamRepository>();
@@ -74,6 +75,7 @@ namespace QL_HocVien
             // Đăng ký Services (SOLID - SRP, OCP)
             services.AddSingleton<IEmailService, EmailService>();
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IClassService, ClassService>();
             services.AddScoped<ICadetService, CadetService>();
             services.AddScoped<ISubjectService, SubjectService>();
             services.AddScoped<IEvaluationService, EvaluationService>();
@@ -87,6 +89,7 @@ namespace QL_HocVien
             services.AddTransient<ForgotPasswordViewModel>();
             services.AddTransient<MainViewModel>();
             services.AddTransient<DashboardViewModel>();
+            services.AddTransient<ClassManagementViewModel>();
             services.AddTransient<CadetManagementViewModel>();
             services.AddTransient<AddCadetViewModel>();
             services.AddTransient<SubjectManagementViewModel>();

@@ -11,6 +11,7 @@ namespace QL_HocVien.ViewModels
     public partial class CadetManagementViewModel : ViewModelBase
     {
         private readonly ICadetService _cadetService;
+        private readonly IClassService _classService;
         private readonly IAuthService _authService;
         private readonly IExcelService _excelService;
         private readonly IFileDialogService _fileDialogService;
@@ -22,8 +23,9 @@ namespace QL_HocVien.ViewModels
         };
         public ObservableCollection<string> UnitList { get; } = new()
         {
-            "Tất cả", "Đại đội 1", "Đại đội 2", "Đại đội 3", "Trung đội 1", "Trung đội 2", "Trung đội 3"
+            "Tất cả", "Đại đội 1", "Đại đội 2", "Đại đội 3", "Đại đội 4", "Trung đội 1", "Trung đội 2", "Trung đội 3"
         };
+        public ObservableCollection<string> ClassList { get; } = new() { "Tất cả" };
 
         [ObservableProperty]
         private string _searchKeyword = string.Empty;
@@ -33,6 +35,9 @@ namespace QL_HocVien.ViewModels
 
         [ObservableProperty]
         private string _selectedUnit = "Tất cả";
+
+        [ObservableProperty]
+        private string _selectedClass = "Tất cả";
 
         [ObservableProperty]
         private Cadet? _selectedCadet;
@@ -73,17 +78,43 @@ namespace QL_HocVien.ViewModels
 
         public CadetManagementViewModel(
             ICadetService cadetService,
+            IClassService classService,
             IAuthService authService,
             IExcelService excelService,
             IFileDialogService fileDialogService)
         {
             _cadetService = cadetService;
+            _classService = classService;
             _authService = authService;
             _excelService = excelService;
             _fileDialogService = fileDialogService;
             Title = "Quản Lý Danh Sách Học Viên";
 
-            _ = LoadCadetsAsync();
+            _ = InitializeAsync();
+        }
+
+        private async Task InitializeAsync()
+        {
+            await LoadClassListAsync();
+            await LoadCadetsAsync();
+        }
+
+        public async Task LoadClassListAsync()
+        {
+            try
+            {
+                var classes = await _classService.GetAllClassesAsync();
+                ClassList.Clear();
+                ClassList.Add("Tất cả");
+                foreach (var c in classes)
+                {
+                    ClassList.Add(c.ClassName);
+                }
+            }
+            catch
+            {
+                // Fallback
+            }
         }
 
         [RelayCommand]
@@ -92,7 +123,8 @@ namespace QL_HocVien.ViewModels
             IsBusy = true;
             try
             {
-                var list = await _cadetService.SearchCadetsAsync(SearchKeyword, SelectedRank, SelectedUnit, null);
+                var filterClass = SelectedClass != "Tất cả" ? SelectedClass : null;
+                var list = await _cadetService.SearchCadetsAsync(SearchKeyword, SelectedRank, SelectedUnit, filterClass);
                 Cadets.Clear();
                 foreach (var cadet in list)
                 {

@@ -11,6 +11,24 @@ namespace QL_HocVien.ViewModels
     public partial class AddCadetViewModel : ViewModelBase
     {
         private readonly ICadetService _cadetService;
+        private readonly IClassService _classService;
+
+        public ObservableCollection<MilitaryClass> AvailableClasses { get; } = new();
+
+        [ObservableProperty]
+        private MilitaryClass? _selectedMilitaryClass;
+
+        partial void OnSelectedMilitaryClassChanged(MilitaryClass? value)
+        {
+            if (value != null)
+            {
+                ClassName = value.ClassName;
+                if (!string.IsNullOrWhiteSpace(value.Unit) && UnitList.Contains(value.Unit))
+                {
+                    SelectedUnit = value.Unit;
+                }
+            }
+        }
 
         [ObservableProperty]
         private string _cadetCode = string.Empty;
@@ -55,7 +73,7 @@ namespace QL_HocVien.ViewModels
 
         public ObservableCollection<string> UnitList { get; } = new()
         {
-            "Đại đội 1", "Đại đội 2", "Đại đội 3", "Trung đội 1", "Trung đội 2", "Trung đội 3"
+            "Đại đội 1", "Đại đội 2", "Đại đội 3", "Đại đội 4", "Trung đội 1", "Trung đội 2", "Trung đội 3"
         };
 
         public ObservableCollection<string> PositionList { get; } = new()
@@ -67,12 +85,40 @@ namespace QL_HocVien.ViewModels
 
         public event Action? OnCadetSaved;
 
-        public AddCadetViewModel(ICadetService cadetService)
+        public AddCadetViewModel(ICadetService cadetService, IClassService classService)
         {
             _cadetService = cadetService;
+            _classService = classService;
             Title = "Thêm Mới Học Viên";
 
-            _ = GenerateSuggestedCodeAsync();
+            _ = InitializeAsync();
+        }
+
+        private async Task InitializeAsync()
+        {
+            await LoadAvailableClassesAsync();
+            await GenerateSuggestedCodeAsync();
+        }
+
+        public async Task LoadAvailableClassesAsync()
+        {
+            try
+            {
+                var classes = await _classService.GetAllClassesAsync();
+                AvailableClasses.Clear();
+                foreach (var c in classes)
+                {
+                    AvailableClasses.Add(c);
+                }
+                if (AvailableClasses.Count > 0)
+                {
+                    SelectedMilitaryClass = AvailableClasses[0];
+                }
+            }
+            catch
+            {
+                // Fallback nếu có lỗi
+            }
         }
 
         [RelayCommand]
@@ -149,7 +195,8 @@ namespace QL_HocVien.ViewModels
                 CadetCode = CadetCode.Trim(),
                 FullName = FullName.Trim(),
                 PhoneNumber = PhoneNumber.Trim(),
-                ClassName = ClassName.Trim(),
+                ClassId = SelectedMilitaryClass?.Id,
+                ClassName = !string.IsNullOrWhiteSpace(ClassName) ? ClassName.Trim() : (SelectedMilitaryClass?.ClassName ?? string.Empty),
                 Rank = SelectedRank,
                 Position = SelectedPosition,
                 Unit = SelectedUnit,

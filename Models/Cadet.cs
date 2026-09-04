@@ -21,6 +21,10 @@ namespace QL_HocVien.Models
         // Liên kết tài khoản đăng nhập (nếu có)
         public int? UserId { get; set; }
         public User? User { get; set; }
+
+        // Liên kết lớp học (nếu có)
+        public int? ClassId { get; set; }
+        public MilitaryClass? MilitaryClass { get; set; }
         
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public ICollection<PhysicalExamRecord> ExamRecords { get; set; } = new List<PhysicalExamRecord>();

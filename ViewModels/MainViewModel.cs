@@ -67,6 +67,13 @@ namespace QL_HocVien.ViewModels
         }
 
         [RelayCommand]
+        public void NavigateToClassManagement()
+        {
+            ActiveMenu = "ClassManagement";
+            CurrentView = _serviceProvider.GetRequiredService<ClassManagementViewModel>();
+        }
+
+        [RelayCommand]
         public void NavigateToPhysicalExam()
         {
             ActiveMenu = "PhysicalExam";

@@ -44,11 +44,13 @@
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="2*"/>
-                        <ColumnDefinition Width="14"/>
+                        <ColumnDefinition Width="10"/>
                         <ColumnDefinition Width="1*"/>
-                        <ColumnDefinition Width="14"/>
+                        <ColumnDefinition Width="10"/>
                         <ColumnDefinition Width="1*"/>
-                        <ColumnDefinition Width="14"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="1.2*"/>
+                        <ColumnDefinition Width="10"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
@@ -73,8 +75,15 @@
                                   Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
                     </StackPanel>
 
+                    <!-- Lọc Lớp học -->
+                    <StackPanel Grid.Column="6">
+                        <TextBlock Text="Lọc Lớp học:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                        <ComboBox ItemsSource="{Binding ClassList}" SelectedItem="{Binding SelectedClass}" 
+                                  Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
+                    </StackPanel>
+
                     <!-- Nút Tải lại -->
-                    <Button Grid.Column="6" Content="🔄 Tải lại" VerticalAlignment="Bottom" Height="36" 
+                    <Button Grid.Column="8" Content="🔄 Tải lại" VerticalAlignment="Bottom" Height="36" 
                             Style="{StaticResource SecondaryButtonStyle}" Command="{Binding LoadCadetsCommand}"/>
                 </Grid>
             </Border>
