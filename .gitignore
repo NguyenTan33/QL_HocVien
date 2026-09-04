@@ -1,4 +1,4 @@
-﻿## Build results
+## Build results
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
@@ -12,6 +12,7 @@ bld/
 [Oo]bj/
 [Ll]og/
 [Ll]ogs/
+Release_App/
 
 ## Visual Studio
 .vs/
