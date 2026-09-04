@@ -271,197 +271,223 @@
                 </Border>
 
                 <!-- CỘT BÊN TRÁI 2: CUỐN LỊCH THÁNG KIỂU ĐIỆN THOẠI (PHONE-STYLE MONTHLY CALENDAR) -->
-                <Border Grid.Column="0" Style="{StaticResource CardBorderStyle}" Padding="16" Margin="0,0,14,0"
+                <Border Grid.Column="0" Style="{StaticResource CardBorderStyle}" Padding="14,12" Margin="0,0,14,0"
                         Visibility="{Binding IsCalendarViewVisible, Converter={StaticResource BoolToVis}}">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <!-- Header điều hướng Tháng / Năm -->
-                            <RowDefinition Height="Auto"/>
-                            <!-- Tiêu đề 7 thứ trong tuần -->
-                            <RowDefinition Height="Auto"/>
-                            <!-- Lưới 42 ô ngày (6 tuần x 7 ngày) -->
-                            <RowDefinition Height="*"/>
-                            <!-- Chú thích màu sắc sự kiện -->
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <!-- Header điều hướng Tháng / Năm -->
+                                <RowDefinition Height="Auto"/>
+                                <!-- Tiêu đề 7 thứ trong tuần -->
+                                <RowDefinition Height="Auto"/>
+                                <!-- Lưới 42 ô ngày (6 tuần x 7 ngày) -->
+                                <RowDefinition Height="Auto"/>
+                                <!-- Chú thích màu sắc sự kiện -->
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
 
-                        <!-- HÀNG 0: HEADER ĐIỀU HƯỚNG THÁNG / NĂM -->
-                        <Border Grid.Row="0" Background="#F1F5F9" CornerRadius="8" Padding="12,8" Margin="0,0,0,12">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
+                            <!-- HÀNG 0: HEADER ĐIỀU HƯỚNG THÁNG / NĂM -->
+                            <Border Grid.Row="0" Background="#F1F5F9" CornerRadius="8" Padding="12,8" Margin="0,0,0,10">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
 
-                                <StackPanel Grid.Column="0" Orientation="Horizontal">
-                                    <Button Content="◀ Tháng Trước" Style="{StaticResource SecondaryButtonStyle}" 
-                                            Padding="10,4" Margin="0,0,6,0"
-                                            Command="{Binding PreviousMonthCommand}"/>
-                                    <Button Content="Hôm Nay" Style="{StaticResource SecondaryButtonStyle}" 
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                        <Button Content="◀ Tháng Trước" Style="{StaticResource SecondaryButtonStyle}" 
+                                                Padding="10,4" Margin="0,0,6,0"
+                                                Command="{Binding PreviousMonthCommand}"/>
+                                        <Button Content="Hôm Nay" Style="{StaticResource SecondaryButtonStyle}" 
+                                                Padding="10,4"
+                                                Command="{Binding TodayCommand}"/>
+                                    </StackPanel>
+
+                                    <TextBlock Grid.Column="1" Text="{Binding MonthYearTitle}" 
+                                               FontSize="16" FontWeight="ExtraBold" Foreground="#0F766E" 
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+                                    <Button Grid.Column="2" Content="Tháng Sau ▶" Style="{StaticResource SecondaryButtonStyle}" 
                                             Padding="10,4"
-                                            Command="{Binding TodayCommand}"/>
-                                </StackPanel>
-
-                                <TextBlock Grid.Column="1" Text="{Binding MonthYearTitle}" 
-                                           FontSize="16" FontWeight="ExtraBold" Foreground="#0F766E" 
-                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
-
-                                <Button Grid.Column="2" Content="Tháng Sau ▶" Style="{StaticResource SecondaryButtonStyle}" 
-                                        Padding="10,4"
-                                        Command="{Binding NextMonthCommand}"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- HÀNG 1: TIÊU ĐỀ 7 THỨ TRONG TUẦN -->
-                        <UniformGrid Grid.Row="1" Columns="7" Margin="0,0,0,6">
-                            <Border Background="#0F766E" CornerRadius="4" Margin="2" Padding="0,6">
-                                <TextBlock Text="THỨ HAI" FontSize="11" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                                            Command="{Binding NextMonthCommand}"/>
+                                </Grid>
                             </Border>
-                            <Border Background="#0F766E" CornerRadius="4" Margin="2" Padding="0,6">
-                                <TextBlock Text="THỨ BA" FontSize="11" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
-                            </Border>
-                            <Border Background="#0F766E" CornerRadius="4" Margin="2" Padding="0,6">
-                                <TextBlock Text="THỨ TƯ" FontSize="11" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
-                            </Border>
-                            <Border Background="#0F766E" CornerRadius="4" Margin="2" Padding="0,6">
-                                <TextBlock Text="THỨ NĂM" FontSize="11" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
-                            </Border>
-                            <Border Background="#0F766E" CornerRadius="4" Margin="2" Padding="0,6">
-                                <TextBlock Text="THỨ SÁU" FontSize="11" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
-                            </Border>
-                            <Border Background="#0D5E56" CornerRadius="4" Margin="2" Padding="0,6">
-                                <TextBlock Text="THỨ BẢY" FontSize="11" FontWeight="Bold" Foreground="#FEF08A" HorizontalAlignment="Center"/>
-                            </Border>
-                            <Border Background="#B91C1C" CornerRadius="4" Margin="2" Padding="0,6">
-                                <TextBlock Text="CHỦ NHẬT" FontSize="11" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
-                            </Border>
-                        </UniformGrid>
 
-                        <!-- HÀNG 2: LƯỚI 42 Ô NGÀY TRÊN CUỐN LỊCH -->
-                        <ItemsControl Grid.Row="2" ItemsSource="{Binding CalendarDays}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <UniformGrid Rows="6" Columns="7"/>
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <!-- Từng ô ngày trên cuốn lịch -->
-                                    <Border Margin="2" CornerRadius="6" Cursor="Hand" ToolTip="{Binding FullTooltip}">
-                                        <Border.Style>
-                                            <Style TargetType="Border">
-                                                <Setter Property="Background" Value="#FFFFFF"/>
-                                                <Setter Property="BorderBrush" Value="#E2E8F0"/>
-                                                <Setter Property="BorderThickness" Value="1"/>
-                                                <Style.Triggers>
-                                                    <!-- Ngày không thuộc tháng này -->
-                                                    <DataTrigger Binding="{Binding IsCurrentMonth}" Value="False">
-                                                        <Setter Property="Background" Value="#F8FAFC"/>
-                                                        <Setter Property="Opacity" Value="0.4"/>
-                                                    </DataTrigger>
-                                                    <!-- Ngày được chọn -->
-                                                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                                                        <Setter Property="BorderBrush" Value="#0F766E"/>
-                                                        <Setter Property="BorderThickness" Value="2.5"/>
-                                                        <Setter Property="Background" Value="#F0FDFA"/>
-                                                    </DataTrigger>
-                                                    <!-- Ngày hôm nay -->
-                                                    <DataTrigger Binding="{Binding IsToday}" Value="True">
-                                                        <Setter Property="Background" Value="#FEF3C7"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Border.Style>
+                            <!-- HÀNG 1: TIÊU ĐỀ 7 THỨ TRONG TUẦN -->
+                            <UniformGrid Grid.Row="1" Columns="7" Margin="0,0,0,6">
+                                <Border Background="#0F766E" CornerRadius="4" Margin="2" Padding="0,6">
+                                    <TextBlock Text="THỨ HAI" FontSize="11" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                                </Border>
+                                <Border Background="#0F766E" CornerRadius="4" Margin="2" Padding="0,6">
+                                    <TextBlock Text="THỨ BA" FontSize="11" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                                </Border>
+                                <Border Background="#0F766E" CornerRadius="4" Margin="2" Padding="0,6">
+                                    <TextBlock Text="THỨ TƯ" FontSize="11" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                                </Border>
+                                <Border Background="#0F766E" CornerRadius="4" Margin="2" Padding="0,6">
+                                    <TextBlock Text="THỨ NĂM" FontSize="11" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                                </Border>
+                                <Border Background="#0F766E" CornerRadius="4" Margin="2" Padding="0,6">
+                                    <TextBlock Text="THỨ SÁU" FontSize="11" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                                </Border>
+                                <Border Background="#0D5E56" CornerRadius="4" Margin="2" Padding="0,6">
+                                    <TextBlock Text="THỨ BẢY" FontSize="11" FontWeight="Bold" Foreground="#FEF08A" HorizontalAlignment="Center"/>
+                                </Border>
+                                <Border Background="#B91C1C" CornerRadius="4" Margin="2" Padding="0,6">
+                                    <TextBlock Text="CHỦ NHẬT" FontSize="11" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                                </Border>
+                            </UniformGrid>
 
-                                        <Border.InputBindings>
-                                            <MouseBinding MouseAction="LeftClick" 
-                                                          Command="{Binding DataContext.SelectCalendarDayCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                                          CommandParameter="{Binding}"/>
-                                        </Border.InputBindings>
+                            <!-- HÀNG 2: LƯỚI 42 Ô NGÀY TRÊN CUỐN LỊCH -->
+                            <ItemsControl Grid.Row="2" ItemsSource="{Binding CalendarDays}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Rows="6" Columns="7"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <!-- Từng ô ngày trên cuốn lịch -->
+                                        <Border Margin="2.5" CornerRadius="6" Cursor="Hand" MinHeight="62" ToolTip="{Binding FullTooltip}">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="#FFFFFF"/>
+                                                    <Setter Property="BorderBrush" Value="#E2E8F0"/>
+                                                    <Setter Property="BorderThickness" Value="1"/>
+                                                    <Style.Triggers>
+                                                        <!-- Ngày không thuộc tháng này -->
+                                                        <DataTrigger Binding="{Binding IsCurrentMonth}" Value="False">
+                                                            <Setter Property="Background" Value="#F8FAFC"/>
+                                                            <Setter Property="Opacity" Value="0.4"/>
+                                                        </DataTrigger>
+                                                        <!-- Ngày được chọn -->
+                                                        <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                            <Setter Property="BorderBrush" Value="#0F766E"/>
+                                                            <Setter Property="BorderThickness" Value="2.5"/>
+                                                            <Setter Property="Background" Value="#F0FDFA"/>
+                                                        </DataTrigger>
+                                                        <!-- Ngày hôm nay -->
+                                                        <DataTrigger Binding="{Binding IsToday}" Value="True">
+                                                            <Setter Property="BorderBrush" Value="#F59E0B"/>
+                                                            <Setter Property="BorderThickness" Value="2"/>
+                                                            <Setter Property="Background" Value="#FFFBEB"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
 
-                                        <Grid Margin="4,3">
-                                            <Grid.RowDefinitions>
-                                                <RowDefinition Height="Auto"/>
-                                                <RowDefinition Height="*"/>
-                                            </Grid.RowDefinitions>
+                                            <Border.InputBindings>
+                                                <MouseBinding MouseAction="LeftClick" 
+                                                              Command="{Binding DataContext.SelectCalendarDayCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                              CommandParameter="{Binding}"/>
+                                            </Border.InputBindings>
 
-                                            <!-- Hàng số ngày & Huy hiệu Hôm nay -->
-                                            <DockPanel Grid.Row="0" LastChildFill="False">
-                                                <TextBlock Text="{Binding DayNumber}" DockPanel.Dock="Left"
-                                                           FontSize="13" FontWeight="Bold">
-                                                    <TextBlock.Style>
-                                                        <Style TargetType="TextBlock">
-                                                            <Setter Property="Foreground" Value="#0F172A"/>
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding IsCurrentMonth}" Value="False">
-                                                                    <Setter Property="Foreground" Value="#94A3B8"/>
-                                                                </DataTrigger>
-                                                                <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                                                                    <Setter Property="Foreground" Value="#0F766E"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </TextBlock.Style>
-                                                </TextBlock>
+                                            <Grid Margin="4,3">
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="*"/>
+                                                </Grid.RowDefinitions>
 
-                                                <Border DockPanel.Dock="Right" CornerRadius="3" Background="#D97706" Padding="4,1" Margin="2,0,0,0"
-                                                        Visibility="{Binding IsToday, Converter={StaticResource BoolToVis}}">
-                                                    <TextBlock Text="Nay" FontSize="9" FontWeight="Bold" Foreground="White"/>
-                                                </Border>
-                                            </DockPanel>
+                                                <!-- Hàng số ngày & Huy hiệu Hôm nay -->
+                                                <DockPanel Grid.Row="0" LastChildFill="False">
+                                                    <TextBlock Text="{Binding DayNumber}" DockPanel.Dock="Left"
+                                                               FontSize="13" FontWeight="Bold">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Foreground" Value="#0F172A"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsCurrentMonth}" Value="False">
+                                                                        <Setter Property="Foreground" Value="#94A3B8"/>
+                                                                    </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                                        <Setter Property="Foreground" Value="#0F766E"/>
+                                                                    </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding IsToday}" Value="True">
+                                                                        <Setter Property="Foreground" Value="#D97706"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
 
-                                            <!-- Hàng ĐÁNH DẤU SỰ KIỆN TRÊN CUỐN LỊCH -->
-                                            <StackPanel Grid.Row="1" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,2,0,0">
-                                                <!-- Chấm tròn màu chỉ thị (Indicator dots) -->
-                                                <WrapPanel HorizontalAlignment="Center" Margin="0,0,0,2">
-                                                    <Ellipse Width="7" Height="7" Fill="#DC2626" Margin="1"
-                                                             Visibility="{Binding HasExamEvent, Converter={StaticResource BoolToVis}}"
-                                                             ToolTip="Thi cử quân sự"/>
-                                                    <Ellipse Width="7" Height="7" Fill="#0F766E" Margin="1"
-                                                             Visibility="{Binding HasFitnessEvent, Converter={StaticResource BoolToVis}}"
-                                                             ToolTip="Kiểm tra thể lực"/>
-                                                    <Ellipse Width="7" Height="7" Fill="#16A34A" Margin="1"
-                                                             Visibility="{Binding HasPracticeEvent, Converter={StaticResource BoolToVis}}"
-                                                             ToolTip="Tập luyện / Rèn luyện"/>
-                                                    <Ellipse Width="7" Height="7" Fill="#2563EB" Margin="1"
-                                                             Visibility="{Binding HasSportsEvent, Converter={StaticResource BoolToVis}}"
-                                                             ToolTip="Hội thao / Sự kiện"/>
-                                                </WrapPanel>
+                                                    <Border DockPanel.Dock="Right" CornerRadius="3" Background="#D97706" Padding="4,1" Margin="2,0,0,0"
+                                                            Visibility="{Binding IsToday, Converter={StaticResource BoolToVis}}">
+                                                        <TextBlock Text="Nay" FontSize="9" FontWeight="Bold" Foreground="White"/>
+                                                    </Border>
+                                                </DockPanel>
 
-                                                <!-- Tên sự kiện vắn tắt -->
-                                                <Border CornerRadius="3" Padding="4,1" Margin="0,1,0,0"
-                                                        Background="#0F766E"
-                                                        Visibility="{Binding HasEvents, Converter={StaticResource BoolToVis}}">
-                                                    <TextBlock Text="{Binding EventSummaryText}" FontSize="9" FontWeight="SemiBold" Foreground="White"
-                                                               TextTrimming="CharacterEllipsis" MaxWidth="80" HorizontalAlignment="Center"/>
-                                                </Border>
-                                            </StackPanel>
-                                        </Grid>
+                                                <!-- Hàng ĐÁNH DẤU SỰ KIỆN TRÊN CUỐN LỊCH -->
+                                                <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,3,0,0">
+                                                    <!-- Chấm tròn màu chỉ thị (Indicator dots) -->
+                                                    <WrapPanel HorizontalAlignment="Center" Margin="0,0,0,2">
+                                                        <Ellipse Width="7" Height="7" Fill="#DC2626" Margin="1.5,0"
+                                                                 Visibility="{Binding HasExamEvent, Converter={StaticResource BoolToVis}}"
+                                                                 ToolTip="Thi cử quân sự"/>
+                                                        <Ellipse Width="7" Height="7" Fill="#0F766E" Margin="1.5,0"
+                                                                 Visibility="{Binding HasFitnessEvent, Converter={StaticResource BoolToVis}}"
+                                                                 ToolTip="Kiểm tra thể lực"/>
+                                                        <Ellipse Width="7" Height="7" Fill="#16A34A" Margin="1.5,0"
+                                                                 Visibility="{Binding HasPracticeEvent, Converter={StaticResource BoolToVis}}"
+                                                                 ToolTip="Tập luyện / Rèn luyện"/>
+                                                        <Ellipse Width="7" Height="7" Fill="#2563EB" Margin="1.5,0"
+                                                                 Visibility="{Binding HasSportsEvent, Converter={StaticResource BoolToVis}}"
+                                                                 ToolTip="Hội thao / Sự kiện"/>
+                                                    </WrapPanel>
+
+                                                    <!-- Tag danh mục sự kiện ngắn gọn, rõ ràng, không bị tràn chữ -->
+                                                    <Border CornerRadius="4" Padding="5,2"
+                                                            Background="{Binding PrimaryBadgeBackground}"
+                                                            BorderBrush="{Binding PrimaryBadgeBorder}"
+                                                            BorderThickness="1"
+                                                            Visibility="{Binding HasEvents, Converter={StaticResource BoolToVis}}">
+                                                        <TextBlock Text="{Binding CategoryBadgeText}" FontSize="10" FontWeight="Bold"
+                                                                   Foreground="{Binding PrimaryBadgeForeground}"
+                                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <!-- HÀNG 3: CHÚ THÍCH MÀU SẮC ĐÁNH DẤU SỰ KIỆN -->
+                            <Border Grid.Row="3" Background="#F8FAFC" CornerRadius="8" Padding="10,8" Margin="0,10,0,0" BorderBrush="#E2E8F0" BorderThickness="1">
+                                <WrapPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <TextBlock Text="Chú thích: " FontSize="11" FontWeight="Bold" Foreground="#334155" VerticalAlignment="Center" Margin="0,0,8,0"/>
+
+                                    <Border Background="#FEE2E2" CornerRadius="4" Padding="6,3" Margin="0,2,8,2">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Ellipse Width="8" Height="8" Fill="#DC2626" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="Thi cử quân sự" FontSize="11" FontWeight="SemiBold" Foreground="#991B1B" VerticalAlignment="Center"/>
+                                        </StackPanel>
                                     </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
 
-                        <!-- HÀNG 3: CHÚ THÍCH MÀU SẮC ĐÁNH DẤU SỰ KIỆN -->
-                        <Border Grid.Row="3" Background="#F8FAFC" CornerRadius="6" Padding="8,6" Margin="0,8,0,0">
-                            <WrapPanel HorizontalAlignment="Center">
-                                <TextBlock Text="Đánh dấu ngày có sự kiện: " FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,8,0"/>
+                                    <Border Background="#CCFBF1" CornerRadius="4" Padding="6,3" Margin="0,2,8,2">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Ellipse Width="8" Height="8" Fill="#0F766E" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="Kiểm tra thể lực" FontSize="11" FontWeight="SemiBold" Foreground="#115E59" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
 
-                                <Ellipse Width="8" Height="8" Fill="#DC2626" Margin="0,0,4,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="Thi cử quân sự" FontSize="11" Foreground="#1E293B" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                                    <Border Background="#DCFCE7" CornerRadius="4" Padding="6,3" Margin="0,2,8,2">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Ellipse Width="8" Height="8" Fill="#16A34A" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="Tập luyện / Rèn luyện" FontSize="11" FontWeight="SemiBold" Foreground="#166534" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
 
-                                <Ellipse Width="8" Height="8" Fill="#0F766E" Margin="0,0,4,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="Kiểm tra thể lực" FontSize="11" Foreground="#1E293B" Margin="0,0,12,0" VerticalAlignment="Center"/>
-
-                                <Ellipse Width="8" Height="8" Fill="#16A34A" Margin="0,0,4,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="Tập luyện / Rèn luyện" FontSize="11" Foreground="#1E293B" Margin="0,0,12,0" VerticalAlignment="Center"/>
-
-                                <Ellipse Width="8" Height="8" Fill="#2563EB" Margin="0,0,4,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="Hội thao / Sự kiện" FontSize="11" Foreground="#1E293B" VerticalAlignment="Center"/>
-                            </WrapPanel>
-                        </Border>
-                    </Grid>
+                                    <Border Background="#DBEAFE" CornerRadius="4" Padding="6,3" Margin="0,2,0,2">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Ellipse Width="8" Height="8" Fill="#2563EB" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="Hội thao / Sự kiện" FontSize="11" FontWeight="SemiBold" Foreground="#1E40AF" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+                                </WrapPanel>
+                            </Border>
+                        </Grid>
+                    </ScrollViewer>
                 </Border>
 
                 <!-- CỘT BÊN PHẢI: FORM BIÊN TẬP HOẶC CHI TIẾT NGÀY ĐƯỢC CHỌN -->

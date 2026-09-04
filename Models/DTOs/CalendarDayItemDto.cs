@@ -37,6 +37,67 @@ namespace QL_HocVien.Models.DTOs
             }
         }
 
+        /// <summary>
+        /// Badge hiển thị ngắn gọn, đẹp mắt, vừa vặn trên ô lịch mà không bao giờ bị cắt chữ
+        /// </summary>
+        public string CategoryBadgeText
+        {
+            get
+            {
+                if (!HasEvents) return string.Empty;
+                if (EventCount > 1) return $"● {EventCount} sự kiện";
+
+                var cat = Events[0].Category;
+                return cat switch
+                {
+                    "Thi cử quân sự" => "🎯 Thi cử",
+                    "Kiểm tra thể lực" => "⏱️ Thể lực",
+                    "Tập luyện / Rèn luyện" => "🏋️ Rèn luyện",
+                    "Hội thao / Sự kiện" => "🏆 Hội thao",
+                    _ => Events[0].Title.Length > 10 ? Events[0].Title[..9] + "…" : Events[0].Title
+                };
+            }
+        }
+
+        public string PrimaryBadgeBackground
+        {
+            get
+            {
+                if (EventCount > 1) return "#FEF3C7";  // Amber nhạt
+                if (HasExamEvent) return "#FEE2E2";    // Đỏ nhạt
+                if (HasFitnessEvent) return "#CCFBF1";  // Teal nhạt
+                if (HasPracticeEvent) return "#DCFCE7"; // Lục nhạt
+                if (HasSportsEvent) return "#DBEAFE";   // Lam nhạt
+                return "#F1F5F9";
+            }
+        }
+
+        public string PrimaryBadgeBorder
+        {
+            get
+            {
+                if (EventCount > 1) return "#FDE68A";
+                if (HasExamEvent) return "#FECACA";
+                if (HasFitnessEvent) return "#99F6E4";
+                if (HasPracticeEvent) return "#BBF7D0";
+                if (HasSportsEvent) return "#BFDBFE";
+                return "#CBD5E1";
+            }
+        }
+
+        public string PrimaryBadgeForeground
+        {
+            get
+            {
+                if (EventCount > 1) return "#B45309";  // Cam đậm
+                if (HasExamEvent) return "#DC2626";    // Đỏ
+                if (HasFitnessEvent) return "#0F766E";  // Teal đậm
+                if (HasPracticeEvent) return "#16A34A"; // Lục đậm
+                if (HasSportsEvent) return "#2563EB";   // Lam đậm
+                return "#334155";
+            }
+        }
+
         public string EventSummaryText
         {
             get
@@ -52,8 +113,8 @@ namespace QL_HocVien.Models.DTOs
             get
             {
                 if (!HasEvents) return $"{Date:dd/MM/yyyy}: Không có sự kiện";
-                var lines = Events.Select(e => $"• [{e.Category}] {e.Title} ({e.StartDate:dd/MM} - {e.EndDate:dd/MM}) - Đơn vị: {e.TargetUnit}");
-                return $"{Date:dd/MM/yyyy}:\n" + string.Join("\n", lines);
+                var lines = Events.Select(e => $"• [{e.Category}] {e.Title}\n  ⏱ Thời gian: {e.StartDate:dd/MM/yyyy} ➔ {e.EndDate:dd/MM/yyyy}\n  📍 Địa điểm: {e.Location} | Đơn vị: {e.TargetUnit}");
+                return $"📅 Ngày {Date:dd/MM/yyyy} ({Events.Count} sự kiện):\n\n" + string.Join("\n\n", lines);
             }
         }
     }
