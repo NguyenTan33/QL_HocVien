@@ -1,0 +1,305 @@
+<Window x:Class="QL_HocVien.Views.Windows.LoginWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:helpers="clr-namespace:QL_HocVien.Helpers"
+        xmlns:local_cv="clr-namespace:QL_HocVien.Converters"
+        mc:Ignorable="d"
+        Title="Quản Lý Học Viên Quân Đội - Đăng Nhập Hệ Thống"
+        Height="650" Width="1000"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize">
+
+    <Border CornerRadius="16" Background="#0F172A" BorderBrush="#1E293B" BorderThickness="1">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="30" Color="#000000" Opacity="0.4" ShadowDepth="10"/>
+        </Border.Effect>
+
+        <Grid>
+            <!-- Nút điều khiển cửa sổ góc trên phải -->
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,12,16,0" Panel.ZIndex="10">
+                <Button Content="—" Width="32" Height="32" Background="Transparent" Foreground="#94A3B8" BorderThickness="0"
+                        FontSize="14" Cursor="Hand" Click="BtnMinimize_Click"/>
+                <Button Content="✕" Width="32" Height="32" Background="Transparent" Foreground="#94A3B8" BorderThickness="0"
+                        FontSize="14" Cursor="Hand" Click="BtnClose_Click" Margin="4,0,0,0"/>
+            </StackPanel>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <!-- Cột giới thiệu / Thương hiệu quân đội -->
+                    <ColumnDefinition Width="420"/>
+                    <!-- Cột Form thao tác -->
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Panel Bên Trái: Nhận diện Quân Đội Nhân Dân Việt Nam -->
+                <Border Grid.Column="0" CornerRadius="16,0,0,16">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#0A192F" Offset="0"/>
+                            <GradientStop Color="#1E3A8A" Offset="0.5"/>
+                            <GradientStop Color="#064E3B" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+
+                    <Grid Margin="40">
+                        <StackPanel VerticalAlignment="Center">
+                            <!-- Biểu tượng Ngôi sao vàng & Huy hiệu quân đội -->
+                            <Border Width="80" Height="80" CornerRadius="40" Background="#DC2626" HorizontalAlignment="Left" Margin="0,0,0,24">
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="15" Color="#DC2626" Opacity="0.5" ShadowDepth="0"/>
+                                </Border.Effect>
+                                <TextBlock Text="★" FontSize="46" Foreground="#FBBF24" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+
+                            <TextBlock Text="QUÂN ĐỘI NHÂN DÂN" FontSize="14" FontWeight="Bold" Foreground="#FBBF24"/>
+                            <TextBlock Text="VIỆT NAM" FontSize="14" FontWeight="Bold" Foreground="#FBBF24" Margin="0,2,0,12"/>
+
+                            <TextBlock Text="HỆ THỐNG QUẢN LÝ" FontSize="26" FontWeight="ExtraBold" Foreground="White"/>
+                            <TextBlock Text="HỌC VIÊN &amp; THỂ LỰC" FontSize="26" FontWeight="ExtraBold" Foreground="#60A5FA" Margin="0,2,0,16"/>
+
+                            <TextBlock Text="Phần mềm quản lý hồ sơ học viên quân sự, theo dõi kiểm tra rèn luyện thể lực theo quy chuẩn Thông tư 32/2009/TTLT-BQP-BVHTTDL."
+                                       FontSize="13" TextWrapping="Wrap" Foreground="#CBD5E1" LineHeight="20" Margin="0,0,0,24"/>
+
+                            <Border Background="#1E293B" CornerRadius="8" Padding="12" Opacity="0.85">
+                                <StackPanel>
+                                    <TextBlock Text="✓ Cơ sở dữ liệu SQLite cục bộ bảo mật" FontSize="12" Foreground="#94A3B8" Margin="0,0,0,4"/>
+                                    <TextBlock Text="✓ Chuẩn hóa OOP &amp; Kiến trúc SOLID" FontSize="12" Foreground="#94A3B8" Margin="0,0,0,4"/>
+                                    <TextBlock Text="✓ Đăng nhập bằng Tên tài khoản hoặc SĐT" FontSize="12" Foreground="#94A3B8" Margin="0,0,0,4"/>
+                                    <TextBlock Text="✓ Đặt lại mật khẩu OTP xác thực qua Email" FontSize="12" Foreground="#94A3B8"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <TextBlock Text="Phiên bản 1.0 - Năm 2026" FontSize="11" Foreground="#64748B" VerticalAlignment="Bottom"/>
+                    </Grid>
+                </Border>
+
+                <!-- Panel Bên Phải: Nội dung Form (Đăng nhập / Đăng ký / Quên MK) -->
+                <Border Grid.Column="1" Background="#FFFFFF" CornerRadius="0,16,16,0" Padding="48,36">
+                    <Grid>
+                        <!-- ==================== 1. FORM ĐĂNG NHẬP ==================== -->
+                        <Grid x:Name="LoginFormGrid" Visibility="Visible">
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="Đăng Nhập" FontSize="28" FontWeight="Bold" Foreground="#0F172A"/>
+                                <TextBlock Text="Nhập thông tin tài khoản để truy cập hệ thống" FontSize="13" Foreground="#64748B" Margin="0,6,0,28"/>
+
+                                <!-- Thông báo lỗi -->
+                                <Border Background="#FEF2F2" BorderBrush="#FCA5A5" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,16"
+                                        Visibility="{Binding ErrorMessage, Converter={x:Static local_cv:StringToVisibilityConverter.Instance}}">
+                                    <TextBlock Text="{Binding ErrorMessage}" Foreground="#DC2626" FontSize="13" TextWrapping="Wrap"/>
+                                </Border>
+
+                                <!-- Tài khoản hoặc SĐT -->
+                                <TextBlock Text="Tên tài khoản hoặc Số điện thoại:" FontSize="13" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,6"/>
+                                <TextBox Text="{Binding UsernameOrPhone, UpdateSourceTrigger=PropertyChanged}" 
+                                         Style="{StaticResource ModernTextBoxStyle}" Height="42" Margin="0,0,0,16"/>
+
+                                <!-- Mật khẩu -->
+                                <Grid Margin="0,0,0,6">
+                                    <TextBlock Text="Mật khẩu:" FontSize="13" FontWeight="SemiBold" Foreground="#334155"/>
+                                    <Button Content="Quên mật khẩu?" HorizontalAlignment="Right" Background="Transparent" 
+                                            Foreground="#2563EB" BorderThickness="0" FontSize="12" Cursor="Hand"
+                                            Command="{Binding GoToForgotPasswordCommand}"/>
+                                </Grid>
+                                <PasswordBox x:Name="LoginPasswordBox"
+                                             helpers:PasswordBoxHelper.BindPassword="True"
+                                             helpers:PasswordBoxHelper.BoundPassword="{Binding Password, Mode=TwoWay}"
+                                             Style="{StaticResource ModernPasswordBoxStyle}" Height="42" Margin="0,0,0,24"/>
+
+                                <!-- Nút Đăng nhập -->
+                                <Button Content="ĐĂNG NHẬP VÀO HỆ THỐNG" 
+                                        Style="{StaticResource PrimaryButtonStyle}" 
+                                        Height="44" 
+                                        Command="{Binding LoginCommand}"/>
+
+                                <!-- Chuyển sang Đăng ký -->
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,28,0,0">
+                                    <TextBlock Text="Chưa có tài khoản?" FontSize="13" Foreground="#64748B" VerticalAlignment="Center"/>
+                                    <Button Content="Đăng ký tài khoản mới" Background="Transparent" Foreground="#15803D" 
+                                            FontWeight="Bold" BorderThickness="0" FontSize="13" Cursor="Hand" Margin="6,0,0,0"
+                                            Command="{Binding GoToRegisterCommand}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- ==================== 2. FORM ĐĂNG KÝ ==================== -->
+                        <Grid x:Name="RegisterFormGrid" Visibility="Collapsed">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="Đăng Ký Tài Khoản" FontSize="26" FontWeight="Bold" Foreground="#0F172A"/>
+                                    <TextBlock Text="Tạo tài khoản học viên để tra cứu thông tin và kết quả" FontSize="13" Foreground="#64748B" Margin="0,4,0,20"/>
+
+                                    <!-- Thông báo thành công / lỗi -->
+                                    <Border Background="#F0FDF4" BorderBrush="#86EFAC" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,12"
+                                            Visibility="{Binding RegisterVm.SuccessMessage, Converter={x:Static local_cv:StringToVisibilityConverter.Instance}}">
+                                        <TextBlock Text="{Binding RegisterVm.SuccessMessage}" Foreground="#16A34A" FontSize="13" TextWrapping="Wrap"/>
+                                    </Border>
+                                    <Border Background="#FEF2F2" BorderBrush="#FCA5A5" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,12"
+                                            Visibility="{Binding RegisterVm.ErrorMessage, Converter={x:Static local_cv:StringToVisibilityConverter.Instance}}">
+                                        <TextBlock Text="{Binding RegisterVm.ErrorMessage}" Foreground="#DC2626" FontSize="13" TextWrapping="Wrap"/>
+                                    </Border>
+
+                                    <Grid Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="12"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="Tên tài khoản (Username):" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                                            <TextBox Text="{Binding RegisterVm.Username, UpdateSourceTrigger=PropertyChanged}" 
+                                                     Style="{StaticResource ModernTextBoxStyle}" Height="38"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2">
+                                            <TextBlock Text="Họ và tên:" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                                            <TextBox Text="{Binding RegisterVm.FullName, UpdateSourceTrigger=PropertyChanged}" 
+                                                     Style="{StaticResource ModernTextBoxStyle}" Height="38"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <Grid Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="12"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="Số điện thoại:" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                                            <TextBox Text="{Binding RegisterVm.PhoneNumber, UpdateSourceTrigger=PropertyChanged}" 
+                                                     Style="{StaticResource ModernTextBoxStyle}" Height="38"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2">
+                                            <TextBlock Text="Địa chỉ Email:" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                                            <TextBox Text="{Binding RegisterVm.Email, UpdateSourceTrigger=PropertyChanged}" 
+                                                     Style="{StaticResource ModernTextBoxStyle}" Height="38"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <Grid Margin="0,0,0,20">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="12"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="Mật khẩu:" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                                            <PasswordBox helpers:PasswordBoxHelper.BindPassword="True"
+                                                         helpers:PasswordBoxHelper.BoundPassword="{Binding RegisterVm.Password, Mode=TwoWay}"
+                                                         Style="{StaticResource ModernPasswordBoxStyle}" Height="38"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2">
+                                            <TextBlock Text="Xác nhận mật khẩu:" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                                            <PasswordBox helpers:PasswordBoxHelper.BindPassword="True"
+                                                         helpers:PasswordBoxHelper.BoundPassword="{Binding RegisterVm.ConfirmPassword, Mode=TwoWay}"
+                                                         Style="{StaticResource ModernPasswordBoxStyle}" Height="38"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <!-- Nút Đăng ký -->
+                                    <Button Content="HOÀN TẤT ĐĂNG KÝ" 
+                                            Style="{StaticResource SuccessButtonStyle}" 
+                                            Height="42" 
+                                            Command="{Binding RegisterVm.RegisterCommand}"/>
+
+                                    <!-- Quay lại Đăng nhập -->
+                                    <Button Content="← Đã có tài khoản? Quay lại Đăng nhập" 
+                                            Background="Transparent" Foreground="#2563EB" BorderThickness="0" 
+                                            FontSize="13" Cursor="Hand" Margin="0,16,0,0"
+                                            Command="{Binding RegisterVm.GoToLoginCommand}"/>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Grid>
+
+                        <!-- ==================== 3. FORM QUÊN MẬT KHẨU ==================== -->
+                        <Grid x:Name="ForgotPasswordFormGrid" Visibility="Collapsed">
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="Khôi Phục Mật Khẩu" FontSize="26" FontWeight="Bold" Foreground="#0F172A"/>
+                                <TextBlock Text="Nhận mã OTP qua Email để đặt lại mật khẩu an toàn" FontSize="13" Foreground="#64748B" Margin="0,4,0,20"/>
+
+                                <!-- Thông báo -->
+                                <Border Background="#EFF6FF" BorderBrush="#93C5FD" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,12"
+                                        Visibility="{Binding ForgotPasswordVm.InfoMessage, Converter={x:Static local_cv:StringToVisibilityConverter.Instance}}">
+                                    <TextBlock Text="{Binding ForgotPasswordVm.InfoMessage}" Foreground="#1D4ED8" FontSize="13" TextWrapping="Wrap"/>
+                                </Border>
+                                <Border Background="#FEF2F2" BorderBrush="#FCA5A5" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,12"
+                                        Visibility="{Binding ForgotPasswordVm.ErrorMessage, Converter={x:Static local_cv:StringToVisibilityConverter.Instance}}">
+                                    <TextBlock Text="{Binding ForgotPasswordVm.ErrorMessage}" Foreground="#DC2626" FontSize="13" TextWrapping="Wrap"/>
+                                </Border>
+
+                                <!-- Bước 1: Nhập Email / Username / SĐT để nhận mã -->
+                                <StackPanel Visibility="{Binding ForgotPasswordVm.IsOtpSent, Converter={x:Static local_cv:InvertedBooleanToVisibilityConverter.Instance}}">
+                                    <TextBlock Text="Nhập Email, Tên tài khoản hoặc Số điện thoại:" FontSize="13" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,6"/>
+                                    <TextBox Text="{Binding ForgotPasswordVm.Identifier, UpdateSourceTrigger=PropertyChanged}" 
+                                             Style="{StaticResource ModernTextBoxStyle}" Height="42" Margin="0,0,0,16"/>
+
+                                    <Button Content="GỬI MÃ XÁC THỰC OTP QUA EMAIL" 
+                                            Style="{StaticResource PrimaryButtonStyle}" 
+                                            Height="42" 
+                                            Command="{Binding ForgotPasswordVm.SendOtpCommand}"/>
+                                </StackPanel>
+
+                                <!-- Bước 2: Nhập OTP và Mật khẩu mới -->
+                                <StackPanel Visibility="{Binding ForgotPasswordVm.IsOtpSent, Converter={x:Static local_cv:BooleanToVisibilityConverter.Instance}}">
+                                    <Grid Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="12"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="Email nhận mã:" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                                            <TextBox Text="{Binding ForgotPasswordVm.TargetEmail, UpdateSourceTrigger=PropertyChanged}" 
+                                                     Style="{StaticResource ModernTextBoxStyle}" Height="38"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2">
+                                            <TextBlock Text="Mã OTP 6 số:" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                                            <TextBox Text="{Binding ForgotPasswordVm.OtpCode, UpdateSourceTrigger=PropertyChanged}" 
+                                                     Style="{StaticResource ModernTextBoxStyle}" Height="38"
+                                                     FontSize="16" FontWeight="Bold" Foreground="#DC2626"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <Grid Margin="0,0,0,16">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="12"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="Mật khẩu mới:" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                                            <PasswordBox helpers:PasswordBoxHelper.BindPassword="True"
+                                                         helpers:PasswordBoxHelper.BoundPassword="{Binding ForgotPasswordVm.NewPassword, Mode=TwoWay}"
+                                                         Style="{StaticResource ModernPasswordBoxStyle}" Height="38"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2">
+                                            <TextBlock Text="Xác nhận mật khẩu:" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                                            <PasswordBox helpers:PasswordBoxHelper.BindPassword="True"
+                                                         helpers:PasswordBoxHelper.BoundPassword="{Binding ForgotPasswordVm.ConfirmNewPassword, Mode=TwoWay}"
+                                                         Style="{StaticResource ModernPasswordBoxStyle}" Height="38"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <Button Content="ĐỔI MẬT KHẨU MỚI" 
+                                            Style="{StaticResource SuccessButtonStyle}" 
+                                            Height="42" 
+                                            Command="{Binding ForgotPasswordVm.ResetPasswordCommand}"/>
+                                </StackPanel>
+
+                                <!-- Quay lại Đăng nhập -->
+                                <Button Content="← Quay lại màn hình Đăng nhập" 
+                                        Background="Transparent" Foreground="#2563EB" BorderThickness="0" 
+                                        FontSize="13" Cursor="Hand" Margin="0,20,0,0"
+                                        Command="{Binding ForgotPasswordVm.GoToLoginCommand}"/>
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>
