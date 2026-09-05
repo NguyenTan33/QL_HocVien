@@ -117,6 +117,7 @@ namespace QL_HocVien
             services.AddScoped<IAnalyticsService, AnalyticsService>();
             services.AddScoped<ITrainingRecommendationService, TrainingRecommendationService>();
             services.AddScoped<IDashboardAnalyticsService, DashboardAnalyticsService>();
+            services.AddScoped<ICreditSubjectService, CreditSubjectService>();
 
             // Đăng ký Infrastructure (Validation Factory & Security Services - OOP & SOLID)
             services.AddAppInfrastructureValidation();
@@ -127,6 +128,7 @@ namespace QL_HocVien
             services.AddTransient<ForgotPasswordViewModel>();
             services.AddTransient<MainViewModel>();
             services.AddTransient<DashboardViewModel>();
+            services.AddTransient<CreditSubjectManagementViewModel>();
             services.AddTransient<OfficerManagementViewModel>();
             services.AddTransient<CatalogManagementViewModel>();
             services.AddTransient<ClassManagementViewModel>();

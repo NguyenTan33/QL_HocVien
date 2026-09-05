@@ -22,8 +22,8 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,6">
-                    <TextBlock Text="KIỂM TRA &amp; ĐÁNH GIÁ THỂ LỰC QUÂN SỰ" FontSize="20" FontWeight="Bold" Foreground="#0F172A" TextWrapping="Wrap"/>
-                    <TextBlock Text="Nhập kết quả thành tích kiểm tra, tự động chấm điểm và xếp loại theo tiêu chuẩn Thông tư 32" 
+                    <TextBlock Text="RÈN LUYỆN &amp; ĐÁNH GIÁ THỂ LỰC QUÂN SỰ" FontSize="20" FontWeight="Bold" Foreground="#0F172A" TextWrapping="Wrap"/>
+                    <TextBlock Text="Rèn luyện thể lực và đánh giá kết quả theo tiêu chuẩn Thông tư 32/2009/TTLT-BQP-BVHTTDL" 
                                FontSize="13" Foreground="#64748B" Margin="0,4,0,0" TextWrapping="Wrap"/>
                 </StackPanel>
 

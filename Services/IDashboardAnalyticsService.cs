@@ -14,6 +14,9 @@ namespace QL_HocVien.Services
         Task<List<SubjectPerformanceDto>> GetSubjectPerformancesAsync(DashboardFilterCriteria criteria);
         Task<List<CadetHonorDto>> GetHonoredCadetsAsync(DashboardFilterCriteria criteria, int topCount = 10);
         Task<List<PhysicalExamRecord>> GetFailedRecordsAsync(DashboardFilterCriteria criteria);
+        Task<List<TrainingEvent>> GetMonthlyFocusEventsAsync();
+        Task<List<UntestedCadetDto>> GetUntestedCadetsAsync(DashboardFilterCriteria criteria);
+        Task<int> GetTotalTestedSubjectsCountAsync(DashboardFilterCriteria criteria);
         Task<List<string>> GetAvailableUnitsAsync();
         Task<List<string>> GetAvailableClassesAsync(string? unit = null);
         Task<List<string>> GetAvailableSessionsAsync();

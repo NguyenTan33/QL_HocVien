@@ -21,6 +21,8 @@ namespace QL_HocVien.Data
         public DbSet<MilitaryMajor> MilitaryMajors => Set<MilitaryMajor>();
         public DbSet<Officer> Officers => Set<Officer>();
         public DbSet<TrainingEvent> TrainingEvents => Set<TrainingEvent>();
+        public DbSet<CreditSubject> CreditSubjects => Set<CreditSubject>();
+        public DbSet<CreditScoreRecord> CreditScoreRecords => Set<CreditScoreRecord>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -161,6 +163,31 @@ namespace QL_HocVien.Data
                 entity.Property(e => e.Location).HasMaxLength(200);
                 entity.Property(e => e.Priority).HasMaxLength(50);
                 entity.Property(e => e.Status).HasMaxLength(50);
+            });
+
+            // Cấu hình CreditSubject
+            modelBuilder.Entity<CreditSubject>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.SubjectCode).IsUnique();
+                entity.Property(e => e.SubjectCode).IsRequired().HasMaxLength(30);
+                entity.Property(e => e.SubjectName).IsRequired().HasMaxLength(150);
+                entity.Property(e => e.AssessmentType).IsRequired().HasMaxLength(100);
+            });
+
+            // Cấu hình CreditScoreRecord
+            modelBuilder.Entity<CreditScoreRecord>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasOne(e => e.Cadet)
+                      .WithMany()
+                      .HasForeignKey(e => e.CadetId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.CreditSubject)
+                      .WithMany(s => s.ScoreRecords)
+                      .HasForeignKey(e => e.CreditSubjectId)
+                      .OnDelete(DeleteBehavior.Cascade);
             });
         }
     }

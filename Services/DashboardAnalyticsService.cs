@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using QL_HocVien.Data;
 using QL_HocVien.Models;
 using QL_HocVien.Models.DTOs;
 using QL_HocVien.Models.Filters;
@@ -10,6 +12,7 @@ namespace QL_HocVien.Services
 {
     public class DashboardAnalyticsService : IDashboardAnalyticsService
     {
+        private readonly AppDbContext _context;
         private readonly ICadetService _cadetService;
         private readonly IPhysicalExamService _examService;
         private readonly ISubjectService _subjectService;
@@ -17,12 +20,14 @@ namespace QL_HocVien.Services
         private readonly ICatalogService _catalogService;
 
         public DashboardAnalyticsService(
+            AppDbContext context,
             ICadetService cadetService,
             IPhysicalExamService examService,
             ISubjectService subjectService,
             IClassService classService,
             ICatalogService catalogService)
         {
+            _context = context;
             _cadetService = cadetService;
             _examService = examService;
             _subjectService = subjectService;
@@ -110,6 +115,7 @@ namespace QL_HocVien.Services
             }
 
             var targetedCadets = cadetsQuery.ToList();
+            int totalTestedSubjects = await GetTotalTestedSubjectsCountAsync(criteria);
 
             var summary = new DashboardSummaryDto
             {
@@ -118,8 +124,10 @@ namespace QL_HocVien.Services
                 TotalClassesCount = targetedCadets.Select(c => c.ClassName ?? c.MilitaryClass?.ClassName).Where(cl => !string.IsNullOrEmpty(cl)).Distinct().Count(),
                 TotalExamRecords = filteredRecords.Count,
                 UniqueTestedCadets = filteredRecords.Select(r => r.CadetId).Distinct().Count(),
+                TotalTestedSubjects = totalTestedSubjects,
                 ExcellentCount = filteredRecords.Count(r => r.Grade == "Xuất sắc"),
                 GoodCount = filteredRecords.Count(r => r.Grade == "Giỏi"),
+                FairCount = filteredRecords.Count(r => r.Grade == "Khá"),
                 PassCount = filteredRecords.Count(r => r.Grade == "Khá" || r.Grade == "Đạt"),
                 FailCount = filteredRecords.Count(r => r.Grade == "Không đạt")
             };
@@ -147,6 +155,10 @@ namespace QL_HocVien.Services
                 int elite = g.Count(r => r.Grade == "Xuất sắc" || r.Grade == "Giỏi");
                 int cadetsInUnit = allCadets.Count(c => c.Unit == unitName);
 
+                int excellent = g.Count(r => r.Grade == "Xuất sắc");
+                int good = g.Count(r => r.Grade == "Giỏi");
+                int fair = g.Count(r => r.Grade == "Khá" || r.Grade == "Đạt");
+
                 list.Add(new UnitLeaderboardDto
                 {
                     UnitName = unitName,
@@ -154,12 +166,18 @@ namespace QL_HocVien.Services
                     TotalExamRecords = totalExams,
                     PassedCount = passed,
                     EliteCount = elite,
-                    FailedCount = fail
+                    FailedCount = fail,
+                    ExcellentCount = excellent,
+                    GoodCount = good,
+                    FairCount = fair
                 });
             }
 
-            // Sắp xếp thứ tự: Tỷ lệ đạt cao nhất, nếu bằng nhau thì tỷ lệ Giỏi cao hơn
-            var sorted = list.OrderByDescending(u => u.PassRate)
+            // Sắp xếp thứ tự theo chuẩn: Xuất sắc -> Giỏi -> Khá -> Trung bình, sau đó theo PassRate, EliteRate
+            var sorted = list.OrderByDescending(u => u.EvaluationStatus == "Đơn vị Xuất sắc" ? 4 :
+                                                     (u.EvaluationStatus == "Đơn vị Giỏi" ? 3 :
+                                                     (u.EvaluationStatus == "Đơn vị Khá" ? 2 : 1)))
+                             .ThenByDescending(u => u.PassRate)
                              .ThenByDescending(u => u.EliteRate)
                              .ThenByDescending(u => u.TotalExamRecords)
                              .ToList();
@@ -301,6 +319,115 @@ namespace QL_HocVien.Services
             var allSubject = new Subject { Id = 0, SubjectCode = "ALL", SubjectName = "Tất cả các môn" };
             subjects.Insert(0, allSubject);
             return subjects;
+        }
+
+        public async Task<List<TrainingEvent>> GetMonthlyFocusEventsAsync()
+        {
+            var today = DateTime.Today;
+            var currentMonth = today.Month;
+            var currentYear = today.Year;
+
+            var events = await _context.TrainingEvents
+                .Where(e => e.StartDate.Month == currentMonth && e.StartDate.Year == currentYear)
+                .OrderBy(e => e.StartDate)
+                .ToListAsync();
+
+            // Nếu trong tháng chưa có sự kiện nào, lấy các sự kiện từ hôm nay trở đi
+            if (events.Count == 0)
+            {
+                events = await _context.TrainingEvents
+                    .Where(e => e.StartDate >= today)
+                    .OrderBy(e => e.StartDate)
+                    .Take(10)
+                    .ToListAsync();
+            }
+
+            return events;
+        }
+
+        public async Task<List<UntestedCadetDto>> GetUntestedCadetsAsync(DashboardFilterCriteria criteria)
+        {
+            var query = _context.Cadets
+                .Include(c => c.MilitaryClass)
+                .AsNoTracking()
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(criteria.Unit) && criteria.Unit != "Tất cả")
+                query = query.Where(c => c.Unit == criteria.Unit);
+
+            if (!string.IsNullOrWhiteSpace(criteria.ClassName) && criteria.ClassName != "Tất cả")
+                query = query.Where(c => (c.ClassName != null && c.ClassName == criteria.ClassName) || (c.MilitaryClass != null && c.MilitaryClass.ClassName == criteria.ClassName));
+
+            if (!string.IsNullOrWhiteSpace(criteria.SearchKeyword))
+            {
+                var kw = criteria.SearchKeyword.Trim().ToLower();
+                query = query.Where(c => c.FullName.ToLower().Contains(kw) || c.CadetCode.ToLower().Contains(kw));
+            }
+
+            var cadets = await query.ToListAsync();
+            var allCreditSubjs = await _context.CreditSubjects.AsNoTracking().ToListAsync();
+            var allScores = await _context.CreditScoreRecords.AsNoTracking().ToListAsync();
+            var physicalRecords = await _context.PhysicalExamRecords.AsNoTracking().ToListAsync();
+
+            var result = new List<UntestedCadetDto>();
+
+            foreach (var cadet in cadets)
+            {
+                var takenSubjectIds = allScores
+                    .Where(s => s.CadetId == cadet.Id)
+                    .Select(s => s.CreditSubjectId)
+                    .Distinct()
+                    .ToHashSet();
+
+                var missingSubjects = allCreditSubjs
+                    .Where(s => !takenSubjectIds.Contains(s.Id))
+                    .Select(s => s.SubjectName)
+                    .ToList();
+
+                bool hasPhysicalExam = physicalRecords.Any(p => p.CadetId == cadet.Id);
+
+                if (missingSubjects.Count > 0 || !hasPhysicalExam)
+                {
+                    var missingList = new List<string>(missingSubjects);
+                    if (!hasPhysicalExam)
+                        missingList.Add("Rèn luyện thể lực (chưa có điểm)");
+
+                    result.Add(new UntestedCadetDto
+                    {
+                        CadetId = cadet.Id,
+                        CadetCode = cadet.CadetCode,
+                        FullName = cadet.FullName,
+                        Rank = cadet.Rank,
+                        Unit = cadet.Unit,
+                        ClassName = cadet.ClassName ?? cadet.MilitaryClass?.ClassName ?? cadet.Unit,
+                        MissingSubjects = string.Join(", ", missingList),
+                        MissingCount = missingList.Count,
+                        ExamType = missingSubjects.Count > 0 && !hasPhysicalExam 
+                            ? "Môn Tín chỉ & Thể lực" 
+                            : (missingSubjects.Count > 0 ? "Môn Tín chỉ" : "Rèn luyện Thể lực"),
+                        Status = "Chưa hoàn thành",
+                        Note = $"Còn thiếu {missingList.Count} nội dung cần tổ chức kiểm tra bù"
+                    });
+                }
+            }
+
+            return result.OrderByDescending(u => u.MissingCount).ThenBy(u => u.Unit).ToList();
+        }
+
+        public async Task<int> GetTotalTestedSubjectsCountAsync(DashboardFilterCriteria criteria)
+        {
+            var physTested = await _context.PhysicalExamRecords
+                .Select(r => r.SubjectId)
+                .Distinct()
+                .CountAsync();
+
+            var creditTested = await _context.CreditScoreRecords
+                .Select(r => r.CreditSubjectId)
+                .Distinct()
+                .CountAsync();
+
+            int total = physTested + creditTested;
+            return total > 0 ? total : physTested;
         }
     }
 }

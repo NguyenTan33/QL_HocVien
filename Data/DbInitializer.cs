@@ -126,6 +126,32 @@ namespace QL_HocVien.Data
                         ""Description"" TEXT NOT NULL,
                         ""CreatedAt"" TEXT NOT NULL
                     );
+
+                    CREATE TABLE IF NOT EXISTS ""CreditSubjects"" (
+                        ""Id"" INTEGER NOT NULL CONSTRAINT ""PK_CreditSubjects"" PRIMARY KEY AUTOINCREMENT,
+                        ""SubjectCode"" TEXT NOT NULL,
+                        ""SubjectName"" TEXT NOT NULL,
+                        ""Credits"" INTEGER NOT NULL,
+                        ""AssessmentType"" TEXT NOT NULL,
+                        ""Description"" TEXT NOT NULL,
+                        ""CreatedAt"" TEXT NOT NULL
+                    );
+                    CREATE UNIQUE INDEX IF NOT EXISTS ""IX_CreditSubjects_SubjectCode"" ON ""CreditSubjects"" (""SubjectCode"");
+
+                    CREATE TABLE IF NOT EXISTS ""CreditScoreRecords"" (
+                        ""Id"" INTEGER NOT NULL CONSTRAINT ""PK_CreditScoreRecords"" PRIMARY KEY AUTOINCREMENT,
+                        ""CadetId"" INTEGER NOT NULL,
+                        ""CreditSubjectId"" INTEGER NOT NULL,
+                        ""RegularScore"" REAL NULL,
+                        ""ExamScore"" REAL NULL,
+                        ""FinalScore"" REAL NOT NULL,
+                        ""ExamSession"" TEXT NOT NULL,
+                        ""ExamDate"" TEXT NOT NULL,
+                        ""Notes"" TEXT NOT NULL,
+                        ""CreatedAt"" TEXT NOT NULL,
+                        CONSTRAINT ""FK_CreditScoreRecords_Cadets"" FOREIGN KEY (""CadetId"") REFERENCES ""Cadets"" (""Id"") ON DELETE CASCADE,
+                        CONSTRAINT ""FK_CreditScoreRecords_CreditSubjects"" FOREIGN KEY (""CreditSubjectId"") REFERENCES ""CreditSubjects"" (""Id"") ON DELETE CASCADE
+                    );
                 ");
             }
             catch
@@ -708,6 +734,90 @@ namespace QL_HocVien.Data
                 };
 
                 context.TrainingEvents.AddRange(events);
+                context.SaveChanges();
+            }
+
+            // 7. Seed Môn học tín chỉ mẫu
+            if (!context.CreditSubjects.Any())
+            {
+                var creditSubjects = new List<CreditSubject>
+                {
+                    new CreditSubject
+                    {
+                        SubjectCode = "TOAN01",
+                        SubjectName = "Toán cao cấp",
+                        Credits = 3,
+                        AssessmentType = "Kiểm tra và thi",
+                        Description = "Học phần toán cơ bản dành cho sĩ quan chỉ huy tham mưu kỹ thuật."
+                    },
+                    new CreditSubject
+                    {
+                        SubjectCode = "TRIET01",
+                        SubjectName = "Triết học Mác - Lênin",
+                        Credits = 2,
+                        AssessmentType = "Kiểm tra thường xuyên",
+                        Description = "Lý luận chính trị quân sự và nền tảng tư tưởng cách mạng."
+                    },
+                    new CreditSubject
+                    {
+                        SubjectCode = "ANH01",
+                        SubjectName = "Ngoại ngữ quân sự",
+                        Credits = 3,
+                        AssessmentType = "Kiểm tra và thi",
+                        Description = "Giao tiếp và thuật ngữ quân sự đối ngoại quốc phòng."
+                    },
+                    new CreditSubject
+                    {
+                        SubjectCode = "CHIEN01",
+                        SubjectName = "Chiến thuật bộ binh",
+                        Credits = 3,
+                        AssessmentType = "Kiểm tra và thi",
+                        Description = "Kỹ chiến thuật phân đội bộ binh trong chiến đấu tiến công và phòng ngự."
+                    },
+                    new CreditSubject
+                    {
+                        SubjectCode = "PHAP01",
+                        SubjectName = "Pháp luật & Điều lệnh",
+                        Credits = 2,
+                        AssessmentType = "Kiểm tra thường xuyên",
+                        Description = "Điều lệnh quản lý bộ đội và pháp luật đại cương."
+                    }
+                };
+
+                context.CreditSubjects.AddRange(creditSubjects);
+                context.SaveChanges();
+
+                // Seed điểm tín chỉ mẫu cho các học viên
+                var cadets = context.Cadets.Take(15).ToList();
+                var scores = new List<CreditScoreRecord>();
+                var rnd = new Random(42);
+
+                foreach (var cadet in cadets)
+                {
+                    foreach (var subj in creditSubjects.Take(3))
+                    {
+                        double regScore = Math.Round(6.5 + rnd.NextDouble() * 3.5, 1);
+                        double examScore = Math.Round(6.0 + rnd.NextDouble() * 4.0, 1);
+                        double finalScore = subj.AssessmentType == "Kiểm tra thường xuyên" 
+                            ? regScore 
+                            : Math.Round(regScore * 0.3 + examScore * 0.7, 1);
+
+                        scores.Add(new CreditScoreRecord
+                        {
+                            CadetId = cadet.Id,
+                            CreditSubjectId = subj.Id,
+                            RegularScore = regScore,
+                            ExamScore = subj.AssessmentType == "Kiểm tra thường xuyên" ? null : examScore,
+                            FinalScore = finalScore,
+                            ExamSession = "Học kỳ 1",
+                            ExamDate = DateTime.Today.AddDays(-rnd.Next(1, 30)),
+                            Notes = "Đạt yêu cầu học phần",
+                            CreatedAt = DateTime.Now
+                        });
+                    }
+                }
+
+                context.CreditScoreRecords.AddRange(scores);
                 context.SaveChanges();
             }
         }

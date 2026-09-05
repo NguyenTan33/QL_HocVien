@@ -95,6 +95,13 @@ namespace QL_HocVien.ViewModels
         }
 
         [RelayCommand]
+        public void NavigateToCreditSubjectManagement()
+        {
+            ActiveMenu = "CreditSubjectManagement";
+            CurrentView = _serviceProvider.GetRequiredService<CreditSubjectManagementViewModel>();
+        }
+
+        [RelayCommand]
         public void NavigateToExamAnalytics()
         {
             ActiveMenu = "ExamAnalytics";

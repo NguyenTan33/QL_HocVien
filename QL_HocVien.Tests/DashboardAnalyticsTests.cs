@@ -71,6 +71,7 @@ namespace QL_HocVien.Tests
                 secValidator);
 
             _dashboardService = new DashboardAnalyticsService(
+                _context,
                 _cadetService,
                 examService,
                 subjectService,
@@ -334,6 +335,7 @@ namespace QL_HocVien.Tests
                     services.AddScoped<IAnalyticsService, AnalyticsService>();
                     services.AddScoped<ITrainingRecommendationService, TrainingRecommendationService>();
                     services.AddScoped<IDashboardAnalyticsService, DashboardAnalyticsService>();
+                    services.AddScoped<ICreditSubjectService, CreditSubjectService>();
                     services.AddAppInfrastructureValidation();
 
                     // ViewModels
@@ -342,6 +344,7 @@ namespace QL_HocVien.Tests
                     services.AddTransient<ForgotPasswordViewModel>();
                     services.AddTransient<MainViewModel>();
                     services.AddTransient<DashboardViewModel>();
+                    services.AddTransient<CreditSubjectManagementViewModel>();
                     services.AddTransient<OfficerManagementViewModel>();
                     services.AddTransient<CatalogManagementViewModel>();
                     services.AddTransient<ClassManagementViewModel>();
@@ -391,6 +394,154 @@ namespace QL_HocVien.Tests
             {
                 throw new Exception($"Lỗi khởi tạo MainWindow: {exception.Message}\n{exception.StackTrace}", exception);
             }
+        }
+
+        [Fact]
+        public void Test_CreditSubject_GPA_Calculation_WeightedAverage()
+        {
+            // Kiểm tra công thức tính điểm trung bình môn học theo tín chỉ trong Thay đổi.docx:
+            // Toán 1 TC: 8.0, Văn 2 TC: 7.0, Anh 3 TC: 9.0
+            // GPA = (8.0*1 + 7.0*2 + 9.0*3) / (1 + 2 + 3) = 49.0 / 6 = 8.166... = 8.17
+            var summary = new CadetAcademicSummaryDto
+            {
+                CadetId = 1,
+                CadetCode = "HV001",
+                FullName = "Nguyễn Văn A",
+                TotalCreditsEarned = 6,
+                TotalSubjectsCompleted = 3,
+                Gpa = Math.Round((8.0 * 1 + 7.0 * 2 + 9.0 * 3) / 6.0, 2)
+            };
+
+            Assert.Equal(8.17, summary.Gpa);
+            Assert.Equal("Giỏi", summary.AcademicRating);
+        }
+
+        [Fact]
+        public void Test_UnitLeaderboard_EvaluationTiers_ExactRules()
+        {
+            // Quy tắc tính theo môn tín chỉ trong Thay đổi.docx:
+            // 1. Đơn vị đạt Xuất sắc: 100% Đạt, XS >= 50%
+            var unitXs = new UnitLeaderboardDto
+            {
+                UnitName = "Đại đội 1",
+                TotalExamRecords = 100,
+                PassedCount = 100,
+                ExcellentCount = 55,
+                GoodCount = 30,
+                FairCount = 15
+            };
+            Assert.Equal(100.0, unitXs.PassRate);
+            Assert.Equal(55.0, unitXs.ExcellentRate);
+            Assert.Equal("Đơn vị Xuất sắc", unitXs.EvaluationStatus);
+
+            // 2. Đơn vị Giỏi: Đạt >= 95%, (XS + G) >= 50%
+            var unitGioi = new UnitLeaderboardDto
+            {
+                UnitName = "Đại đội 2",
+                TotalExamRecords = 100,
+                PassedCount = 96,
+                ExcellentCount = 20,
+                GoodCount = 35,
+                FairCount = 41
+            };
+            Assert.Equal(96.0, unitGioi.PassRate);
+            Assert.Equal(55.0, unitGioi.ExcellentRate + unitGioi.GoodRate);
+            Assert.Equal("Đơn vị Giỏi", unitGioi.EvaluationStatus);
+
+            // 3. Đơn vị Khá: Đạt >= 90%, (XS + G + K) >= 50%
+            var unitKha = new UnitLeaderboardDto
+            {
+                UnitName = "Đại đội 3",
+                TotalExamRecords = 100,
+                PassedCount = 92,
+                ExcellentCount = 10,
+                GoodCount = 15,
+                FairCount = 30
+            };
+            Assert.Equal(92.0, unitKha.PassRate);
+            Assert.Equal(55.0, unitKha.ExcellentRate + unitKha.GoodRate + unitKha.FairRate);
+            Assert.Equal("Đơn vị Khá", unitKha.EvaluationStatus);
+
+            // 4. Đơn vị Trung bình: nếu không đủ điều kiện đạt khá
+            var unitTb = new UnitLeaderboardDto
+            {
+                UnitName = "Đại đội 4",
+                TotalExamRecords = 100,
+                PassedCount = 85,
+                ExcellentCount = 10,
+                GoodCount = 10,
+                FairCount = 20
+            };
+            Assert.Equal(85.0, unitTb.PassRate);
+            Assert.Equal("Đơn vị Trung bình", unitTb.EvaluationStatus);
+        }
+
+        [Fact]
+        public async Task Test_CreditSubjectService_CRUD_And_GPA_Calculation()
+        {
+            var creditService = new CreditSubjectService(_context);
+
+            // Lấy danh sách môn học đã được seed
+            var subjects = await creditService.GetAllSubjectsAsync();
+            Assert.NotNull(subjects);
+            Assert.NotEmpty(subjects);
+
+            // Thêm môn học tín chỉ mới
+            var newSub = new CreditSubject
+            {
+                SubjectCode = "TC_TEST01",
+                SubjectName = "Toán Cao Cấp ĐH",
+                Credits = 3,
+                AssessmentType = "Kiểm tra và thi",
+                Description = "Môn kiểm thử tính điểm GPA tín chỉ"
+            };
+            var addRes = await creditService.AddSubjectAsync(newSub);
+            Assert.True(addRes.Success);
+            Assert.True(newSub.Id > 0);
+
+            // Lấy 1 học viên
+            var cadets = await _cadetService.GetAllCadetsAsync();
+            var testCadet = cadets.First();
+
+            // Lưu điểm cho học viên
+            var score = new CreditScoreRecord
+            {
+                CadetId = testCadet.Id,
+                CreditSubjectId = newSub.Id,
+                RegularScore = 8.5,
+                ExamScore = 9.0,
+                FinalScore = 8.8,
+                ExamSession = "Học kỳ 1 - 2026",
+                ExamDate = DateTime.Today
+            };
+            var saveRes = await creditService.SaveScoreAsync(score);
+            Assert.True(saveRes.Success);
+
+            // Lấy tổng kết học thuật theo tín chỉ của học viên
+            var summaries = await creditService.GetCadetAcademicSummariesAsync();
+            Assert.NotNull(summaries);
+            var cadetSummary = summaries.FirstOrDefault(s => s.CadetId == testCadet.Id);
+            Assert.NotNull(cadetSummary);
+            Assert.True(cadetSummary.TotalCreditsEarned > 0);
+            Assert.True(cadetSummary.Gpa > 0);
+        }
+
+        [Fact]
+        public async Task Test_DashboardAnalytics_UntestedCadets_And_MonthlyFocusEvents()
+        {
+            var criteria = new DashboardFilterCriteria();
+
+            // 1. Kiểm tra học viên chưa thi / kiểm tra
+            var untested = await _dashboardService.GetUntestedCadetsAsync(criteria);
+            Assert.NotNull(untested);
+
+            // 2. Kiểm tra trọng tâm trong tháng
+            var monthlyEvents = await _dashboardService.GetMonthlyFocusEventsAsync();
+            Assert.NotNull(monthlyEvents);
+
+            // 3. Kiểm tra tổng số môn đã thi
+            var testedCount = await _dashboardService.GetTotalTestedSubjectsCountAsync(criteria);
+            Assert.True(testedCount >= 0);
         }
     }
 }

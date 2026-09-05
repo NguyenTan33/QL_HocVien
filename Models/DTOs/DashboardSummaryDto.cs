@@ -12,8 +12,10 @@ namespace QL_HocVien.Models.DTOs
 
         public int ExcellentCount { get; set; }
         public int GoodCount { get; set; }
+        public int FairCount { get; set; }
         public int PassCount { get; set; }
         public int FailCount { get; set; }
+        public int TotalTestedSubjects { get; set; }
 
         public double ExcellentRate
         {
@@ -24,6 +26,12 @@ namespace QL_HocVien.Models.DTOs
         public double GoodRate
         {
             get => TotalExamRecords > 0 ? Math.Round((double)GoodCount / TotalExamRecords * 100, 1) : 0;
+            set { }
+        }
+
+        public double FairRate
+        {
+            get => TotalExamRecords > 0 ? Math.Round((double)FairCount / TotalExamRecords * 100, 1) : 0;
             set { }
         }
 
@@ -62,10 +70,10 @@ namespace QL_HocVien.Models.DTOs
             get
             {
                 if (TotalExamRecords == 0) return "Chưa có dữ liệu";
-                if (OverallPassRate >= 95 && EliteRate >= 50) return "Đơn vị Rèn luyện Xuất sắc";
-                if (OverallPassRate >= 90) return "Đơn vị Đạt Chuẩn Giỏi";
-                if (OverallPassRate >= 80) return "Đơn vị Đạt Yêu Cầu";
-                return "Cần Tăng Cường Huấn Luyện";
+                if (OverallPassRate >= 100 && ExcellentRate >= 50) return "Đơn vị Đạt Xuất Sắc";
+                if (OverallPassRate >= 95 && (ExcellentRate + GoodRate) >= 50) return "Đơn vị Đạt Chuẩn Giỏi";
+                if (OverallPassRate >= 90 && (ExcellentRate + GoodRate + FairRate) >= 50) return "Đơn vị Đạt Chuẩn Khá";
+                return "Đơn vị Đạt Mức Trung Bình";
             }
             set { }
         }
@@ -75,9 +83,10 @@ namespace QL_HocVien.Models.DTOs
             get
             {
                 if (TotalExamRecords == 0) return "#64748B";
-                if (OverallPassRate >= 90) return "#16A34A";
-                if (OverallPassRate >= 80) return "#D97706";
-                return "#DC2626";
+                if (OverallPassRate >= 100 && ExcellentRate >= 50) return "#7C3AED";
+                if (OverallPassRate >= 95 && (ExcellentRate + GoodRate) >= 50) return "#2563EB";
+                if (OverallPassRate >= 90 && (ExcellentRate + GoodRate + FairRate) >= 50) return "#16A34A";
+                return "#D97706";
             }
             set { }
         }

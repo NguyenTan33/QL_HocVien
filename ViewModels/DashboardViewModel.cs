@@ -72,6 +72,9 @@ namespace QL_HocVien.ViewModels
         private int _totalExamRecords;
 
         [ObservableProperty]
+        private int _totalTestedSubjects;
+
+        [ObservableProperty]
         private int _uniqueTestedCadets;
 
         [ObservableProperty]
@@ -114,6 +117,8 @@ namespace QL_HocVien.ViewModels
         #region BIỂU ĐỒ & DỮ LIỆU PHÂN TÍCH (DATA COLLECTIONS)
         public ObservableCollection<UnitLeaderboardDto> UnitLeaderboard { get; } = new();
         public ObservableCollection<SubjectPerformanceDto> SubjectPerformances { get; } = new();
+        public ObservableCollection<TrainingEvent> MonthlyFocusEvents { get; } = new();
+        public ObservableCollection<UntestedCadetDto> UntestedCadets { get; } = new();
         public ObservableCollection<CadetHonorDto> HonoredCadets { get; } = new();
         public ObservableCollection<PhysicalExamRecord> FailedRecords { get; } = new();
 
@@ -125,7 +130,7 @@ namespace QL_HocVien.ViewModels
         public ObservableCollection<PersonalizedCadetPrescriptionDto> AiPersonalizedPrescriptions { get; } = new();
 
         [ObservableProperty]
-        private int _selectedTabIndex = 0; // 0: AI Đề Xuất, 1: Cần Bồi Dưỡng, 2: Vinh Danh, 3: Thi Đua Đơn Vị
+        private int _selectedTabIndex = 0; // 0: HV Chưa Thi/KT, 1: AI Đề Xuất, 2: Chưa Đạt, 3: Vinh Danh, 4: Thi Đua Đơn Vị
         #endregion
 
         public DashboardViewModel(
@@ -240,6 +245,7 @@ namespace QL_HocVien.ViewModels
                 TotalUnitsCount = summary.TotalUnitsCount;
                 TotalClassesCount = summary.TotalClassesCount;
                 TotalExamRecords = summary.TotalExamRecords;
+                TotalTestedSubjects = summary.TotalTestedSubjects;
                 UniqueTestedCadets = summary.UniqueTestedCadets;
                 PassRate = summary.OverallPassRate;
                 EliteRate = summary.EliteRate;
@@ -251,27 +257,37 @@ namespace QL_HocVien.ViewModels
                 OverallRatingLabel = summary.OverallRatingLabel;
                 OverallRatingColor = summary.OverallRatingColor;
 
-                // 2. Tải Xếp hạng đơn vị
+                // 2. Tải Xếp hạng thi đua giữa các đơn vị
                 var units = await _analyticsService.GetUnitLeaderboardAsync(criteria);
                 UnitLeaderboard.Clear();
                 foreach (var u in units) UnitLeaderboard.Add(u);
 
-                // 3. Tải Phân tích môn thể lực
+                // 3. Tải Sự kiện trọng tâm trong tháng (xếp từ ngày gần nhất đến xa nhất)
+                var monthlyEvents = await _analyticsService.GetMonthlyFocusEventsAsync();
+                MonthlyFocusEvents.Clear();
+                foreach (var ev in monthlyEvents) MonthlyFocusEvents.Add(ev);
+
+                // 4. Tải Danh sách học viên chưa thi / kiểm tra
+                var untested = await _analyticsService.GetUntestedCadetsAsync(criteria);
+                UntestedCadets.Clear();
+                foreach (var uc in untested) UntestedCadets.Add(uc);
+
+                // 5. Tải Phân tích môn thể lực
                 var subPerfs = await _analyticsService.GetSubjectPerformancesAsync(criteria);
                 SubjectPerformances.Clear();
                 foreach (var s in subPerfs) SubjectPerformances.Add(s);
 
-                // 4. Tải Danh sách vinh danh học viên xuất sắc
+                // 6. Tải Danh sách vinh danh học viên xuất sắc
                 var honors = await _analyticsService.GetHonoredCadetsAsync(criteria, 15);
                 HonoredCadets.Clear();
                 foreach (var h in honors) HonoredCadets.Add(h);
 
-                // 5. Tải Danh sách học viên chưa đạt chuẩn
+                // 7. Tải Danh sách học viên chưa đạt chuẩn
                 var failed = await _analyticsService.GetFailedRecordsAsync(criteria);
                 FailedRecords.Clear();
                 foreach (var f in failed) FailedRecords.Add(f);
 
-                // 6. 🤖 Sinh Đề Xuất Huấn Luyện AI
+                // 8. 🤖 Sinh Đề Xuất Huấn Luyện AI
                 var filteredRecords = await _analyticsService.GetFilteredRecordsAsync(criteria);
                 var allCadets = await _cadetService.GetAllCadetsAsync();
                 var aiSummary = await _recommendationService.GenerateRecommendationsAsync(filteredRecords, allCadets, SelectedUnit);
@@ -284,7 +300,7 @@ namespace QL_HocVien.ViewModels
                 AiPersonalizedPrescriptions.Clear();
                 foreach (var pp in aiSummary.PersonalizedCadetPrescriptions) AiPersonalizedPrescriptions.Add(pp);
 
-                StatusMessage = $"Cập nhật thành công số liệu: {TotalExamRecords} lượt kiểm tra, tỷ lệ đạt {PassRate:F1}%.";
+                StatusMessage = $"Cập nhật thành công số liệu: {TotalTestedSubjects} môn đã thi/KT, tỷ lệ đạt {PassRate:F1}%.";
             }
             catch (Exception ex)
             {

@@ -44,6 +44,9 @@
         <DataTemplate DataType="{x:Type vm:CatalogManagementViewModel}">
             <views:CatalogManagementView/>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:CreditSubjectManagementViewModel}">
+            <views:CreditSubjectManagementView/>
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:ExamAnalyticsViewModel}">
             <views:ExamAnalyticsView/>
         </DataTemplate>
@@ -173,20 +176,20 @@
                                     Style="{StaticResource SidebarNavButtonStyle}"
                                     Command="{Binding NavigateToClassManagementCommand}"/>
 
-                            <!-- 5. Danh Mục Tổ Chức (Cấp bậc, Chức vụ, Đơn vị, Chuyên ngành) -->
-                            <Button Content="📑   Danh Mục Tổ Chức" 
+                            <!-- 5. Môn Học & Điểm Tín Chỉ -->
+                            <Button Content="📖   Môn Học &amp; Điểm Tín Chỉ" 
                                     Style="{StaticResource SidebarNavButtonStyle}"
-                                    Command="{Binding NavigateToCatalogManagementCommand}"/>
+                                    Command="{Binding NavigateToCreditSubjectManagementCommand}"/>
 
-                            <!-- 6. Quản Lý Môn Học -->
-                            <Button Content="📚   Quản Lý Môn Học" 
+                            <!-- 6. Tiêu Chuẩn Môn Thể Lực -->
+                            <Button Content="📚   Tiêu Chuẩn Môn Thể Lực" 
                                     Style="{StaticResource SidebarNavButtonStyle}"
                                     Command="{Binding NavigateToSubjectManagementCommand}"/>
 
                             <TextBlock Text="RÈN LUYỆN &amp; HỆ THỐNG" FontSize="11" FontWeight="Bold" Foreground="#64748B" Margin="20,18,0,6"/>
 
-                            <!-- 5. Kiểm Tra Thể Lực -->
-                            <Button Content="⏱️   Kiểm Tra Thể Lực" 
+                            <!-- 7. Rèn Luyện Thể Lực (Chuẩn TT 32) -->
+                            <Button Content="🏋️   Rèn Luyện Thể Lực" 
                                     Style="{StaticResource SidebarNavButtonStyle}"
                                     Command="{Binding NavigateToPhysicalExamCommand}"/>
 
