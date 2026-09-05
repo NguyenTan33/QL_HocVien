@@ -132,19 +132,35 @@ namespace QL_HocVien.ViewModels
             IsBusy = true;
             try
             {
-                // Nạp đơn vị
-                var units = await _catalogService.GetAllUnitsAsync();
+                // Nạp đơn vị thực tế từ học viên
+                var units = await _cadetService.GetDistinctUnitsAsync();
                 UnitOptions.Clear();
                 UnitOptions.Add("Tất cả");
-                foreach (var u in units.OrderBy(u => u.UnitName))
-                    UnitOptions.Add(u.UnitName);
+                if (units.Any())
+                {
+                    foreach (var u in units) UnitOptions.Add(u);
+                }
+                else
+                {
+                    var fallbackUnits = await _catalogService.GetAllUnitsAsync();
+                    foreach (var u in fallbackUnits.OrderBy(u => u.UnitName))
+                        UnitOptions.Add(u.UnitName);
+                }
 
-                // Nạp lớp
-                var classes = await _classService.GetAllClassesAsync();
+                // Nạp lớp thực tế từ học viên
+                var classes = await _cadetService.GetDistinctClassesAsync();
                 ClassOptions.Clear();
                 ClassOptions.Add("Tất cả");
-                foreach (var c in classes.OrderBy(c => c.ClassName))
-                    ClassOptions.Add(c.ClassName);
+                if (classes.Any())
+                {
+                    foreach (var c in classes) ClassOptions.Add(c);
+                }
+                else
+                {
+                    var fallbackClasses = await _classService.GetAllClassesAsync();
+                    foreach (var c in fallbackClasses.OrderBy(c => c.ClassName))
+                        ClassOptions.Add(c.ClassName);
+                }
 
                 // Nạp học viên
                 var cadets = await _cadetService.GetAllCadetsAsync();

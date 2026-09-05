@@ -24,14 +24,8 @@ namespace QL_HocVien.ViewModels
             "Tất cả", "Xuất sắc", "Giỏi", "Khá", "Đạt", "Không đạt"
         };
         public ObservableCollection<string> SubjectFilters { get; } = new() { "Tất cả các môn" };
-        public ObservableCollection<string> SessionFilters { get; } = new()
-        {
-            "Tất cả", "Kiểm tra Quý 1/2026", "Kiểm tra Quý 2/2026", "Kiểm tra Quý 3/2026", "Kiểm tra Quý 4/2026", "Kiểm tra định kỳ"
-        };
-        public ObservableCollection<string> UnitFilters { get; } = new()
-        {
-            "Tất cả", "Đại đội 1", "Đại đội 2", "Đại đội 3", "Đại đội 4", "Tiểu đoàn 1"
-        };
+        public ObservableCollection<string> SessionFilters { get; } = new() { "Tất cả" };
+        public ObservableCollection<string> UnitFilters { get; } = new() { "Tất cả" };
         public ObservableCollection<string> ClassFilters { get; } = new() { "Tất cả" };
 
         [ObservableProperty]
@@ -145,32 +139,53 @@ namespace QL_HocVien.ViewModels
                 SubjectFilters.Add(s.SubjectName);
             }
 
-            if (_classService != null)
+            try
             {
-                try
+                var classes = await _cadetService.GetDistinctClassesAsync();
+                ClassFilters.Clear();
+                ClassFilters.Add("Tất cả");
+                if (classes.Any())
                 {
-                    var classes = await _classService.GetAllClassesAsync();
-                    ClassFilters.Clear();
-                    ClassFilters.Add("Tất cả");
-                    foreach (var c in classes) ClassFilters.Add(c.ClassName);
+                    foreach (var c in classes) ClassFilters.Add(c);
                 }
-                catch { }
+                else if (_classService != null)
+                {
+                    var fallbackClasses = await _classService.GetAllClassesAsync();
+                    foreach (var c in fallbackClasses) ClassFilters.Add(c.ClassName);
+                }
             }
+            catch { }
 
-            if (_catalogService != null)
+            try
             {
-                try
+                var units = await _cadetService.GetDistinctUnitsAsync();
+                UnitFilters.Clear();
+                UnitFilters.Add("Tất cả");
+                if (units.Any())
                 {
-                    var units = await _catalogService.GetUnitDropdownAsync();
-                    if (units.Any())
-                    {
-                        UnitFilters.Clear();
-                        UnitFilters.Add("Tất cả");
-                        foreach (var u in units) UnitFilters.Add(u);
-                    }
+                    foreach (var u in units) UnitFilters.Add(u);
                 }
-                catch { }
+                else if (_catalogService != null)
+                {
+                    var fallbackUnits = await _catalogService.GetUnitDropdownAsync();
+                    foreach (var u in fallbackUnits) UnitFilters.Add(u);
+                }
             }
+            catch { }
+
+            try
+            {
+                var allRecords = await _examService.GetAllRecordsAsync();
+                var sessions = allRecords
+                    .Select(r => r.ExamSession)
+                    .Where(s => !string.IsNullOrWhiteSpace(s))
+                    .Distinct()
+                    .OrderBy(s => s);
+                SessionFilters.Clear();
+                SessionFilters.Add("Tất cả");
+                foreach (var s in sessions) SessionFilters.Add(s);
+            }
+            catch { }
 
             if (Cadets.Count > 0) FormSelectedCadet = Cadets[0];
             if (Subjects.Count > 0) FormSelectedSubject = Subjects[0];

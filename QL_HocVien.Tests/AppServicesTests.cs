@@ -806,5 +806,103 @@ namespace QL_HocVien.Tests
                 Assert.All(majorResult, m => Assert.Equal(majorWithDept.Department, m.Department));
             }
         }
+
+        [Fact]
+        public async Task UpdateCadet_CanChangeCadetCode_WhenNotDuplicate()
+        {
+            var cadets = (await _cadetService.GetAllCadetsAsync()).ToList();
+            Assert.NotEmpty(cadets);
+            var target = cadets.First();
+            var newCode = $"HV-EDIT-{Guid.NewGuid():N}".Substring(0, 15);
+
+            target.CadetCode = newCode;
+            var result = await _cadetService.UpdateCadetAsync(target);
+
+            Assert.True(result.Success);
+            var updated = await _cadetService.GetCadetByIdAsync(target.Id);
+            Assert.NotNull(updated);
+            Assert.Equal(newCode, updated.CadetCode);
+        }
+
+        [Fact]
+        public async Task UpdateCadet_Fails_WhenCadetCodeAlreadyExists()
+        {
+            var cadets = (await _cadetService.GetAllCadetsAsync()).ToList();
+            Assert.True(cadets.Count >= 2);
+            var first = cadets[0];
+            var second = cadets[1];
+
+            first.CadetCode = second.CadetCode;
+            var result = await _cadetService.UpdateCadetAsync(first);
+
+            Assert.False(result.Success);
+            Assert.Contains("đã được sử dụng", result.Message);
+        }
+
+        [Fact]
+        public async Task CadetService_GetDistinctValues_ReturnsActualCadetData()
+        {
+            var units = await _cadetService.GetDistinctUnitsAsync();
+            var classes = await _cadetService.GetDistinctClassesAsync();
+            var ranks = await _cadetService.GetDistinctRanksAsync();
+            var positions = await _cadetService.GetDistinctPositionsAsync();
+
+            Assert.NotEmpty(units);
+            Assert.NotEmpty(classes);
+            Assert.NotEmpty(ranks);
+            Assert.NotEmpty(positions);
+
+            // Kiểm tra không có phần tử trùng lặp
+            Assert.Equal(units.Count, units.Distinct().Count());
+            Assert.Equal(classes.Count, classes.Distinct().Count());
+            Assert.Equal(ranks.Count, ranks.Distinct().Count());
+            Assert.Equal(positions.Count, positions.Distinct().Count());
+        }
+
+        [Fact]
+        public async Task DeleteMultipleCadets_DeletesAllSelectedAndCascades()
+        {
+            // Tạo 2 học viên mới để test xóa hàng loạt
+            var c1 = new Cadet
+            {
+                CadetCode = $"HV-DEL1-{Guid.NewGuid():N}".Substring(0, 15),
+                FullName = "Học Viên Test Xóa 1",
+                Unit = "Đại đội Test",
+                ClassName = "Lớp Test 1",
+                Rank = "Binh nhì",
+                Position = "Học viên",
+                DateOfBirth = new DateTime(2002, 1, 1),
+                Gender = "Nam"
+            };
+            var c2 = new Cadet
+            {
+                CadetCode = $"HV-DEL2-{Guid.NewGuid():N}".Substring(0, 15),
+                FullName = "Học Viên Test Xóa 2",
+                Unit = "Đại đội Test",
+                ClassName = "Lớp Test 2",
+                Rank = "Binh nhì",
+                Position = "Học viên",
+                DateOfBirth = new DateTime(2002, 2, 2),
+                Gender = "Nam"
+            };
+
+            var r1 = await _cadetService.AddCadetAsync(c1);
+            var r2 = await _cadetService.AddCadetAsync(c2);
+            Assert.True(r1.Success && r2.Success);
+
+            int id1 = r1.Cadet!.Id;
+            int id2 = r2.Cadet!.Id;
+
+            // Xóa hàng loạt
+            var delResult = await _cadetService.DeleteMultipleCadetsAsync(new[] { id1, id2 });
+            Assert.True(delResult.Success);
+            Assert.Equal(2, delResult.DeletedCount);
+
+            // Kiểm tra không còn trong DB
+            var check1 = await _cadetService.GetCadetByIdAsync(id1);
+            var check2 = await _cadetService.GetCadetByIdAsync(id2);
+            Assert.Null(check1);
+            Assert.Null(check2);
+        }
     }
 }

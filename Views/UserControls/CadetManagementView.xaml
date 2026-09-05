@@ -28,15 +28,27 @@
                 </StackPanel>
 
                 <WrapPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <Button Content="📥 Nhập Excel" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,6"
+                    <Button Content="☑️ Chọn hết" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,6,6"
+                            Command="{Binding SelectAllCommand}" ToolTip="Chọn toàn bộ học viên đang hiển thị"/>
+                    <Button Content="⬜ Bỏ chọn" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,6,6"
+                            Command="{Binding DeselectAllCommand}" ToolTip="Bỏ chọn tất cả"/>
+                    <Button Style="{StaticResource DangerButtonStyle}" Margin="0,0,6,6"
+                            Command="{Binding DeleteSelectedCommand}" ToolTip="Xóa các học viên đã được tích chọn">
+                        <TextBlock Text="{Binding SelectedCount, StringFormat='🗑️ Xóa đã chọn ({0})'}"/>
+                    </Button>
+                    <Button Style="{StaticResource DangerButtonStyle}" Margin="0,0,10,6" Background="#991B1B"
+                            Command="{Binding DeleteAllFilteredCommand}" ToolTip="Xóa toàn bộ học viên đang hiển thị theo bộ lọc hiện tại">
+                        <TextBlock Text="{Binding Cadets.Count, StringFormat='💥 Xóa toàn bộ ({0})'}"/>
+                    </Button>
+                    <Button Content="📥 Nhập Excel" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,6,6"
                             Command="{Binding ImportExcelCommand}"/>
-                    <Button Content="📤 Xuất Excel" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,6"
+                    <Button Content="📤 Xuất Excel" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,6,6"
                             Command="{Binding ExportExcelCommand}"/>
-                    <Button Content="➕ Thêm Học Viên" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,6"
+                    <Button Content="➕ Thêm HV" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,6,6"
                             Command="{Binding RequestAddNewCommand}"/>
-                    <Button Content="✏️ Sửa" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,6"
+                    <Button Content="✏️ Sửa" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,6,6"
                             Command="{Binding StartEditCommand}"/>
-                    <Button Content="🔑 Đổi MK" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,6"
+                    <Button Content="🔑 Đổi MK" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,6,6"
                             Command="{Binding OpenResetPasswordCommand}"/>
                     <Button Content="🗑️ Xóa" Style="{StaticResource DangerButtonStyle}" Margin="0,0,0,6"
                             Command="{Binding DeleteCadetCommand}"/>
@@ -177,7 +189,7 @@
             <!-- Bảng Dữ Liệu Học Viên -->
             <Border Grid.Row="2" Style="{StaticResource CardBorderStyle}" Padding="0">
                 <DataGrid ItemsSource="{Binding Cadets}" SelectedItem="{Binding SelectedCadet}"
-                          AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
+                          AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
                           GridLinesVisibility="Horizontal" HeadersVisibility="Column" Background="White"
                           BorderThickness="0" RowHeight="42" SelectionMode="Single"
                           AlternationCount="2"
@@ -185,15 +197,29 @@
                           ScrollViewer.VerticalScrollBarVisibility="Auto"
                           ScrollViewer.CanContentScroll="True">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="Mã Học Viên" Binding="{Binding CadetCode}" Width="110"/>
-                        <DataGridTextColumn Header="Họ và Tên" Binding="{Binding FullName}" Width="170"/>
-                        <DataGridTextColumn Header="Cấp Bậc" Binding="{Binding Rank}" Width="110"/>
-                        <DataGridTextColumn Header="Chức Vụ" Binding="{Binding Position}" Width="130"/>
-                        <DataGridTextColumn Header="Đơn Vị" Binding="{Binding Unit}" Width="120"/>
-                        <DataGridTextColumn Header="Lớp" Binding="{Binding ClassName}" MinWidth="150" Width="*"/>
-                        <DataGridTextColumn Header="Số Điện Thoại" Binding="{Binding PhoneNumber}" Width="120"/>
-                        <DataGridTextColumn Header="Tuổi" Binding="{Binding Age}" Width="70"/>
-                        <DataGridTextColumn Header="Giới Tính" Binding="{Binding Gender}" Width="90"/>
+                        <!-- Cột Chọn checkbox -->
+                        <DataGridTemplateColumn Width="48" CanUserResize="False">
+                            <DataGridTemplateColumn.Header>
+                                <CheckBox IsChecked="{Binding DataContext.IsAllSelected, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                          HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="Chọn tất cả / Bỏ chọn tất cả"/>
+                            </DataGridTemplateColumn.Header>
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTextColumn Header="Mã Học Viên" Binding="{Binding CadetCode}" Width="110" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Họ và Tên" Binding="{Binding FullName}" Width="170" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Cấp Bậc" Binding="{Binding Rank}" Width="110" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Chức Vụ" Binding="{Binding Position}" Width="130" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Đơn Vị" Binding="{Binding Unit}" Width="120" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Lớp" Binding="{Binding ClassName}" MinWidth="150" Width="*" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Số Điện Thoại" Binding="{Binding PhoneNumber}" Width="120" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Tuổi" Binding="{Binding Age}" Width="70" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Giới Tính" Binding="{Binding Gender}" Width="90" IsReadOnly="True"/>
                     </DataGrid.Columns>
                 </DataGrid>
             </Border>
@@ -208,6 +234,7 @@
                 <StackPanel>
                     <TextBlock Text="CẬP NHẬT THÔNG TIN HỌC VIÊN" FontSize="18" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,18"/>
 
+                    <!-- Hàng 1: Mã học viên & Họ tên -->
                     <Grid Margin="0,0,0,12">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
@@ -215,15 +242,16 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="Họ và tên:" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
-                            <TextBox Text="{Binding EditFullName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                            <TextBlock Text="Mã học viên (ID): *" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding EditCadetCode, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
                         </StackPanel>
                         <StackPanel Grid.Column="2">
-                            <TextBlock Text="Số điện thoại:" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
-                            <TextBox Text="{Binding EditPhone, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                            <TextBlock Text="Họ và tên: *" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding EditFullName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
                         </StackPanel>
                     </Grid>
 
+                    <!-- Hàng 2: Cấp bậc & Chức vụ -->
                     <Grid Margin="0,0,0,12">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
@@ -240,6 +268,7 @@
                         </StackPanel>
                     </Grid>
 
+                    <!-- Hàng 3: Đơn vị & Lớp -->
                     <Grid Margin="0,0,0,12">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
@@ -256,10 +285,22 @@
                         </StackPanel>
                     </Grid>
 
-                    <StackPanel Margin="0,0,0,20">
-                        <TextBlock Text="Email liên hệ:" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
-                        <TextBox Text="{Binding EditEmail, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
-                    </StackPanel>
+                    <!-- Hàng 4: SĐT & Email -->
+                    <Grid Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Số điện thoại:" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding EditPhone, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Email liên hệ:" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding EditEmail, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                        </StackPanel>
+                    </Grid>
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                         <Button Content="Hủy Bỏ" Style="{StaticResource SecondaryButtonStyle}" Width="90" Height="36" Margin="0,0,10,0"

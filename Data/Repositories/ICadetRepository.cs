@@ -10,7 +10,12 @@ namespace QL_HocVien.Data.Repositories
         Task<IEnumerable<Cadet>> SearchWithCriteriaAsync(QL_HocVien.Models.Filters.CadetFilterCriteria criteria);
         Task<Cadet?> GetByCodeAsync(string cadetCode);
         Task<Cadet?> GetCadetWithRecordsAsync(int id);
-        Task<bool> ExistsByCodeAsync(string cadetCode);
+        Task<bool> ExistsByCodeAsync(string cadetCode, int? excludeId = null);
         Task<int> GetNextCadetSequenceNumberAsync(int year);
+        Task<List<string>> GetDistinctUnitsAsync();
+        Task<List<string>> GetDistinctClassesAsync();
+        Task<List<string>> GetDistinctRanksAsync();
+        Task<List<string>> GetDistinctPositionsAsync();
+        Task<int> DeleteMultipleAsync(IEnumerable<int> ids);
     }
 }

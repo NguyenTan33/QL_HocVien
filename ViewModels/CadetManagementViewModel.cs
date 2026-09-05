@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -82,6 +84,9 @@ namespace QL_HocVien.ViewModels
         private bool _isEditing;
 
         [ObservableProperty]
+        private string _editCadetCode = string.Empty;
+
+        [ObservableProperty]
         private string _editFullName = string.Empty;
 
         [ObservableProperty]
@@ -101,6 +106,15 @@ namespace QL_HocVien.ViewModels
 
         [ObservableProperty]
         private string _editEmail = string.Empty;
+
+        // Chọn nhiều & xóa hàng loạt
+        [ObservableProperty]
+        private bool _isAllSelected;
+
+        [ObservableProperty]
+        private int _selectedCount;
+
+        private bool _isUpdatingSelection;
 
         // Cho đặt lại mật khẩu học viên
         [ObservableProperty]
@@ -137,31 +151,46 @@ namespace QL_HocVien.ViewModels
             await LoadCadetsAsync();
         }
 
-        private async Task LoadCatalogDropdownsAsync()
+        public async Task LoadCatalogDropdownsAsync()
         {
             try
             {
-                var ranks = await _catalogService.GetRankDropdownAsync();
-                if (ranks.Any())
+                var distinctUnits = await _cadetService.GetDistinctUnitsAsync();
+                UnitList.Clear();
+                UnitList.Add("Tất cả");
+                if (distinctUnits.Any())
                 {
-                    RankList.Clear();
-                    RankList.Add("Tất cả");
-                    foreach (var r in ranks) RankList.Add(r);
+                    foreach (var u in distinctUnits) UnitList.Add(u);
                 }
-
-                var units = await _catalogService.GetUnitDropdownAsync();
-                if (units.Any())
+                else
                 {
-                    UnitList.Clear();
-                    UnitList.Add("Tất cả");
+                    var units = await _catalogService.GetUnitDropdownAsync();
                     foreach (var u in units) UnitList.Add(u);
                 }
 
-                var positions = await _catalogService.GetPositionDropdownAsync();
-                if (positions.Any())
+                var distinctRanks = await _cadetService.GetDistinctRanksAsync();
+                RankList.Clear();
+                RankList.Add("Tất cả");
+                if (distinctRanks.Any())
                 {
-                    PositionList.Clear();
-                    PositionList.Add("Tất cả");
+                    foreach (var r in distinctRanks) RankList.Add(r);
+                }
+                else
+                {
+                    var ranks = await _catalogService.GetRankDropdownAsync();
+                    foreach (var r in ranks) RankList.Add(r);
+                }
+
+                var distinctPositions = await _cadetService.GetDistinctPositionsAsync();
+                PositionList.Clear();
+                PositionList.Add("Tất cả");
+                if (distinctPositions.Any())
+                {
+                    foreach (var p in distinctPositions) PositionList.Add(p);
+                }
+                else
+                {
+                    var positions = await _catalogService.GetPositionDropdownAsync();
                     foreach (var p in positions) PositionList.Add(p);
                 }
             }
@@ -175,12 +204,17 @@ namespace QL_HocVien.ViewModels
         {
             try
             {
-                var classes = await _classService.GetAllClassesAsync();
+                var distinctClasses = await _cadetService.GetDistinctClassesAsync();
                 ClassList.Clear();
                 ClassList.Add("Tất cả");
-                foreach (var c in classes)
+                if (distinctClasses.Any())
                 {
-                    ClassList.Add(c.ClassName);
+                    foreach (var c in distinctClasses) ClassList.Add(c);
+                }
+                else
+                {
+                    var classes = await _classService.GetAllClassesAsync();
+                    foreach (var c in classes) ClassList.Add(c.ClassName);
                 }
             }
             catch
@@ -247,11 +281,19 @@ namespace QL_HocVien.ViewModels
                 };
 
                 var list = await _cadetService.SearchCadetsAsync(criteria);
+
+                foreach (var c in Cadets)
+                {
+                    c.PropertyChanged -= Cadet_PropertyChanged;
+                }
                 Cadets.Clear();
                 foreach (var cadet in list)
                 {
+                    cadet.IsSelected = false;
+                    cadet.PropertyChanged += Cadet_PropertyChanged;
                     Cadets.Add(cadet);
                 }
+                UpdateSelectionCount();
                 StatusMessage = $"Đã tải {Cadets.Count} học viên {(ActiveFilterCount > 0 ? $"({ActiveFilterCount} bộ lọc đang áp dụng)" : "")}.";
             }
             catch (Exception ex)
@@ -262,6 +304,65 @@ namespace QL_HocVien.ViewModels
             {
                 IsBusy = false;
             }
+        }
+
+        partial void OnIsAllSelectedChanged(bool value)
+        {
+            if (_isUpdatingSelection) return;
+            _isUpdatingSelection = true;
+            try
+            {
+                foreach (var c in Cadets)
+                {
+                    c.IsSelected = value;
+                }
+                SelectedCount = value ? Cadets.Count : 0;
+            }
+            finally
+            {
+                _isUpdatingSelection = false;
+            }
+        }
+
+        private void Cadet_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(Cadet.IsSelected))
+            {
+                UpdateSelectionCount();
+            }
+        }
+
+        [RelayCommand]
+        public void UpdateSelectionCount()
+        {
+            if (_isUpdatingSelection) return;
+            _isUpdatingSelection = true;
+            try
+            {
+                int count = 0;
+                foreach (var c in Cadets)
+                {
+                    if (c.IsSelected) count++;
+                }
+                SelectedCount = count;
+                IsAllSelected = (Cadets.Count > 0 && count == Cadets.Count);
+            }
+            finally
+            {
+                _isUpdatingSelection = false;
+            }
+        }
+
+        [RelayCommand]
+        public void SelectAll()
+        {
+            IsAllSelected = true;
+        }
+
+        [RelayCommand]
+        public void DeselectAll()
+        {
+            IsAllSelected = false;
         }
 
         [RelayCommand]
@@ -279,6 +380,7 @@ namespace QL_HocVien.ViewModels
                 return;
             }
 
+            EditCadetCode = SelectedCadet.CadetCode;
             EditFullName = SelectedCadet.FullName;
             EditRank = SelectedCadet.Rank;
             EditPosition = SelectedCadet.Position;
@@ -294,6 +396,13 @@ namespace QL_HocVien.ViewModels
         {
             if (SelectedCadet == null) return;
 
+            if (string.IsNullOrWhiteSpace(EditCadetCode))
+            {
+                StatusMessage = "Mã học viên (ID) không được để trống.";
+                return;
+            }
+
+            SelectedCadet.CadetCode = EditCadetCode.Trim();
             SelectedCadet.FullName = EditFullName;
             SelectedCadet.Rank = EditRank;
             SelectedCadet.Position = EditPosition;
@@ -310,6 +419,8 @@ namespace QL_HocVien.ViewModels
                 if (result.Success)
                 {
                     IsEditing = false;
+                    await LoadCatalogDropdownsAsync();
+                    await LoadClassListAsync();
                     await LoadCadetsAsync();
                 }
             }
@@ -345,6 +456,8 @@ namespace QL_HocVien.ViewModels
                 StatusMessage = result.Message;
                 if (result.Success)
                 {
+                    await LoadCatalogDropdownsAsync();
+                    await LoadClassListAsync();
                     await LoadCadetsAsync();
                     SelectedCadet = null;
                 }
@@ -352,6 +465,88 @@ namespace QL_HocVien.ViewModels
             catch (Exception ex)
             {
                 StatusMessage = $"Lỗi xóa: {ex.Message}";
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        [RelayCommand]
+        private async Task DeleteSelectedAsync()
+        {
+            var selectedIds = Cadets.Where(c => c.IsSelected).Select(c => c.Id).ToList();
+            if (!selectedIds.Any())
+            {
+                StatusMessage = "Vui lòng chọn ít nhất một học viên để xóa.";
+                return;
+            }
+
+            var confirm = System.Windows.MessageBox.Show(
+                $"Bạn có chắc chắn muốn xóa {selectedIds.Count} học viên đã chọn?\n\nLưu ý: Tất cả hồ sơ kết quả kiểm tra thể lực và điểm môn học tín chỉ liên quan sẽ được tự động xóa theo.",
+                "Xác nhận xóa học viên đã chọn",
+                System.Windows.MessageBoxButton.YesNo,
+                System.Windows.MessageBoxImage.Warning);
+
+            if (confirm != System.Windows.MessageBoxResult.Yes) return;
+
+            IsBusy = true;
+            try
+            {
+                var result = await _cadetService.DeleteMultipleCadetsAsync(selectedIds);
+                StatusMessage = result.Message;
+                if (result.Success)
+                {
+                    await LoadCatalogDropdownsAsync();
+                    await LoadClassListAsync();
+                    await LoadCadetsAsync();
+                    SelectedCadet = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Lỗi xóa nhiều học viên: {ex.Message}";
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        [RelayCommand]
+        private async Task DeleteAllFilteredAsync()
+        {
+            var allIds = Cadets.Select(c => c.Id).ToList();
+            if (!allIds.Any())
+            {
+                StatusMessage = "Danh sách hiện tại không có học viên nào để xóa.";
+                return;
+            }
+
+            var confirm = System.Windows.MessageBox.Show(
+                $"CẢNH BÁO QUAN TRỌNG!\n\nBạn đang yêu cầu xóa TOÀN BỘ {allIds.Count} học viên đang hiển thị theo bộ lọc.\nToàn bộ dữ liệu điểm số, thành tích của các học viên này sẽ bị xóa vĩnh viễn!\n\nBạn có thực sự muốn xóa?",
+                "Cảnh báo xóa toàn bộ học viên",
+                System.Windows.MessageBoxButton.YesNo,
+                System.Windows.MessageBoxImage.Stop);
+
+            if (confirm != System.Windows.MessageBoxResult.Yes) return;
+
+            IsBusy = true;
+            try
+            {
+                var result = await _cadetService.DeleteMultipleCadetsAsync(allIds);
+                StatusMessage = result.Message;
+                if (result.Success)
+                {
+                    await LoadCatalogDropdownsAsync();
+                    await LoadClassListAsync();
+                    await LoadCadetsAsync();
+                    SelectedCadet = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Lỗi xóa toàn bộ học viên: {ex.Message}";
             }
             finally
             {
@@ -439,6 +634,8 @@ namespace QL_HocVien.ViewModels
                 StatusMessage = result.Message;
                 if (result.Success)
                 {
+                    await LoadCatalogDropdownsAsync();
+                    await LoadClassListAsync();
                     await LoadCadetsAsync();
                 }
             }

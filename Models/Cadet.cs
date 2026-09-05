@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace QL_HocVien.Models
 {
-    public class Cadet
+    public partial class Cadet : ObservableObject
     {
         public int Id { get; set; }
         public string CadetCode { get; set; } = string.Empty; // Mã học viên, ví dụ HV26-001
@@ -28,5 +30,9 @@ namespace QL_HocVien.Models
         
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public ICollection<PhysicalExamRecord> ExamRecords { get; set; } = new List<PhysicalExamRecord>();
+
+        [NotMapped]
+        [ObservableProperty]
+        private bool _isSelected;
     }
 }

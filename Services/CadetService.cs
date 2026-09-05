@@ -67,18 +67,19 @@ namespace QL_HocVien.Services
             if (string.IsNullOrWhiteSpace(cadet.FullName))
                 return (false, "Họ và tên học viên không được để trống.");
 
+            if (string.IsNullOrWhiteSpace(cadet.CadetCode))
+                return (false, "Mã học viên (ID) không được để trống.");
+
+            if (await _cadetRepository.ExistsByCodeAsync(cadet.CadetCode, cadet.Id))
+            {
+                return (false, $"Mã học viên '{cadet.CadetCode}' đã được sử dụng.");
+            }
+
             var existing = await _cadetRepository.GetByIdAsync(cadet.Id);
             if (existing == null)
                 return (false, "Không tìm thấy học viên để cập nhật.");
 
-            // Kiểm tra mã nếu bị đổi
-            if (existing.CadetCode != cadet.CadetCode)
-            {
-                if (await _cadetRepository.ExistsByCodeAsync(cadet.CadetCode))
-                    return (false, $"Mã học viên '{cadet.CadetCode}' đã được sử dụng.");
-            }
-
-            existing.CadetCode = cadet.CadetCode;
+            existing.CadetCode = cadet.CadetCode.Trim();
             existing.FullName = cadet.FullName;
             existing.Rank = cadet.Rank;
             existing.Position = cadet.Position;
@@ -90,10 +91,16 @@ namespace QL_HocVien.Services
             existing.Age = cadet.Age;
             existing.Gender = cadet.Gender;
 
-            _cadetRepository.Update(existing);
-            await _cadetRepository.SaveChangesAsync();
-
-            return (true, "Cập nhật thông tin học viên thành công!");
+            try
+            {
+                _cadetRepository.Update(existing);
+                await _cadetRepository.SaveChangesAsync();
+                return (true, "Cập nhật thông tin học viên thành công!");
+            }
+            catch (Exception ex)
+            {
+                return (false, $"Lỗi cập nhật học viên: {ex.Message}");
+            }
         }
 
         public async Task<(bool Success, string Message)> DeleteCadetAsync(int id)
@@ -107,6 +114,28 @@ namespace QL_HocVien.Services
 
             return (true, "Xóa học viên thành công!");
         }
+
+        public async Task<(bool Success, string Message, int DeletedCount)> DeleteMultipleCadetsAsync(IEnumerable<int> cadetIds)
+        {
+            var ids = cadetIds?.Distinct().ToList() ?? new List<int>();
+            if (!ids.Any())
+                return (false, "Không có học viên nào được chọn để xóa.", 0);
+
+            try
+            {
+                int count = await _cadetRepository.DeleteMultipleAsync(ids);
+                return (true, $"Đã xóa thành công {count} học viên.", count);
+            }
+            catch (Exception ex)
+            {
+                return (false, $"Lỗi khi xóa học viên: {ex.Message}", 0);
+            }
+        }
+
+        public async Task<List<string>> GetDistinctUnitsAsync() => await _cadetRepository.GetDistinctUnitsAsync();
+        public async Task<List<string>> GetDistinctClassesAsync() => await _cadetRepository.GetDistinctClassesAsync();
+        public async Task<List<string>> GetDistinctRanksAsync() => await _cadetRepository.GetDistinctRanksAsync();
+        public async Task<List<string>> GetDistinctPositionsAsync() => await _cadetRepository.GetDistinctPositionsAsync();
 
         public async Task<string> GenerateSuggestedCadetCodeAsync()
         {

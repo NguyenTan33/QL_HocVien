@@ -14,6 +14,11 @@ namespace QL_HocVien.Services
         Task<(bool Success, string Message, Cadet? Cadet)> AddCadetAsync(Cadet cadet);
         Task<(bool Success, string Message)> UpdateCadetAsync(Cadet cadet);
         Task<(bool Success, string Message)> DeleteCadetAsync(int id);
+        Task<(bool Success, string Message, int DeletedCount)> DeleteMultipleCadetsAsync(IEnumerable<int> cadetIds);
+        Task<List<string>> GetDistinctUnitsAsync();
+        Task<List<string>> GetDistinctClassesAsync();
+        Task<List<string>> GetDistinctRanksAsync();
+        Task<List<string>> GetDistinctPositionsAsync();
         Task<string> GenerateSuggestedCadetCodeAsync();
     }
 }

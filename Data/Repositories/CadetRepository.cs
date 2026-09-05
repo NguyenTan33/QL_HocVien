@@ -140,9 +140,15 @@ namespace QL_HocVien.Data.Repositories
                 .FirstOrDefaultAsync(c => c.Id == id);
         }
 
-        public async Task<bool> ExistsByCodeAsync(string cadetCode)
+        public async Task<bool> ExistsByCodeAsync(string cadetCode, int? excludeId = null)
         {
-            return await _context.Cadets.AnyAsync(c => c.CadetCode.ToLower() == cadetCode.Trim().ToLower());
+            if (string.IsNullOrWhiteSpace(cadetCode)) return false;
+            var query = _context.Cadets.AsQueryable();
+            if (excludeId.HasValue)
+            {
+                query = query.Where(c => c.Id != excludeId.Value);
+            }
+            return await query.AnyAsync(c => c.CadetCode.ToLower() == cadetCode.Trim().ToLower());
         }
 
         public async Task<int> GetNextCadetSequenceNumberAsync(int year)
@@ -164,6 +170,61 @@ namespace QL_HocVien.Data.Repositories
             }
 
             return maxSeq + 1;
+        }
+
+        public async Task<List<string>> GetDistinctUnitsAsync()
+        {
+            return await _context.Cadets
+                .Where(c => !string.IsNullOrWhiteSpace(c.Unit))
+                .Select(c => c.Unit.Trim())
+                .Distinct()
+                .OrderBy(u => u)
+                .ToListAsync();
+        }
+
+        public async Task<List<string>> GetDistinctClassesAsync()
+        {
+            return await _context.Cadets
+                .Where(c => !string.IsNullOrWhiteSpace(c.ClassName))
+                .Select(c => c.ClassName.Trim())
+                .Distinct()
+                .OrderBy(c => c)
+                .ToListAsync();
+        }
+
+        public async Task<List<string>> GetDistinctRanksAsync()
+        {
+            return await _context.Cadets
+                .Where(c => !string.IsNullOrWhiteSpace(c.Rank))
+                .Select(c => c.Rank.Trim())
+                .Distinct()
+                .OrderBy(r => r)
+                .ToListAsync();
+        }
+
+        public async Task<List<string>> GetDistinctPositionsAsync()
+        {
+            return await _context.Cadets
+                .Where(c => !string.IsNullOrWhiteSpace(c.Position))
+                .Select(c => c.Position.Trim())
+                .Distinct()
+                .OrderBy(p => p)
+                .ToListAsync();
+        }
+
+        public async Task<int> DeleteMultipleAsync(IEnumerable<int> ids)
+        {
+            var idList = ids.Distinct().ToList();
+            if (!idList.Any()) return 0;
+
+            var cadetsToDelete = await _context.Cadets
+                .Where(c => idList.Contains(c.Id))
+                .ToListAsync();
+
+            if (!cadetsToDelete.Any()) return 0;
+
+            _context.Cadets.RemoveRange(cadetsToDelete);
+            return await _context.SaveChangesAsync();
         }
     }
 }

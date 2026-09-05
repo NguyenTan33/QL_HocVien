@@ -281,20 +281,28 @@ namespace QL_HocVien.Services
 
         public async Task<List<string>> GetAvailableUnitsAsync()
         {
-            var units = await _catalogService.GetAllUnitsAsync();
-            var list = units.Select(u => u.UnitName).OrderBy(u => u).ToList();
+            var units = await _cadetService.GetDistinctUnitsAsync();
+            var list = units.OrderBy(u => u).ToList();
             list.Insert(0, "Tất cả");
             return list;
         }
 
         public async Task<List<string>> GetAvailableClassesAsync(string? unit = null)
         {
-            var classes = (await _classService.GetAllClassesAsync()).ToList();
+            List<string> list;
             if (!string.IsNullOrWhiteSpace(unit) && unit != "Tất cả")
             {
-                // Có thể lọc lớp theo đơn vị nếu lớp có UnitId/UnitName
+                list = await _context.Cadets
+                    .Where(c => c.Unit == unit && !string.IsNullOrWhiteSpace(c.ClassName))
+                    .Select(c => c.ClassName.Trim())
+                    .Distinct()
+                    .OrderBy(c => c)
+                    .ToListAsync();
             }
-            var list = classes.Select(c => c.ClassName).Distinct().OrderBy(c => c).ToList();
+            else
+            {
+                list = await _cadetService.GetDistinctClassesAsync();
+            }
             list.Insert(0, "Tất cả");
             return list;
         }
