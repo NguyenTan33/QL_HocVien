@@ -47,7 +47,18 @@ namespace QL_HocVien.ViewModels
             ActiveMenu = "CadetManagement";
             var vm = _serviceProvider.GetRequiredService<CadetManagementViewModel>();
             vm.OnRequestAddCadet += NavigateToAddCadet;
+            vm.OnRequestManageUnits += NavigateToUnitCatalog;
             CurrentView = vm;
+        }
+
+        [RelayCommand]
+        public void NavigateToUnitCatalog()
+        {
+            NavigateToCatalogManagement();
+            if (CurrentView is CatalogManagementViewModel cvm)
+            {
+                cvm.SelectedTabIndex = 2; // Tab Đơn Vị Quản Lý (Đại đội, Tiểu đoàn...)
+            }
         }
 
         [RelayCommand]

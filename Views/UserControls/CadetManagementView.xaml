@@ -38,8 +38,10 @@
                     </Button>
                     <Button Style="{StaticResource DangerButtonStyle}" Margin="0,0,10,6" Background="#991B1B"
                             Command="{Binding DeleteAllFilteredCommand}" ToolTip="Xóa toàn bộ học viên đang hiển thị theo bộ lọc hiện tại">
-                        <TextBlock Text="{Binding Cadets.Count, StringFormat='💥 Xóa toàn bộ ({0})'}"/>
+                        <TextBlock Text="{Binding TotalFilteredCount, StringFormat='💥 Xóa toàn bộ ({0})'}"/>
                     </Button>
+                    <Button Content="🏛️ QL Đơn Vị" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,6,6"
+                            Command="{Binding NavigateToUnitsCommand}" ToolTip="Mở trang Quản lý Đơn vị, Đại đội, Cấp bậc, Chức vụ"/>
                     <Button Content="📥 Nhập Excel" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,6,6"
                             Command="{Binding ImportExcelCommand}"/>
                     <Button Content="📤 Xuất Excel" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,6,6"

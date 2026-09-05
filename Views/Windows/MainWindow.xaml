@@ -176,7 +176,12 @@
                                     Style="{StaticResource SidebarNavButtonStyle}"
                                     Command="{Binding NavigateToClassManagementCommand}"/>
 
-                            <!-- 5. Môn Học & Điểm Tín Chỉ -->
+                            <!-- 5. Danh Mục Tổ Chức (Đại Đội, Cấp Bậc, Chức Vụ) -->
+                            <Button Content="🏛️   Danh Mục &amp; Đại Đội" 
+                                    Style="{StaticResource SidebarNavButtonStyle}"
+                                    Command="{Binding NavigateToCatalogManagementCommand}"/>
+
+                            <!-- 6. Môn Học & Điểm Tín Chỉ -->
                             <Button Content="📖   Môn Học &amp; Điểm Tín Chỉ" 
                                     Style="{StaticResource SidebarNavButtonStyle}"
                                     Command="{Binding NavigateToCreditSubjectManagementCommand}"/>

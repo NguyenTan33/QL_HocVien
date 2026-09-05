@@ -123,7 +123,14 @@ namespace QL_HocVien.ViewModels
         [ObservableProperty]
         private string _newCadetPassword = string.Empty;
 
+        [ObservableProperty]
+        private int _totalFilteredCount;
+
         public event Action? OnRequestAddCadet;
+        public event Action? OnRequestManageUnits;
+
+        private bool _isSuppressingFilterEvents;
+        private readonly System.Threading.SemaphoreSlim _loadLock = new(1, 1);
 
         public CadetManagementViewModel(
             ICadetService cadetService,
@@ -146,12 +153,36 @@ namespace QL_HocVien.ViewModels
 
         private async Task InitializeAsync()
         {
-            await LoadCatalogDropdownsAsync();
-            await LoadClassListAsync();
+            _isSuppressingFilterEvents = true;
+            try
+            {
+                await LoadCatalogDropdownsInternalAsync();
+                await LoadClassListInternalAsync();
+                EnsureFilterDefaults();
+            }
+            finally
+            {
+                _isSuppressingFilterEvents = false;
+            }
+
             await LoadCadetsAsync();
         }
 
         public async Task LoadCatalogDropdownsAsync()
+        {
+            _isSuppressingFilterEvents = true;
+            try
+            {
+                await LoadCatalogDropdownsInternalAsync();
+                EnsureFilterDefaults();
+            }
+            finally
+            {
+                _isSuppressingFilterEvents = false;
+            }
+        }
+
+        private async Task LoadCatalogDropdownsInternalAsync()
         {
             try
             {
@@ -202,6 +233,20 @@ namespace QL_HocVien.ViewModels
 
         public async Task LoadClassListAsync()
         {
+            _isSuppressingFilterEvents = true;
+            try
+            {
+                await LoadClassListInternalAsync();
+                EnsureFilterDefaults();
+            }
+            finally
+            {
+                _isSuppressingFilterEvents = false;
+            }
+        }
+
+        private async Task LoadClassListInternalAsync()
+        {
             try
             {
                 var distinctClasses = await _cadetService.GetDistinctClassesAsync();
@@ -223,6 +268,24 @@ namespace QL_HocVien.ViewModels
             }
         }
 
+        private void EnsureFilterDefaults()
+        {
+            if (string.IsNullOrEmpty(SelectedUnit) || !UnitList.Contains(SelectedUnit))
+                SelectedUnit = "Tất cả";
+            if (string.IsNullOrEmpty(SelectedRank) || !RankList.Contains(SelectedRank))
+                SelectedRank = "Tất cả";
+            if (string.IsNullOrEmpty(SelectedPosition) || !PositionList.Contains(SelectedPosition))
+                SelectedPosition = "Tất cả";
+            if (string.IsNullOrEmpty(SelectedClass) || !ClassList.Contains(SelectedClass))
+                SelectedClass = "Tất cả";
+            if (string.IsNullOrEmpty(SelectedGender))
+                SelectedGender = "Tất cả";
+            if (string.IsNullOrEmpty(SelectedHasAccount))
+                SelectedHasAccount = "Tất cả";
+            if (string.IsNullOrEmpty(SelectedFitnessGrade))
+                SelectedFitnessGrade = "Tất cả";
+        }
+
         [RelayCommand]
         public void ToggleAdvancedFilter()
         {
@@ -230,54 +293,73 @@ namespace QL_HocVien.ViewModels
         }
 
         [RelayCommand]
-        public void ResetFilters()
+        public async Task ResetFilters()
         {
-            SearchKeyword = string.Empty;
-            SelectedRank = "Tất cả";
-            SelectedUnit = "Tất cả";
-            SelectedClass = "Tất cả";
-            SelectedPosition = "Tất cả";
-            SelectedGender = "Tất cả";
-            FilterMinAge = null;
-            FilterMaxAge = null;
-            SelectedHasAccount = "Tất cả";
-            SelectedFitnessGrade = "Tất cả";
-            _ = LoadCadetsAsync();
+            _isSuppressingFilterEvents = true;
+            try
+            {
+                SearchKeyword = string.Empty;
+                SelectedRank = "Tất cả";
+                SelectedUnit = "Tất cả";
+                SelectedClass = "Tất cả";
+                SelectedPosition = "Tất cả";
+                SelectedGender = "Tất cả";
+                FilterMinAge = null;
+                FilterMaxAge = null;
+                SelectedHasAccount = "Tất cả";
+                SelectedFitnessGrade = "Tất cả";
+            }
+            finally
+            {
+                _isSuppressingFilterEvents = false;
+            }
+            await LoadCadetsAsync();
         }
 
         [RelayCommand]
         public async Task LoadCadetsAsync()
         {
+            if (_isSuppressingFilterEvents) return;
+
+            await _loadLock.WaitAsync();
             IsBusy = true;
             try
             {
+                var rank = string.IsNullOrWhiteSpace(SelectedRank) ? "Tất cả" : SelectedRank;
+                var unit = string.IsNullOrWhiteSpace(SelectedUnit) ? "Tất cả" : SelectedUnit;
+                var className = string.IsNullOrWhiteSpace(SelectedClass) ? "Tất cả" : SelectedClass;
+                var position = string.IsNullOrWhiteSpace(SelectedPosition) ? "Tất cả" : SelectedPosition;
+                var gender = string.IsNullOrWhiteSpace(SelectedGender) ? "Tất cả" : SelectedGender;
+                var grade = string.IsNullOrWhiteSpace(SelectedFitnessGrade) ? "Tất cả" : SelectedFitnessGrade;
+                var account = string.IsNullOrWhiteSpace(SelectedHasAccount) ? "Tất cả" : SelectedHasAccount;
+
                 int count = 0;
                 if (!string.IsNullOrWhiteSpace(SearchKeyword)) count++;
-                if (SelectedRank != "Tất cả") count++;
-                if (SelectedUnit != "Tất cả") count++;
-                if (SelectedClass != "Tất cả") count++;
-                if (SelectedPosition != "Tất cả") count++;
-                if (SelectedGender != "Tất cả") count++;
+                if (rank != "Tất cả") count++;
+                if (unit != "Tất cả") count++;
+                if (className != "Tất cả") count++;
+                if (position != "Tất cả") count++;
+                if (gender != "Tất cả") count++;
                 if (FilterMinAge.HasValue || FilterMaxAge.HasValue) count++;
-                if (SelectedHasAccount != "Tất cả") count++;
-                if (SelectedFitnessGrade != "Tất cả") count++;
+                if (account != "Tất cả") count++;
+                if (grade != "Tất cả") count++;
                 ActiveFilterCount = count;
 
-                bool? hasAccount = SelectedHasAccount == "Đã có tài khoản" ? true :
-                                   SelectedHasAccount == "Chưa có tài khoản" ? false : null;
+                bool? hasAccount = account == "Đã có tài khoản" ? true :
+                                   account == "Chưa có tài khoản" ? false : null;
 
                 var criteria = new QL_HocVien.Models.Filters.CadetFilterCriteria
                 {
                     Keyword = SearchKeyword,
-                    Rank = SelectedRank,
-                    Unit = SelectedUnit,
-                    ClassName = SelectedClass,
-                    Position = SelectedPosition,
-                    Gender = SelectedGender,
+                    Rank = rank,
+                    Unit = unit,
+                    ClassName = className,
+                    Position = position,
+                    Gender = gender,
                     MinAge = FilterMinAge,
                     MaxAge = FilterMaxAge,
                     HasAccount = hasAccount,
-                    FitnessGrade = SelectedFitnessGrade
+                    FitnessGrade = grade
                 };
 
                 var list = await _cadetService.SearchCadetsAsync(criteria);
@@ -293,6 +375,7 @@ namespace QL_HocVien.ViewModels
                     cadet.PropertyChanged += Cadet_PropertyChanged;
                     Cadets.Add(cadet);
                 }
+                TotalFilteredCount = Cadets.Count;
                 UpdateSelectionCount();
                 StatusMessage = $"Đã tải {Cadets.Count} học viên {(ActiveFilterCount > 0 ? $"({ActiveFilterCount} bộ lọc đang áp dụng)" : "")}.";
             }
@@ -303,7 +386,14 @@ namespace QL_HocVien.ViewModels
             finally
             {
                 IsBusy = false;
+                _loadLock.Release();
             }
+        }
+
+        [RelayCommand]
+        private void NavigateToUnits()
+        {
+            OnRequestManageUnits?.Invoke();
         }
 
         partial void OnIsAllSelectedChanged(bool value)
@@ -649,15 +739,15 @@ namespace QL_HocVien.ViewModels
             }
         }
 
-        partial void OnSearchKeywordChanged(string value) => _ = LoadCadetsAsync();
-        partial void OnSelectedRankChanged(string value) => _ = LoadCadetsAsync();
-        partial void OnSelectedUnitChanged(string value) => _ = LoadCadetsAsync();
-        partial void OnSelectedClassChanged(string value) => _ = LoadCadetsAsync();
-        partial void OnSelectedPositionChanged(string value) => _ = LoadCadetsAsync();
-        partial void OnSelectedGenderChanged(string value) => _ = LoadCadetsAsync();
-        partial void OnFilterMinAgeChanged(int? value) => _ = LoadCadetsAsync();
-        partial void OnFilterMaxAgeChanged(int? value) => _ = LoadCadetsAsync();
-        partial void OnSelectedHasAccountChanged(string value) => _ = LoadCadetsAsync();
-        partial void OnSelectedFitnessGradeChanged(string value) => _ = LoadCadetsAsync();
+        partial void OnSearchKeywordChanged(string value) { if (!_isSuppressingFilterEvents) _ = LoadCadetsAsync(); }
+        partial void OnSelectedRankChanged(string value) { if (!_isSuppressingFilterEvents) _ = LoadCadetsAsync(); }
+        partial void OnSelectedUnitChanged(string value) { if (!_isSuppressingFilterEvents) _ = LoadCadetsAsync(); }
+        partial void OnSelectedClassChanged(string value) { if (!_isSuppressingFilterEvents) _ = LoadCadetsAsync(); }
+        partial void OnSelectedPositionChanged(string value) { if (!_isSuppressingFilterEvents) _ = LoadCadetsAsync(); }
+        partial void OnSelectedGenderChanged(string value) { if (!_isSuppressingFilterEvents) _ = LoadCadetsAsync(); }
+        partial void OnFilterMinAgeChanged(int? value) { if (!_isSuppressingFilterEvents) _ = LoadCadetsAsync(); }
+        partial void OnFilterMaxAgeChanged(int? value) { if (!_isSuppressingFilterEvents) _ = LoadCadetsAsync(); }
+        partial void OnSelectedHasAccountChanged(string value) { if (!_isSuppressingFilterEvents) _ = LoadCadetsAsync(); }
+        partial void OnSelectedFitnessGradeChanged(string value) { if (!_isSuppressingFilterEvents) _ = LoadCadetsAsync(); }
     }
 }

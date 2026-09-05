@@ -9,6 +9,7 @@ using QL_HocVien.Data.Repositories;
 using QL_HocVien.Models;
 using QL_HocVien.Models.Filters;
 using QL_HocVien.Services;
+using QL_HocVien.ViewModels;
 using Xunit;
 
 namespace QL_HocVien.Tests
@@ -904,5 +905,77 @@ namespace QL_HocVien.Tests
             Assert.Null(check1);
             Assert.Null(check2);
         }
+
+        [Fact]
+        public void TestCadetManagementView_Instantiation()
+        {
+            Exception? threadEx = null;
+            var thread = new System.Threading.Thread(() =>
+            {
+                try
+                {
+                    var app = System.Windows.Application.Current ?? new System.Windows.Application();
+                    if (app.Resources.MergedDictionaries.Count == 0)
+                    {
+                        app.Resources.MergedDictionaries.Add(new System.Windows.ResourceDictionary
+                        {
+                            Source = new Uri("pack://application:,,,/QL_HocVien;component/Styles/MilitaryTheme.xaml")
+                        });
+                    }
+                    var view = new QL_HocVien.Views.UserControls.CadetManagementView();
+                    var vm = new CadetManagementViewModel(
+                        _cadetService,
+                        _classService,
+                        _authService,
+                        _excelService,
+                        new TestFileDialogService(),
+                        _catalogService);
+                    view.DataContext = vm;
+                    view.Measure(new System.Windows.Size(1000, 800));
+                    view.Arrange(new System.Windows.Rect(0, 0, 1000, 800));
+                    view.UpdateLayout();
+                    Assert.NotNull(view);
+                }
+                catch (Exception ex)
+                {
+                    threadEx = ex;
+                }
+            });
+            thread.SetApartmentState(System.Threading.ApartmentState.STA);
+            thread.Start();
+            thread.Join();
+
+            if (threadEx != null)
+            {
+                throw new Exception($"CadetManagementView instantiation failed: {threadEx.Message}", threadEx);
+            }
+        }
+
+        [Fact]
+        public async Task TestCadetManagementViewModel_DataLoad()
+        {
+            var vm = new CadetManagementViewModel(
+                _cadetService,
+                _classService,
+                _authService,
+                _excelService,
+                new TestFileDialogService(),
+                _catalogService);
+
+            // Wait a bit for _ = InitializeAsync() to finish
+            await Task.Delay(1000);
+
+            Assert.Equal("Tất cả", vm.SelectedUnit);
+            Assert.Equal("Tất cả", vm.SelectedClass);
+            Assert.Equal("Tất cả", vm.SelectedRank);
+            Assert.Equal("Tất cả", vm.SelectedPosition);
+            Assert.NotEmpty(vm.Cadets);
+        }
+    }
+
+    public class TestFileDialogService : IFileDialogService
+    {
+        public string? ShowOpenFileDialog(string filter = "All files (*.*)|*.*", string title = "Chọn tệp tin") => null;
+        public string? ShowSaveFileDialog(string defaultFileName, string filter = "All files (*.*)|*.*", string title = "Lưu tệp tin") => null;
     }
 }
