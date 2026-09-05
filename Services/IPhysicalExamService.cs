@@ -14,5 +14,6 @@ namespace QL_HocVien.Services
         Task<(bool Success, string Message, PhysicalExamRecord? Record)> AddExamRecordAsync(PhysicalExamRecord record);
         Task<(bool Success, string Message)> UpdateExamRecordAsync(PhysicalExamRecord record);
         Task<(bool Success, string Message)> DeleteExamRecordAsync(int id);
+        Task<(bool Success, string Message, int DeletedCount)> DeleteMultipleExamRecordsAsync(IEnumerable<int> recordIds);
     }
 }

@@ -970,6 +970,95 @@ namespace QL_HocVien.Tests
             Assert.Equal("Tất cả", vm.SelectedRank);
             Assert.Equal("Tất cả", vm.SelectedPosition);
             Assert.NotEmpty(vm.Cadets);
+
+            // Test ToggleSelectAll
+            Assert.Equal("☑️ Chọn tất cả", vm.SelectAllButtonText);
+            vm.ToggleSelectAll();
+            Assert.True(vm.IsAllSelected);
+            Assert.Equal("⬜ Bỏ chọn", vm.SelectAllButtonText);
+            Assert.True(vm.Cadets.All(c => c.IsSelected));
+
+            vm.ToggleSelectAll();
+            Assert.False(vm.IsAllSelected);
+            Assert.Equal("☑️ Chọn tất cả", vm.SelectAllButtonText);
+            Assert.True(vm.Cadets.All(c => !c.IsSelected));
+        }
+
+        [Fact]
+        public async Task DeleteMultipleOfficers_DeletesAllSelected()
+        {
+            var o1 = new Officer { OfficerCode = "CB-TEST-01", FullName = "Cán bộ 1", Rank = "Đại úy", Position = "Đại đội trưởng", Unit = "Đại đội 1" };
+            var o2 = new Officer { OfficerCode = "CB-TEST-02", FullName = "Cán bộ 2", Rank = "Trung úy", Position = "Chính trị viên", Unit = "Đại đội 2" };
+            var r1 = await _officerService.AddOfficerAsync(o1);
+            var r2 = await _officerService.AddOfficerAsync(o2);
+            Assert.True(r1.Success && r2.Success);
+
+            int id1 = r1.Officer!.Id;
+            int id2 = r2.Officer!.Id;
+
+            var delRes = await _officerService.DeleteMultipleOfficersAsync(new[] { id1, id2 });
+            Assert.True(delRes.Success);
+            Assert.Equal(2, delRes.DeletedCount);
+
+            Assert.Null(await _officerService.GetOfficerByIdAsync(id1));
+            Assert.Null(await _officerService.GetOfficerByIdAsync(id2));
+        }
+
+        [Fact]
+        public async Task DeleteMultipleClasses_DeletesAllSelected()
+        {
+            var c1 = new MilitaryClass { ClassCode = "LH-TEST-01", ClassName = "Lớp Test 1", Unit = "Đại đội 1", Major = "Chỉ huy Tham mưu" };
+            var c2 = new MilitaryClass { ClassCode = "LH-TEST-02", ClassName = "Lớp Test 2", Unit = "Đại đội 2", Major = "Chỉ huy Tham mưu" };
+            var r1 = await _classService.AddClassAsync(c1);
+            var r2 = await _classService.AddClassAsync(c2);
+            Assert.True(r1.Success && r2.Success);
+
+            int id1 = r1.Class!.Id;
+            int id2 = r2.Class!.Id;
+
+            var delRes = await _classService.DeleteMultipleClassesAsync(new[] { id1, id2 });
+            Assert.True(delRes.Success);
+            Assert.Equal(2, delRes.DeletedCount);
+
+            Assert.Null(await _classService.GetClassByIdAsync(id1));
+            Assert.Null(await _classService.GetClassByIdAsync(id2));
+        }
+
+        [Fact]
+        public async Task DeleteMultipleSubjects_DeletesAllSelected()
+        {
+            var s1 = new Subject { SubjectCode = "MH-TEST-01", SubjectName = "Môn Test 1", Category = "Sức mạnh", Unit = "lần", ExcellentThreshold = 20, GoodThreshold = 15, PassThreshold = 10 };
+            var s2 = new Subject { SubjectCode = "MH-TEST-02", SubjectName = "Môn Test 2", Category = "Sức nhanh", Unit = "giây", ExcellentThreshold = 12, GoodThreshold = 14, PassThreshold = 16, IsHigherBetter = false };
+            var r1 = await _subjectService.AddSubjectAsync(s1);
+            var r2 = await _subjectService.AddSubjectAsync(s2);
+            Assert.True(r1.Success && r2.Success);
+
+            int id1 = r1.Subject!.Id;
+            int id2 = r2.Subject!.Id;
+
+            var delRes = await _subjectService.DeleteMultipleSubjectsAsync(new[] { id1, id2 });
+            Assert.True(delRes.Success);
+            Assert.Equal(2, delRes.DeletedCount);
+
+            Assert.Null(await _subjectService.GetSubjectByIdAsync(id1));
+            Assert.Null(await _subjectService.GetSubjectByIdAsync(id2));
+        }
+
+        [Fact]
+        public async Task DeleteMultipleExamRecords_DeletesAllSelected()
+        {
+            var rec1 = new PhysicalExamRecord { CadetId = 1, SubjectId = 1, ExamDate = DateTime.Today, ExamSession = "Test", ScoreValue = 18, Grade = "Khá" };
+            var rec2 = new PhysicalExamRecord { CadetId = 1, SubjectId = 2, ExamDate = DateTime.Today, ExamSession = "Test", ScoreValue = 22, Grade = "Giỏi" };
+            var r1 = await _examService.AddExamRecordAsync(rec1);
+            var r2 = await _examService.AddExamRecordAsync(rec2);
+            Assert.True(r1.Success && r2.Success);
+
+            int id1 = r1.Record!.Id;
+            int id2 = r2.Record!.Id;
+
+            var delRes = await _examService.DeleteMultipleExamRecordsAsync(new[] { id1, id2 });
+            Assert.True(delRes.Success);
+            Assert.Equal(2, delRes.DeletedCount);
         }
     }
 

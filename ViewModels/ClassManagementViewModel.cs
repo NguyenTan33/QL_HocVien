@@ -73,6 +73,71 @@ namespace QL_HocVien.ViewModels
         [ObservableProperty]
         private MilitaryClass? _selectedClass;
 
+        [ObservableProperty]
+        private bool _isAllSelected;
+
+        [ObservableProperty]
+        private int _selectedCount;
+
+        private bool _isUpdatingSelection;
+
+        public string SelectAllButtonText => IsAllSelected ? "⬜ Bỏ chọn" : "☑️ Chọn tất cả";
+
+        [RelayCommand]
+        public void ToggleSelectAll()
+        {
+            IsAllSelected = !IsAllSelected;
+        }
+
+        partial void OnIsAllSelectedChanged(bool value)
+        {
+            if (_isUpdatingSelection) return;
+            _isUpdatingSelection = true;
+            try
+            {
+                foreach (var c in Classes)
+                {
+                    c.IsSelected = value;
+                }
+                SelectedCount = value ? Classes.Count : 0;
+            }
+            finally
+            {
+                _isUpdatingSelection = false;
+                OnPropertyChanged(nameof(SelectAllButtonText));
+            }
+        }
+
+        private void Class_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(MilitaryClass.IsSelected))
+            {
+                UpdateSelectionCount();
+            }
+        }
+
+        [RelayCommand]
+        public void UpdateSelectionCount()
+        {
+            if (_isUpdatingSelection) return;
+            _isUpdatingSelection = true;
+            try
+            {
+                int count = 0;
+                foreach (var c in Classes)
+                {
+                    if (c.IsSelected) count++;
+                }
+                SelectedCount = count;
+                IsAllSelected = (Classes.Count > 0 && count == Classes.Count);
+            }
+            finally
+            {
+                _isUpdatingSelection = false;
+                OnPropertyChanged(nameof(SelectAllButtonText));
+            }
+        }
+
         // Form Modal Thêm / Sửa
         [ObservableProperty]
         private bool _isFormVisible;
@@ -221,8 +286,10 @@ namespace QL_HocVien.ViewModels
                 Classes.Clear();
                 foreach (var c in list)
                 {
+                    c.PropertyChanged += Class_PropertyChanged;
                     Classes.Add(c);
                 }
+                UpdateSelectionCount();
                 StatusMessage = $"Đang hiển thị {Classes.Count} lớp học {(ActiveFilterCount > 0 ? $"({ActiveFilterCount} bộ lọc đang áp dụng)" : "")}.";
             }
             catch (Exception ex)
@@ -360,17 +427,51 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         private async Task DeleteClassAsync(MilitaryClass? targetClass = null)
         {
-            var c = targetClass ?? SelectedClass;
-            if (c == null)
+            if (targetClass != null)
             {
-                StatusMessage = "Vui lòng chọn lớp học cần xóa.";
+                var confirmSingle = MessageBox.Show(
+                    $"Bạn có chắc chắn muốn xóa lớp học '{targetClass.ClassName}' (Mã: {targetClass.ClassCode})?\n" +
+                    $"Quân số hiện tại: {targetClass.Cadets.Count} học viên.\n" +
+                    "Các học viên sẽ không bị xóa mà được chuyển trạng thái lớp tự do.",
+                    "Xác nhận xóa lớp học",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning);
+
+                if (confirmSingle != MessageBoxResult.Yes) return;
+
+                IsBusy = true;
+                try
+                {
+                    var result = await _classService.DeleteClassAsync(targetClass.Id);
+                    StatusMessage = result.Message;
+                    SelectedClass = null;
+                    await LoadClassesAsync();
+                }
+                catch (Exception ex)
+                {
+                    StatusMessage = $"Lỗi khi xóa lớp: {ex.Message}";
+                }
+                finally
+                {
+                    IsBusy = false;
+                }
+                return;
+            }
+
+            var selected = Classes.Where(cl => cl.IsSelected).ToList();
+            if (!selected.Any() && SelectedClass != null)
+            {
+                selected.Add(SelectedClass);
+            }
+
+            if (!selected.Any())
+            {
+                MessageBox.Show("Vui lòng chọn ít nhất một lớp học để xóa.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
             var confirm = MessageBox.Show(
-                $"Bạn có chắc chắn muốn xóa lớp học '{c.ClassName}' (Mã: {c.ClassCode})?\n" +
-                $"Quân số hiện tại: {c.Cadets.Count} học viên.\n" +
-                "Các học viên sẽ không bị xóa mà được chuyển trạng thái lớp tự do.",
+                $"Bạn có chắc chắn muốn xóa {selected.Count} lớp học đã chọn không?\n\nCác học viên thuộc các lớp này sẽ không bị xóa mà được chuyển trạng thái lớp tự do.",
                 "Xác nhận xóa lớp học",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Warning);
@@ -381,8 +482,9 @@ namespace QL_HocVien.ViewModels
             IsBusy = true;
             try
             {
-                var result = await _classService.DeleteClassAsync(c.Id);
+                var result = await _classService.DeleteMultipleClassesAsync(selected.Select(cl => cl.Id));
                 StatusMessage = result.Message;
+                SelectedClass = null;
                 await LoadClassesAsync();
             }
             catch (Exception ex)

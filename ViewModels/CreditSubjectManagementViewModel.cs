@@ -330,6 +330,15 @@ namespace QL_HocVien.ViewModels
         public async Task DeleteSubjectAsync(CreditSubject? subject)
         {
             if (subject == null) return;
+
+            var confirm = System.Windows.MessageBox.Show(
+                $"Bạn có chắc chắn muốn xóa môn học tín chỉ '{subject.SubjectName}' ({subject.SubjectCode}) không?\n\nLưu ý: Tất cả điểm số liên quan đến môn học này sẽ bị xóa.",
+                "Xác nhận xóa môn học tín chỉ",
+                System.Windows.MessageBoxButton.YesNo,
+                System.Windows.MessageBoxImage.Warning);
+
+            if (confirm != System.Windows.MessageBoxResult.Yes) return;
+
             IsBusy = true;
             try
             {

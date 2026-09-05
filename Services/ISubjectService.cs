@@ -13,5 +13,6 @@ namespace QL_HocVien.Services
         Task<(bool Success, string Message, Subject? Subject)> AddSubjectAsync(Subject subject);
         Task<(bool Success, string Message)> UpdateSubjectAsync(Subject subject);
         Task<(bool Success, string Message)> DeleteSubjectAsync(int id);
+        Task<(bool Success, string Message, int DeletedCount)> DeleteMultipleSubjectsAsync(IEnumerable<int> subjectIds);
     }
 }

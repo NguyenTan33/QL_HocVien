@@ -59,6 +59,71 @@ namespace QL_HocVien.ViewModels
         [ObservableProperty]
         private Officer? _selectedOfficer;
 
+        [ObservableProperty]
+        private bool _isAllSelected;
+
+        [ObservableProperty]
+        private int _selectedCount;
+
+        private bool _isUpdatingSelection;
+
+        public string SelectAllButtonText => IsAllSelected ? "⬜ Bỏ chọn" : "☑️ Chọn tất cả";
+
+        [RelayCommand]
+        public void ToggleSelectAll()
+        {
+            IsAllSelected = !IsAllSelected;
+        }
+
+        partial void OnIsAllSelectedChanged(bool value)
+        {
+            if (_isUpdatingSelection) return;
+            _isUpdatingSelection = true;
+            try
+            {
+                foreach (var o in Officers)
+                {
+                    o.IsSelected = value;
+                }
+                SelectedCount = value ? Officers.Count : 0;
+            }
+            finally
+            {
+                _isUpdatingSelection = false;
+                OnPropertyChanged(nameof(SelectAllButtonText));
+            }
+        }
+
+        private void Officer_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(Officer.IsSelected))
+            {
+                UpdateSelectionCount();
+            }
+        }
+
+        [RelayCommand]
+        public void UpdateSelectionCount()
+        {
+            if (_isUpdatingSelection) return;
+            _isUpdatingSelection = true;
+            try
+            {
+                int count = 0;
+                foreach (var o in Officers)
+                {
+                    if (o.IsSelected) count++;
+                }
+                SelectedCount = count;
+                IsAllSelected = (Officers.Count > 0 && count == Officers.Count);
+            }
+            finally
+            {
+                _isUpdatingSelection = false;
+                OnPropertyChanged(nameof(SelectAllButtonText));
+            }
+        }
+
         // Modal Form Thêm / Sửa Cán Bộ
         [ObservableProperty]
         private bool _isFormVisible;
@@ -245,8 +310,10 @@ namespace QL_HocVien.ViewModels
                 Officers.Clear();
                 foreach (var off in list)
                 {
+                    off.PropertyChanged += Officer_PropertyChanged;
                     Officers.Add(off);
                 }
+                UpdateSelectionCount();
 
                 StatusMessage = $"Tìm thấy {Officers.Count} cán bộ quân sự {(ActiveFilterCount > 0 ? $"({ActiveFilterCount} bộ lọc đang áp dụng)" : "")}.";
             }
@@ -392,22 +459,28 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         public async Task DeleteOfficerAsync()
         {
-            if (SelectedOfficer == null)
+            var selected = Officers.Where(o => o.IsSelected).ToList();
+            if (!selected.Any() && SelectedOfficer != null)
             {
-                MessageBox.Show("Vui lòng chọn cán bộ cần xóa.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
+                selected.Add(SelectedOfficer);
+            }
+
+            if (!selected.Any())
+            {
+                MessageBox.Show("Vui lòng chọn ít nhất một cán bộ để xóa.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
             var confirm = MessageBox.Show(
-                $"Bạn có chắc chắn muốn xóa cán bộ {SelectedOfficer.FullName} ({SelectedOfficer.OfficerCode}) không?",
-                "Xác nhận xóa", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                $"Bạn có chắc chắn muốn xóa {selected.Count} cán bộ đã chọn không?\n\nHành động này không thể hoàn tác!",
+                "Xác nhận xóa cán bộ", MessageBoxButton.YesNo, MessageBoxImage.Warning);
 
             if (confirm != MessageBoxResult.Yes) return;
 
             IsBusy = true;
             try
             {
-                var result = await _officerService.DeleteOfficerAsync(SelectedOfficer.Id);
+                var result = await _officerService.DeleteMultipleOfficersAsync(selected.Select(o => o.Id));
                 StatusMessage = result.Message;
                 if (!result.Success)
                 {
@@ -415,6 +488,7 @@ namespace QL_HocVien.ViewModels
                 }
                 else
                 {
+                    SelectedOfficer = null;
                     await SearchAsync();
                 }
             }

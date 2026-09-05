@@ -93,5 +93,35 @@ namespace QL_HocVien.Services
 
             return (true, "Xóa môn học thành công!");
         }
+
+        public async Task<(bool Success, string Message, int DeletedCount)> DeleteMultipleSubjectsAsync(IEnumerable<int> subjectIds)
+        {
+            var idList = subjectIds?.Distinct().ToList() ?? new List<int>();
+            if (!idList.Any())
+                return (false, "Không có môn học nào được chọn để xóa.", 0);
+
+            int deleted = 0;
+            try
+            {
+                foreach (var id in idList)
+                {
+                    var existing = await _subjectRepository.GetByIdAsync(id);
+                    if (existing != null)
+                    {
+                        _subjectRepository.Delete(existing);
+                        deleted++;
+                    }
+                }
+                if (deleted > 0)
+                {
+                    await _subjectRepository.SaveChangesAsync();
+                }
+                return (true, $"Đã xóa thành công {deleted} môn học.", deleted);
+            }
+            catch (Exception ex)
+            {
+                return (false, $"Lỗi khi xóa môn học: {ex.Message}", deleted);
+            }
+        }
     }
 }

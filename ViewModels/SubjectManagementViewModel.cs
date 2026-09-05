@@ -52,6 +52,71 @@ namespace QL_HocVien.ViewModels
         [ObservableProperty]
         private Subject? _selectedSubject;
 
+        [ObservableProperty]
+        private bool _isAllSelected;
+
+        [ObservableProperty]
+        private int _selectedCount;
+
+        private bool _isUpdatingSelection;
+
+        public string SelectAllButtonText => IsAllSelected ? "⬜ Bỏ chọn" : "☑️ Chọn tất cả";
+
+        [RelayCommand]
+        public void ToggleSelectAll()
+        {
+            IsAllSelected = !IsAllSelected;
+        }
+
+        partial void OnIsAllSelectedChanged(bool value)
+        {
+            if (_isUpdatingSelection) return;
+            _isUpdatingSelection = true;
+            try
+            {
+                foreach (var s in Subjects)
+                {
+                    s.IsSelected = value;
+                }
+                SelectedCount = value ? Subjects.Count : 0;
+            }
+            finally
+            {
+                _isUpdatingSelection = false;
+                OnPropertyChanged(nameof(SelectAllButtonText));
+            }
+        }
+
+        private void Subject_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(Subject.IsSelected))
+            {
+                UpdateSelectionCount();
+            }
+        }
+
+        [RelayCommand]
+        public void UpdateSelectionCount()
+        {
+            if (_isUpdatingSelection) return;
+            _isUpdatingSelection = true;
+            try
+            {
+                int count = 0;
+                foreach (var s in Subjects)
+                {
+                    if (s.IsSelected) count++;
+                }
+                SelectedCount = count;
+                IsAllSelected = (Subjects.Count > 0 && count == Subjects.Count);
+            }
+            finally
+            {
+                _isUpdatingSelection = false;
+                OnPropertyChanged(nameof(SelectAllButtonText));
+            }
+        }
+
         // Modal / Form thêm & sửa môn học
         [ObservableProperty]
         private bool _isFormVisible;
@@ -142,8 +207,10 @@ namespace QL_HocVien.ViewModels
                 Subjects.Clear();
                 foreach (var item in list)
                 {
+                    item.PropertyChanged += Subject_PropertyChanged;
                     Subjects.Add(item);
                 }
+                UpdateSelectionCount();
                 StatusMessage = $"Hiển thị {Subjects.Count} môn học {(ActiveFilterCount > 0 ? $"({ActiveFilterCount} bộ lọc đang áp dụng)" : "")}.";
             }
             catch (Exception ex)
@@ -287,26 +354,37 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         private async Task DeleteSubjectAsync()
         {
-            if (SelectedSubject == null)
+            var selected = Subjects.Where(s => s.IsSelected).ToList();
+            if (!selected.Any() && SelectedSubject != null)
             {
-                StatusMessage = "Vui lòng chọn môn học cần xóa.";
+                selected.Add(SelectedSubject);
+            }
+
+            if (!selected.Any())
+            {
+                System.Windows.MessageBox.Show("Vui lòng chọn ít nhất một môn học để xóa.", "Thông báo", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
                 return;
             }
+
+            var confirm = System.Windows.MessageBox.Show(
+                $"Bạn có chắc chắn muốn xóa {selected.Count} môn học đã chọn không?\n\nLưu ý: Toàn bộ hồ sơ kiểm tra liên quan đến các môn này sẽ bị xóa theo.",
+                "Xác nhận xóa môn học",
+                System.Windows.MessageBoxButton.YesNo,
+                System.Windows.MessageBoxImage.Warning);
+
+            if (confirm != System.Windows.MessageBoxResult.Yes) return;
 
             IsBusy = true;
             try
             {
-                var result = await _subjectService.DeleteSubjectAsync(SelectedSubject.Id);
+                var result = await _subjectService.DeleteMultipleSubjectsAsync(selected.Select(s => s.Id));
                 StatusMessage = result.Message;
-                if (result.Success)
-                {
-                    await LoadSubjectsAsync();
-                    SelectedSubject = null;
-                }
+                SelectedSubject = null;
+                await LoadSubjectsAsync();
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Lỗi: {ex.Message}";
+                StatusMessage = $"Lỗi xóa: {ex.Message}";
             }
             finally
             {

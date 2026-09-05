@@ -14,5 +14,6 @@ namespace QL_HocVien.Services
         Task<(bool Success, string Message, MilitaryClass? Class)> AddClassAsync(MilitaryClass militaryClass);
         Task<(bool Success, string Message)> UpdateClassAsync(MilitaryClass militaryClass);
         Task<(bool Success, string Message)> DeleteClassAsync(int id);
+        Task<(bool Success, string Message, int DeletedCount)> DeleteMultipleClassesAsync(IEnumerable<int> classIds);
     }
 }

@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace QL_HocVien.Models
 {
-    public class Officer
+    public partial class Officer : ObservableObject
     {
         public int Id { get; set; }
         public string OfficerCode { get; set; } = string.Empty; // Mã cán bộ: CB-001, CB-002...
@@ -25,5 +27,14 @@ namespace QL_HocVien.Models
 
         // Danh sách các lớp học được phân công phụ trách
         public ICollection<MilitaryClass> ManagedClasses { get; set; } = new List<MilitaryClass>();
+
+        private bool _isSelected;
+
+        [NotMapped]
+        public bool IsSelected
+        {
+            get => _isSelected;
+            set => SetProperty(ref _isSelected, value);
+        }
     }
 }

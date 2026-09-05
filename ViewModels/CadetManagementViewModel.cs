@@ -396,6 +396,14 @@ namespace QL_HocVien.ViewModels
             OnRequestManageUnits?.Invoke();
         }
 
+        public string SelectAllButtonText => IsAllSelected ? "⬜ Bỏ chọn" : "☑️ Chọn tất cả";
+
+        [RelayCommand]
+        public void ToggleSelectAll()
+        {
+            IsAllSelected = !IsAllSelected;
+        }
+
         partial void OnIsAllSelectedChanged(bool value)
         {
             if (_isUpdatingSelection) return;
@@ -411,6 +419,7 @@ namespace QL_HocVien.ViewModels
             finally
             {
                 _isUpdatingSelection = false;
+                OnPropertyChanged(nameof(SelectAllButtonText));
             }
         }
 
@@ -440,6 +449,7 @@ namespace QL_HocVien.ViewModels
             finally
             {
                 _isUpdatingSelection = false;
+                OnPropertyChanged(nameof(SelectAllButtonText));
             }
         }
 
@@ -533,16 +543,30 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         private async Task DeleteCadetAsync()
         {
-            if (SelectedCadet == null)
+            var selected = Cadets.Where(c => c.IsSelected).ToList();
+            if (!selected.Any() && SelectedCadet != null)
             {
-                StatusMessage = "Vui lòng chọn học viên cần xóa.";
+                selected.Add(SelectedCadet);
+            }
+
+            if (!selected.Any())
+            {
+                System.Windows.MessageBox.Show("Vui lòng chọn ít nhất một học viên để xóa.", "Thông báo", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
                 return;
             }
+
+            var confirm = System.Windows.MessageBox.Show(
+                $"Bạn có chắc chắn muốn xóa {selected.Count} học viên đã chọn?\n\nLưu ý: Tất cả hồ sơ kết quả kiểm tra thể lực và điểm môn học tín chỉ liên quan sẽ được tự động xóa theo.",
+                "Xác nhận xóa học viên",
+                System.Windows.MessageBoxButton.YesNo,
+                System.Windows.MessageBoxImage.Warning);
+
+            if (confirm != System.Windows.MessageBoxResult.Yes) return;
 
             IsBusy = true;
             try
             {
-                var result = await _cadetService.DeleteCadetAsync(SelectedCadet.Id);
+                var result = await _cadetService.DeleteMultipleCadetsAsync(selected.Select(c => c.Id));
                 StatusMessage = result.Message;
                 if (result.Success)
                 {
@@ -554,7 +578,7 @@ namespace QL_HocVien.ViewModels
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Lỗi xóa: {ex.Message}";
+                StatusMessage = $"Lỗi xóa học viên: {ex.Message}";
             }
             finally
             {

@@ -1,8 +1,10 @@
 using System;
+using System.ComponentModel.DataAnnotations.Schema;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace QL_HocVien.Models
 {
-    public class PhysicalExamRecord
+    public partial class PhysicalExamRecord : ObservableObject
     {
         public int Id { get; set; }
         public int CadetId { get; set; }
@@ -16,5 +18,14 @@ namespace QL_HocVien.Models
         public string Grade { get; set; } = "Chưa xếp loại"; // "Xuất sắc", "Giỏi", "Khá", "Đạt", "Không đạt"
         public string Notes { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; } = DateTime.Now;
+
+        private bool _isSelected;
+
+        [NotMapped]
+        public bool IsSelected
+        {
+            get => _isSelected;
+            set => SetProperty(ref _isSelected, value);
+        }
     }
 }

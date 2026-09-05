@@ -152,6 +152,36 @@ namespace QL_HocVien.Services
             return (true, "Đã xóa cán bộ thành công!");
         }
 
+        public async Task<(bool Success, string Message, int DeletedCount)> DeleteMultipleOfficersAsync(IEnumerable<int> officerIds)
+        {
+            var idList = officerIds?.Distinct().ToList() ?? new List<int>();
+            if (!idList.Any())
+                return (false, "Không có cán bộ nào được chọn để xóa.", 0);
+
+            int deleted = 0;
+            try
+            {
+                foreach (var id in idList)
+                {
+                    var existing = await _officerRepo.GetOfficerWithDetailsAsync(id);
+                    if (existing != null)
+                    {
+                        _officerRepo.Delete(existing);
+                        deleted++;
+                    }
+                }
+                if (deleted > 0)
+                {
+                    await _officerRepo.SaveChangesAsync();
+                }
+                return (true, $"Đã xóa thành công {deleted} cán bộ.", deleted);
+            }
+            catch (Exception ex)
+            {
+                return (false, $"Lỗi khi xóa cán bộ: {ex.Message}", deleted);
+            }
+        }
+
         public async Task<(bool Success, string Message)> ResetOfficerPasswordAsync(int officerId, string newPassword)
         {
             if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < 6)

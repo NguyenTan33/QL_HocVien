@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace QL_HocVien.Models
 {
-    public class MilitaryClass
+    public partial class MilitaryClass : ObservableObject
     {
         public int Id { get; set; }
         public string ClassCode { get; set; } = string.Empty; // Mã lớp: K26A, K26B, CHTM01...
@@ -20,5 +22,14 @@ namespace QL_HocVien.Models
 
         // Quan hệ 1-N: Một lớp học có nhiều học viên
         public ICollection<Cadet> Cadets { get; set; } = new List<Cadet>();
+
+        private bool _isSelected;
+
+        [NotMapped]
+        public bool IsSelected
+        {
+            get => _isSelected;
+            set => SetProperty(ref _isSelected, value);
+        }
     }
 }

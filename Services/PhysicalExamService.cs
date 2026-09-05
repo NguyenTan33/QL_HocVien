@@ -105,5 +105,35 @@ namespace QL_HocVien.Services
 
             return (true, "Xóa kết quả kiểm tra thành công!");
         }
+
+        public async Task<(bool Success, string Message, int DeletedCount)> DeleteMultipleExamRecordsAsync(IEnumerable<int> recordIds)
+        {
+            var idList = recordIds?.Distinct().ToList() ?? new List<int>();
+            if (!idList.Any())
+                return (false, "Không có kết quả kiểm tra nào được chọn để xóa.", 0);
+
+            int deleted = 0;
+            try
+            {
+                foreach (var id in idList)
+                {
+                    var existing = await _examRepository.GetByIdAsync(id);
+                    if (existing != null)
+                    {
+                        _examRepository.Delete(existing);
+                        deleted++;
+                    }
+                }
+                if (deleted > 0)
+                {
+                    await _examRepository.SaveChangesAsync();
+                }
+                return (true, $"Đã xóa thành công {deleted} kết quả kiểm tra thể lực.", deleted);
+            }
+            catch (Exception ex)
+            {
+                return (false, $"Lỗi khi xóa kết quả kiểm tra: {ex.Message}", deleted);
+            }
+        }
     }
 }

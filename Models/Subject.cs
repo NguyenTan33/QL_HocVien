@@ -1,8 +1,10 @@
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace QL_HocVien.Models
 {
-    public class Subject
+    public partial class Subject : ObservableObject
     {
         public int Id { get; set; }
         public string SubjectCode { get; set; } = string.Empty; // Mã môn: XD, XK, C100, CV3000, BE, VVC91
@@ -18,5 +20,14 @@ namespace QL_HocVien.Models
         public bool IsHigherBetter { get; set; } = true; // true: số càng cao càng tốt; false: số càng thấp càng tốt (chạy)
         
         public ICollection<PhysicalExamRecord> ExamRecords { get; set; } = new List<PhysicalExamRecord>();
+
+        private bool _isSelected;
+
+        [NotMapped]
+        public bool IsSelected
+        {
+            get => _isSelected;
+            set => SetProperty(ref _isSelected, value);
+        }
     }
 }

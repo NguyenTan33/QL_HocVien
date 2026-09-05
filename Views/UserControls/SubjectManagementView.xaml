@@ -28,6 +28,8 @@
                 </StackPanel>
 
                 <WrapPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button Content="{Binding SelectAllButtonText}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,6"
+                            Command="{Binding ToggleSelectAllCommand}" ToolTip="Chọn hoặc bỏ chọn tất cả môn học"/>
                     <Button Content="📥 Nhập Excel" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,6"
                             Command="{Binding ImportExcelCommand}"/>
                     <Button Content="📤 Xuất Excel" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,6"
@@ -138,6 +140,18 @@
                           ScrollViewer.VerticalScrollBarVisibility="Auto"
                           ScrollViewer.CanContentScroll="True">
                     <DataGrid.Columns>
+                        <DataGridTemplateColumn Width="48" CanUserResize="False">
+                            <DataGridTemplateColumn.Header>
+                                <CheckBox IsChecked="{Binding DataContext.IsAllSelected, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </DataGridTemplateColumn.Header>
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <CheckBox IsChecked="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}"
+                                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
                         <DataGridTextColumn Header="Mã Môn (ID)" Binding="{Binding SubjectCode}" Width="120"/>
                         <DataGridTextColumn Header="Tên Môn Học" Binding="{Binding SubjectName}" Width="220"/>
                         <DataGridTextColumn Header="Nhóm Tố Chất" Binding="{Binding Category}" Width="140"/>

@@ -15,6 +15,7 @@ namespace QL_HocVien.Services
         Task<(bool Success, string Message, Officer? Officer)> CreateOfficerAsync(Officer officer, bool createLoginAccount = false, string? rawPassword = null);
         Task<(bool Success, string Message)> UpdateOfficerAsync(Officer officer);
         Task<(bool Success, string Message)> DeleteOfficerAsync(int id);
+        Task<(bool Success, string Message, int DeletedCount)> DeleteMultipleOfficersAsync(IEnumerable<int> officerIds);
         Task<(bool Success, string Message)> ResetOfficerPasswordAsync(int officerId, string newPassword);
         Task<string> GenerateSuggestedOfficerCodeAsync();
         Task<string> GenerateNextOfficerCodeAsync();

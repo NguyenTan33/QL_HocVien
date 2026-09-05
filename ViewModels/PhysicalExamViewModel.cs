@@ -61,6 +61,71 @@ namespace QL_HocVien.ViewModels
         [ObservableProperty]
         private PhysicalExamRecord? _selectedRecord;
 
+        [ObservableProperty]
+        private bool _isAllSelected;
+
+        [ObservableProperty]
+        private int _selectedCount;
+
+        private bool _isUpdatingSelection;
+
+        public string SelectAllButtonText => IsAllSelected ? "⬜ Bỏ chọn" : "☑️ Chọn tất cả";
+
+        [RelayCommand]
+        public void ToggleSelectAll()
+        {
+            IsAllSelected = !IsAllSelected;
+        }
+
+        partial void OnIsAllSelectedChanged(bool value)
+        {
+            if (_isUpdatingSelection) return;
+            _isUpdatingSelection = true;
+            try
+            {
+                foreach (var r in ExamRecords)
+                {
+                    r.IsSelected = value;
+                }
+                SelectedCount = value ? ExamRecords.Count : 0;
+            }
+            finally
+            {
+                _isUpdatingSelection = false;
+                OnPropertyChanged(nameof(SelectAllButtonText));
+            }
+        }
+
+        private void ExamRecord_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(PhysicalExamRecord.IsSelected))
+            {
+                UpdateSelectionCount();
+            }
+        }
+
+        [RelayCommand]
+        public void UpdateSelectionCount()
+        {
+            if (_isUpdatingSelection) return;
+            _isUpdatingSelection = true;
+            try
+            {
+                int count = 0;
+                foreach (var r in ExamRecords)
+                {
+                    if (r.IsSelected) count++;
+                }
+                SelectedCount = count;
+                IsAllSelected = (ExamRecords.Count > 0 && count == ExamRecords.Count);
+            }
+            finally
+            {
+                _isUpdatingSelection = false;
+                OnPropertyChanged(nameof(SelectAllButtonText));
+            }
+        }
+
         // Form nhập kết quả kiểm tra
         [ObservableProperty]
         private bool _isFormVisible;
@@ -250,8 +315,10 @@ namespace QL_HocVien.ViewModels
                 ExamRecords.Clear();
                 foreach (var r in list)
                 {
+                    r.PropertyChanged += ExamRecord_PropertyChanged;
                     ExamRecords.Add(r);
                 }
+                UpdateSelectionCount();
                 StatusMessage = $"Đã tải {ExamRecords.Count} lượt kiểm tra {(ActiveFilterCount > 0 ? $"({ActiveFilterCount} bộ lọc đang áp dụng)" : "")}.";
             }
             catch (Exception ex)
@@ -345,22 +412,33 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         private async Task DeleteRecordAsync()
         {
-            if (SelectedRecord == null)
+            var selected = ExamRecords.Where(r => r.IsSelected).ToList();
+            if (!selected.Any() && SelectedRecord != null)
             {
-                StatusMessage = "Vui lòng chọn bản ghi cần xóa.";
+                selected.Add(SelectedRecord);
+            }
+
+            if (!selected.Any())
+            {
+                System.Windows.MessageBox.Show("Vui lòng chọn ít nhất một kết quả kiểm tra để xóa.", "Thông báo", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
                 return;
             }
+
+            var confirm = System.Windows.MessageBox.Show(
+                $"Bạn có chắc chắn muốn xóa {selected.Count} kết quả kiểm tra thể lực đã chọn không?\n\nHành động này không thể hoàn tác!",
+                "Xác nhận xóa kết quả",
+                System.Windows.MessageBoxButton.YesNo,
+                System.Windows.MessageBoxImage.Warning);
+
+            if (confirm != System.Windows.MessageBoxResult.Yes) return;
 
             IsBusy = true;
             try
             {
-                var result = await _examService.DeleteExamRecordAsync(SelectedRecord.Id);
+                var result = await _examService.DeleteMultipleExamRecordsAsync(selected.Select(r => r.Id));
                 StatusMessage = result.Message;
-                if (result.Success)
-                {
-                    await LoadRecordsAsync();
-                    SelectedRecord = null;
-                }
+                SelectedRecord = null;
+                await LoadRecordsAsync();
             }
             catch (Exception ex)
             {
