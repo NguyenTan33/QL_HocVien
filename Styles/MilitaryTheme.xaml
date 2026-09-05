@@ -246,8 +246,9 @@
         </Setter>
     </Style>
 
-    <!-- Hiệu ứng đổ bóng CardShadow dùng chung -->
+    <!-- Hiệu ứng đổ bóng CardShadow & ShadowEffect dùng chung -->
     <DropShadowEffect x:Key="CardShadow" BlurRadius="20" Color="#000000" Opacity="0.25" ShadowDepth="4"/>
+    <DropShadowEffect x:Key="ShadowEffect" BlurRadius="20" Color="#000000" Opacity="0.25" ShadowDepth="4"/>
 
     <!-- ==================== DATAGRID QUÂN ĐỘI: ZEBRA STRIPING & HIỆN ĐẠI ==================== -->
     <Style x:Key="MilitaryDataGridStyle" TargetType="DataGrid">

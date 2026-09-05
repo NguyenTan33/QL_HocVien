@@ -10,6 +10,7 @@
     <UserControl.Resources>
         <local_cv:BooleanToVisibilityConverter x:Key="BoolToVis"/>
         <local_cv:StringToBrushConverter x:Key="StringToBrush"/>
+        <DropShadowEffect x:Key="ShadowEffect" BlurRadius="25" ShadowDepth="6" Direction="270" Color="#0F172A" Opacity="0.18"/>
     </UserControl.Resources>
 
     <Border Padding="20">

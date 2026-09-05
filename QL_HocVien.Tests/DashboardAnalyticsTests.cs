@@ -294,6 +294,79 @@ namespace QL_HocVien.Tests
         }
 
         [Fact]
+        public void Test_CreditSubjectManagementView_Instantiation_On_STA_Thread()
+        {
+            Exception? exception = null;
+            var thread = new System.Threading.Thread(() =>
+            {
+                try
+                {
+                    if (System.Windows.Application.Current == null)
+                    {
+                        var app = new System.Windows.Application();
+                        app.Resources.MergedDictionaries.Add(new System.Windows.ResourceDictionary
+                        {
+                            Source = new Uri("pack://application:,,,/QL_HocVien;component/Styles/MilitaryTheme.xaml", UriKind.Absolute)
+                        });
+                    }
+                    else
+                    {
+                        bool hasTheme = System.Windows.Application.Current.Resources.MergedDictionaries.Any(d => d.Source != null && d.Source.ToString().Contains("MilitaryTheme"));
+                        if (!hasTheme)
+                        {
+                            System.Windows.Application.Current.Resources.MergedDictionaries.Add(new System.Windows.ResourceDictionary
+                            {
+                                Source = new Uri("pack://application:,,,/QL_HocVien;component/Styles/MilitaryTheme.xaml", UriKind.Absolute)
+                            });
+                        }
+                    }
+
+                    var rankRepo = new RankRepository(_context);
+                    var posRepo = new PositionRepository(_context);
+                    var unitRepo = new UnitRepository(_context);
+                    var majorRepo = new MajorRepository(_context);
+                    var classRepo = new ClassRepository(_context);
+                    var cadetRepo = new CadetRepository(_context);
+
+                    var creditService = new CreditSubjectService(_context);
+                    var cadetService = new CadetService(cadetRepo);
+                    var catalogService = new CatalogService(rankRepo, posRepo, unitRepo, majorRepo);
+                    var classService = new ClassService(classRepo);
+                    var fileDialogService = new FileDialogService();
+
+                    var vm = new CreditSubjectManagementViewModel(
+                        creditService,
+                        cadetService,
+                        catalogService,
+                        classService,
+                        fileDialogService);
+
+                    vm.InitializeAsync().GetAwaiter().GetResult();
+
+                    var view = new QL_HocVien.Views.UserControls.CreditSubjectManagementView { DataContext = vm };
+                    view.Measure(new System.Windows.Size(1280, 1000));
+                    view.Arrange(new System.Windows.Rect(0, 0, 1280, 1000));
+                    view.UpdateLayout();
+
+                    Assert.NotNull(view);
+                }
+                catch (Exception ex)
+                {
+                    exception = ex;
+                }
+            });
+
+            thread.SetApartmentState(System.Threading.ApartmentState.STA);
+            thread.Start();
+            thread.Join(7000);
+
+            if (exception != null)
+            {
+                throw new Exception($"Lỗi khởi tạo CreditSubjectManagementView: {exception.Message}\n{exception.StackTrace}", exception);
+            }
+        }
+
+        [Fact]
         public void Test_MainWindow_Instantiation_On_STA_Thread()
         {
             Exception? exception = null;
@@ -367,6 +440,26 @@ namespace QL_HocVien.Tests
                         DbInitializer.Initialize(db);
                     }
 
+                    if (System.Windows.Application.Current == null)
+                    {
+                        var app = new System.Windows.Application();
+                        app.Resources.MergedDictionaries.Add(new System.Windows.ResourceDictionary
+                        {
+                            Source = new Uri("pack://application:,,,/QL_HocVien;component/Styles/MilitaryTheme.xaml", UriKind.Absolute)
+                        });
+                    }
+                    else
+                    {
+                        bool hasTheme = System.Windows.Application.Current.Resources.MergedDictionaries.Any(d => d.Source != null && d.Source.ToString().Contains("MilitaryTheme"));
+                        if (!hasTheme)
+                        {
+                            System.Windows.Application.Current.Resources.MergedDictionaries.Add(new System.Windows.ResourceDictionary
+                            {
+                                Source = new Uri("pack://application:,,,/QL_HocVien;component/Styles/MilitaryTheme.xaml", UriKind.Absolute)
+                            });
+                        }
+                    }
+
                     // Test resolving LoginWindow
                     var loginWindow = sp.GetRequiredService<LoginWindow>();
                     Assert.NotNull(loginWindow);
@@ -378,6 +471,11 @@ namespace QL_HocVien.Tests
 
                     mainWindow.Measure(new System.Windows.Size(1280, 800));
                     mainWindow.Arrange(new System.Windows.Rect(0, 0, 1280, 800));
+                    mainWindow.UpdateLayout();
+
+                    // Test navigating to CreditSubjectManagement
+                    var mainVm = (MainViewModel)mainWindow.DataContext;
+                    mainVm.NavigateToCreditSubjectManagementCommand.Execute(null);
                     mainWindow.UpdateLayout();
                 }
                 catch (Exception ex)
