@@ -107,6 +107,7 @@ namespace QL_HocVien.Data
             modelBuilder.Entity<Cadet>(entity =>
             {
                 entity.HasKey(e => e.Id);
+                entity.Ignore(e => e.IsSelected);
                 entity.HasIndex(e => e.CadetCode).IsUnique();
                 entity.Property(e => e.CadetCode).IsRequired().HasMaxLength(30);
                 entity.Property(e => e.FullName).IsRequired().HasMaxLength(100);

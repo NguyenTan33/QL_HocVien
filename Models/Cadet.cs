@@ -31,8 +31,13 @@ namespace QL_HocVien.Models
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public ICollection<PhysicalExamRecord> ExamRecords { get; set; } = new List<PhysicalExamRecord>();
 
-        [NotMapped]
-        [ObservableProperty]
         private bool _isSelected;
+
+        [NotMapped]
+        public bool IsSelected
+        {
+            get => _isSelected;
+            set => SetProperty(ref _isSelected, value);
+        }
     }
 }
