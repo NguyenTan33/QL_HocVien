@@ -919,15 +919,24 @@ namespace QL_HocVien.ViewModels
             string? filePath = _fileDialogService.ShowOpenFileDialog("Tập tin Excel (*.xlsx)|*.xlsx|Tất cả tập tin (*.*)|*.*");
             if (string.IsNullOrWhiteSpace(filePath)) return;
 
+            var confirm = System.Windows.MessageBox.Show(
+                $"Hệ thống sẽ làm sạch CSDL và nạp lại toàn bộ học viên, môn học và điểm số chuẩn từ file:\n{filePath}\n\nĐồng chí có chắc chắn muốn thực hiện?",
+                "Xác Nhận Làm Sạch & Nạp Lại Dữ Liệu",
+                System.Windows.MessageBoxButton.YesNo,
+                System.Windows.MessageBoxImage.Warning);
+
+            if (confirm != System.Windows.MessageBoxResult.Yes) return;
+
             IsBusy = true;
+            StatusMessage = "Đang làm sạch và nạp lại dữ liệu chuẩn từ Excel...";
             try
             {
-                var res = await _creditService.ImportStandardTbmExcelAsync(filePath);
+                var res = await _creditService.ResetAndImportFreshFromExcelAsync(filePath);
                 StatusMessage = res.Message;
 
                 if (res.Success)
                 {
-                    System.Windows.MessageBox.Show(res.Message, "Nhập Excel Chuẩn Thành Công", 
+                    System.Windows.MessageBox.Show(res.Message, "Nạp Lại Chuẩn Thành Công", 
                         System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
                     await InitializeAsync();
                 }

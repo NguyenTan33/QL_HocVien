@@ -938,6 +938,227 @@ namespace QL_HocVien.Services
             });
         }
 
+        public async Task<(bool Success, string Message, int Cadets, int Subjects, int Scores)> ResetAndImportFreshFromExcelAsync(string filePath)
+        {
+            return await Task.Run(async () =>
+            {
+                try
+                {
+                    if (!File.Exists(filePath))
+                        return (false, "File Excel không tồn tại trên hệ thống.", 0, 0, 0);
+
+                    // 1. Xóa sạch toàn bộ dữ liệu học viên, môn học, thành phần và điểm số
+                    var allScores = await _context.CreditScoreRecords.ToListAsync();
+                    _context.CreditScoreRecords.RemoveRange(allScores);
+
+                    var allPhysical = await _context.PhysicalExamRecords.ToListAsync();
+                    _context.PhysicalExamRecords.RemoveRange(allPhysical);
+
+                    var allComps = await _context.SubjectAssessmentComponents.ToListAsync();
+                    _context.SubjectAssessmentComponents.RemoveRange(allComps);
+
+                    var allSubjs = await _context.CreditSubjects.ToListAsync();
+                    _context.CreditSubjects.RemoveRange(allSubjs);
+
+                    var allCadets = await _context.Cadets.ToListAsync();
+                    _context.Cadets.RemoveRange(allCadets);
+
+                    await _context.SaveChangesAsync();
+
+                    // 2. Nạp mới toàn bộ từ file Excel
+                    using var wb = new XLWorkbook(filePath);
+                    var ws = wb.Worksheets.FirstOrDefault();
+                    if (ws == null)
+                        return (false, "File Excel không chứa bất kỳ sheet nào.", 0, 0, 0);
+
+                    var colSubjectMap = new Dictionary<int, CreditSubject>();
+
+                    for (int c = 6; c <= 100; c++)
+                    {
+                        string rawName = ws.Cell(5, c).GetString();
+                        string subjName = System.Text.RegularExpressions.Regex.Replace(rawName, @"\s+", " ").Trim();
+
+                        if (string.IsNullOrWhiteSpace(subjName))
+                        {
+                            if (ws.Cell(4, c).GetString().Trim().Contains("TBM") || 
+                                ws.Cell(5, c).GetString().Trim().Contains("TBM"))
+                                break;
+                            
+                            if (string.IsNullOrWhiteSpace(ws.Cell(5, c + 1).GetString().Trim()))
+                                break;
+
+                            continue;
+                        }
+
+                        if (subjName.Equals("TBM", StringComparison.OrdinalIgnoreCase))
+                            break;
+
+                        if (c == 20) subjName = "ĐHQS 1";
+                        else if (c == 60) subjName = "ĐHQS 2";
+                        else if (c == 27) subjName = "KT Xe 1";
+                        else if (c == 42) subjName = "KT Xe 2";
+                        else if (c == 44) subjName = "Võ 1";
+                        else if (c == 57) subjName = "Võ 2";
+
+                        double credits = 1.0;
+                        string creditStr = ws.Cell(1, c).GetString().Trim().Replace(',', '.');
+                        if (double.TryParse(creditStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double parsedCredits) && parsedCredits > 0)
+                        {
+                            credits = parsedCredits;
+                        }
+
+                        string subjCode = $"TC{c - 5:D2}";
+                        string group = string.Empty;
+                        bool isComponent = false;
+
+                        if (subjName.StartsWith("CNTT", StringComparison.OrdinalIgnoreCase)) { group = "CNTT"; isComponent = true; }
+                        else if (subjName.Contains("ĐLQLBĐ", StringComparison.OrdinalIgnoreCase)) { group = "ĐLQLBĐ"; isComponent = true; }
+                        else if (subjName.Contains("TH M-L", StringComparison.OrdinalIgnoreCase)) { group = "TH M-L"; isComponent = true; }
+                        else if (subjName.Contains("KTCT", StringComparison.OrdinalIgnoreCase)) { group = "KTCT"; isComponent = true; }
+                        else if (subjName.Contains("CNXH", StringComparison.OrdinalIgnoreCase)) { group = "CNXH"; isComponent = true; }
+                        else if (subjName.Contains("LSĐ", StringComparison.OrdinalIgnoreCase)) { group = "LSĐ"; isComponent = true; }
+                        else if (subjName.StartsWith("bBB", StringComparison.OrdinalIgnoreCase)) { group = "bBB"; isComponent = true; }
+                        else if (subjName.Contains("VKHD", StringComparison.OrdinalIgnoreCase)) { group = "VKHD"; isComponent = true; }
+                        else if (subjName.StartsWith("KT Xe", StringComparison.OrdinalIgnoreCase)) { group = "KT Xe"; isComponent = true; }
+                        else if (subjName.StartsWith("ĐHQS", StringComparison.OrdinalIgnoreCase)) { group = "ĐHQS"; isComponent = true; }
+                        else if (subjName.StartsWith("Võ", StringComparison.OrdinalIgnoreCase)) { group = "Võ"; isComponent = true; }
+                        else if (subjName.StartsWith("HC", StringComparison.OrdinalIgnoreCase) && subjName.Contains("QS", StringComparison.OrdinalIgnoreCase)) { group = "HCQS"; isComponent = true; }
+                        else if (subjName.StartsWith("TT HCM", StringComparison.OrdinalIgnoreCase)) { group = "TT HCM"; isComponent = true; }
+                        else if (subjName.StartsWith("LĐ", StringComparison.OrdinalIgnoreCase)) { group = "Lựu đạn"; isComponent = true; }
+                        else if (subjName.StartsWith("Thi ", StringComparison.OrdinalIgnoreCase)) { group = subjName.Substring(4).Trim(); isComponent = true; }
+
+                        var newSubj = new CreditSubject
+                        {
+                            SubjectCode = subjCode,
+                            SubjectName = subjName,
+                            Credits = credits,
+                            AssessmentType = subjName.StartsWith("Thi ", StringComparison.OrdinalIgnoreCase) ? "Kiểm tra và thi" : "Kiểm tra thường xuyên",
+                            SubjectGroup = group,
+                            IsComponent = isComponent,
+                            Description = $"Nhập tự động từ file Excel ({credits} tín chỉ)",
+                            CreatedAt = DateTime.Now
+                        };
+
+                        _context.CreditSubjects.Add(newSubj);
+                        colSubjectMap[c] = newSubj;
+                    }
+
+                    await _context.SaveChangesAsync();
+
+                    // Đọc danh sách học viên
+                    int lastRow = ws.LastRowUsed()?.RowNumber() ?? 70;
+                    var addedCadets = new List<Cadet>();
+                    int importedCadetsCount = 0;
+                    int importedScoresCount = 0;
+
+                    for (int r = 6; r <= lastRow; r++)
+                    {
+                        string fullName = ws.Cell(r, 5).GetString().Trim();
+                        if (string.IsNullOrWhiteSpace(fullName))
+                        {
+                            string last = ws.Cell(r, 3).GetString().Trim();
+                            string first = ws.Cell(r, 4).GetString().Trim();
+                            fullName = $"{last} {first}".Trim();
+                        }
+
+                        fullName = System.Text.RegularExpressions.Regex.Replace(fullName, @"\s+", " ").Trim();
+                        if (string.IsNullOrWhiteSpace(fullName)) continue;
+
+                        string unit = ws.Cell(r, 2).GetString().Trim();
+                        if (string.IsNullOrWhiteSpace(unit)) unit = "b1";
+
+                        var cadet = new Cadet
+                        {
+                            CadetCode = $"HV{DateTime.Now:yy}{addedCadets.Count + 1:D3}",
+                            FullName = fullName,
+                            Unit = unit,
+                            Rank = "Binh nhì",
+                            Position = "Học viên",
+                            DateOfBirth = new DateTime(2002, 1, 1),
+                            CreatedAt = DateTime.Now
+                        };
+
+                        _context.Cadets.Add(cadet);
+                        addedCadets.Add(cadet);
+                        importedCadetsCount++;
+                    }
+
+                    await _context.SaveChangesAsync();
+
+                    // Đọc điểm
+                    int cadetIdx = 0;
+                    for (int r = 6; r <= lastRow; r++)
+                    {
+                        if (cadetIdx >= addedCadets.Count) break;
+                        string fullName = ws.Cell(r, 5).GetString().Trim();
+                        if (string.IsNullOrWhiteSpace(fullName))
+                        {
+                            string last = ws.Cell(r, 3).GetString().Trim();
+                            string first = ws.Cell(r, 4).GetString().Trim();
+                            fullName = $"{last} {first}".Trim();
+                        }
+                        if (string.IsNullOrWhiteSpace(fullName)) continue;
+
+                        var cadet = addedCadets[cadetIdx++];
+
+                        foreach (var (c, subj) in colSubjectMap)
+                        {
+                            string scoreStr = ws.Cell(r, c).GetString().Trim().Replace(',', '.');
+                            if (double.TryParse(scoreStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double scoreVal))
+                            {
+                                if (scoreVal >= 0 && scoreVal <= 10)
+                                {
+                                    _context.CreditScoreRecords.Add(new CreditScoreRecord
+                                    {
+                                        CadetId = cadet.Id,
+                                        CreditSubjectId = subj.Id,
+                                        FinalScore = scoreVal,
+                                        RegularScore = scoreVal,
+                                        ExamSession = "Toàn khóa",
+                                        ExamDate = DateTime.Today,
+                                        Notes = "Nhập tự động từ file chuẩn TBM",
+                                        CreatedAt = DateTime.Now
+                                    });
+                                    importedScoresCount++;
+                                }
+                            }
+                        }
+                    }
+
+                    await _context.SaveChangesAsync();
+
+                    // 3. Tái cấu trúc chuẩn thành 41 môn lớn và các đợt kiểm tra / thi trực thuộc
+                    await ConsolidateMajorSubjectsAsync();
+
+                    // 4. Đảm bảo toàn bộ CreditScoreRecords đều có ComponentId
+                    var orphanScores = await _context.CreditScoreRecords
+                        .Where(s => s.ComponentId == null)
+                        .ToListAsync();
+
+                    if (orphanScores.Any())
+                    {
+                        var allComponents = await _context.SubjectAssessmentComponents.ToListAsync();
+                        foreach (var sc in orphanScores)
+                        {
+                            var matchedComp = allComponents.FirstOrDefault(comp => comp.CreditSubjectId == sc.CreditSubjectId);
+                            if (matchedComp != null)
+                            {
+                                sc.ComponentId = matchedComp.Id;
+                            }
+                        }
+                        await _context.SaveChangesAsync();
+                    }
+
+                    int totalMajorSubjects = await _context.CreditSubjects.CountAsync(s => !s.IsComponent);
+                    return (true, $"Làm sạch và nạp lại CSDL thành công: {importedCadetsCount} học viên, {totalMajorSubjects} môn lớn, {importedScoresCount} điểm số!", importedCadetsCount, totalMajorSubjects, importedScoresCount);
+                }
+                catch (Exception ex)
+                {
+                    return (false, $"Lỗi khi làm sạch và nạp lại: {ex.Message}", 0, 0, 0);
+                }
+            });
+        }
+
         public async Task<(bool Success, string Message)> SaveSubjectWithComponentsAsync(
             CreditSubject subject, IEnumerable<SubjectAssessmentComponent> components)
         {

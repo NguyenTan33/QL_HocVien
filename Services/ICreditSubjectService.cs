@@ -23,6 +23,7 @@ namespace QL_HocVien.Services
 
         Task<(bool Success, string Message)> ExportAcademicReportAsync(string filePath, List<CadetAcademicSummaryDto> summaries, List<CreditSubject> subjects);
         Task<(bool Success, string Message, int ImportedCadets, int ImportedScores)> ImportStandardTbmExcelAsync(string filePath);
+        Task<(bool Success, string Message, int Cadets, int Subjects, int Scores)> ResetAndImportFreshFromExcelAsync(string filePath);
         Task<List<MajorSubjectBreakdownDto>> GetSubjectBreakdownForCadetAsync(int cadetId);
         Task<(bool Success, string Message)> SaveSubjectWithComponentsAsync(CreditSubject subject, IEnumerable<SubjectAssessmentComponent> components);
         Task<List<SubjectAssessmentComponent>> GetComponentsBySubjectIdAsync(int subjectId);
