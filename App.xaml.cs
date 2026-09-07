@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Text.Json;
 using System.Windows;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using QL_HocVien.Data;
@@ -11,6 +12,7 @@ using QL_HocVien.Services;
 using QL_HocVien.Services.Calculators;
 using QL_HocVien.ViewModels;
 using QL_HocVien.Views.Windows;
+using SQLitePCL;
 
 namespace QL_HocVien
 {
@@ -20,6 +22,9 @@ namespace QL_HocVien
 
         protected override void OnStartup(StartupEventArgs e)
         {
+            // 1. Nạp engine mã hóa SQLCipher AES-256 trước khi bất kỳ kết nối SQLite nào được mở
+            Batteries_V2.Init();
+
             base.OnStartup(e);
 
             DispatcherUnhandledException += (sender, args) =>
@@ -49,6 +54,8 @@ namespace QL_HocVien
             }
             catch (Exception ex)
             {
+                File.WriteAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "startup_error.log"),
+                    $"[ERROR] {ex.Message}\n\n{ex.StackTrace}\n\nInner: {ex.InnerException?.Message}\n{ex.InnerException?.StackTrace}");
                 MessageBox.Show($"Không thể khởi động ứng dụng:\n{ex.Message}\n\n{ex.StackTrace}",
                                 "Lỗi Khởi Động", MessageBoxButton.OK, MessageBoxImage.Error);
                 Shutdown();
@@ -59,29 +66,22 @@ namespace QL_HocVien
         {
             // Cấu hình chuỗi kết nối SQLite nằm cố định cùng thư mục thực thi
             var dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ql_hocvien.db");
-            string connectionString = $"Data Source={dbPath}";
-            try
+
+            // 2. Lấy Passphrase mã hóa cấp độ quân sự từ SecureKeyVault (DPAPI + Machine Fingerprint)
+            string dbPassphrase = SecureKeyVault.GetPassphrase();
+
+            // 3. Tự động kiểm tra và chuyển đổi CSDL sang dạng mã hóa SQLCipher AES-256 nếu đang là plaintext
+            SqlCipherMigrator.MigrateIfPlaintext(dbPath, dbPassphrase);
+
+            // 4. Cấu hình chuỗi kết nối có mật khẩu AES-256
+            var connectionStringBuilder = new SqliteConnectionStringBuilder
             {
-                var settingsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json");
-                if (File.Exists(settingsPath))
-                {
-                    var json = File.ReadAllText(settingsPath);
-                    using var doc = JsonDocument.Parse(json);
-                    if (doc.RootElement.TryGetProperty("ConnectionStrings", out var connProp) &&
-                        connProp.TryGetProperty("DefaultConnection", out var defaultConn))
-                    {
-                        var configured = defaultConn.GetString();
-                        if (!string.IsNullOrWhiteSpace(configured))
-                        {
-                            connectionString = configured;
-                        }
-                    }
-                }
-            }
-            catch
-            {
-                // Giữ mặc định nếu lỗi đọc file cấu hình
-            }
+                DataSource = dbPath,
+                Mode = SqliteOpenMode.ReadWriteCreate,
+                Password = dbPassphrase // Kích hoạt mã hóa SQLCipher AES-256
+            };
+
+            string connectionString = connectionStringBuilder.ToString();
 
             services.AddDbContext<AppDbContext>(options =>
             {
@@ -123,6 +123,7 @@ namespace QL_HocVien
             services.AddScoped<IAcademicAnalyticsService, AcademicAnalyticsService>();
             services.AddSingleton<ISecurityDialogService, SecurityDialogService>();
             services.AddSingleton<ISecurityGateService, SecurityGateService>();
+            services.AddSingleton<ISecureKeyVault, SecureKeyVault>();
 
             // Đăng ký Infrastructure (Validation Factory & Security Services - OOP & SOLID)
             services.AddAppInfrastructureValidation();
