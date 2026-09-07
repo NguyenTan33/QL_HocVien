@@ -34,26 +34,33 @@ namespace QL_HocVien.Services
             _sanitizer = sanitizer ?? new SecuritySanitizer();
         }
 
+        private const string GenericLoginErrorMessage = "Tài khoản hoặc mật khẩu không chính xác!";
+        private static readonly string DummyHash = BCrypt.Net.BCrypt.HashPassword("DummySecretAuthSalt2026!#@", 11);
+
         public async Task<(bool Success, string Message, User? User)> LoginAsync(string usernameOrPhone, string password)
         {
-            if (string.IsNullOrWhiteSpace(usernameOrPhone))
-                return (false, "Vui lòng nhập tên tài khoản hoặc số điện thoại.", null);
+            if (string.IsNullOrWhiteSpace(usernameOrPhone) || string.IsNullOrWhiteSpace(password))
+                return (false, GenericLoginErrorMessage, null);
 
-            if (_sanitizer.ContainsDangerousPatterns(usernameOrPhone, out var threat))
-                return (false, $"[BẢO MẬT] Thông tin đăng nhập không hợp lệ: {threat}", null);
+            if (_sanitizer.ContainsDangerousPatterns(usernameOrPhone, out _))
+                return (false, GenericLoginErrorMessage, null);
 
-            if (string.IsNullOrWhiteSpace(password))
-                return (false, "Vui lòng nhập mật khẩu.", null);
-
-            var user = await _userRepository.GetByUsernameOrPhoneAsync(usernameOrPhone);
+            var user = await _userRepository.GetByUsernameOrPhoneAsync(usernameOrPhone.Trim());
             if (user == null)
             {
-                return (false, "Tài khoản hoặc số điện thoại không tồn tại.", null);
+                // Chống tấn công dò quét tài khoản qua thời gian phản hồi (Timing Attack)
+                try
+                {
+                    BCrypt.Net.BCrypt.Verify(password, DummyHash);
+                }
+                catch { }
+
+                return (false, GenericLoginErrorMessage, null);
             }
 
             if (!user.IsActive)
             {
-                return (false, "Tài khoản này hiện đang bị tạm khóa.", null);
+                return (false, GenericLoginErrorMessage, null);
             }
 
             bool isPasswordValid = false;
@@ -68,7 +75,7 @@ namespace QL_HocVien.Services
 
             if (!isPasswordValid)
             {
-                return (false, "Mật khẩu không chính xác.", null);
+                return (false, GenericLoginErrorMessage, null);
             }
 
             user.LastLoginAt = DateTime.Now;

@@ -125,6 +125,7 @@ namespace QL_HocVien
             services.AddSingleton<ISecurityDialogService, SecurityDialogService>();
             services.AddSingleton<ISecurityGateService, SecurityGateService>();
             services.AddSingleton<ISecureKeyVault, SecureKeyVault>();
+            services.AddSingleton<ILoginLockoutService, LoginLockoutService>();
 
             // Đăng ký Infrastructure (Validation Factory & Security Services - OOP & SOLID)
             services.AddAppInfrastructureValidation();

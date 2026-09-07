@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -10,6 +11,7 @@ namespace QL_HocVien.ViewModels
     {
         private readonly IAuthService _authService;
         private readonly IPasskeyService _passkeyService;
+        private readonly ILoginLockoutService _lockoutService;
 
         [ObservableProperty]
         private string _usernameOrPhone = string.Empty;
@@ -20,8 +22,21 @@ namespace QL_HocVien.ViewModels
         [ObservableProperty]
         private bool _rememberMe;
 
+        // Trạng thái khóa do Brute-Force
         [ObservableProperty]
-        private string _errorMessage = string.Empty;
+        [NotifyPropertyChangedFor(nameof(CanLogin))]
+        [NotifyPropertyChangedFor(nameof(LoginButtonText))]
+        private bool _isLockedOut;
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(LoginButtonText))]
+        private string _lockoutRemainingText = "00:00";
+
+        public bool CanLogin => !IsLockedOut && !IsBusy;
+
+        public string LoginButtonText => IsLockedOut 
+            ? $"ĐANG TẠM KHÓA ({LockoutRemainingText})" 
+            : "ĐĂNG NHẬP VÀO HỆ THỐNG  ➔";
 
         // Trạng thái dùng thử & Passkey
         [ObservableProperty]
@@ -49,13 +64,56 @@ namespace QL_HocVien.ViewModels
         public event Action? OnNavigateToRegister;
         public event Action? OnNavigateToForgotPassword;
 
-        public LoginViewModel(IAuthService authService, IPasskeyService passkeyService)
+        public LoginViewModel(
+            IAuthService authService, 
+            IPasskeyService passkeyService,
+            ILoginLockoutService lockoutService)
         {
             _authService = authService;
             _passkeyService = passkeyService;
+            _lockoutService = lockoutService;
             Title = "Đăng Nhập - Hệ Thống Quản Lý Học Viên Quân Đội";
 
+            _lockoutService.OnLockoutStateChanged += UpdateLockoutState;
+            UpdateLockoutState();
+
             UpdateTrialStatus();
+        }
+
+        private void UpdateLockoutState()
+        {
+            void update()
+            {
+                IsLockedOut = _lockoutService.IsLockedOut;
+                LockoutRemainingText = _lockoutService.FormattedRemainingTime;
+                if (IsLockedOut)
+                {
+                    ErrorMessage = _lockoutService.LockoutMessage;
+                }
+                else if (ErrorMessage.StartsWith("Bạn đã nhập sai"))
+                {
+                    ErrorMessage = string.Empty;
+                }
+            }
+
+            if (System.Windows.Application.Current?.Dispatcher != null && 
+                !System.Windows.Application.Current.Dispatcher.CheckAccess())
+            {
+                System.Windows.Application.Current.Dispatcher.Invoke(update);
+            }
+            else
+            {
+                update();
+            }
+        }
+
+        protected override void OnPropertyChanged(PropertyChangedEventArgs e)
+        {
+            base.OnPropertyChanged(e);
+            if (e.PropertyName == nameof(IsBusy))
+            {
+                OnPropertyChanged(nameof(CanLogin));
+            }
         }
 
         public void UpdateTrialStatus()
@@ -67,6 +125,7 @@ namespace QL_HocVien.ViewModels
                 int hours = Math.Max(0, remaining.Hours);
                 TrialStatusText = $"★ Dùng thử miễn phí đến 23:59 ngày 12/09/2026 (Còn {days} ngày {hours} giờ)";
                 IsTrialExpired = false;
+                IsPasskeyModalVisible = false;
             }
             else
             {

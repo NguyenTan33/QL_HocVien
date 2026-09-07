@@ -22,19 +22,9 @@ namespace QL_HocVien.Infrastructure.Validation.Auth
 
         public Task ValidateAsync(LoginValidationRequest request, CancellationToken cancellationToken = default)
         {
-            if (request == null)
+            if (request == null || string.IsNullOrWhiteSpace(request.UsernameOrPhone) || string.IsNullOrWhiteSpace(request.Password))
             {
-                throw new ValidationException("Dữ liệu đăng nhập không được để trống.");
-            }
-
-            if (string.IsNullOrWhiteSpace(request.UsernameOrPhone))
-            {
-                throw new ValidationException("Tên đăng nhập hoặc số điện thoại không được để trống.", nameof(request.UsernameOrPhone));
-            }
-
-            if (string.IsNullOrWhiteSpace(request.Password))
-            {
-                throw new ValidationException("Mật khẩu không được để trống.", nameof(request.Password));
+                throw new ValidationException("Tài khoản hoặc mật khẩu không chính xác!");
             }
 
             // Kiểm tra Injection trong trường Tên đăng nhập / Số điện thoại

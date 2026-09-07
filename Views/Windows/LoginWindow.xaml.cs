@@ -25,6 +25,7 @@ namespace QL_HocVien.Views.Windows
 
             DataContext = this;
             LoginFormGrid.DataContext = LoginVm;
+            PasskeyModalGrid.DataContext = LoginVm;
 
             // Wire events
             LoginVm.OnLoginSuccess += OnLoginSuccess;

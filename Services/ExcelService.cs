@@ -1683,8 +1683,96 @@ namespace QL_HocVien.Services
                 }
                 wsMajor.Columns().AdjustToContents();
 
+                // 12. Sheet Môn học tín chỉ
+                var creditSubjects = await _context.CreditSubjects.AsNoTracking().ToListAsync();
+                var wsCreditSub = workbook.Worksheets.Add("Môn học tín chỉ");
+                wsCreditSub.Cell("A1").Value = "DANH MỤC MÔN HỌC TÍN CHỈ QUÂN SỰ";
+                wsCreditSub.Range("A1:H1").Merge().Style.Font.SetBold().Font.SetFontSize(14).Font.SetFontColor(XLColor.FromHtml("#1E3A8A"));
+                string[] csHeaders = { "STT", "Mã môn học", "Tên môn học", "Số tín chỉ", "Hình thức đánh giá", "Nhóm môn học", "Là môn thành phần", "Ghi chú" };
+                for (int i = 0; i < csHeaders.Length; i++)
+                {
+                    wsCreditSub.Cell(3, i + 1).Value = csHeaders[i];
+                    wsCreditSub.Cell(3, i + 1).Style.Font.SetBold().Font.SetFontColor(XLColor.White).Fill.SetBackgroundColor(XLColor.FromHtml("#1E3A8A"));
+                }
+                for (int i = 0; i < creditSubjects.Count; i++)
+                {
+                    var cs = creditSubjects[i];
+                    wsCreditSub.Cell(i + 4, 1).Value = i + 1;
+                    wsCreditSub.Cell(i + 4, 2).Value = cs.SubjectCode;
+                    wsCreditSub.Cell(i + 4, 3).Value = cs.SubjectName;
+                    wsCreditSub.Cell(i + 4, 4).Value = cs.Credits;
+                    wsCreditSub.Cell(i + 4, 5).Value = cs.AssessmentType;
+                    wsCreditSub.Cell(i + 4, 6).Value = cs.SubjectGroup ?? "";
+                    wsCreditSub.Cell(i + 4, 7).Value = cs.IsComponent ? "Có" : "Không";
+                    wsCreditSub.Cell(i + 4, 8).Value = cs.Description ?? "";
+                }
+                wsCreditSub.Columns().AdjustToContents();
+
+                // 13. Sheet Đợt kiểm tra & Thi
+                var components = await _context.SubjectAssessmentComponents
+                    .Include(c => c.CreditSubject)
+                    .AsNoTracking()
+                    .OrderBy(c => c.CreditSubjectId)
+                    .ThenBy(c => c.OrderIndex)
+                    .ToListAsync();
+
+                var wsComp = workbook.Worksheets.Add("Đợt kiểm tra & Thi");
+                wsComp.Cell("A1").Value = "DANH MỤC ĐỢT KIỂM TRA & THI CỦA MÔN TÍN CHỈ";
+                wsComp.Range("A1:F1").Merge().Style.Font.SetBold().Font.SetFontSize(14).Font.SetFontColor(XLColor.FromHtml("#1E3A8A"));
+                string[] compHeaders = { "STT", "Mã môn học", "Tên môn học", "Tên đợt kiểm tra / thi", "Số tín chỉ đợt", "Thứ tự" };
+                for (int i = 0; i < compHeaders.Length; i++)
+                {
+                    wsComp.Cell(3, i + 1).Value = compHeaders[i];
+                    wsComp.Cell(3, i + 1).Style.Font.SetBold().Font.SetFontColor(XLColor.White).Fill.SetBackgroundColor(XLColor.FromHtml("#1E3A8A"));
+                }
+                for (int i = 0; i < components.Count; i++)
+                {
+                    var cp = components[i];
+                    wsComp.Cell(i + 4, 1).Value = i + 1;
+                    wsComp.Cell(i + 4, 2).Value = cp.CreditSubject?.SubjectCode ?? "";
+                    wsComp.Cell(i + 4, 3).Value = cp.CreditSubject?.SubjectName ?? "";
+                    wsComp.Cell(i + 4, 4).Value = cp.ComponentName;
+                    wsComp.Cell(i + 4, 5).Value = cp.Credits;
+                    wsComp.Cell(i + 4, 6).Value = cp.OrderIndex;
+                }
+                wsComp.Columns().AdjustToContents();
+
+                // 14. Sheet Bảng điểm chi tiết
+                var creditScores = await _context.CreditScoreRecords
+                    .Include(s => s.Cadet)
+                    .Include(s => s.CreditSubject)
+                    .Include(s => s.Component)
+                    .AsNoTracking()
+                    .ToListAsync();
+
+                var wsScores = workbook.Worksheets.Add("Bảng điểm tín chỉ");
+                wsScores.Cell("A1").Value = "CHI TIẾT ĐẦU ĐIỂM HỌC TẬP TÍN CHỈ HỌC VIÊN";
+                wsScores.Range("A1:K1").Merge().Style.Font.SetBold().Font.SetFontSize(14).Font.SetFontColor(XLColor.FromHtml("#1E3A8A"));
+                string[] scHeaders = { "STT", "Mã học viên", "Họ và tên", "Đơn vị", "Lớp", "Mã môn học", "Tên môn học", "Tên đợt kiểm tra / thi", "Điểm số", "Ngày kiểm tra", "Ghi chú" };
+                for (int i = 0; i < scHeaders.Length; i++)
+                {
+                    wsScores.Cell(3, i + 1).Value = scHeaders[i];
+                    wsScores.Cell(3, i + 1).Style.Font.SetBold().Font.SetFontColor(XLColor.White).Fill.SetBackgroundColor(XLColor.FromHtml("#1E3A8A"));
+                }
+                for (int i = 0; i < creditScores.Count; i++)
+                {
+                    var sc = creditScores[i];
+                    wsScores.Cell(i + 4, 1).Value = i + 1;
+                    wsScores.Cell(i + 4, 2).Value = sc.Cadet?.CadetCode ?? "";
+                    wsScores.Cell(i + 4, 3).Value = sc.Cadet?.FullName ?? "";
+                    wsScores.Cell(i + 4, 4).Value = sc.Cadet?.Unit ?? "";
+                    wsScores.Cell(i + 4, 5).Value = sc.Cadet?.ClassName ?? "";
+                    wsScores.Cell(i + 4, 6).Value = sc.CreditSubject?.SubjectCode ?? "";
+                    wsScores.Cell(i + 4, 7).Value = sc.CreditSubject?.SubjectName ?? "";
+                    wsScores.Cell(i + 4, 8).Value = sc.Component?.ComponentName ?? (sc.ExamSession ?? "");
+                    wsScores.Cell(i + 4, 9).Value = sc.FinalScore;
+                    wsScores.Cell(i + 4, 10).Value = sc.ExamDate.ToString("dd/MM/yyyy");
+                    wsScores.Cell(i + 4, 11).Value = sc.Notes ?? "";
+                }
+                wsScores.Columns().AdjustToContents();
+
                 workbook.SaveAs(filePath);
-                return (true, $"Xuất toàn bộ dữ liệu thành công ra file Excel ({classes.Count} lớp học, {cadets.Count} học viên, {officers.Count} cán bộ, {subjects.Count} môn, {records.Count} lượt kiểm tra trên 11 sheets).");
+                return (true, $"Xuất toàn bộ dữ liệu thành công ra file Excel ({classes.Count} lớp học, {cadets.Count} học viên, {officers.Count} cán bộ, {creditSubjects.Count} môn tín chỉ, {components.Count} đợt kiểm tra, {creditScores.Count} đầu điểm trên 14 sheets).");
             }
             catch (Exception ex)
             {
@@ -1692,16 +1780,16 @@ namespace QL_HocVien.Services
             }
         }
 
-        public async Task<(bool Success, string Message, int ClassesCount, int CadetsCount, int SubjectsCount, int ExamsCount, int OfficersCount)> ImportAllDataFromExcelAsync(string filePath)
+        public async Task<(bool Success, string Message, int ClassesCount, int CadetsCount, int SubjectsCount, int ExamsCount, int OfficersCount, int CreditSubjectsCount, int CreditScoresCount)> ImportAllDataFromExcelAsync(string filePath)
         {
             try
             {
                 if (!File.Exists(filePath))
-                    return (false, "Tệp không tồn tại.", 0, 0, 0, 0, 0);
+                    return (false, "Tệp không tồn tại.", 0, 0, 0, 0, 0, 0, 0);
 
                 var secCheck = await ValidateExcelSecurityAsync(filePath);
                 if (!secCheck.IsValid)
-                    return (false, secCheck.Message, 0, 0, 0, 0, 0);
+                    return (false, secCheck.Message, 0, 0, 0, 0, 0, 0, 0);
 
                 // 1. Nhập danh mục tổ chức trước
                 var catResult = await ImportCatalogsFromExcelAsync(filePath);
@@ -1709,12 +1797,14 @@ namespace QL_HocVien.Services
                 var offResult = await ImportOfficersFromExcelAsync(filePath);
                 // 3. Nhập lớp học
                 var classResult = await ImportClassesFromExcelAsync(filePath);
-                // 4. Nhập môn học
+                // 4. Nhập môn học thể lực
                 var subResult = await ImportSubjectsFromExcelAsync(filePath);
                 // 5. Nhập học viên
                 var cadetResult = await ImportCadetsFromExcelAsync(filePath);
-                // 4. Nhập kết quả kiểm tra
+                // 6. Nhập kết quả kiểm tra thể lực
                 var examResult = await ImportExamRecordsFromExcelAsync(filePath);
+                // 7. Nhập môn học tín chỉ, đợt kiểm tra và bảng điểm tín chỉ
+                var (csCount, scoreCount) = await ImportCreditDataFromExcelAsync(filePath);
 
                 int clCount = classResult.Classes.Count;
                 int cCount = cadetResult.Cadets.Count;
@@ -1722,12 +1812,196 @@ namespace QL_HocVien.Services
                 int eCount = examResult.Records.Count;
                 int offCount = offResult.Officers.Count;
 
-                return (true, $"Khôi phục/Nhập toàn bộ thành công: {clCount} lớp học, {cCount} học viên, {offCount} cán bộ, {sCount} môn học, {eCount} lượt kiểm tra thể lực.", clCount, cCount, sCount, eCount, offCount);
+                return (true, $"Khôi phục toàn bộ dữ liệu thành công: {clCount} lớp học, {cCount} học viên, {offCount} cán bộ, {csCount} môn tín chỉ, {scoreCount} đầu điểm, {sCount} môn thể lực, {eCount} lượt kiểm tra thể lực.", clCount, cCount, sCount, eCount, offCount, csCount, scoreCount);
             }
             catch (Exception ex)
             {
-                return (false, $"Lỗi nhập toàn bộ dữ liệu: {ex.Message}", 0, 0, 0, 0, 0);
+                return (false, $"Lỗi nhập toàn bộ dữ liệu: {ex.Message}", 0, 0, 0, 0, 0, 0, 0);
             }
+        }
+
+        private async Task<(int SubjectsCount, int ScoresCount)> ImportCreditDataFromExcelAsync(string filePath)
+        {
+            using var workbook = new XLWorkbook(filePath);
+            int importedSubjects = 0;
+            int importedScores = 0;
+
+            var wsCreditSub = workbook.Worksheets.FirstOrDefault(w => w.Name == "Môn học tín chỉ");
+            var wsComp = workbook.Worksheets.FirstOrDefault(w => w.Name == "Đợt kiểm tra & Thi");
+            var wsScores = workbook.Worksheets.FirstOrDefault(w => w.Name == "Bảng điểm tín chỉ");
+
+            if (wsCreditSub != null)
+            {
+                var existingSubjects = await _context.CreditSubjects.ToListAsync();
+                int lastRow = wsCreditSub.LastRowUsed()?.RowNumber() ?? 3;
+                for (int r = 4; r <= lastRow; r++)
+                {
+                    string code = CleanCellText(wsCreditSub.Cell(r, 2).GetString());
+                    string name = CleanCellText(wsCreditSub.Cell(r, 3).GetString());
+                    if (string.IsNullOrWhiteSpace(code) || string.IsNullOrWhiteSpace(name)) continue;
+
+                    double credits = 1.0;
+                    var cVal = wsCreditSub.Cell(r, 4).Value;
+                    if (cVal.IsNumber) credits = cVal.GetNumber();
+                    else if (double.TryParse(CleanCellText(cVal.ToString()), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var cv))
+                        credits = cv;
+
+                    string assess = CleanCellText(wsCreditSub.Cell(r, 5).GetString());
+                    if (string.IsNullOrWhiteSpace(assess)) assess = "Kiểm tra và thi";
+                    string group = CleanCellText(wsCreditSub.Cell(r, 6).GetString());
+                    string isCompStr = CleanCellText(wsCreditSub.Cell(r, 7).GetString());
+                    bool isComp = isCompStr.Equals("Có", StringComparison.OrdinalIgnoreCase);
+                    string desc = CleanCellText(wsCreditSub.Cell(r, 8).GetString());
+
+                    var subj = existingSubjects.FirstOrDefault(s => s.SubjectCode.Equals(code, StringComparison.OrdinalIgnoreCase));
+                    if (subj == null)
+                    {
+                        subj = new CreditSubject
+                        {
+                            SubjectCode = code,
+                            SubjectName = name,
+                            Credits = credits,
+                            AssessmentType = assess,
+                            SubjectGroup = group,
+                            IsComponent = isComp,
+                            Description = desc,
+                            CreatedAt = DateTime.Now
+                        };
+                        _context.CreditSubjects.Add(subj);
+                        existingSubjects.Add(subj);
+                        importedSubjects++;
+                    }
+                    else
+                    {
+                        subj.SubjectName = name;
+                        subj.Credits = credits;
+                        subj.AssessmentType = assess;
+                        subj.SubjectGroup = group;
+                        subj.IsComponent = isComp;
+                        subj.Description = desc;
+                    }
+                }
+                await _context.SaveChangesAsync();
+
+                // Nhập Đợt kiểm tra & Thi
+                if (wsComp != null)
+                {
+                    var existingComps = await _context.SubjectAssessmentComponents.ToListAsync();
+                    int cLastRow = wsComp.LastRowUsed()?.RowNumber() ?? 3;
+                    for (int r = 4; r <= cLastRow; r++)
+                    {
+                        string sCode = CleanCellText(wsComp.Cell(r, 2).GetString());
+                        string cName = CleanCellText(wsComp.Cell(r, 4).GetString());
+                        if (string.IsNullOrWhiteSpace(sCode) || string.IsNullOrWhiteSpace(cName)) continue;
+
+                        double cCredits = 1.0;
+                        var val = wsComp.Cell(r, 5).Value;
+                        if (val.IsNumber) cCredits = val.GetNumber();
+                        else if (double.TryParse(CleanCellText(val.ToString()), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var cv))
+                            cCredits = cv;
+
+                        int order = r - 3;
+                        var oVal = wsComp.Cell(r, 6).Value;
+                        if (oVal.IsNumber) order = (int)oVal.GetNumber();
+
+                        var targetSubj = existingSubjects.FirstOrDefault(s => s.SubjectCode.Equals(sCode, StringComparison.OrdinalIgnoreCase));
+                        if (targetSubj != null)
+                        {
+                            var comp = existingComps.FirstOrDefault(c => c.CreditSubjectId == targetSubj.Id && c.ComponentName.Equals(cName, StringComparison.OrdinalIgnoreCase));
+                            if (comp == null)
+                            {
+                                comp = new SubjectAssessmentComponent
+                                {
+                                    CreditSubjectId = targetSubj.Id,
+                                    ComponentName = cName,
+                                    Credits = cCredits,
+                                    OrderIndex = order,
+                                    CreatedAt = DateTime.Now
+                                };
+                                _context.SubjectAssessmentComponents.Add(comp);
+                                existingComps.Add(comp);
+                            }
+                            else
+                            {
+                                comp.Credits = cCredits;
+                                comp.OrderIndex = order;
+                            }
+                        }
+                    }
+                    await _context.SaveChangesAsync();
+                }
+
+                // Nhập Bảng điểm chi tiết
+                if (wsScores != null)
+                {
+                    var allCadets = await _context.Cadets.ToListAsync();
+                    var allComps = await _context.SubjectAssessmentComponents.ToListAsync();
+                    var existingScores = await _context.CreditScoreRecords.ToListAsync();
+
+                    int sLastRow = wsScores.LastRowUsed()?.RowNumber() ?? 3;
+                    for (int r = 4; r <= sLastRow; r++)
+                    {
+                        string cadetCode = CleanCellText(wsScores.Cell(r, 2).GetString());
+                        string cadetName = CleanCellText(wsScores.Cell(r, 3).GetString());
+                        string sCode = CleanCellText(wsScores.Cell(r, 6).GetString());
+                        string cName = CleanCellText(wsScores.Cell(r, 8).GetString());
+
+                        double score = 0.0;
+                        var sVal = wsScores.Cell(r, 9).Value;
+                        if (sVal.IsNumber) score = sVal.GetNumber();
+                        else if (double.TryParse(CleanCellText(sVal.ToString()).Replace(',', '.'), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var sv))
+                            score = sv;
+
+                        DateTime examDate = DateTime.Now;
+                        var dVal = wsScores.Cell(r, 10).Value;
+                        if (dVal.IsDateTime) examDate = dVal.GetDateTime();
+                        else if (DateTime.TryParse(CleanCellText(dVal.ToString()), out var dt))
+                            examDate = dt;
+
+                        string note = CleanCellText(wsScores.Cell(r, 11).GetString());
+
+                        var cadet = allCadets.FirstOrDefault(c => (!string.IsNullOrEmpty(cadetCode) && c.CadetCode.Equals(cadetCode, StringComparison.OrdinalIgnoreCase)) || c.FullName.Equals(cadetName, StringComparison.OrdinalIgnoreCase));
+                        var subj = existingSubjects.FirstOrDefault(s => s.SubjectCode.Equals(sCode, StringComparison.OrdinalIgnoreCase));
+                        if (cadet == null || subj == null) continue;
+
+                        var comp = allComps.FirstOrDefault(c => c.CreditSubjectId == subj.Id && c.ComponentName.Equals(cName, StringComparison.OrdinalIgnoreCase));
+
+                        var scoreRecord = existingScores.FirstOrDefault(s => s.CadetId == cadet.Id && s.CreditSubjectId == subj.Id && ((comp != null && s.ComponentId == comp.Id) || (comp == null && (s.ExamSession == cName || s.ExamSession == null))));
+
+                        if (scoreRecord == null)
+                        {
+                            scoreRecord = new CreditScoreRecord
+                            {
+                                CadetId = cadet.Id,
+                                CreditSubjectId = subj.Id,
+                                ComponentId = comp?.Id,
+                                ExamSession = cName,
+                                FinalScore = score,
+                                RegularScore = score,
+                                ExamScore = score,
+                                ExamDate = examDate,
+                                Notes = note,
+                                CreatedAt = DateTime.Now
+                            };
+                            _context.CreditScoreRecords.Add(scoreRecord);
+                            existingScores.Add(scoreRecord);
+                            importedScores++;
+                        }
+                        else
+                        {
+                            scoreRecord.FinalScore = score;
+                            scoreRecord.RegularScore = score;
+                            scoreRecord.ExamScore = score;
+                            scoreRecord.ExamDate = examDate;
+                            scoreRecord.Notes = note;
+                            importedScores++;
+                        }
+                    }
+                    await _context.SaveChangesAsync();
+                }
+            }
+
+            return (importedSubjects, importedScores);
         }
         #endregion
 

@@ -17,54 +17,50 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <!-- Header & Action Buttons -->
-                <Grid Grid.Row="0" Margin="0,0,0,16">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,6">
-                        <TextBlock Text="QUẢN LÝ CÁN BỘ QUÂN SỰ" FontSize="20" FontWeight="Bold" Foreground="#0F172A" TextWrapping="Wrap"/>
-                        <TextBlock Text="Hồ sơ cán bộ chỉ huy, quản trị lớp học, phân cấp quân hàm, chức vụ, đơn vị và phân quyền" 
-                                   FontSize="13" Foreground="#64748B" Margin="0,4,0,0" TextWrapping="Wrap"/>
-                    </StackPanel>
+                <!-- 1. Tiêu đề trang (Page Header) -->
+                <StackPanel Grid.Row="0" VerticalAlignment="Center" Margin="0,0,0,10">
+                    <TextBlock Text="QUẢN LÝ CÁN BỘ QUÂN SỰ" FontSize="20" FontWeight="Bold" Foreground="#0F172A" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                    <TextBlock Text="Hồ sơ cán bộ chỉ huy, quản trị lớp học, phân cấp quân hàm, chức vụ, đơn vị và phân quyền" 
+                               FontSize="13" Foreground="#64748B" Margin="0,4,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                </StackPanel>
 
-                    <WrapPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
-                        <Button Content="{Binding SelectAllButtonText}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,6"
-                                Command="{Binding ToggleSelectAllCommand}" ToolTip="Chọn hoặc bỏ chọn tất cả cán bộ"/>
-                        <Button Content="📥 Nhập Excel" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,6"
-                                Command="{Binding ImportExcelCommand}"/>
-                        <Button Content="📤 Xuất Excel" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,6"
-                                Command="{Binding ExportExcelCommand}"/>
-                        <Button Content="🔑 Đặt Lại Mật Khẩu" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,6"
-                                Command="{Binding OpenResetPasswordDialogCommand}"/>
-                        <Button Content="➕ Thêm Cán Bộ" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,6"
-                                Command="{Binding OpenAddFormCommand}"/>
-                        <Button Content="✏️ Sửa" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,6"
-                                Command="{Binding OpenEditFormCommand}"/>
-                        <Button Content="🗑️ Xóa" Style="{StaticResource DangerButtonStyle}" Margin="0,0,8,6"
-                                Command="{Binding DeleteOfficerCommand}"/>
-                        <Button Content="🔄 Làm Mới" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,0,6"
-                                Command="{Binding LoadDataCommand}"/>
-                    </WrapPanel>
-                </Grid>
+                <!-- 2. Thanh công cụ thao tác (Page Toolbar) -->
+                <WrapPanel Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,0,12">
+                    <Button Content="{Binding SelectAllButtonText}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,8"
+                            Command="{Binding ToggleSelectAllCommand}" ToolTip="Chọn hoặc bỏ chọn tất cả cán bộ"/>
+                    <Button Content="📥 Nhập Excel" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,8"
+                            Command="{Binding ImportExcelCommand}"/>
+                    <Button Content="📤 Xuất Excel" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,8"
+                            Command="{Binding ExportExcelCommand}"/>
+                    <Button Content="🔑 Đặt Lại Mật Khẩu" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,8"
+                            Command="{Binding OpenResetPasswordDialogCommand}"/>
+                    <Button Content="➕ Thêm Cán Bộ" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,8"
+                            Command="{Binding OpenAddFormCommand}"/>
+                    <Button Content="✏️ Sửa" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,8"
+                            Command="{Binding OpenEditFormCommand}"/>
+                    <Button Content="🗑️ Xóa" Style="{StaticResource DangerButtonStyle}" Margin="0,0,8,8"
+                            Command="{Binding DeleteOfficerCommand}"/>
+                    <Button Content="🔄 Làm Mới" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,0,8"
+                            Command="{Binding LoadDataCommand}"/>
+                </WrapPanel>
 
-                <!-- Bộ Lọc Nâng Cao Đa Tiêu Chí -->
-                <Border Grid.Row="1" Style="{StaticResource CardBorderStyle}" Margin="0,0,0,16" Padding="14">
+                <!-- 3. Bộ Lọc Nâng Cao Đa Tiêu Chí -->
+                <Border Grid.Row="2" Style="{StaticResource CardBorderStyle}" Margin="0,0,0,16" Padding="14">
                     <StackPanel>
                         <!-- Hàng lọc cơ bản -->
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="2*"/>
+                                <ColumnDefinition Width="2*" MinWidth="160"/>
                                 <ColumnDefinition Width="10"/>
-                                <ColumnDefinition Width="1.1*"/>
+                                <ColumnDefinition Width="1.1*" MinWidth="100"/>
                                 <ColumnDefinition Width="10"/>
-                                <ColumnDefinition Width="1.1*"/>
+                                <ColumnDefinition Width="1.1*" MinWidth="100"/>
                                 <ColumnDefinition Width="10"/>
-                                <ColumnDefinition Width="1.1*"/>
+                                <ColumnDefinition Width="1.1*" MinWidth="100"/>
                                 <ColumnDefinition Width="10"/>
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="8"/>
@@ -155,8 +151,8 @@
                     </StackPanel>
                 </Border>
 
-                <!-- DataGrid Cán Bộ -->
-                <Border Grid.Row="2" Style="{StaticResource CardBorderStyle}" Padding="0">
+                <!-- 4. DataGrid Cán Bộ -->
+                <Border Grid.Row="3" Style="{StaticResource CardBorderStyle}" Padding="0">
                     <DataGrid ItemsSource="{Binding Officers}" SelectedItem="{Binding SelectedOfficer}"
                               AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
                               GridLinesVisibility="Horizontal" HeadersVisibility="Column" Background="White"

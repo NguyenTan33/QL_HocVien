@@ -222,13 +222,14 @@
                         </Grid.ColumnDefinitions>
 
                         <!-- Huy hiệu Trải nghiệm dùng thử / Nút kích hoạt Passkey -->
-                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" DataContext="{Binding LoginVm}">
                             <Border Background="#E5DCB9" BorderBrush="#8C7D46" BorderThickness="1" CornerRadius="4" Padding="8,3" Margin="0,0,8,0">
                                 <TextBlock Text="{Binding TrialStatusText}" FontSize="11" FontWeight="SemiBold" Foreground="#4A5C3B"/>
                             </Border>
-                            <Button Content="🔑 Kích Hoạt Passkey" Height="22" Padding="6,0"
+                            <Button Content="🔑 Nhập Passkey" Height="22" Padding="8,0"
                                     Background="#8F1515" Foreground="#FFE17A" BorderBrush="#D4B547" BorderThickness="1"
                                     FontSize="10" FontWeight="Bold" Cursor="Hand"
+                                    ToolTip="Tùy chọn: Kích hoạt trước bản quyền vĩnh viễn cho tài khoản"
                                     Command="{Binding OpenPasskeyModalCommand}">
                                 <Button.Resources>
                                     <Style TargetType="Border">
@@ -476,8 +477,11 @@
                     </Grid>
 
                     <!-- ==================== HỘP THOẠI MODAL: KÍCH HOẠT 10 PASSKEY BẢN QUYỀN ==================== -->
-                    <Grid Background="#A5000000" Visibility="{Binding IsPasskeyModalVisible, Converter={x:Static local_cv:BooleanToVisibilityConverter.Instance}}" Panel.ZIndex="100">
-                        <Border Width="450" Background="#18251A" BorderBrush="#D4B547" BorderThickness="1.5" CornerRadius="8" Padding="24" VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <Grid x:Name="PasskeyModalGrid" DataContext="{Binding LoginVm}"
+                          Background="#B5000000"
+                          Visibility="{Binding IsPasskeyModalVisible, Converter={x:Static local_cv:BooleanToVisibilityConverter.Instance}, FallbackValue=Collapsed}"
+                          Panel.ZIndex="100">
+                        <Border Width="460" Background="#18251A" BorderBrush="#D4B547" BorderThickness="1.5" CornerRadius="8" Padding="24" VerticalAlignment="Center" HorizontalAlignment="Center">
                             <Border.Effect>
                                 <DropShadowEffect BlurRadius="25" Color="#000000" Opacity="0.75" ShadowDepth="6"/>
                             </Border.Effect>
@@ -490,8 +494,9 @@
                                 </StackPanel>
                                 <TextBlock Text="Mỗi Passkey chỉ kích hoạt cho 01 tài khoản duy nhất để bảo mật." FontSize="11" Foreground="#B9B99E" Margin="0,0,0,16"/>
 
-                                <!-- Thông báo trạng thái Passkey -->
-                                <Border Background="#243424" BorderBrush="#625C34" BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,0,0,14">
+                                <!-- Thông báo trạng thái Passkey (Chỉ hiện khi có thông báo) -->
+                                <Border Background="#243424" BorderBrush="#625C34" BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,0,0,14"
+                                        Visibility="{Binding PasskeyStatusMessage, Converter={x:Static local_cv:StringToVisibilityConverter.Instance}}">
                                     <TextBlock Text="{Binding PasskeyStatusMessage}" FontSize="12" TextWrapping="Wrap"
                                                Foreground="{Binding IsPasskeySuccess, Converter={x:Static local_cv:BooleanToBrushConverter.Instance}, FallbackValue='#FFE17A'}"/>
                                 </Border>

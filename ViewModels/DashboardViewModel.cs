@@ -439,7 +439,20 @@ namespace QL_HocVien.ViewModels
                 StatusMessage = result.Message;
                 if (result.Success)
                 {
+                    System.Windows.MessageBox.Show(
+                        result.Message,
+                        "Khôi Phục Dữ Liệu Thành Công",
+                        System.Windows.MessageBoxButton.OK,
+                        System.Windows.MessageBoxImage.Information);
                     await InitializeDashboardAsync();
+                }
+                else
+                {
+                    System.Windows.MessageBox.Show(
+                        result.Message,
+                        "Khôi Phục Dữ Liệu Thất Bại",
+                        System.Windows.MessageBoxButton.OK,
+                        System.Windows.MessageBoxImage.Warning);
                 }
             }
             catch (Exception ex)
