@@ -135,8 +135,10 @@ namespace QL_HocVien.ViewModels
         }
 
         [RelayCommand]
-        public void SaveSettings()
+        public async Task SaveSettingsAsync()
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Lưu cấu hình hệ thống & máy chủ thư")) return;
+
             try
             {
                 var settingsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json");

@@ -156,15 +156,18 @@ namespace QL_HocVien.ViewModels
 
         private readonly IExcelService _excelService;
         private readonly IFileDialogService _fileDialogService;
+        private readonly ISecurityGateService _securityGate;
 
         public SubjectManagementViewModel(
             ISubjectService subjectService,
             IExcelService excelService,
-            IFileDialogService fileDialogService)
+            IFileDialogService fileDialogService,
+            ISecurityGateService securityGate)
         {
             _subjectService = subjectService;
             _excelService = excelService;
             _fileDialogService = fileDialogService;
+            _securityGate = securityGate;
             Title = "Quản Lý Môn Học & Tiêu Chuẩn Thể Lực";
 
             _ = LoadSubjectsAsync();
@@ -224,8 +227,10 @@ namespace QL_HocVien.ViewModels
         }
 
         [RelayCommand]
-        private void OpenAddForm()
+        private async Task OpenAddFormAsync()
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Thêm môn học thể lực mới")) return;
+
             IsEditing = false;
             FormSubjectCode = string.Empty;
             FormSubjectName = string.Empty;
@@ -241,13 +246,15 @@ namespace QL_HocVien.ViewModels
         }
 
         [RelayCommand]
-        private void OpenEditForm()
+        private async Task OpenEditFormAsync()
         {
             if (SelectedSubject == null)
             {
                 StatusMessage = "Vui lòng chọn môn học cần chỉnh sửa.";
                 return;
             }
+
+            if (!await _securityGate.EnsureUnlockedAsync($"Chỉnh sửa môn học '{SelectedSubject.SubjectName}'")) return;
 
             IsEditing = true;
             FormSubjectCode = SelectedSubject.SubjectCode;
@@ -272,6 +279,8 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         private async Task SaveFormAsync()
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Lưu thông tin môn học thể lực")) return;
+
             FormErrorMessage = string.Empty;
 
             if (string.IsNullOrWhiteSpace(FormSubjectCode))
@@ -366,6 +375,8 @@ namespace QL_HocVien.ViewModels
                 return;
             }
 
+            if (!await _securityGate.EnsureUnlockedAsync($"Xóa {selected.Count} môn học đã chọn")) return;
+
             var confirm = System.Windows.MessageBox.Show(
                 $"Bạn có chắc chắn muốn xóa {selected.Count} môn học đã chọn không?\n\nLưu ý: Toàn bộ hồ sơ kiểm tra liên quan đến các môn này sẽ bị xóa theo.",
                 "Xác nhận xóa môn học",
@@ -406,6 +417,8 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         private async Task ExportExcelAsync()
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Xuất danh mục môn học ra Excel")) return;
+
             var fileName = $"DanhMuc_MonHoc_{DateTime.Today:yyyyMMdd}.xlsx";
             var filePath = _fileDialogService.ShowSaveFileDialog(fileName, "Excel Files (*.xlsx)|*.xlsx", "Xuất danh mục môn học ra Excel");
             if (string.IsNullOrWhiteSpace(filePath)) return;
@@ -429,6 +442,8 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         private async Task ImportExcelAsync()
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Nhập danh mục môn học từ Excel")) return;
+
             var filePath = _fileDialogService.ShowOpenFileDialog("Excel Files (*.xlsx)|*.xlsx|All Files (*.*)|*.*", "Chọn tệp Excel danh mục môn học");
             if (string.IsNullOrWhiteSpace(filePath)) return;
 

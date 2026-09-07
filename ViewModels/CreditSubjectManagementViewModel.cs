@@ -17,6 +17,7 @@ namespace QL_HocVien.ViewModels
         private readonly ICatalogService _catalogService;
         private readonly IClassService _classService;
         private readonly IFileDialogService _fileDialogService;
+        private readonly ISecurityGateService _securityGate;
 
         #region PROPERTIES & COLLECTIONS
         public ObservableCollection<CreditSubject> Subjects { get; } = new();
@@ -205,13 +206,15 @@ namespace QL_HocVien.ViewModels
             ICadetService cadetService,
             ICatalogService catalogService,
             IClassService classService,
-            IFileDialogService fileDialogService)
+            IFileDialogService fileDialogService,
+            ISecurityGateService securityGate)
         {
             _creditService = creditService;
             _cadetService = cadetService;
             _catalogService = catalogService;
             _classService = classService;
             _fileDialogService = fileDialogService;
+            _securityGate = securityGate;
 
             _ = InitializeAsync();
         }
@@ -376,8 +379,10 @@ namespace QL_HocVien.ViewModels
         }
 
         [RelayCommand]
-        public void OpenAddSubjectForm()
+        public async Task OpenAddSubjectFormAsync()
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Thêm môn học tín chỉ mới")) return;
+
             IsEditingSubject = false;
             EditingSubjectId = 0;
             SubjectCode = $"TC{DateTime.Now:yyMM}{Subjects.Count + 1:D2}";
@@ -401,6 +406,8 @@ namespace QL_HocVien.ViewModels
         public async Task OpenEditSubjectFormAsync(CreditSubject? subject)
         {
             if (subject == null) return;
+            if (!await _securityGate.EnsureUnlockedAsync($"Chỉnh sửa môn học '{subject.SubjectName}'")) return;
+
             IsEditingSubject = true;
             EditingSubjectId = subject.Id;
             SubjectCode = subject.SubjectCode;
@@ -446,6 +453,9 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         public async Task SaveSubjectFormAsync()
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Lưu thông tin môn học & đợt kiểm tra"))
+                return;
+
             if (string.IsNullOrWhiteSpace(SubjectCode) || string.IsNullOrWhiteSpace(SubjectName))
             {
                 StatusMessage = "Vui lòng nhập đầy đủ mã môn và tên môn học.";
@@ -520,6 +530,8 @@ namespace QL_HocVien.ViewModels
         public async Task DeleteSubjectAsync(CreditSubject? subject)
         {
             if (subject == null) return;
+            if (!await _securityGate.EnsureUnlockedAsync($"Xóa môn học '{subject.SubjectName}'"))
+                return;
 
             var confirm = System.Windows.MessageBox.Show(
                 $"Bạn có chắc chắn muốn xóa môn học tín chỉ '{subject.SubjectName}' ({subject.SubjectCode}) không?\n\nLưu ý: Tất cả các đợt kiểm tra và điểm số liên quan sẽ bị xóa.",
@@ -551,13 +563,15 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         public async Task OpenAddScoreFormAsync(CadetAcademicSummaryDto? summary)
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Nhập điểm môn học tín chỉ")) return;
+
             if (summary != null)
             {
                 await OpenCadetScoreModalAsync(summary);
             }
             else
             {
-                OpenGradeMatrixModal(null);
+                await OpenGradeMatrixModalAsync(null);
             }
         }
 
@@ -565,6 +579,7 @@ namespace QL_HocVien.ViewModels
         public async Task OpenCadetScoreModalAsync(CadetAcademicSummaryDto? cadet)
         {
             if (cadet == null) return;
+            if (!await _securityGate.EnsureUnlockedAsync($"Nhập điểm cho học viên '{cadet.FullName}'")) return;
 
             CadetForScoreEntry = cadet;
             CadetScoreModalTitle = $"NHẬP ĐIỂM HỌC VIÊN: {cadet.FullName} - {cadet.CadetCode} ({cadet.ClassName} - {cadet.Unit})";
@@ -682,6 +697,8 @@ namespace QL_HocVien.ViewModels
         public async Task SaveCadetScoreModalAsync()
         {
             if (CadetForScoreEntry == null || SelectedSubjectForCadetScore == null) return;
+            if (!await _securityGate.EnsureUnlockedAsync($"Lưu điểm học viên '{CadetForScoreEntry.FullName}' môn '{SelectedSubjectForCadetScore.SubjectName}'"))
+                return;
 
             IsBusy = true;
             try
@@ -721,15 +738,17 @@ namespace QL_HocVien.ViewModels
         #region MA TRẬN NHẬP ĐIỂM THEO MÔN HỌC (GRADE ENTRY MATRIX ACTIONS)
 
         [RelayCommand]
-        public void OpenGradeMatrixModal(CreditSubject? subject = null)
+        public async Task OpenGradeMatrixModalAsync(CreditSubject? subject = null)
         {
+            if (!await _securityGate.EnsureUnlockedAsync(subject != null ? $"Nhập điểm ma trận môn '{subject.SubjectName}'" : "Nhập điểm ma trận theo môn học")) return;
+
             SearchSubjectText = string.Empty;
             FilteredSubjectsForGrading.Clear();
             foreach (var s in Subjects) FilteredSubjectsForGrading.Add(s);
 
             SelectedSubjectForGrading = subject ?? Subjects.FirstOrDefault();
             IsGradeMatrixModalVisible = true;
-            _ = LoadGradeMatrixForSelectedSubjectAsync();
+            await LoadGradeMatrixForSelectedSubjectAsync();
         }
 
         [RelayCommand]
@@ -824,6 +843,9 @@ namespace QL_HocVien.ViewModels
                 return;
             }
 
+            if (!await _securityGate.EnsureUnlockedAsync($"Lưu bảng điểm môn '{SelectedSubjectForGrading.SubjectName}'"))
+                return;
+
             IsBusy = true;
             try
             {
@@ -859,6 +881,9 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         public async Task ExportToExcelAsync()
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Xuất Báo Cáo Bảng Điểm Tín Chỉ ra Excel"))
+                return;
+
             if (CadetSummaries.Count == 0)
             {
                 StatusMessage = "Không có dữ liệu học viên để xuất báo cáo.";
@@ -916,6 +941,9 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         public async Task ImportStandardExcelAsync()
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Làm sạch CSDL và nạp lại dữ liệu chuẩn từ file Excel"))
+                return;
+
             string? filePath = _fileDialogService.ShowOpenFileDialog("Tập tin Excel (*.xlsx)|*.xlsx|Tất cả tập tin (*.*)|*.*");
             if (string.IsNullOrWhiteSpace(filePath)) return;
 

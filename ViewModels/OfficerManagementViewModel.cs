@@ -16,6 +16,7 @@ namespace QL_HocVien.ViewModels
         private readonly ICatalogService _catalogService;
         private readonly IExcelService _excelService;
         private readonly IFileDialogService _fileDialogService;
+        private readonly ISecurityGateService _securityGate;
 
         public ObservableCollection<Officer> Officers { get; } = new();
         public ObservableCollection<string> FilterRanks { get; } = new() { "Tất cả" };
@@ -191,12 +192,14 @@ namespace QL_HocVien.ViewModels
             IOfficerService officerService,
             ICatalogService catalogService,
             IExcelService excelService,
-            IFileDialogService fileDialogService)
+            IFileDialogService fileDialogService,
+            ISecurityGateService securityGate)
         {
             _officerService = officerService;
             _catalogService = catalogService;
             _excelService = excelService;
             _fileDialogService = fileDialogService;
+            _securityGate = securityGate;
             Title = "Quản Lý Cán Bộ Quân Sự";
 
             _ = LoadDataAsync();
@@ -330,6 +333,8 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         public async Task OpenAddFormAsync()
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Thêm cán bộ quân sự mới")) return;
+
             IsEditing = false;
             ClearForm();
             FormTitle = "Thêm Cán Bộ Quản Lý Mới";
@@ -347,13 +352,15 @@ namespace QL_HocVien.ViewModels
         }
 
         [RelayCommand]
-        public void OpenEditForm()
+        public async Task OpenEditFormAsync()
         {
             if (SelectedOfficer == null)
             {
                 MessageBox.Show("Vui lòng chọn một cán bộ để chỉnh sửa.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
+
+            if (!await _securityGate.EnsureUnlockedAsync($"Chỉnh sửa cán bộ '{SelectedOfficer.FullName}'")) return;
 
             IsEditing = true;
             ClearForm();
@@ -385,6 +392,8 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         public async Task SaveFormAsync()
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Lưu hồ sơ cán bộ")) return;
+
             if (string.IsNullOrWhiteSpace(FormOfficerCode) || string.IsNullOrWhiteSpace(FormFullName))
             {
                 MessageBox.Show("Mã cán bộ và Họ tên không được để trống.", "Cảnh báo", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -459,6 +468,8 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         public async Task DeleteOfficerAsync()
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Xóa cán bộ khỏi hệ thống")) return;
+
             var selected = Officers.Where(o => o.IsSelected).ToList();
             if (!selected.Any() && SelectedOfficer != null)
             {
@@ -503,13 +514,15 @@ namespace QL_HocVien.ViewModels
         }
 
         [RelayCommand]
-        public void OpenResetPasswordDialog()
+        public async Task OpenResetPasswordDialogAsync()
         {
             if (SelectedOfficer == null)
             {
                 MessageBox.Show("Vui lòng chọn cán bộ cần đặt lại mật khẩu.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
+
+            if (!await _securityGate.EnsureUnlockedAsync($"Đặt lại mật khẩu cho cán bộ '{SelectedOfficer.FullName}'")) return;
 
             ResetOfficerName = $"{SelectedOfficer.FullName} ({SelectedOfficer.OfficerCode})";
             ResetNewPassword = "Password123@";
@@ -531,6 +544,8 @@ namespace QL_HocVien.ViewModels
                 MessageBox.Show("Mật khẩu mới không được để trống.", "Cảnh báo", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
+
+            if (!await _securityGate.EnsureUnlockedAsync($"Đặt lại mật khẩu cho cán bộ '{SelectedOfficer.FullName}'")) return;
 
             IsBusy = true;
             try
@@ -559,6 +574,8 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         public async Task ExportExcelAsync()
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Xuất danh sách cán bộ ra Excel")) return;
+
             var filePath = _fileDialogService.ShowSaveFileDialog("Excel Files (*.xlsx)|*.xlsx", "Danh_Sach_Can_Bo_Quan_Su.xlsx");
             if (string.IsNullOrWhiteSpace(filePath)) return;
 
@@ -583,6 +600,8 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         public async Task ImportExcelAsync()
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Nhập danh sách cán bộ từ file Excel")) return;
+
             var filePath = _fileDialogService.ShowOpenFileDialog("Excel Files (*.xlsx)|*.xlsx|All Files (*.*)|*.*", "Chọn file Excel danh sách cán bộ");
             if (string.IsNullOrWhiteSpace(filePath)) return;
 

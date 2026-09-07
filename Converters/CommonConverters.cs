@@ -109,6 +109,24 @@ namespace QL_HocVien.Converters
         }
     }
 
+    public class BooleanToBrushConverter : IValueConverter
+    {
+        public static readonly BooleanToBrushConverter Instance = new();
+        private static readonly System.Windows.Media.SolidColorBrush _greenBrush = new(System.Windows.Media.Color.FromRgb(22, 163, 74));
+        private static readonly System.Windows.Media.SolidColorBrush _redBrush = new(System.Windows.Media.Color.FromRgb(220, 38, 38));
+
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is bool b && b) return _greenBrush;
+            return _redBrush;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     public class BindingProxy : Freezable
     {
         protected override Freezable CreateInstanceCore()

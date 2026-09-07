@@ -18,6 +18,7 @@ namespace QL_HocVien.ViewModels
         private readonly IExcelService _excelService;
         private readonly IFileDialogService _fileDialogService;
         private readonly ICatalogService _catalogService;
+        private readonly ISecurityGateService _securityGate;
 
         public ObservableCollection<Cadet> Cadets { get; } = new();
         public ObservableCollection<string> RankList { get; } = new()
@@ -138,7 +139,8 @@ namespace QL_HocVien.ViewModels
             IAuthService authService,
             IExcelService excelService,
             IFileDialogService fileDialogService,
-            ICatalogService catalogService)
+            ICatalogService catalogService,
+            ISecurityGateService securityGate)
         {
             _cadetService = cadetService;
             _classService = classService;
@@ -146,6 +148,7 @@ namespace QL_HocVien.ViewModels
             _excelService = excelService;
             _fileDialogService = fileDialogService;
             _catalogService = catalogService;
+            _securityGate = securityGate;
             Title = "Quản Lý Danh Sách Học Viên";
 
             _ = InitializeAsync();
@@ -466,19 +469,22 @@ namespace QL_HocVien.ViewModels
         }
 
         [RelayCommand]
-        private void RequestAddNew()
+        private async Task RequestAddNewAsync()
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Thêm mới học viên vào hệ thống")) return;
             OnRequestAddCadet?.Invoke();
         }
 
         [RelayCommand]
-        private void StartEdit()
+        private async Task StartEditAsync()
         {
             if (SelectedCadet == null)
             {
                 StatusMessage = "Vui lòng chọn học viên cần chỉnh sửa.";
                 return;
             }
+
+            if (!await _securityGate.EnsureUnlockedAsync($"Chỉnh sửa học viên '{SelectedCadet.FullName}'")) return;
 
             EditCadetCode = SelectedCadet.CadetCode;
             EditFullName = SelectedCadet.FullName;
@@ -495,6 +501,7 @@ namespace QL_HocVien.ViewModels
         private async Task SaveEditAsync()
         {
             if (SelectedCadet == null) return;
+            if (!await _securityGate.EnsureUnlockedAsync($"Cập nhật thông tin học viên '{SelectedCadet.FullName}'")) return;
 
             if (string.IsNullOrWhiteSpace(EditCadetCode))
             {
@@ -543,6 +550,7 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         private async Task DeleteCadetAsync()
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Xóa học viên khỏi hệ thống")) return;
             var selected = Cadets.Where(c => c.IsSelected).ToList();
             if (!selected.Any() && SelectedCadet != null)
             {
@@ -596,6 +604,8 @@ namespace QL_HocVien.ViewModels
                 return;
             }
 
+            if (!await _securityGate.EnsureUnlockedAsync($"Xóa {selectedIds.Count} học viên đã chọn")) return;
+
             var confirm = System.Windows.MessageBox.Show(
                 $"Bạn có chắc chắn muốn xóa {selectedIds.Count} học viên đã chọn?\n\nLưu ý: Tất cả hồ sơ kết quả kiểm tra thể lực và điểm môn học tín chỉ liên quan sẽ được tự động xóa theo.",
                 "Xác nhận xóa học viên đã chọn",
@@ -637,6 +647,8 @@ namespace QL_HocVien.ViewModels
                 return;
             }
 
+            if (!await _securityGate.EnsureUnlockedAsync($"Xóa toàn bộ {allIds.Count} học viên")) return;
+
             var confirm = System.Windows.MessageBox.Show(
                 $"CẢNH BÁO QUAN TRỌNG!\n\nBạn đang yêu cầu xóa TOÀN BỘ {allIds.Count} học viên đang hiển thị theo bộ lọc.\nToàn bộ dữ liệu điểm số, thành tích của các học viên này sẽ bị xóa vĩnh viễn!\n\nBạn có thực sự muốn xóa?",
                 "Cảnh báo xóa toàn bộ học viên",
@@ -669,13 +681,15 @@ namespace QL_HocVien.ViewModels
         }
 
         [RelayCommand]
-        private void OpenResetPassword()
+        private async Task OpenResetPasswordAsync()
         {
             if (SelectedCadet == null)
             {
                 StatusMessage = "Vui lòng chọn một học viên để đặt lại mật khẩu.";
                 return;
             }
+
+            if (!await _securityGate.EnsureUnlockedAsync($"Đặt lại mật khẩu cho học viên '{SelectedCadet.FullName}'")) return;
 
             NewCadetPassword = "Hocvien@123"; // Gợi ý mặc định dễ nhớ
             IsResetPasswordDialogVisible = true;
@@ -691,6 +705,7 @@ namespace QL_HocVien.ViewModels
         private async Task ConfirmResetPasswordAsync()
         {
             if (SelectedCadet == null) return;
+            if (!await _securityGate.EnsureUnlockedAsync($"Đặt lại mật khẩu cho học viên '{SelectedCadet.FullName}'")) return;
 
             IsBusy = true;
             try
@@ -715,6 +730,8 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         private async Task ExportExcelAsync()
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Xuất danh sách học viên ra Excel")) return;
+
             var fileName = $"DanhSach_HocVien_{DateTime.Today:yyyyMMdd}.xlsx";
             var filePath = _fileDialogService.ShowSaveFileDialog(fileName, "Excel Files (*.xlsx)|*.xlsx", "Xuất danh sách học viên ra Excel");
             if (string.IsNullOrWhiteSpace(filePath)) return;
@@ -738,6 +755,8 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         private async Task ImportExcelAsync()
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Nhập danh sách học viên từ file Excel")) return;
+
             var filePath = _fileDialogService.ShowOpenFileDialog("Excel Files (*.xlsx)|*.xlsx|All Files (*.*)|*.*", "Chọn tệp Excel danh sách học viên");
             if (string.IsNullOrWhiteSpace(filePath)) return;
 

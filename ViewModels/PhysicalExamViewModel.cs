@@ -158,6 +158,7 @@ namespace QL_HocVien.ViewModels
         private readonly IFileDialogService _fileDialogService;
         private readonly IClassService? _classService;
         private readonly ICatalogService? _catalogService;
+        private readonly ISecurityGateService _securityGate;
 
         public PhysicalExamViewModel(
             IPhysicalExamService examService,
@@ -166,6 +167,7 @@ namespace QL_HocVien.ViewModels
             IEvaluationService evaluationService,
             IExcelService excelService,
             IFileDialogService fileDialogService,
+            ISecurityGateService securityGate,
             IClassService? classService = null,
             ICatalogService? catalogService = null)
         {
@@ -175,6 +177,7 @@ namespace QL_HocVien.ViewModels
             _evaluationService = evaluationService;
             _excelService = excelService;
             _fileDialogService = fileDialogService;
+            _securityGate = securityGate;
             _classService = classService;
             _catalogService = catalogService;
             Title = "Kiểm Tra Rèn Luyện Thể Lực";
@@ -332,13 +335,15 @@ namespace QL_HocVien.ViewModels
         }
 
         [RelayCommand]
-        private void OpenAddForm()
+        private async Task OpenAddFormAsync()
         {
             if (Cadets.Count == 0 || Subjects.Count == 0)
             {
                 StatusMessage = "Cần có ít nhất 1 học viên và 1 môn học để nhập điểm kiểm tra.";
                 return;
             }
+
+            if (!await _securityGate.EnsureUnlockedAsync("Nhập kết quả kiểm tra thể lực")) return;
 
             FormSelectedCadet = Cadets.FirstOrDefault();
             FormSelectedSubject = Subjects.FirstOrDefault();
@@ -360,6 +365,8 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         private async Task SaveRecordAsync()
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Lưu kết quả kiểm tra thể lực")) return;
+
             FormErrorMessage = string.Empty;
 
             if (FormSelectedCadet == null)
@@ -412,6 +419,8 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         private async Task DeleteRecordAsync()
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Xóa kết quả kiểm tra thể lực")) return;
+
             var selected = ExamRecords.Where(r => r.IsSelected).ToList();
             if (!selected.Any() && SelectedRecord != null)
             {
@@ -453,6 +462,8 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         private async Task ExportExcelAsync()
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Xuất kết quả kiểm tra thể lực ra Excel")) return;
+
             var fileName = $"KetQua_KiemTraTheLuc_{DateTime.Today:yyyyMMdd}.xlsx";
             var filePath = _fileDialogService.ShowSaveFileDialog(fileName, "Excel Files (*.xlsx)|*.xlsx", "Xuất kết quả kiểm tra thể lực ra Excel");
             if (string.IsNullOrWhiteSpace(filePath)) return;
@@ -476,6 +487,8 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         private async Task ImportExcelAsync()
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Nhập kết quả kiểm tra thể lực từ file Excel")) return;
+
             var filePath = _fileDialogService.ShowOpenFileDialog("Excel Files (*.xlsx)|*.xlsx|All Files (*.*)|*.*", "Chọn tệp Excel kết quả kiểm tra thể lực");
             if (string.IsNullOrWhiteSpace(filePath)) return;
 

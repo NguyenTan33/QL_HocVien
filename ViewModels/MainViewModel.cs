@@ -96,7 +96,7 @@ namespace QL_HocVien.ViewModels
         {
             ActiveMenu = "CadetManagement";
             var vm = _serviceProvider.GetRequiredService<CadetManagementViewModel>();
-            vm.OnRequestAddCadet += NavigateToAddCadet;
+            vm.OnRequestAddCadet += OpenAddCadetView;
             vm.OnRequestManageUnits += NavigateToUnitCatalog;
             CurrentView = vm;
         }
@@ -112,7 +112,13 @@ namespace QL_HocVien.ViewModels
         }
 
         [RelayCommand]
-        public void NavigateToAddCadet()
+        public async Task NavigateToAddCadetAsync()
+        {
+            if (!await _securityGate.EnsureUnlockedAsync("Mở biểu mẫu Thêm Mới Học Viên")) return;
+            OpenAddCadetView();
+        }
+
+        private void OpenAddCadetView()
         {
             ActiveMenu = "AddCadet";
             var vm = _serviceProvider.GetRequiredService<AddCadetViewModel>();

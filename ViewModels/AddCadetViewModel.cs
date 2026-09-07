@@ -13,6 +13,7 @@ namespace QL_HocVien.ViewModels
         private readonly ICadetService _cadetService;
         private readonly IClassService _classService;
         private readonly ICatalogService _catalogService;
+        private readonly ISecurityGateService _securityGate;
 
         public ObservableCollection<MilitaryClass> AvailableClasses { get; } = new();
 
@@ -86,11 +87,16 @@ namespace QL_HocVien.ViewModels
 
         public event Action? OnCadetSaved;
 
-        public AddCadetViewModel(ICadetService cadetService, IClassService classService, ICatalogService catalogService)
+        public AddCadetViewModel(
+            ICadetService cadetService,
+            IClassService classService,
+            ICatalogService catalogService,
+            ISecurityGateService securityGate)
         {
             _cadetService = cadetService;
             _classService = classService;
             _catalogService = catalogService;
+            _securityGate = securityGate;
             Title = "Thêm Mới Học Viên";
 
             _ = InitializeAsync();
@@ -197,6 +203,9 @@ namespace QL_HocVien.ViewModels
 
         private async Task<bool> ExecuteSaveAsync()
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Thêm mới học viên vào hệ thống"))
+                return false;
+
             ErrorMessage = string.Empty;
             SuccessMessage = string.Empty;
 

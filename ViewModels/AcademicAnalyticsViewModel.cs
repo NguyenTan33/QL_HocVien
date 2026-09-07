@@ -16,6 +16,7 @@ namespace QL_HocVien.ViewModels
         private readonly ICatalogService _catalogService;
         private readonly IClassService _classService;
         private readonly IFileDialogService _fileDialogService;
+        private readonly ISecurityGateService _securityGate;
 
         #region FILTER PROPERTIES
         [ObservableProperty]
@@ -125,12 +126,14 @@ namespace QL_HocVien.ViewModels
             IAcademicAnalyticsService academicAnalyticsService,
             ICatalogService catalogService,
             IClassService classService,
-            IFileDialogService fileDialogService)
+            IFileDialogService fileDialogService,
+            ISecurityGateService securityGate)
         {
             _academicAnalyticsService = academicAnalyticsService;
             _catalogService = catalogService;
             _classService = classService;
             _fileDialogService = fileDialogService;
+            _securityGate = securityGate;
 
             Title = "Phân Tích & So Sánh Học Lực Toàn Đơn Vị";
             _ = InitializeAsync();
@@ -251,6 +254,9 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         public async Task ExportExcelAsync()
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Xuất Báo Cáo Phân Tích Học Lực ra Excel"))
+                return;
+
             if (_cachedResult == null || _cachedResult.TotalCadetsEvaluated == 0)
             {
                 StatusMessage = "Không có dữ liệu phân tích để xuất file Excel.";

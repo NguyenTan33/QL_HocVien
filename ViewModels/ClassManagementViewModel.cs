@@ -17,6 +17,7 @@ namespace QL_HocVien.ViewModels
         private readonly IFileDialogService _fileDialogService;
         private readonly ICatalogService _catalogService;
         private readonly IOfficerService _officerService;
+        private readonly ISecurityGateService _securityGate;
 
         public ObservableCollection<MilitaryClass> Classes { get; } = new();
 
@@ -183,13 +184,15 @@ namespace QL_HocVien.ViewModels
             IExcelService excelService,
             IFileDialogService fileDialogService,
             ICatalogService catalogService,
-            IOfficerService officerService)
+            IOfficerService officerService,
+            ISecurityGateService securityGate)
         {
             _classService = classService;
             _excelService = excelService;
             _fileDialogService = fileDialogService;
             _catalogService = catalogService;
             _officerService = officerService;
+            _securityGate = securityGate;
             Title = "Quản Lý Lớp Học Quân Đội";
 
             _ = InitializeDataAsync();
@@ -303,8 +306,10 @@ namespace QL_HocVien.ViewModels
         }
 
         [RelayCommand]
-        private void OpenAddForm()
+        private async Task OpenAddFormAsync()
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Thêm lớp học quân sự mới")) return;
+
             IsEditing = false;
             FormClassCode = string.Empty;
             FormClassName = string.Empty;
@@ -318,7 +323,7 @@ namespace QL_HocVien.ViewModels
         }
 
         [RelayCommand]
-        private void OpenEditForm(MilitaryClass? targetClass = null)
+        private async Task OpenEditFormAsync(MilitaryClass? targetClass = null)
         {
             var c = targetClass ?? SelectedClass;
             if (c == null)
@@ -326,6 +331,8 @@ namespace QL_HocVien.ViewModels
                 StatusMessage = "Vui lòng chọn lớp học cần chỉnh sửa.";
                 return;
             }
+
+            if (!await _securityGate.EnsureUnlockedAsync($"Chỉnh sửa lớp học '{c.ClassName}'")) return;
 
             SelectedClass = c;
             IsEditing = true;
@@ -349,6 +356,8 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         private async Task SaveFormAsync()
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Lưu thông tin lớp học")) return;
+
             FormErrorMessage = string.Empty;
 
             if (string.IsNullOrWhiteSpace(FormClassCode))
@@ -427,6 +436,8 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         private async Task DeleteClassAsync(MilitaryClass? targetClass = null)
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Xóa lớp học")) return;
+
             if (targetClass != null)
             {
                 var confirmSingle = MessageBox.Show(
@@ -543,6 +554,8 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         private async Task ExportExcelAsync()
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Xuất danh sách lớp học ra Excel")) return;
+
             var fileName = $"DanhSach_LopHoc_{DateTime.Today:yyyyMMdd}.xlsx";
             var filePath = _fileDialogService.ShowSaveFileDialog(fileName, "Excel Files (*.xlsx)|*.xlsx", "Xuất danh sách lớp học ra Excel");
             if (string.IsNullOrWhiteSpace(filePath)) return;
@@ -567,6 +580,8 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         private async Task ImportExcelAsync()
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Nhập danh sách lớp học từ file Excel")) return;
+
             var filePath = _fileDialogService.ShowOpenFileDialog("Excel Files (*.xlsx)|*.xlsx|All Files (*.*)|*.*", "Chọn tệp Excel danh sách lớp học");
             if (string.IsNullOrWhiteSpace(filePath)) return;
 

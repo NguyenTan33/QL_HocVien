@@ -15,6 +15,7 @@ namespace QL_HocVien.ViewModels
     {
         private readonly ITrainingEventService _eventService;
         private readonly ICatalogService _catalogService;
+        private readonly ISecurityGateService _securityGate;
 
         [ObservableProperty]
         private ObservableCollection<TrainingEvent> _events = new();
@@ -134,10 +135,12 @@ namespace QL_HocVien.ViewModels
 
         public TrainingTimelineViewModel(
             ITrainingEventService eventService,
-            ICatalogService catalogService)
+            ICatalogService catalogService,
+            ISecurityGateService securityGate)
         {
             _eventService = eventService;
             _catalogService = catalogService;
+            _securityGate = securityGate;
 
             Title = "Lịch Huấn Luyện, Thi Cử & Mốc Sự Kiện Quân Sự";
             _ = InitializeAsync();
@@ -209,8 +212,10 @@ namespace QL_HocVien.ViewModels
         }
 
         [RelayCommand]
-        public void OpenAddForm()
+        public async Task OpenAddFormAsync()
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Thêm mốc sự kiện huấn luyện")) return;
+
             FormHeader = "★ THÊM MỐC SỰ KIỆN HUẤN LUYỆN MỚI";
             EditId = 0;
             EditTitle = string.Empty;
@@ -227,10 +232,12 @@ namespace QL_HocVien.ViewModels
         }
 
         [RelayCommand]
-        public void OpenEditForm(TrainingEvent? evt)
+        public async Task OpenEditFormAsync(TrainingEvent? evt)
         {
             var target = evt ?? SelectedEvent;
             if (target == null) return;
+
+            if (!await _securityGate.EnsureUnlockedAsync($"Chỉnh sửa mốc sự kiện '{target.Title}'")) return;
 
             FormHeader = "★ CHỈNH SỬA MỐC SỰ KIỆN HUẤN LUYỆN";
             EditId = target.Id;
@@ -256,6 +263,8 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         public async Task SaveEventAsync()
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Lưu mốc sự kiện huấn luyện")) return;
+
             if (string.IsNullOrWhiteSpace(EditTitle))
             {
                 MessageBox.Show("Vui lòng nhập tên/tiêu đề mốc sự kiện.", "Cảnh Báo", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -345,6 +354,8 @@ namespace QL_HocVien.ViewModels
             var target = evt ?? SelectedEvent;
             if (target == null) return;
 
+            if (!await _securityGate.EnsureUnlockedAsync($"Xóa mốc sự kiện '{target.Title}'")) return;
+
             var confirm = MessageBox.Show(
                 $"Đồng chí có chắc chắn muốn xóa mốc sự kiện:\n'{target.Title}'?",
                 "Xác Nhận Xóa Sự Kiện",
@@ -385,6 +396,8 @@ namespace QL_HocVien.ViewModels
         {
             var target = evt ?? SelectedEvent;
             if (target == null) return;
+
+            if (!await _securityGate.EnsureUnlockedAsync($"Cập nhật trạng thái mốc sự kiện '{target.Title}'")) return;
 
             IsBusy = true;
             try
@@ -480,12 +493,15 @@ namespace QL_HocVien.ViewModels
         }
 
         [RelayCommand]
-        public void AddEventForSelectedDay()
+        public async Task AddEventForSelectedDayAsync()
         {
             DateTime targetDate = SelectedCalendarDay?.Date ?? DateTime.Today;
-            OpenAddForm();
-            EditStartDate = targetDate;
-            EditEndDate = targetDate;
+            await OpenAddFormAsync();
+            if (IsFormVisible)
+            {
+                EditStartDate = targetDate;
+                EditEndDate = targetDate;
+            }
         }
 
         public void GenerateCalendarGrid(bool selectToday = false)

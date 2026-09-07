@@ -15,6 +15,7 @@ namespace QL_HocVien.ViewModels
         private readonly ICatalogService _catalogService;
         private readonly IExcelService _excelService;
         private readonly IFileDialogService _fileDialogService;
+        private readonly ISecurityGateService _securityGate;
 
         public ObservableCollection<MilitaryRank> Ranks { get; } = new();
         public ObservableCollection<MilitaryPosition> Positions { get; } = new();
@@ -123,11 +124,13 @@ namespace QL_HocVien.ViewModels
         public CatalogManagementViewModel(
             ICatalogService catalogService,
             IExcelService excelService,
-            IFileDialogService fileDialogService)
+            IFileDialogService fileDialogService,
+            ISecurityGateService securityGate)
         {
             _catalogService = catalogService;
             _excelService = excelService;
             _fileDialogService = fileDialogService;
+            _securityGate = securityGate;
             Title = "Danh Mục Tổ Chức Quân Sự";
 
             _ = LoadAllDataAsync();
@@ -257,8 +260,10 @@ namespace QL_HocVien.ViewModels
         }
 
         [RelayCommand]
-        public void OpenAddModal()
+        public async Task OpenAddModalAsync()
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Thêm mới danh mục quân sự")) return;
+
             IsEditing = false;
             ClearForm();
 
@@ -289,8 +294,10 @@ namespace QL_HocVien.ViewModels
         }
 
         [RelayCommand]
-        public void OpenEditModal()
+        public async Task OpenEditModalAsync()
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Chỉnh sửa thông tin danh mục quân sự")) return;
+
             ClearForm();
             IsEditing = true;
 
@@ -367,6 +374,8 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         public async Task SaveFormAsync()
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Lưu danh mục tổ chức")) return;
+
             if (string.IsNullOrWhiteSpace(FormCode) || string.IsNullOrWhiteSpace(FormName))
             {
                 MessageBox.Show("Mã và Tên không được để trống.", "Cảnh báo", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -480,6 +489,8 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         public async Task DeleteAsync()
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Xóa mục trong danh mục tổ chức")) return;
+
             string itemDesc = "";
             switch (SelectedTabIndex)
             {
@@ -547,6 +558,8 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         public async Task ExportExcelAsync()
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Xuất danh mục tổ chức ra Excel")) return;
+
             var filePath = _fileDialogService.ShowSaveFileDialog("Excel Files (*.xlsx)|*.xlsx", "Danh_Muc_To_Chuc_Quan_Doi.xlsx");
             if (string.IsNullOrWhiteSpace(filePath)) return;
 
@@ -571,6 +584,8 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         public async Task ImportExcelAsync()
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Nhập danh mục tổ chức từ file Excel")) return;
+
             var filePath = _fileDialogService.ShowOpenFileDialog("Excel Files (*.xlsx)|*.xlsx|All Files (*.*)|*.*", "Chọn file Excel danh mục tổ chức");
             if (string.IsNullOrWhiteSpace(filePath)) return;
 

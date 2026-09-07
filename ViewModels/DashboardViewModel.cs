@@ -19,6 +19,7 @@ namespace QL_HocVien.ViewModels
         private readonly ICadetService _cadetService;
         private readonly IExcelService _excelService;
         private readonly IFileDialogService _fileDialogService;
+        private readonly ISecurityGateService _securityGate;
 
         #region BỘ LỌC NÂNG CAO (FILTER PROPERTIES)
         public ObservableCollection<string> UnitOptions { get; } = new();
@@ -139,7 +140,8 @@ namespace QL_HocVien.ViewModels
             ITrainingEventService eventService,
             ICadetService cadetService,
             IExcelService excelService,
-            IFileDialogService fileDialogService)
+            IFileDialogService fileDialogService,
+            ISecurityGateService securityGate)
         {
             _analyticsService = analyticsService;
             _recommendationService = recommendationService;
@@ -147,6 +149,7 @@ namespace QL_HocVien.ViewModels
             _cadetService = cadetService;
             _excelService = excelService;
             _fileDialogService = fileDialogService;
+            _securityGate = securityGate;
 
             Title = "Trung Tâm Chỉ Huy & Phân Tích Rèn Luyện Thể Lực Quân Đội";
 
@@ -342,6 +345,8 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         public async Task ExportExecutiveReportAsync()
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Xuất Báo Cáo Tổng Quan & Đề Xuất Huấn Luyện AI ra Excel")) return;
+
             var fileName = $"BaoCao_TongQuan_DeXuatHuấnLuyen_QLHV_{DateTime.Now:yyyyMMdd_HHmm}.xlsx";
             var filePath = _fileDialogService.ShowSaveFileDialog(
                 fileName, 
@@ -397,6 +402,8 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         private async Task ExportAllDataAsync()
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Sao lưu toàn bộ cơ sở dữ liệu ra Excel")) return;
+
             var fileName = $"BaoCao_TongHop_QLHV_{DateTime.Today:yyyyMMdd}.xlsx";
             var filePath = _fileDialogService.ShowSaveFileDialog(fileName, "Excel Files (*.xlsx)|*.xlsx", "Xuất toàn bộ cơ sở dữ liệu ra Excel");
             if (string.IsNullOrWhiteSpace(filePath)) return;
@@ -420,6 +427,8 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         private async Task ImportAllDataAsync()
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Nhập và khôi phục toàn bộ dữ liệu từ Excel")) return;
+
             var filePath = _fileDialogService.ShowOpenFileDialog("Excel Files (*.xlsx)|*.xlsx|All Files (*.*)|*.*", "Chọn tệp Excel để nhập/khôi phục toàn bộ dữ liệu");
             if (string.IsNullOrWhiteSpace(filePath)) return;
 
