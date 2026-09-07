@@ -223,6 +223,59 @@ namespace QL_HocVien.Data
                 // Bỏ qua nếu cột đã tồn tại
             }
 
+            // Đảm bảo bảng AccountPasskeys và các cột bản quyền tồn tại
+            try
+            {
+                context.Database.ExecuteSqlRaw(@"
+                    CREATE TABLE IF NOT EXISTS ""AccountPasskeys"" (
+                        ""Id"" INTEGER NOT NULL CONSTRAINT ""PK_AccountPasskeys"" PRIMARY KEY AUTOINCREMENT,
+                        ""Passkey"" TEXT NOT NULL,
+                        ""IsUsed"" INTEGER NOT NULL DEFAULT 0,
+                        ""UsedByUsername"" TEXT NULL,
+                        ""ActivatedAt"" TEXT NULL,
+                        ""Remarks"" TEXT NOT NULL
+                    );
+                    CREATE UNIQUE INDEX IF NOT EXISTS ""IX_AccountPasskeys_Passkey"" ON ""AccountPasskeys"" (""Passkey"");
+                ");
+            }
+            catch { }
+
+            try
+            {
+                context.Database.ExecuteSqlRaw(@"ALTER TABLE ""Users"" ADD COLUMN ""HasPasskeyActivated"" INTEGER NOT NULL DEFAULT 0;");
+            }
+            catch { }
+            try
+            {
+                context.Database.ExecuteSqlRaw(@"ALTER TABLE ""Users"" ADD COLUMN ""ActivatedPasskey"" TEXT NULL;");
+            }
+            catch { }
+            try
+            {
+                context.Database.ExecuteSqlRaw(@"ALTER TABLE ""Users"" ADD COLUMN ""PasskeyActivatedAt"" TEXT NULL;");
+            }
+            catch { }
+
+            // Khởi tạo 10 Passkey bản quyền gắn liền theo tài khoản nếu chưa có
+            if (!context.AccountPasskeys.Any())
+            {
+                var initialPasskeys = new List<AccountPasskey>
+                {
+                    new AccountPasskey { Passkey = "QD-2026-HQ88-K01A", Remarks = "Mã Passkey bản quyền số 01 (Vĩnh viễn theo tài khoản)" },
+                    new AccountPasskey { Passkey = "QD-2026-TL32-B02C", Remarks = "Mã Passkey bản quyền số 02 (Vĩnh viễn theo tài khoản)" },
+                    new AccountPasskey { Passkey = "QD-2026-QS99-D03E", Remarks = "Mã Passkey bản quyền số 03 (Vĩnh viễn theo tài khoản)" },
+                    new AccountPasskey { Passkey = "QD-2026-CH01-F04G", Remarks = "Mã Passkey bản quyền số 04 (Vĩnh viễn theo tài khoản)" },
+                    new AccountPasskey { Passkey = "QD-2026-QDND-H05J", Remarks = "Mã Passkey bản quyền số 05 (Vĩnh viễn theo tài khoản)" },
+                    new AccountPasskey { Passkey = "QD-2026-BQP8-K06L", Remarks = "Mã Passkey bản quyền số 06 (Vĩnh viễn theo tài khoản)" },
+                    new AccountPasskey { Passkey = "QD-2026-VN26-M07N", Remarks = "Mã Passkey bản quyền số 07 (Vĩnh viễn theo tài khoản)" },
+                    new AccountPasskey { Passkey = "QD-2026-VT32-P08R", Remarks = "Mã Passkey bản quyền số 08 (Vĩnh viễn theo tài khoản)" },
+                    new AccountPasskey { Passkey = "QD-2026-TT32-S09T", Remarks = "Mã Passkey bản quyền số 09 (Vĩnh viễn theo tài khoản)" },
+                    new AccountPasskey { Passkey = "QD-2026-QT99-X10Z", Remarks = "Mã Passkey bản quyền số 10 (Vĩnh viễn theo tài khoản)" },
+                };
+                context.AccountPasskeys.AddRange(initialPasskeys);
+                context.SaveChanges();
+            }
+
             // 1. Seed tài khoản Admin mặc định
             if (!context.Users.Any())
             {

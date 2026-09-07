@@ -14,5 +14,8 @@ namespace QL_HocVien.Models
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime? LastLoginAt { get; set; }
         public bool IsActive { get; set; } = true;
+        public bool HasPasskeyActivated { get; set; } = false;
+        public string? ActivatedPasskey { get; set; }
+        public DateTime? PasskeyActivatedAt { get; set; }
     }
 }

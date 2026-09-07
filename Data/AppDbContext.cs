@@ -24,6 +24,7 @@ namespace QL_HocVien.Data
         public DbSet<CreditSubject> CreditSubjects => Set<CreditSubject>();
         public DbSet<SubjectAssessmentComponent> SubjectAssessmentComponents => Set<SubjectAssessmentComponent>();
         public DbSet<CreditScoreRecord> CreditScoreRecords => Set<CreditScoreRecord>();
+        public DbSet<AccountPasskey> AccountPasskeys => Set<AccountPasskey>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -213,6 +214,15 @@ namespace QL_HocVien.Data
                       .WithMany(c => c.ScoreRecords)
                       .HasForeignKey(e => e.ComponentId)
                       .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Cấu hình AccountPasskey
+            modelBuilder.Entity<AccountPasskey>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.Passkey).IsUnique();
+                entity.Property(e => e.Passkey).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.UsedByUsername).HasMaxLength(50);
             });
         }
     }

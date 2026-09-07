@@ -12,6 +12,7 @@
   <ItemGroup>
     <Resource Include="Resources\app_icon.ico" />
     <Resource Include="Resources\app_icon.png" />
+    <Resource Include="Resources\auth_bg.jpg" />
   </ItemGroup>
 
   <ItemGroup>

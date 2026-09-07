@@ -105,6 +105,7 @@ namespace QL_HocVien
             // Đăng ký Services (SOLID - SRP, OCP)
             services.AddSingleton<IEmailService, EmailService>();
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IPasskeyService, PasskeyService>();
             services.AddScoped<IClassService, ClassService>();
             services.AddScoped<ICadetService, CadetService>();
             services.AddScoped<ISubjectService, SubjectService>();
