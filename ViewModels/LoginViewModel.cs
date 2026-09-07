@@ -26,6 +26,7 @@ namespace QL_HocVien.ViewModels
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(CanLogin))]
         [NotifyPropertyChangedFor(nameof(LoginButtonText))]
+        [NotifyPropertyChangedFor(nameof(IsNormalErrorVisible))]
         private bool _isLockedOut;
 
         [ObservableProperty]
@@ -33,6 +34,8 @@ namespace QL_HocVien.ViewModels
         private string _lockoutRemainingText = "00:00";
 
         public bool CanLogin => !IsLockedOut && !IsBusy;
+
+        public bool IsNormalErrorVisible => !string.IsNullOrWhiteSpace(ErrorMessage) && !IsLockedOut;
 
         public string LoginButtonText => IsLockedOut 
             ? $"ĐANG TẠM KHÓA ({LockoutRemainingText})" 
@@ -114,6 +117,10 @@ namespace QL_HocVien.ViewModels
             {
                 OnPropertyChanged(nameof(CanLogin));
             }
+            else if (e.PropertyName == nameof(ErrorMessage))
+            {
+                OnPropertyChanged(nameof(IsNormalErrorVisible));
+            }
         }
 
         public void UpdateTrialStatus()
@@ -137,6 +144,12 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         private async Task LoginAsync()
         {
+            if (_lockoutService.IsLockedOut)
+            {
+                ErrorMessage = _lockoutService.LockoutMessage;
+                return;
+            }
+
             ErrorMessage = string.Empty;
             IsBusy = true;
 
@@ -145,9 +158,13 @@ namespace QL_HocVien.ViewModels
                 var result = await _authService.LoginAsync(UsernameOrPhone, Password);
                 if (!result.Success)
                 {
-                    ErrorMessage = result.Message;
+                    var (isLocked, _, message) = _lockoutService.RecordFailedAttempt();
+                    ErrorMessage = isLocked ? message : result.Message;
                     return;
                 }
+
+                // Đăng nhập thành công -> Reset hoàn toàn đếm lần sai
+                _lockoutService.RecordSuccessfulLogin();
 
                 var user = result.User!;
 

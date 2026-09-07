@@ -54,37 +54,32 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <!-- HEADER & ACTION BUTTONS -->
-                <Grid Grid.Row="0" Margin="0,0,0,16">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
+                <!-- 1. HEADER (PAGE HEADER) -->
+                <StackPanel Grid.Row="0" VerticalAlignment="Center" Margin="0,0,0,10">
+                    <TextBlock Text="QUẢN LÝ MÔN HỌC &amp; TÍNH ĐIỂM TBM CHUẨN QUÂN SỰ" FontSize="20" FontWeight="Bold" Foreground="#0F172A" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                    <TextBlock Text="Tính điểm thành phần theo số tín chỉ, tính TBM toàn khóa chuẩn Excel và nhận diện học viên thiếu môn" 
+                               FontSize="13" Foreground="#64748B" Margin="0,4,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                </StackPanel>
 
-                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                        <TextBlock Text="QUẢN LÝ MÔN HỌC &amp; TÍNH ĐIỂM TBM CHUẨN QUÂN SỰ" FontSize="20" FontWeight="Bold" Foreground="#0F172A"/>
-                        <TextBlock Text="Tính điểm thành phần theo số tín chỉ, tính TBM toàn khóa chuẩn Excel và nhận diện học viên thiếu môn" 
-                                   FontSize="13" Foreground="#64748B" Margin="0,4,0,0"/>
-                    </StackPanel>
+                <!-- 2. THANH CÔNG CỤ THAO TÁC (PAGE TOOLBAR) -->
+                <WrapPanel Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,0,12">
+                    <Button Content="➕ Thêm Môn Học" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,8"
+                            Command="{Binding OpenAddSubjectFormCommand}"/>
+                    <Button Content="✏️ Nhập Điểm" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,8"
+                            Command="{Binding OpenAddScoreFormCommand}"/>
+                    <Button Content="📤 Nhập Excel Chuẩn" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,8"
+                            ToolTip="Nhập danh mục môn, số tín chỉ và điểm học viên từ file 'Điểm TBM chuẩn .xlsx'"
+                            Command="{Binding ImportStandardExcelCommand}"/>
+                    <Button Content="📥 Xuất Báo Cáo Excel" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,0,8"
+                            Command="{Binding ExportToExcelCommand}"/>
+                </WrapPanel>
 
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Button Content="➕ Thêm Môn Học" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"
-                                Command="{Binding OpenAddSubjectFormCommand}"/>
-                        <Button Content="✏️ Nhập Điểm" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"
-                                Command="{Binding OpenAddScoreFormCommand}"/>
-                        <Button Content="📤 Nhập Excel Chuẩn" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"
-                                ToolTip="Nhập danh mục môn, số tín chỉ và điểm học viên từ file 'Điểm TBM chuẩn .xlsx'"
-                                Command="{Binding ImportStandardExcelCommand}"/>
-                        <Button Content="📥 Xuất Báo Cáo Excel" Style="{StaticResource PrimaryButtonStyle}"
-                                Command="{Binding ExportToExcelCommand}"/>
-                    </StackPanel>
-                </Grid>
-
-                <!-- 5 THẺ CHỈ SỐ NHANH (SUMMARY KPI CARDS) -->
-                <Grid Grid.Row="1" Margin="0,0,0,16">
+                <!-- 3. 5 THẺ CHỈ SỐ NHANH (SUMMARY KPI CARDS) -->
+                <Grid Grid.Row="2" Margin="0,0,0,16">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="10"/>
@@ -149,8 +144,8 @@
                     </Border>
                 </Grid>
 
-                <!-- NỘI DUNG 2 TABS -->
-                <Border Grid.Row="2" Style="{StaticResource CardBorderStyle}" Padding="0" BorderBrush="#CBD5E1">
+                <!-- 4. NỘI DUNG 2 TABS -->
+                <Border Grid.Row="3" Style="{StaticResource CardBorderStyle}" Padding="0" BorderBrush="#CBD5E1">
                     <TabControl BorderThickness="0" Background="Transparent" SelectedIndex="{Binding SelectedTabIndex}">
 
                         <!-- ==================== TAB 1: BẢNG ĐIỂM TÍN CHỈ & ĐIỂM TB HỌC VIÊN ==================== -->

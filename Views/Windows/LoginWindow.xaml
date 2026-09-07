@@ -86,7 +86,8 @@
                                 <Setter TargetName="btnBorder" Property="BorderBrush" Value="#B89432"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="btnBorder" Property="Opacity" Value="0.6"/>
+                                <Setter TargetName="btnBorder" Property="Opacity" Value="0.5"/>
+                                <Setter Property="Cursor" Value="No"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -257,12 +258,30 @@
                                 <TextBlock Text="★" FontSize="14" Foreground="#F59E0B" TextAlignment="Center" Margin="0,1,0,3"/>
                                 <TextBlock Text="Nhập thông tin tài khoản để truy cập hệ thống" FontSize="13" Foreground="#5A645A" TextAlignment="Center" Margin="0,0,0,22"/>
 
-                                <!-- Thông báo lỗi đăng nhập nếu có -->
+                                <!-- Thông báo lỗi đăng nhập thông thường (Khi không bị khóa) -->
                                 <Border Background="#FEF2F2" BorderBrush="#FCA5A5" BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,0,0,16"
-                                        Visibility="{Binding ErrorMessage, Converter={x:Static local_cv:StringToVisibilityConverter.Instance}}">
+                                        Visibility="{Binding IsNormalErrorVisible, Converter={x:Static local_cv:BooleanToVisibilityConverter.Instance}}">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="⚠️" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                         <TextBlock Text="{Binding ErrorMessage}" Foreground="#B92929" FontSize="12" FontWeight="SemiBold" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Banner cảnh báo Khóa bảo mật Brute-Force (Hiện khi bị khóa) -->
+                                <Border Background="#3E0E10" BorderBrush="#EF4444" BorderThickness="1.5" CornerRadius="8" Padding="12,10" Margin="0,0,0,16"
+                                        Visibility="{Binding IsLockedOut, Converter={x:Static local_cv:BooleanToVisibilityConverter.Instance}}">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                            <TextBlock Text="🔒" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="CẢNH BÁO BẢO MẬT: TẠM KHÓA TRUY CẬP" FontWeight="Bold" FontSize="12" Foreground="#FCA5A5" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding ErrorMessage}" Foreground="#FEE2E2" FontSize="12" TextWrapping="Wrap" Margin="0,2,0,6"/>
+                                        <Border Background="#200506" BorderBrush="#7F1D1D" BorderThickness="1" CornerRadius="4" Padding="8,4" HorizontalAlignment="Left">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="Thời gian mở khóa sau: " Foreground="#FECACA" FontSize="12" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding LockoutRemainingText}" Foreground="#FDE047" FontSize="15" FontWeight="Bold" FontFamily="Consolas, monospace" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Border>
                                     </StackPanel>
                                 </Border>
 
@@ -307,9 +326,10 @@
                                 </Border>
 
                                 <!-- Nút Đăng Nhập Quân Đội -->
-                                <Button Content="ĐĂNG NHẬP VÀO HỆ THỐNG  ➔"
+                                <Button Content="{Binding LoginButtonText}"
                                         Style="{StaticResource MilitaryRedPillButtonStyle}"
                                         Height="48"
+                                        IsEnabled="{Binding CanLogin}"
                                         Command="{Binding LoginCommand}"/>
 
                                 <!-- Dòng chuyển hướng Đăng ký tài khoản -->

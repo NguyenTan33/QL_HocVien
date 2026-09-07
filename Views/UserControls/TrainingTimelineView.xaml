@@ -15,58 +15,54 @@
     <Border Padding="24">
         <Grid>
             <Grid.RowDefinitions>
-                <!-- Tiêu đề & Nút thao tác -->
+                <!-- 0. Tiêu đề trang -->
                 <RowDefinition Height="Auto"/>
-                <!-- Thẻ thống kê KPI -->
+                <!-- 1. Thanh công cụ thao tác -->
                 <RowDefinition Height="Auto"/>
-                <!-- Thanh lọc -->
+                <!-- 2. Thẻ thống kê KPI -->
                 <RowDefinition Height="Auto"/>
-                <!-- Vùng Timeline & Form chi tiết -->
+                <!-- 3. Thanh lọc -->
+                <RowDefinition Height="Auto"/>
+                <!-- 4. Vùng Timeline & Form chi tiết -->
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- HÀNG 0: TIÊU ĐỀ & NÚT THAO TÁC -->
-            <Grid Grid.Row="0" Margin="0,0,0,14">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+            <!-- HÀNG 0: TIÊU ĐỀ TRANG -->
+            <StackPanel Grid.Row="0" VerticalAlignment="Center" Margin="0,0,0,10">
+                <TextBlock Text="LỊCH TRÌNH HUẤN LUYỆN, THI CỬ &amp; SỰ KIỆN QUÂN SỰ" 
+                           FontSize="19" FontWeight="Bold" Foreground="#0F172A" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                <TextBlock Text="Theo dõi dòng thời gian (Timeline) các mốc kiểm tra thể lực, thi cử học phần, dã ngoại rèn luyện và hội thao" 
+                           FontSize="12" Foreground="#64748B" Margin="0,4,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+            </StackPanel>
 
-                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,4">
-                    <TextBlock Text="LỊCH TRÌNH HUẤN LUYỆN, THI CỬ &amp; SỰ KIỆN QUÂN SỰ" 
-                               FontSize="19" FontWeight="Bold" Foreground="#0F172A" TextWrapping="Wrap"/>
-                    <TextBlock Text="Theo dõi dòng thời gian (Timeline) các mốc kiểm tra thể lực, thi cử học phần, dã ngoại rèn luyện và hội thao" 
-                               FontSize="12" Foreground="#64748B" Margin="0,4,0,0" TextWrapping="Wrap"/>
-                </StackPanel>
+            <!-- HÀNG 1: THANH CÔNG CỤ THAO TÁC -->
+            <WrapPanel Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,0,12">
+                <!-- Nút chuyển đổi Cuốn Lịch Tháng vs Dòng Thời Gian -->
+                <Button Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,8"
+                        Command="{Binding SwitchToCalendarViewCommand}"
+                        Visibility="{Binding IsCalendarViewVisible, Converter={StaticResource InvBoolToVis}}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="📅 " FontSize="13"/>
+                        <TextBlock Text="Xem Cuốn Lịch Tháng" FontWeight="SemiBold"/>
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,8"
+                        Command="{Binding SwitchToTimelineViewCommand}"
+                        Visibility="{Binding IsCalendarViewVisible, Converter={StaticResource BoolToVis}}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="📜 " FontSize="13"/>
+                        <TextBlock Text="Dòng Thời Gian Dọc" FontWeight="SemiBold"/>
+                    </StackPanel>
+                </Button>
 
-                <WrapPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <!-- Nút chuyển đổi Cuốn Lịch Tháng vs Dòng Thời Gian -->
-                    <Button Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,4"
-                            Command="{Binding SwitchToCalendarViewCommand}"
-                            Visibility="{Binding IsCalendarViewVisible, Converter={StaticResource InvBoolToVis}}">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="📅 " FontSize="13"/>
-                            <TextBlock Text="Xem Cuốn Lịch Tháng" FontWeight="SemiBold"/>
-                        </StackPanel>
-                    </Button>
-                    <Button Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,4"
-                            Command="{Binding SwitchToTimelineViewCommand}"
-                            Visibility="{Binding IsCalendarViewVisible, Converter={StaticResource BoolToVis}}">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="📜 " FontSize="13"/>
-                            <TextBlock Text="Dòng Thời Gian Dọc" FontWeight="SemiBold"/>
-                        </StackPanel>
-                    </Button>
+                <Button Content="🔄 Tải Lại Lịch" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,8"
+                        Command="{Binding LoadEventsCommand}"/>
+                <Button Content="➕ Thêm Mốc Sự Kiện" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,0,8"
+                        Command="{Binding OpenAddFormCommand}"/>
+            </WrapPanel>
 
-                    <Button Content="🔄 Tải Lại Lịch" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,4"
-                            Command="{Binding LoadEventsCommand}"/>
-                    <Button Content="➕ Thêm Mốc Sự Kiện" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,0,4"
-                            Command="{Binding OpenAddFormCommand}"/>
-                </WrapPanel>
-            </Grid>
-
-            <!-- HÀNG 1: THẺ THỐNG KÊ KPI SỰ KIỆN -->
-            <Grid Grid.Row="1" Margin="0,0,0,14">
+            <!-- HÀNG 2: THẺ THỐNG KÊ KPI SỰ KIỆN -->
+            <Grid Grid.Row="2" Margin="0,0,0,14">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="12"/>
@@ -114,8 +110,8 @@
                 </Border>
             </Grid>
 
-            <!-- HÀNG 2: THANH LỌC LỊCH TRÌNH -->
-            <Border Grid.Row="2" Style="{StaticResource CardBorderStyle}" Margin="0,0,0,14" Padding="12">
+            <!-- HÀNG 3: THANH LỌC LỊCH TRÌNH -->
+            <Border Grid.Row="3" Style="{StaticResource CardBorderStyle}" Margin="0,0,0,14" Padding="12">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="1.5*"/>
@@ -151,8 +147,8 @@
                 </Grid>
             </Border>
 
-            <!-- HÀNG 3: VÙNG TIMELINE & FORM BIÊN TẬP -->
-            <Grid Grid.Row="3">
+            <!-- HÀNG 4: VÙNG TIMELINE & FORM BIÊN TẬP -->
+            <Grid Grid.Row="4">
                 <Grid.ColumnDefinitions>
                     <!-- Cột Danh sách Timeline -->
                     <ColumnDefinition Width="*"/>

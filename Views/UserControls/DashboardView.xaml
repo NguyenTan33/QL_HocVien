@@ -15,36 +15,30 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20,16,20,30">
         <StackPanel>
             <!-- ==================== PHẦN 1: HEADER TRUNG TÂM CHỈ HUY ==================== -->
-            <Grid Margin="0,0,0,16">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-
-                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,4">
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                        <Border Background="#1E3A8A" CornerRadius="4" Padding="8,3" Margin="0,0,8,0">
-                            <TextBlock Text="🇻🇳 TRUNG TÂM CHỈ HUY TÁC CHIẾN HUẤN LUYỆN" FontSize="11" FontWeight="Bold" Foreground="#FFFFFF"/>
-                        </Border>
-                        <Border Background="#EEF2FF" CornerRadius="4" Padding="8,3" BorderBrush="#C7D2FE" BorderThickness="1">
-                            <TextBlock Text="THÔNG TƯ 32/2009/TTLT-BQP-BVHTTDL" FontSize="11" FontWeight="SemiBold" Foreground="#3730A3"/>
-                        </Border>
-                    </StackPanel>
-
-                    <TextBlock Text="BẢNG TỔNG QUAN RÈN LUYỆN THỂ LỰC QUÂN ĐỘI" FontSize="22" FontWeight="ExtraBold" Foreground="#0F172A"/>
-                    <TextBlock Text="Phân tích số liệu kiểm tra thể lực đa chiều, đánh giá chỉ tiêu thi đua và tự động kích hoạt Trợ lý Trí tuệ Nhân tạo đề xuất giáo án" 
-                               FontSize="12.5" Foreground="#64748B" Margin="0,3,0,0" TextWrapping="Wrap"/>
+            <StackPanel Margin="0,0,0,12" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                    <Border Background="#1E3A8A" CornerRadius="4" Padding="8,3" Margin="0,0,8,0">
+                        <TextBlock Text="🇻🇳 TRUNG TÂM CHỈ HUY TÁC CHIẾN HUẤN LUYỆN" FontSize="11" FontWeight="Bold" Foreground="#FFFFFF"/>
+                    </Border>
+                    <Border Background="#EEF2FF" CornerRadius="4" Padding="8,3" BorderBrush="#C7D2FE" BorderThickness="1">
+                        <TextBlock Text="THÔNG TƯ 32/2009/TTLT-BQP-BVHTTDL" FontSize="11" FontWeight="SemiBold" Foreground="#3730A3"/>
+                    </Border>
                 </StackPanel>
 
-                <WrapPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <Button Content="📤 Xuất Báo Cáo &amp; Đề Xuất Excel" Style="{StaticResource SuccessButtonStyle}" Margin="0,0,8,4"
-                            Command="{Binding ExportExecutiveReportCommand}" ToolTip="Xuất toàn bộ chỉ số, phân tích và phác đồ AI ra file Excel 4 sheets"/>
-                    <Button Content="🔄 Làm Mới" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,4"
-                            Command="{Binding LoadDashboardDataCommand}"/>
-                    <Button Content="💾 Sao Lưu Toàn Viện" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,0,4"
-                            Command="{Binding ExportAllDataCommand}"/>
-                </WrapPanel>
-            </Grid>
+                <TextBlock Text="BẢNG TỔNG QUAN RÈN LUYỆN THỂ LỰC QUÂN ĐỘI" FontSize="22" FontWeight="ExtraBold" Foreground="#0F172A" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                <TextBlock Text="Phân tích số liệu kiểm tra thể lực đa chiều, đánh giá chỉ tiêu thi đua và tự động kích hoạt Trợ lý Trí tuệ Nhân tạo đề xuất giáo án" 
+                           FontSize="12.5" Foreground="#64748B" Margin="0,3,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+            </StackPanel>
+
+            <!-- Thanh công cụ tác chiến -->
+            <WrapPanel HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,0,16">
+                <Button Content="📤 Xuất Báo Cáo &amp; Đề Xuất Excel" Style="{StaticResource SuccessButtonStyle}" Margin="0,0,8,8"
+                        Command="{Binding ExportExecutiveReportCommand}" ToolTip="Xuất toàn bộ chỉ số, phân tích và phác đồ AI ra file Excel 4 sheets"/>
+                <Button Content="🔄 Làm Mới" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,8"
+                        Command="{Binding LoadDashboardDataCommand}"/>
+                <Button Content="💾 Sao Lưu Toàn Viện" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,0,8"
+                        Command="{Binding ExportAllDataCommand}"/>
+            </WrapPanel>
 
             <!-- ==================== PHẦN 2: BỘ LỌC NÂNG CAO ĐA CHIỀU ==================== -->
             <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,16" Padding="14" BorderBrush="#CBD5E1">
