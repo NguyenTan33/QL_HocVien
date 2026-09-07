@@ -25,6 +25,13 @@ namespace QL_HocVien.ViewModels
 
         public ObservableCollection<string> UnitOptions { get; } = new();
         public ObservableCollection<string> ClassOptions { get; } = new();
+        public ObservableCollection<string> StatusFilterOptions { get; } = new()
+        {
+            "Tất cả học viên",
+            "✅ Đủ tất cả môn",
+            "⚠️ Thiếu môn (Dòng vàng)"
+        };
+
         public ObservableCollection<string> AssessmentTypes { get; } = new()
         {
             "Kiểm tra và thi",
@@ -36,6 +43,9 @@ namespace QL_HocVien.ViewModels
 
         [ObservableProperty]
         private string _selectedClass = "Tất cả";
+
+        [ObservableProperty]
+        private string _selectedStatusFilter = "Tất cả học viên";
 
         [ObservableProperty]
         private string _searchKeyword = string.Empty;
@@ -51,6 +61,9 @@ namespace QL_HocVien.ViewModels
 
         [ObservableProperty]
         private int _excellentStudentsCount;
+
+        [ObservableProperty]
+        private int _missingSubjectsStudentCount;
 
         [ObservableProperty]
         private int _selectedTabIndex = 0; // 0: Bảng điểm học viên, 1: Danh mục môn tín chỉ
@@ -73,42 +86,118 @@ namespace QL_HocVien.ViewModels
         private string _subjectName = string.Empty;
 
         [ObservableProperty]
-        private int _credits = 2;
+        private double _credits = 1.0;
 
         [ObservableProperty]
         private string _assessmentType = "Kiểm tra và thi";
 
         [ObservableProperty]
         private string _subjectDescription = string.Empty;
+
+        /// <summary>
+        /// Danh sách các đợt kiểm tra / cột điểm trực thuộc môn học chính
+        /// </summary>
+        public ObservableCollection<SubjectComponentItemViewModel> FormComponents { get; } = new();
         #endregion
 
-        #region FORM NHẬP / CẬP NHẬT ĐIỂM
+        #region MODAL XEM CHI TIẾT PHÂN RÃ THÀNH PHẦN MÔN HỌC
+        [ObservableProperty]
+        private bool _isBreakdownModalVisible;
+
+        [ObservableProperty]
+        private string _breakdownCadetName = string.Empty;
+
+        [ObservableProperty]
+        private string _breakdownCadetInfo = string.Empty;
+
+        public ObservableCollection<MajorSubjectBreakdownDto> CadetBreakdowns { get; } = new();
+        #endregion
+
+        #region MA TRẬN NHẬP ĐIỂM THEO MÔN HỌC (GRADE ENTRY MATRIX)
+        [ObservableProperty]
+        private bool _isGradeMatrixModalVisible;
+
+        [ObservableProperty]
+        private string _searchSubjectText = string.Empty;
+
+        public ObservableCollection<CreditSubject> FilteredSubjectsForGrading { get; } = new();
+
+        [ObservableProperty]
+        private CreditSubject? _selectedSubjectForGrading;
+
+        [ObservableProperty]
+        private string _currentSubjectInfoText = string.Empty;
+
+        public ObservableCollection<SubjectAssessmentComponent> CurrentSubjectComponents { get; } = new();
+        public ObservableCollection<CadetSubjectGradeRowDto> SubjectGradeRows { get; } = new();
+
+        // Cấu hình tiêu đề và ẩn hiện của các cột đợt kiểm tra động (hỗ trợ hiển thị linh hoạt 1, 2, 3, 4, 5, 6 cột)
+        [ObservableProperty]
+        private string _col1Header = "Đợt 1";
+        [ObservableProperty]
+        private bool _isCol1Visible;
+
+        [ObservableProperty]
+        private string _col2Header = "Đợt 2";
+        [ObservableProperty]
+        private bool _isCol2Visible;
+
+        [ObservableProperty]
+        private string _col3Header = "Đợt 3";
+        [ObservableProperty]
+        private bool _isCol3Visible;
+
+        [ObservableProperty]
+        private string _col4Header = "Đợt 4";
+        [ObservableProperty]
+        private bool _isCol4Visible;
+
+        [ObservableProperty]
+        private string _col5Header = "Đợt 5";
+        [ObservableProperty]
+        private bool _isCol5Visible;
+
+        [ObservableProperty]
+        private string _col6Header = "Đợt 6";
+        [ObservableProperty]
+        private bool _isCol6Visible;
+
+        // Tương thích ngược
         [ObservableProperty]
         private bool _isScoreFormVisible;
+        #endregion
+
+        #region MODAL NHẬP ĐIỂM THEO TỪNG HỌC VIÊN (CADET SINGLE GRADE ENTRY)
+        [ObservableProperty]
+        private bool _isCadetScoreModalVisible;
 
         [ObservableProperty]
-        private Cadet? _selectedCadetForScore;
+        private CadetAcademicSummaryDto? _cadetForScoreEntry;
 
         [ObservableProperty]
-        private CreditSubject? _selectedSubjectForScore;
+        private string _cadetScoreModalTitle = string.Empty;
 
         [ObservableProperty]
-        private double? _inputRegularScore;
+        private string _cadetModalSearchSubjectText = string.Empty;
+
+        public ObservableCollection<CreditSubject> FilteredSubjectsForCadet { get; } = new();
 
         [ObservableProperty]
-        private double? _inputExamScore;
+        private CreditSubject? _selectedSubjectForCadetScore;
+
+        public ObservableCollection<CadetSingleSubjectGradeDto> CadetComponentGradeItems { get; } = new();
 
         [ObservableProperty]
-        private double _inputFinalScore;
+        private double? _cadetCalculatedSubjectScore;
 
         [ObservableProperty]
-        private string _inputExamSession = "Học kỳ 1";
+        private string _cadetCalculatedSubjectScoreDisplay = "--";
 
         [ObservableProperty]
-        private DateTime _inputExamDate = DateTime.Today;
+        private string _cadetSubjectStatusIcon = "⚪";
 
         [ObservableProperty]
-        private string _inputScoreNotes = string.Empty;
+        private string _cadetSubjectStatusTooltip = "Chưa có điểm";
         #endregion
 
         public CreditSubjectManagementViewModel(
@@ -168,6 +257,7 @@ namespace QL_HocVien.ViewModels
                 foreach (var c in cadets.OrderBy(c => c.FullName))
                     AllCadets.Add(c);
 
+                await _creditService.EnsureComponentsMigratedAsync();
                 await LoadDataAsync();
             }
             catch (Exception ex)
@@ -193,20 +283,32 @@ namespace QL_HocVien.ViewModels
                 TotalSubjectsCount = Subjects.Count;
 
                 // 2. Tải bảng điểm học viên
-                var summaries = await _creditService.GetCadetAcademicSummariesAsync(
+                var allSummaries = await _creditService.GetCadetAcademicSummariesAsync(
                     SelectedUnit, SelectedClass, SearchKeyword);
 
-                CadetSummaries.Clear();
-                foreach (var sum in summaries) CadetSummaries.Add(sum);
+                // Áp dụng bộ lọc trạng thái học tập
+                var filtered = allSummaries.AsEnumerable();
+                if (SelectedStatusFilter == "✅ Đủ tất cả môn")
+                {
+                    filtered = filtered.Where(s => !s.HasMissingSubjects);
+                }
+                else if (SelectedStatusFilter == "⚠️ Thiếu môn (Dòng vàng)")
+                {
+                    filtered = filtered.Where(s => s.HasMissingSubjects);
+                }
 
-                TotalStudentsCount = CadetSummaries.Count;
-                AverageOverallGpa = CadetSummaries.Any(c => c.TotalCreditsEarned > 0)
-                    ? Math.Round(CadetSummaries.Where(c => c.TotalCreditsEarned > 0).Average(c => c.Gpa), 2)
+                CadetSummaries.Clear();
+                foreach (var sum in filtered) CadetSummaries.Add(sum);
+
+                TotalStudentsCount = allSummaries.Count;
+                MissingSubjectsStudentCount = allSummaries.Count(c => c.HasMissingSubjects);
+                AverageOverallGpa = allSummaries.Any(c => c.TotalCreditsEarned > 0)
+                    ? Math.Round(allSummaries.Where(c => c.TotalCreditsEarned > 0).Average(c => c.Gpa), 2)
                     : 0;
 
-                ExcellentStudentsCount = CadetSummaries.Count(c => c.Gpa >= 8.5 && c.TotalCreditsEarned > 0);
+                ExcellentStudentsCount = allSummaries.Count(c => c.Gpa >= 8.0 && c.TotalCreditsEarned > 0);
 
-                StatusMessage = $"Đã tải thành công {TotalStudentsCount} học viên, {TotalSubjectsCount} môn học tín chỉ.";
+                StatusMessage = $"Đã nạp {CadetSummaries.Count}/{TotalStudentsCount} học viên ({MissingSubjectsStudentCount} học viên thiếu môn - dòng vàng), {TotalSubjectsCount} môn tín chỉ.";
             }
             catch (Exception ex)
             {
@@ -229,11 +331,50 @@ namespace QL_HocVien.ViewModels
         {
             SelectedUnit = "Tất cả";
             SelectedClass = "Tất cả";
+            SelectedStatusFilter = "Tất cả học viên";
             SearchKeyword = string.Empty;
             await LoadDataAsync();
         }
 
+        [RelayCommand]
+        public async Task FilterMissingOnlyAsync()
+        {
+            SelectedStatusFilter = "⚠️ Thiếu môn (Dòng vàng)";
+            await LoadDataAsync();
+        }
+
         #region SUBJECT ACTIONS
+        [RelayCommand]
+        public void AddComponentRow()
+        {
+            var newItem = new SubjectComponentItemViewModel
+            {
+                ComponentName = $"Đợt {FormComponents.Count + 1}",
+                Credits = 1.0,
+                OnCreditsChangedAction = UpdateTotalCreditsFromComponents
+            };
+            FormComponents.Add(newItem);
+            UpdateTotalCreditsFromComponents();
+        }
+
+        [RelayCommand]
+        public void RemoveComponentRow(SubjectComponentItemViewModel? item)
+        {
+            if (item == null) return;
+            if (FormComponents.Count <= 1)
+            {
+                StatusMessage = "Môn học phải có ít nhất 1 đợt kiểm tra / cột điểm.";
+                return;
+            }
+            FormComponents.Remove(item);
+            UpdateTotalCreditsFromComponents();
+        }
+
+        private void UpdateTotalCreditsFromComponents()
+        {
+            Credits = FormComponents.Count > 0 ? Math.Round(FormComponents.Sum(c => c.Credits), 2) : 1.0;
+        }
+
         [RelayCommand]
         public void OpenAddSubjectForm()
         {
@@ -241,23 +382,58 @@ namespace QL_HocVien.ViewModels
             EditingSubjectId = 0;
             SubjectCode = $"TC{DateTime.Now:yyMM}{Subjects.Count + 1:D2}";
             SubjectName = string.Empty;
-            Credits = 2;
             AssessmentType = "Kiểm tra và thi";
             SubjectDescription = string.Empty;
+
+            FormComponents.Clear();
+            FormComponents.Add(new SubjectComponentItemViewModel
+            {
+                ComponentName = "Kiểm tra thường xuyên",
+                Credits = 1.0,
+                OnCreditsChangedAction = UpdateTotalCreditsFromComponents
+            });
+            UpdateTotalCreditsFromComponents();
+
             IsSubjectFormVisible = true;
         }
 
         [RelayCommand]
-        public void OpenEditSubjectForm(CreditSubject? subject)
+        public async Task OpenEditSubjectFormAsync(CreditSubject? subject)
         {
             if (subject == null) return;
             IsEditingSubject = true;
             EditingSubjectId = subject.Id;
             SubjectCode = subject.SubjectCode;
             SubjectName = subject.SubjectName;
-            Credits = subject.Credits;
             AssessmentType = subject.AssessmentType;
-            SubjectDescription = subject.Description;
+            SubjectDescription = subject.Description ?? string.Empty;
+
+            FormComponents.Clear();
+            var comps = await _creditService.GetComponentsBySubjectIdAsync(subject.Id);
+            if (comps.Any())
+            {
+                foreach (var c in comps)
+                {
+                    FormComponents.Add(new SubjectComponentItemViewModel
+                    {
+                        Id = c.Id,
+                        ComponentName = c.ComponentName,
+                        Credits = c.Credits,
+                        OnCreditsChangedAction = UpdateTotalCreditsFromComponents
+                    });
+                }
+            }
+            else
+            {
+                FormComponents.Add(new SubjectComponentItemViewModel
+                {
+                    ComponentName = subject.SubjectName,
+                    Credits = subject.Credits > 0 ? subject.Credits : 1.0,
+                    OnCreditsChangedAction = UpdateTotalCreditsFromComponents
+                });
+            }
+
+            UpdateTotalCreditsFromComponents();
             IsSubjectFormVisible = true;
         }
 
@@ -276,45 +452,59 @@ namespace QL_HocVien.ViewModels
                 return;
             }
 
-            if (Credits <= 0)
+            if (!FormComponents.Any())
             {
-                StatusMessage = "Số tín chỉ phải lớn hơn 0.";
+                StatusMessage = "Vui lòng thêm ít nhất 1 đợt kiểm tra cho môn học.";
                 return;
+            }
+
+            foreach (var c in FormComponents)
+            {
+                if (string.IsNullOrWhiteSpace(c.ComponentName))
+                {
+                    StatusMessage = "Tên các đợt kiểm tra không được để trống.";
+                    return;
+                }
+                if (c.Credits <= 0)
+                {
+                    StatusMessage = "Số tín chỉ của từng đợt kiểm tra phải lớn hơn 0.";
+                    return;
+                }
             }
 
             IsBusy = true;
             try
             {
-                if (IsEditingSubject)
+                var subj = new CreditSubject
                 {
-                    var updated = new CreditSubject
-                    {
-                        Id = EditingSubjectId,
-                        SubjectCode = SubjectCode.Trim(),
-                        SubjectName = SubjectName.Trim(),
-                        Credits = Credits,
-                        AssessmentType = AssessmentType,
-                        Description = SubjectDescription?.Trim() ?? string.Empty
-                    };
-                    var res = await _creditService.UpdateSubjectAsync(updated);
-                    StatusMessage = res.Message;
+                    Id = EditingSubjectId,
+                    SubjectCode = SubjectCode.Trim(),
+                    SubjectName = SubjectName.Trim(),
+                    AssessmentType = AssessmentType,
+                    Description = SubjectDescription?.Trim() ?? string.Empty,
+                    Credits = Math.Round(FormComponents.Sum(c => c.Credits), 2)
+                };
+
+                var compEntities = FormComponents.Select((c, idx) => new SubjectAssessmentComponent
+                {
+                    Id = c.Id,
+                    ComponentName = c.ComponentName.Trim(),
+                    Credits = c.Credits,
+                    OrderIndex = idx + 1
+                });
+
+                var res = await _creditService.SaveSubjectWithComponentsAsync(subj, compEntities);
+                StatusMessage = res.Message;
+
+                if (res.Success)
+                {
+                    IsSubjectFormVisible = false;
+                    await LoadDataAsync();
                 }
                 else
                 {
-                    var newSubj = new CreditSubject
-                    {
-                        SubjectCode = SubjectCode.Trim(),
-                        SubjectName = SubjectName.Trim(),
-                        Credits = Credits,
-                        AssessmentType = AssessmentType,
-                        Description = SubjectDescription?.Trim() ?? string.Empty
-                    };
-                    var res = await _creditService.AddSubjectAsync(newSubj);
-                    StatusMessage = res.Message;
+                    System.Windows.MessageBox.Show(res.Message, "Thông báo", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
                 }
-
-                IsSubjectFormVisible = false;
-                await LoadDataAsync();
             }
             catch (Exception ex)
             {
@@ -332,7 +522,7 @@ namespace QL_HocVien.ViewModels
             if (subject == null) return;
 
             var confirm = System.Windows.MessageBox.Show(
-                $"Bạn có chắc chắn muốn xóa môn học tín chỉ '{subject.SubjectName}' ({subject.SubjectCode}) không?\n\nLưu ý: Tất cả điểm số liên quan đến môn học này sẽ bị xóa.",
+                $"Bạn có chắc chắn muốn xóa môn học tín chỉ '{subject.SubjectName}' ({subject.SubjectCode}) không?\n\nLưu ý: Tất cả các đợt kiểm tra và điểm số liên quan sẽ bị xóa.",
                 "Xác nhận xóa môn học tín chỉ",
                 System.Windows.MessageBoxButton.YesNo,
                 System.Windows.MessageBoxImage.Warning);
@@ -357,91 +547,306 @@ namespace QL_HocVien.ViewModels
         }
         #endregion
 
-        #region SCORE ACTIONS
+        #region MODAL NHẬP ĐIỂM THEO TỪNG HỌC VIÊN (CADET GRADE ACTIONS)
         [RelayCommand]
-        public void OpenAddScoreForm(CadetAcademicSummaryDto? summary)
+        public async Task OpenAddScoreFormAsync(CadetAcademicSummaryDto? summary)
         {
             if (summary != null)
             {
-                SelectedCadetForScore = AllCadets.FirstOrDefault(c => c.Id == summary.CadetId);
+                await OpenCadetScoreModalAsync(summary);
             }
             else
             {
-                SelectedCadetForScore = AllCadets.FirstOrDefault();
+                OpenGradeMatrixModal(null);
             }
-
-            SelectedSubjectForScore = Subjects.FirstOrDefault();
-            InputRegularScore = 8.0;
-            InputExamScore = 8.0;
-            InputFinalScore = 8.0;
-            InputExamSession = "Học kỳ 1";
-            InputExamDate = DateTime.Today;
-            InputScoreNotes = string.Empty;
-            IsScoreFormVisible = true;
         }
 
         [RelayCommand]
-        public void AutoCalculateFinalScore()
+        public async Task OpenCadetScoreModalAsync(CadetAcademicSummaryDto? cadet)
         {
-            if (SelectedSubjectForScore == null) return;
+            if (cadet == null) return;
 
-            if (SelectedSubjectForScore.AssessmentType == "Kiểm tra thường xuyên")
+            CadetForScoreEntry = cadet;
+            CadetScoreModalTitle = $"NHẬP ĐIỂM HỌC VIÊN: {cadet.FullName} - {cadet.CadetCode} ({cadet.ClassName} - {cadet.Unit})";
+            CadetModalSearchSubjectText = string.Empty;
+
+            FilteredSubjectsForCadet.Clear();
+            foreach (var s in Subjects)
             {
-                InputFinalScore = InputRegularScore ?? 0;
+                FilteredSubjectsForCadet.Add(s);
+            }
+
+            SelectedSubjectForCadetScore = Subjects.FirstOrDefault();
+            IsCadetScoreModalVisible = true;
+
+            await LoadCadetSubjectGradesAsync();
+        }
+
+        [RelayCommand]
+        public void CloseCadetScoreModal()
+        {
+            IsCadetScoreModalVisible = false;
+            CadetForScoreEntry = null;
+        }
+
+        partial void OnCadetModalSearchSubjectTextChanged(string value)
+        {
+            FilteredSubjectsForCadet.Clear();
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                foreach (var s in Subjects) FilteredSubjectsForCadet.Add(s);
             }
             else
             {
-                // Kiểm tra và thi: 30% KTTX + 70% Điểm thi
-                double reg = InputRegularScore ?? 0;
-                double exam = InputExamScore ?? reg;
-                InputFinalScore = Math.Round(reg * 0.3 + exam * 0.7, 1);
+                var lower = value.Trim().ToLower();
+                var matched = Subjects.Where(s => s.SubjectCode.ToLower().Contains(lower) || 
+                                                  s.SubjectName.ToLower().Contains(lower)).ToList();
+                foreach (var m in matched) FilteredSubjectsForCadet.Add(m);
             }
         }
 
-        [RelayCommand]
-        public void CloseScoreForm()
+        partial void OnSelectedSubjectForCadetScoreChanged(CreditSubject? value)
         {
-            IsScoreFormVisible = false;
+            if (value != null && IsCadetScoreModalVisible)
+            {
+                _ = LoadCadetSubjectGradesAsync();
+            }
+        }
+
+        private async Task LoadCadetSubjectGradesAsync()
+        {
+            if (CadetForScoreEntry == null || SelectedSubjectForCadetScore == null) return;
+
+            IsBusy = true;
+            try
+            {
+                var (subject, components, calcScore, hasMissing) = await _creditService.GetCadetSubjectGradesAsync(
+                    CadetForScoreEntry.CadetId, SelectedSubjectForCadetScore.Id);
+
+                CadetComponentGradeItems.Clear();
+                foreach (var comp in components)
+                {
+                    comp.OnScoreChangedAction = UpdateCadetCalculatedScore;
+                    CadetComponentGradeItems.Add(comp);
+                }
+
+                CadetCalculatedSubjectScore = calcScore;
+                CadetCalculatedSubjectScoreDisplay = calcScore.HasValue ? calcScore.Value.ToString("F2") : "--";
+                CadetSubjectStatusIcon = hasMissing ? "⚠️" : (calcScore.HasValue ? "✅" : "⚪");
+                CadetSubjectStatusTooltip = hasMissing ? "Chưa thi (đợt thi đã có trên 20 học viên có điểm)" : (calcScore.HasValue ? "Đã hoàn thành đầy đủ các đợt thi" : "Chưa hoàn thành đủ các đợt thi");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        private void UpdateCadetCalculatedScore()
+        {
+            if (SelectedSubjectForCadetScore == null) return;
+
+            double totalCredits = SelectedSubjectForCadetScore.Credits > 0 ? SelectedSubjectForCadetScore.Credits : 1.0;
+            double sumContribution = 0;
+            bool allComponentsRecorded = CadetComponentGradeItems.Count > 0;
+
+            foreach (var c in CadetComponentGradeItems)
+            {
+                if (c.Score.HasValue && c.Score.Value >= 0)
+                {
+                    sumContribution += c.Score.Value * c.Credits;
+                }
+                else
+                {
+                    allComponentsRecorded = false;
+                }
+            }
+
+            // Điểm trung bình môn chỉ có khi TẤT CẢ các cột của môn chính được nhập
+            if (allComponentsRecorded)
+            {
+                CadetCalculatedSubjectScore = Math.Round(sumContribution / totalCredits, 2);
+                CadetCalculatedSubjectScoreDisplay = CadetCalculatedSubjectScore.Value.ToString("F2");
+            }
+            else
+            {
+                CadetCalculatedSubjectScore = null;
+                CadetCalculatedSubjectScoreDisplay = "--";
+            }
+
+            bool hasMissing = CadetComponentGradeItems.Any(c => c.HasMissingWarning && (!c.Score.HasValue || c.Score.Value < 0));
+            CadetSubjectStatusIcon = hasMissing ? "⚠️" : (CadetCalculatedSubjectScore.HasValue ? "✅" : "⚪");
+            CadetSubjectStatusTooltip = hasMissing ? "Chưa thi (đợt thi đã có trên 20 học viên có điểm)" : (CadetCalculatedSubjectScore.HasValue ? "Đã hoàn thành đầy đủ các đợt thi" : "Chưa hoàn thành đủ các đợt thi");
         }
 
         [RelayCommand]
-        public async Task SaveScoreFormAsync()
+        public async Task SaveCadetScoreModalAsync()
         {
-            if (SelectedCadetForScore == null || SelectedSubjectForScore == null)
-            {
-                StatusMessage = "Vui lòng chọn học viên và môn học tín chỉ.";
-                return;
-            }
+            if (CadetForScoreEntry == null || SelectedSubjectForCadetScore == null) return;
 
-            if (InputFinalScore < 0 || InputFinalScore > 10)
+            IsBusy = true;
+            try
             {
-                StatusMessage = "Điểm số phải từ 0.0 đến 10.0.";
+                var componentScores = CadetComponentGradeItems
+                    .Select(c => (componentId: c.ComponentId, score: c.Score))
+                    .ToList();
+
+                var res = await _creditService.SaveCadetSubjectGradesAsync(
+                    CadetForScoreEntry.CadetId, SelectedSubjectForCadetScore.Id, componentScores);
+
+                StatusMessage = res.Message;
+                if (res.Success)
+                {
+                    System.Windows.MessageBox.Show(res.Message, "Lưu Điểm Thành Công",
+                        System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+                    await LoadDataAsync();
+                    await LoadCadetSubjectGradesAsync();
+                }
+                else
+                {
+                    System.Windows.MessageBox.Show(res.Message, "Lỗi Lưu Điểm",
+                        System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Lỗi lưu điểm: {ex.Message}";
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+        #endregion
+
+        #region MA TRẬN NHẬP ĐIỂM THEO MÔN HỌC (GRADE ENTRY MATRIX ACTIONS)
+
+        [RelayCommand]
+        public void OpenGradeMatrixModal(CreditSubject? subject = null)
+        {
+            SearchSubjectText = string.Empty;
+            FilteredSubjectsForGrading.Clear();
+            foreach (var s in Subjects) FilteredSubjectsForGrading.Add(s);
+
+            SelectedSubjectForGrading = subject ?? Subjects.FirstOrDefault();
+            IsGradeMatrixModalVisible = true;
+            _ = LoadGradeMatrixForSelectedSubjectAsync();
+        }
+
+        [RelayCommand]
+        public void CloseGradeMatrixModal()
+        {
+            IsGradeMatrixModalVisible = false;
+        }
+
+        partial void OnSearchSubjectTextChanged(string value)
+        {
+            FilteredSubjectsForGrading.Clear();
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                foreach (var s in Subjects) FilteredSubjectsForGrading.Add(s);
+            }
+            else
+            {
+                var lower = value.Trim().ToLower();
+                var matched = Subjects.Where(s => s.SubjectCode.ToLower().Contains(lower) || 
+                                                  s.SubjectName.ToLower().Contains(lower)).ToList();
+                foreach (var m in matched) FilteredSubjectsForGrading.Add(m);
+            }
+        }
+
+        partial void OnSelectedSubjectForGradingChanged(CreditSubject? value)
+        {
+            if (value != null && IsGradeMatrixModalVisible)
+            {
+                _ = LoadGradeMatrixForSelectedSubjectAsync();
+            }
+        }
+
+        public async Task LoadGradeMatrixForSelectedSubjectAsync()
+        {
+            if (SelectedSubjectForGrading == null)
+            {
+                CurrentSubjectInfoText = "Chưa chọn môn học.";
+                CurrentSubjectComponents.Clear();
+                SubjectGradeRows.Clear();
                 return;
             }
 
             IsBusy = true;
             try
             {
-                var record = new CreditScoreRecord
-                {
-                    CadetId = SelectedCadetForScore.Id,
-                    CreditSubjectId = SelectedSubjectForScore.Id,
-                    RegularScore = InputRegularScore,
-                    ExamScore = SelectedSubjectForScore.AssessmentType == "Kiểm tra thường xuyên" ? null : InputExamScore,
-                    FinalScore = InputFinalScore,
-                    ExamSession = InputExamSession,
-                    ExamDate = InputExamDate,
-                    Notes = InputScoreNotes?.Trim() ?? string.Empty
-                };
+                var (subj, components, rows) = await _creditService.GetSubjectGradeMatrixAsync(
+                    SelectedSubjectForGrading.Id, SelectedUnit, SelectedClass);
 
-                var res = await _creditService.SaveScoreAsync(record);
-                StatusMessage = res.Message;
-                IsScoreFormVisible = false;
-                await LoadDataAsync();
+                CurrentSubjectComponents.Clear();
+                foreach (var c in components) CurrentSubjectComponents.Add(c);
+
+                CurrentSubjectInfoText = $"Mã môn: {SelectedSubjectForGrading.SubjectCode}  |  Tổng số tín chỉ: {SelectedSubjectForGrading.CalculatedTotalCredits:F2} TC  |  Số đợt kiểm tra: {components.Count} đợt";
+
+                // Cấu hình hiển thị động các cột đợt kiểm tra
+                IsCol1Visible = components.Count >= 1;
+                Col1Header = components.Count >= 1 ? components[0].DisplayHeader : "Đợt 1";
+
+                IsCol2Visible = components.Count >= 2;
+                Col2Header = components.Count >= 2 ? components[1].DisplayHeader : "Đợt 2";
+
+                IsCol3Visible = components.Count >= 3;
+                Col3Header = components.Count >= 3 ? components[2].DisplayHeader : "Đợt 3";
+
+                IsCol4Visible = components.Count >= 4;
+                Col4Header = components.Count >= 4 ? components[3].DisplayHeader : "Đợt 4";
+
+                IsCol5Visible = components.Count >= 5;
+                Col5Header = components.Count >= 5 ? components[4].DisplayHeader : "Đợt 5";
+
+                IsCol6Visible = components.Count >= 6;
+                Col6Header = components.Count >= 6 ? components[5].DisplayHeader : "Đợt 6";
+
+                SubjectGradeRows.Clear();
+                foreach (var r in rows) SubjectGradeRows.Add(r);
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Lỗi lưu điểm: {ex.Message}";
+                StatusMessage = $"Lỗi nạp bảng điểm môn: {ex.Message}";
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        [RelayCommand]
+        public async Task SaveGradeMatrixAsync()
+        {
+            if (SelectedSubjectForGrading == null)
+            {
+                StatusMessage = "Vui lòng chọn môn học để lưu điểm.";
+                return;
+            }
+
+            IsBusy = true;
+            try
+            {
+                var res = await _creditService.SaveSubjectGradeMatrixAsync(
+                    SelectedSubjectForGrading.Id, SubjectGradeRows.ToList());
+                
+                StatusMessage = res.Message;
+                if (res.Success)
+                {
+                    System.Windows.MessageBox.Show(res.Message, "Lưu Điểm Thành Công",
+                        System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+                    await LoadDataAsync();
+                    await LoadGradeMatrixForSelectedSubjectAsync();
+                }
+                else
+                {
+                    System.Windows.MessageBox.Show(res.Message, "Lỗi Lưu Điểm",
+                        System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Lỗi lưu bảng điểm: {ex.Message}";
             }
             finally
             {
@@ -477,6 +882,66 @@ namespace QL_HocVien.ViewModels
             catch (Exception ex)
             {
                 StatusMessage = $"Lỗi xuất Excel: {ex.Message}";
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+        #endregion
+
+        #region BREAKDOWN MODAL ACTIONS
+        [RelayCommand]
+        public async Task OpenBreakdownModalAsync(CadetAcademicSummaryDto? summary)
+        {
+            if (summary == null) return;
+            BreakdownCadetName = summary.FullName;
+            BreakdownCadetInfo = $"Mã HV: {summary.CadetCode}  |  Đơn vị: {summary.Unit}  |  Lớp: {summary.ClassName}  |  TBM toàn khóa: {summary.Gpa:F2}";
+            
+            CadetBreakdowns.Clear();
+            var breakdowns = await _creditService.GetSubjectBreakdownForCadetAsync(summary.CadetId);
+            foreach (var b in breakdowns) CadetBreakdowns.Add(b);
+
+            IsBreakdownModalVisible = true;
+        }
+
+        [RelayCommand]
+        public void CloseBreakdownModal()
+        {
+            IsBreakdownModalVisible = false;
+        }
+        #endregion
+
+        #region IMPORT EXCEL
+        [RelayCommand]
+        public async Task ImportStandardExcelAsync()
+        {
+            string? filePath = _fileDialogService.ShowOpenFileDialog("Tập tin Excel (*.xlsx)|*.xlsx|Tất cả tập tin (*.*)|*.*");
+            if (string.IsNullOrWhiteSpace(filePath)) return;
+
+            IsBusy = true;
+            try
+            {
+                var res = await _creditService.ImportStandardTbmExcelAsync(filePath);
+                StatusMessage = res.Message;
+
+                if (res.Success)
+                {
+                    System.Windows.MessageBox.Show(res.Message, "Nhập Excel Chuẩn Thành Công", 
+                        System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+                    await InitializeAsync();
+                }
+                else
+                {
+                    System.Windows.MessageBox.Show(res.Message, "Lỗi Nhập Excel", 
+                        System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Lỗi nhập Excel: {ex.Message}";
+                System.Windows.MessageBox.Show($"Lỗi nhập Excel: {ex.Message}", "Lỗi", 
+                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             }
             finally
             {

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace QL_HocVien.Models
 {
@@ -10,6 +10,12 @@ namespace QL_HocVien.Models
 
         public int CreditSubjectId { get; set; }
         public CreditSubject? CreditSubject { get; set; }
+
+        /// <summary>
+        /// Liên kết đến đợt kiểm tra / đợt thi trực thuộc (nếu có)
+        /// </summary>
+        public int? ComponentId { get; set; }
+        public SubjectAssessmentComponent? Component { get; set; }
 
         // Điểm thường xuyên (nếu có)
         public double? RegularScore { get; set; }

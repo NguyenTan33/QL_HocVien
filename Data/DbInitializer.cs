@@ -131,8 +131,10 @@ namespace QL_HocVien.Data
                         ""Id"" INTEGER NOT NULL CONSTRAINT ""PK_CreditSubjects"" PRIMARY KEY AUTOINCREMENT,
                         ""SubjectCode"" TEXT NOT NULL,
                         ""SubjectName"" TEXT NOT NULL,
-                        ""Credits"" INTEGER NOT NULL,
+                        ""Credits"" REAL NOT NULL,
                         ""AssessmentType"" TEXT NOT NULL,
+                        ""SubjectGroup"" TEXT NULL,
+                        ""IsComponent"" INTEGER NOT NULL DEFAULT 0,
                         ""Description"" TEXT NOT NULL,
                         ""CreatedAt"" TEXT NOT NULL
                     );
@@ -158,6 +160,48 @@ namespace QL_HocVien.Data
             {
                 // Bỏ qua nếu bảng đã tồn tại
             }
+
+            // Tự động bổ sung các cột mới cho CreditSubjects nếu CSDL đã tồn tại từ trước
+            try
+            {
+                context.Database.ExecuteSqlRaw(@"ALTER TABLE ""CreditSubjects"" ADD COLUMN ""SubjectGroup"" TEXT NULL;");
+            }
+            catch { }
+            try
+            {
+                context.Database.ExecuteSqlRaw(@"ALTER TABLE ""CreditSubjects"" ADD COLUMN ""IsComponent"" INTEGER NOT NULL DEFAULT 0;");
+            }
+            catch { }
+            try
+            {
+                context.Database.ExecuteSqlRaw(@"UPDATE ""CreditSubjects"" SET ""SubjectGroup"" = '' WHERE ""SubjectGroup"" IS NULL;");
+                context.Database.ExecuteSqlRaw(@"UPDATE ""CreditSubjects"" SET ""Description"" = '' WHERE ""Description"" IS NULL;");
+            }
+            catch { }
+
+            // Tạo bảng SubjectAssessmentComponents (Đợt kiểm tra / đợt thi trực thuộc môn chính)
+            try
+            {
+                context.Database.ExecuteSqlRaw(@"
+                    CREATE TABLE IF NOT EXISTS ""SubjectAssessmentComponents"" (
+                        ""Id"" INTEGER NOT NULL CONSTRAINT ""PK_SubjectAssessmentComponents"" PRIMARY KEY AUTOINCREMENT,
+                        ""CreditSubjectId"" INTEGER NOT NULL,
+                        ""ComponentName"" TEXT NOT NULL,
+                        ""Credits"" REAL NOT NULL DEFAULT 1.0,
+                        ""OrderIndex"" INTEGER NOT NULL DEFAULT 0,
+                        ""CreatedAt"" TEXT NOT NULL,
+                        CONSTRAINT ""FK_SubjectAssessmentComponents_CreditSubjects"" FOREIGN KEY (""CreditSubjectId"") REFERENCES ""CreditSubjects"" (""Id"") ON DELETE CASCADE
+                    );
+                ");
+            }
+            catch { }
+
+            // Thêm cột ComponentId vào bảng CreditScoreRecords
+            try
+            {
+                context.Database.ExecuteSqlRaw(@"ALTER TABLE ""CreditScoreRecords"" ADD COLUMN ""ComponentId"" INTEGER NULL REFERENCES ""SubjectAssessmentComponents""(""Id"") ON DELETE CASCADE;");
+            }
+            catch { }
 
             // Đảm bảo cột ClassId tồn tại trong bảng Cadets
             try

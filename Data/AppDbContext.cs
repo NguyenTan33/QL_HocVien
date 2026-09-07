@@ -22,6 +22,7 @@ namespace QL_HocVien.Data
         public DbSet<Officer> Officers => Set<Officer>();
         public DbSet<TrainingEvent> TrainingEvents => Set<TrainingEvent>();
         public DbSet<CreditSubject> CreditSubjects => Set<CreditSubject>();
+        public DbSet<SubjectAssessmentComponent> SubjectAssessmentComponents => Set<SubjectAssessmentComponent>();
         public DbSet<CreditScoreRecord> CreditScoreRecords => Set<CreditScoreRecord>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -174,6 +175,24 @@ namespace QL_HocVien.Data
                 entity.Property(e => e.SubjectCode).IsRequired().HasMaxLength(30);
                 entity.Property(e => e.SubjectName).IsRequired().HasMaxLength(150);
                 entity.Property(e => e.AssessmentType).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.SubjectGroup).IsRequired(false).HasMaxLength(150);
+                entity.Property(e => e.Description).IsRequired(false);
+
+                entity.HasMany(e => e.Components)
+                      .WithOne(c => c.CreditSubject)
+                      .HasForeignKey(c => c.CreditSubjectId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Cấu hình SubjectAssessmentComponent
+            modelBuilder.Entity<SubjectAssessmentComponent>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.ComponentName).IsRequired().HasMaxLength(150);
+                entity.HasOne(e => e.CreditSubject)
+                      .WithMany(s => s.Components)
+                      .HasForeignKey(e => e.CreditSubjectId)
+                      .OnDelete(DeleteBehavior.Cascade);
             });
 
             // Cấu hình CreditScoreRecord
@@ -188,6 +207,11 @@ namespace QL_HocVien.Data
                 entity.HasOne(e => e.CreditSubject)
                       .WithMany(s => s.ScoreRecords)
                       .HasForeignKey(e => e.CreditSubjectId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Component)
+                      .WithMany(c => c.ScoreRecords)
+                      .HasForeignKey(e => e.ComponentId)
                       .OnDelete(DeleteBehavior.Cascade);
             });
         }

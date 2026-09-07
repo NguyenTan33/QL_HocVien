@@ -8,6 +8,7 @@ using QL_HocVien.Data;
 using QL_HocVien.Data.Repositories;
 using QL_HocVien.Infrastructure.Factory;
 using QL_HocVien.Services;
+using QL_HocVien.Services.Calculators;
 using QL_HocVien.ViewModels;
 using QL_HocVien.Views.Windows;
 
@@ -117,7 +118,9 @@ namespace QL_HocVien
             services.AddScoped<IAnalyticsService, AnalyticsService>();
             services.AddScoped<ITrainingRecommendationService, TrainingRecommendationService>();
             services.AddScoped<IDashboardAnalyticsService, DashboardAnalyticsService>();
+            services.AddScoped<ICreditGradeCalculator, CreditGradeCalculator>();
             services.AddScoped<ICreditSubjectService, CreditSubjectService>();
+            services.AddScoped<IAcademicAnalyticsService, AcademicAnalyticsService>();
 
             // Đăng ký Infrastructure (Validation Factory & Security Services - OOP & SOLID)
             services.AddAppInfrastructureValidation();
@@ -129,6 +132,7 @@ namespace QL_HocVien
             services.AddTransient<MainViewModel>();
             services.AddTransient<DashboardViewModel>();
             services.AddTransient<CreditSubjectManagementViewModel>();
+            services.AddTransient<AcademicAnalyticsViewModel>();
             services.AddTransient<OfficerManagementViewModel>();
             services.AddTransient<CatalogManagementViewModel>();
             services.AddTransient<ClassManagementViewModel>();

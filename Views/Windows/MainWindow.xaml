@@ -47,6 +47,9 @@
         <DataTemplate DataType="{x:Type vm:CreditSubjectManagementViewModel}">
             <views:CreditSubjectManagementView/>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:AcademicAnalyticsViewModel}">
+            <views:AcademicAnalyticsView/>
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:ExamAnalyticsViewModel}">
             <views:ExamAnalyticsView/>
         </DataTemplate>
@@ -181,10 +184,15 @@
                                     Style="{StaticResource SidebarNavButtonStyle}"
                                     Command="{Binding NavigateToCatalogManagementCommand}"/>
 
-                            <!-- 6. Môn Học & Điểm Tín Chỉ -->
-                            <Button Content="📖   Môn Học &amp; Điểm Tín Chỉ" 
+                            <!-- 6. Môn Học -->
+                            <Button Content="📖   Môn Học" 
                                     Style="{StaticResource SidebarNavButtonStyle}"
                                     Command="{Binding NavigateToCreditSubjectManagementCommand}"/>
+
+                            <!-- Phân Tích Học Lực -->
+                            <Button Content="📊   Phân Tích Học Lực" 
+                                    Style="{StaticResource SidebarNavButtonStyle}"
+                                    Command="{Binding NavigateToAcademicAnalyticsCommand}"/>
 
                             <!-- 6. Tiêu Chuẩn Môn Thể Lực -->
                             <Button Content="📚   Tiêu Chuẩn Môn Thể Lực" 

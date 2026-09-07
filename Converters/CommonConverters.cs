@@ -108,4 +108,52 @@ namespace QL_HocVien.Converters
             throw new NotImplementedException();
         }
     }
+
+    public class BindingProxy : Freezable
+    {
+        protected override Freezable CreateInstanceCore()
+        {
+            return new BindingProxy();
+        }
+
+        public object Data
+        {
+            get => GetValue(DataProperty);
+            set => SetValue(DataProperty, value);
+        }
+
+        public static readonly DependencyProperty DataProperty =
+            DependencyProperty.Register("Data", typeof(object), typeof(BindingProxy), new UIPropertyMetadata(null));
+    }
+
+    public class NullableDoubleConverter : IValueConverter
+    {
+        public static readonly NullableDoubleConverter Instance = new();
+
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            if (value is double d)
+            {
+                return d.ToString("0.##", CultureInfo.InvariantCulture);
+            }
+            return string.Empty;
+        }
+
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            if (value == null) return null;
+            string str = value.ToString()?.Trim() ?? string.Empty;
+            if (string.IsNullOrEmpty(str)) return null;
+
+            // Hỗ trợ cả dấu chấm '.' và dấu phẩy ',' (phù hợp thói quen người dùng)
+            str = str.Replace(',', '.');
+            if (double.TryParse(str, NumberStyles.Any, CultureInfo.InvariantCulture, out double result))
+            {
+                if (result < 0) return 0.0;
+                if (result > 10) return 10.0;
+                return Math.Round(result, 2);
+            }
+            return null;
+        }
+    }
 }

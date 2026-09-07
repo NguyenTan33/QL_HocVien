@@ -10,7 +10,41 @@
     <UserControl.Resources>
         <local_cv:BooleanToVisibilityConverter x:Key="BoolToVis"/>
         <local_cv:StringToBrushConverter x:Key="StringToBrush"/>
+        <local_cv:BindingProxy x:Key="Proxy" Data="{Binding}"/>
+        <local_cv:NullableDoubleConverter x:Key="NullableDoubleConverter"/>
         <DropShadowEffect x:Key="ShadowEffect" BlurRadius="25" ShadowDepth="6" Direction="270" Color="#0F172A" Opacity="0.18"/>
+
+        <Style x:Key="MatrixScoreTextBoxStyle" TargetType="TextBox">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Foreground" Value="#1E40AF"/>
+            <Setter Property="BorderBrush" Value="#CBD5E1"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Padding" Value="2,1"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4">
+                            <ScrollViewer x:Name="PART_ContentHost" Focusable="false" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="#2563EB"/>
+                                <Setter TargetName="border" Property="BorderThickness" Value="1.5"/>
+                                <Setter Property="Background" Value="#EFF6FF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
 
     <Border Padding="20">
@@ -31,66 +65,86 @@
                     </Grid.ColumnDefinitions>
 
                     <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                        <TextBlock Text="QUẢN LÝ MÔN HỌC &amp; ĐIỂM HỌC PHẦN TÍN CHỈ" FontSize="20" FontWeight="Bold" Foreground="#0F172A"/>
-                        <TextBlock Text="Hệ thống tính điểm trung bình tích lũy (GPA) theo trọng số tín chỉ và hình thức kiểm tra/thi" 
+                        <TextBlock Text="QUẢN LÝ MÔN HỌC &amp; TÍNH ĐIỂM TBM CHUẨN QUÂN SỰ" FontSize="20" FontWeight="Bold" Foreground="#0F172A"/>
+                        <TextBlock Text="Tính điểm thành phần theo số tín chỉ, tính TBM toàn khóa chuẩn Excel và nhận diện học viên thiếu môn" 
                                    FontSize="13" Foreground="#64748B" Margin="0,4,0,0"/>
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Button Content="➕ Thêm Môn Tín Chỉ" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"
+                        <Button Content="➕ Thêm Môn Học" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"
                                 Command="{Binding OpenAddSubjectFormCommand}"/>
-                        <Button Content="✏️ Nhập Điểm Học Viên" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"
+                        <Button Content="✏️ Nhập Điểm" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"
                                 Command="{Binding OpenAddScoreFormCommand}"/>
+                        <Button Content="📤 Nhập Excel Chuẩn" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"
+                                ToolTip="Nhập danh mục môn, số tín chỉ và điểm học viên từ file 'Điểm TBM chuẩn .xlsx'"
+                                Command="{Binding ImportStandardExcelCommand}"/>
                         <Button Content="📥 Xuất Báo Cáo Excel" Style="{StaticResource PrimaryButtonStyle}"
                                 Command="{Binding ExportToExcelCommand}"/>
                     </StackPanel>
                 </Grid>
 
-                <!-- 4 THẺ CHỈ SỐ NHANH (SUMMARY KPI CARDS) -->
+                <!-- 5 THẺ CHỈ SỐ NHANH (SUMMARY KPI CARDS) -->
                 <Grid Grid.Row="1" Margin="0,0,0,16">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="12"/>
+                        <ColumnDefinition Width="10"/>
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="12"/>
+                        <ColumnDefinition Width="10"/>
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="12"/>
+                        <ColumnDefinition Width="10"/>
                         <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="1.2*"/>
                     </Grid.ColumnDefinitions>
 
                     <!-- Thẻ 1: Tổng số học viên -->
-                    <Border Grid.Column="0" Style="{StaticResource CardBorderStyle}" Background="#EFF6FF" BorderBrush="#BFDBFE" Padding="14,12">
+                    <Border Grid.Column="0" Style="{StaticResource CardBorderStyle}" Background="#EFF6FF" BorderBrush="#BFDBFE" Padding="12,10">
                         <StackPanel>
-                            <TextBlock Text="👨‍✈️ QUÂN SỐ THEO DÕI" FontSize="11" FontWeight="Bold" Foreground="#1E40AF"/>
-                            <TextBlock Text="{Binding TotalStudentsCount}" FontSize="22" FontWeight="ExtraBold" Foreground="#1E3A8A" Margin="0,4,0,0"/>
-                            <TextBlock Text="Học viên có dữ liệu" FontSize="11" Foreground="#3B82F6" Margin="0,2,0,0"/>
+                            <TextBlock Text="👨‍✈️ QUÂN SỐ" FontSize="11" FontWeight="Bold" Foreground="#1E40AF"/>
+                            <TextBlock Text="{Binding TotalStudentsCount}" FontSize="20" FontWeight="ExtraBold" Foreground="#1E3A8A" Margin="0,3,0,0"/>
+                            <TextBlock Text="Học viên theo dõi" FontSize="10.5" Foreground="#3B82F6" Margin="0,1,0,0"/>
                         </StackPanel>
                     </Border>
 
                     <!-- Thẻ 2: Tổng môn học tín chỉ -->
-                    <Border Grid.Column="2" Style="{StaticResource CardBorderStyle}" Background="#F0FDF4" BorderBrush="#BBF7D0" Padding="14,12">
+                    <Border Grid.Column="2" Style="{StaticResource CardBorderStyle}" Background="#F0FDF4" BorderBrush="#BBF7D0" Padding="12,10">
                         <StackPanel>
-                            <TextBlock Text="📚 MÔN HỌC TÍN CHỈ" FontSize="11" FontWeight="Bold" Foreground="#166534"/>
-                            <TextBlock Text="{Binding TotalSubjectsCount}" FontSize="22" FontWeight="ExtraBold" Foreground="#15803D" Margin="0,4,0,0"/>
-                            <TextBlock Text="Môn đang giảng dạy" FontSize="11" Foreground="#22C55E" Margin="0,2,0,0"/>
+                            <TextBlock Text="📚 MÔN TÍN CHỈ" FontSize="11" FontWeight="Bold" Foreground="#166534"/>
+                            <TextBlock Text="{Binding TotalSubjectsCount}" FontSize="20" FontWeight="ExtraBold" Foreground="#15803D" Margin="0,3,0,0"/>
+                            <TextBlock Text="Môn / thành phần" FontSize="10.5" Foreground="#22C55E" Margin="0,1,0,0"/>
                         </StackPanel>
                     </Border>
 
                     <!-- Thẻ 3: Điểm TB chung toàn đơn vị -->
-                    <Border Grid.Column="4" Style="{StaticResource CardBorderStyle}" Background="#FEFCE8" BorderBrush="#FEF08A" Padding="14,12">
+                    <Border Grid.Column="4" Style="{StaticResource CardBorderStyle}" Background="#F8FAFC" BorderBrush="#E2E8F0" Padding="12,10">
                         <StackPanel>
-                            <TextBlock Text="🎯 ĐIỂM TB TOÀN ĐƠN VỊ" FontSize="11" FontWeight="Bold" Foreground="#854D0E"/>
-                            <TextBlock Text="{Binding AverageOverallGpa, StringFormat='{}{0:F2}'}" FontSize="22" FontWeight="ExtraBold" Foreground="#A16207" Margin="0,4,0,0"/>
-                            <TextBlock Text="Thang điểm 10 tích lũy" FontSize="11" Foreground="#CA8A04" Margin="0,2,0,0"/>
+                            <TextBlock Text="🎯 ĐIỂM TB (GPA)" FontSize="11" FontWeight="Bold" Foreground="#334155"/>
+                            <TextBlock Text="{Binding AverageOverallGpa, StringFormat='{}{0:F2}'}" FontSize="20" FontWeight="ExtraBold" Foreground="#0F172A" Margin="0,3,0,0"/>
+                            <TextBlock Text="Tích lũy toàn khóa" FontSize="10.5" Foreground="#64748B" Margin="0,1,0,0"/>
                         </StackPanel>
                     </Border>
 
-                    <!-- Thẻ 4: Số học viên Xuất sắc -->
-                    <Border Grid.Column="6" Style="{StaticResource CardBorderStyle}" Background="#F5F3FF" BorderBrush="#DDD6FE" Padding="14,12">
+                    <!-- Thẻ 4: Số học viên Giỏi -->
+                    <Border Grid.Column="6" Style="{StaticResource CardBorderStyle}" Background="#F5F3FF" BorderBrush="#DDD6FE" Padding="12,10">
                         <StackPanel>
-                            <TextBlock Text="⭐ HỌC LỰC XUẤT SẮC" FontSize="11" FontWeight="Bold" Foreground="#6D28D9"/>
-                            <TextBlock Text="{Binding ExcellentStudentsCount}" FontSize="22" FontWeight="ExtraBold" Foreground="#5B21B6" Margin="0,4,0,0"/>
-                            <TextBlock Text="GPA &gt;= 8.5 điểm" FontSize="11" Foreground="#7C3AED" Margin="0,2,0,0"/>
+                            <TextBlock Text="⭐ HỌC LỰC GIỎI" FontSize="11" FontWeight="Bold" Foreground="#6D28D9"/>
+                            <TextBlock Text="{Binding ExcellentStudentsCount}" FontSize="20" FontWeight="ExtraBold" Foreground="#5B21B6" Margin="0,3,0,0"/>
+                            <TextBlock Text="TBM &gt;= 8.0 điểm" FontSize="10.5" Foreground="#7C3AED" Margin="0,1,0,0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Thẻ 5: CẢNH BÁO HỌC VIÊN THIẾU MÔN (DÒNG MÀU VÀNG) -->
+                    <Border Grid.Column="8" Style="{StaticResource CardBorderStyle}" Background="#FEF9C3" BorderBrush="#FACC15" Padding="12,10"
+                            Cursor="Hand" ToolTip="Nhấp để lọc nhanh danh sách học viên bị thiếu môn (dòng màu vàng)">
+                        <Border.InputBindings>
+                            <MouseBinding MouseAction="LeftClick" Command="{Binding FilterMissingOnlyCommand}"/>
+                        </Border.InputBindings>
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="⚠️ THIẾU MÔN (DÒNG VÀNG)" FontSize="11" FontWeight="Bold" Foreground="#854D0E"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding MissingSubjectsStudentCount}" FontSize="20" FontWeight="ExtraBold" Foreground="#B45309" Margin="0,3,0,0"/>
+                            <TextBlock Text="Cần tổ chức kiểm tra bù" FontSize="10.5" Foreground="#CA8A04" Margin="0,1,0,0"/>
                         </StackPanel>
                     </Border>
                 </Grid>
@@ -100,7 +154,7 @@
                     <TabControl BorderThickness="0" Background="Transparent" SelectedIndex="{Binding SelectedTabIndex}">
 
                         <!-- ==================== TAB 1: BẢNG ĐIỂM TÍN CHỈ & ĐIỂM TB HỌC VIÊN ==================== -->
-                        <TabItem Header="📊  Bảng Điểm Tín Chỉ &amp; Điểm TB (GPA)" FontSize="13" FontWeight="Bold" Padding="16,10">
+                        <TabItem Header="📊  Bảng Điểm Môn Học &amp; TBM Toàn Khóa" FontSize="13" FontWeight="Bold" Padding="16,10">
                             <Grid Margin="16">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
@@ -111,12 +165,14 @@
                                 <Border Grid.Row="0" Background="#F8FAFC" CornerRadius="8" Padding="12" Margin="0,0,0,14" BorderBrush="#E2E8F0" BorderThickness="1">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="1.5*"/>
-                                            <ColumnDefinition Width="10"/>
                                             <ColumnDefinition Width="1.2*"/>
-                                            <ColumnDefinition Width="10"/>
-                                            <ColumnDefinition Width="2*"/>
-                                            <ColumnDefinition Width="10"/>
+                                            <ColumnDefinition Width="8"/>
+                                            <ColumnDefinition Width="1.1*"/>
+                                            <ColumnDefinition Width="8"/>
+                                            <ColumnDefinition Width="1.4*"/>
+                                            <ColumnDefinition Width="8"/>
+                                            <ColumnDefinition Width="1.8*"/>
+                                            <ColumnDefinition Width="8"/>
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="6"/>
                                             <ColumnDefinition Width="Auto"/>
@@ -124,31 +180,37 @@
 
                                         <!-- Lọc Đơn vị -->
                                         <StackPanel Grid.Column="0">
-                                            <TextBlock Text="Đơn vị / Đại đội:" FontSize="11.5" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                            <TextBlock Text="Đơn vị / Phân đội:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
                                             <ComboBox ItemsSource="{Binding UnitOptions}" SelectedItem="{Binding SelectedUnit}" Height="34"/>
                                         </StackPanel>
 
                                         <!-- Lọc Lớp -->
                                         <StackPanel Grid.Column="2">
-                                            <TextBlock Text="Lớp học viên:" FontSize="11.5" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                            <TextBlock Text="Lớp học viên:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
                                             <ComboBox ItemsSource="{Binding ClassOptions}" SelectedItem="{Binding SelectedClass}" Height="34"/>
                                         </StackPanel>
 
-                                        <!-- Tìm kiếm -->
+                                        <!-- Lọc Trạng thái học tập -->
                                         <StackPanel Grid.Column="4">
-                                            <TextBlock Text="Tìm kiếm học viên:" FontSize="11.5" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                            <TextBlock Text="Trạng thái môn học:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                            <ComboBox ItemsSource="{Binding StatusFilterOptions}" SelectedItem="{Binding SelectedStatusFilter}" Height="34"/>
+                                        </StackPanel>
+
+                                        <!-- Tìm kiếm -->
+                                        <StackPanel Grid.Column="6">
+                                            <TextBlock Text="Tìm kiếm học viên:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
                                             <TextBox Text="{Binding SearchKeyword, UpdateSourceTrigger=PropertyChanged}" Height="34" 
                                                      VerticalContentAlignment="Center" Style="{StaticResource ModernTextBoxStyle}"
                                                      Tag="Nhập họ tên hoặc mã học viên..."/>
                                         </StackPanel>
 
                                         <!-- Nút Áp dụng Lọc -->
-                                        <Button Grid.Column="6" Content="🔍 Lọc" Style="{StaticResource PrimaryButtonStyle}" 
+                                        <Button Grid.Column="8" Content="🔍 Lọc" Style="{StaticResource PrimaryButtonStyle}" 
                                                 Height="34" VerticalAlignment="Bottom" Padding="14,0"
                                                 Command="{Binding FilterCommand}"/>
 
                                         <!-- Nút Đặt lại -->
-                                        <Button Grid.Column="8" Content="🔄 Đặt Lại" Style="{StaticResource SecondaryButtonStyle}" 
+                                        <Button Grid.Column="10" Content="🔄 Đặt Lại" Style="{StaticResource SecondaryButtonStyle}" 
                                                 Height="34" VerticalAlignment="Bottom" Padding="12,0"
                                                 Command="{Binding ResetFilterCommand}"/>
                                     </Grid>
@@ -160,6 +222,16 @@
                                           CanUserAddRows="False" SelectionMode="Single"
                                           GridLinesVisibility="Horizontal" HeadersVisibility="Column"
                                           Background="White" RowHeight="40">
+                                    <DataGrid.RowStyle>
+                                        <Style TargetType="DataGridRow">
+                                            <Setter Property="Background" Value="{Binding RowBackground, Converter={StaticResource StringToBrush}}"/>
+                                            <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="#F1F5F9"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </DataGrid.RowStyle>
                                     <DataGrid.Columns>
                                         <DataGridTextColumn Header="Mã HV" Binding="{Binding CadetCode}" Width="90">
                                             <DataGridTextColumn.ElementStyle>
@@ -189,7 +261,7 @@
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
 
-                                        <DataGridTextColumn Header="Đơn Vị" Binding="{Binding Unit}" Width="100">
+                                        <DataGridTextColumn Header="Đơn Vị" Binding="{Binding Unit}" Width="90">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock">
                                                     <Setter Property="VerticalAlignment" Value="Center"/>
@@ -197,7 +269,7 @@
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
 
-                                        <DataGridTextColumn Header="Lớp" Binding="{Binding ClassName}" Width="100">
+                                        <DataGridTextColumn Header="Lớp" Binding="{Binding ClassName}" Width="90">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock">
                                                     <Setter Property="VerticalAlignment" Value="Center"/>
@@ -205,7 +277,7 @@
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
 
-                                        <DataGridTextColumn Header="Môn Đã Học" Binding="{Binding TotalSubjectsCompleted, StringFormat='{}{0} môn'}" Width="110">
+                                        <DataGridTextColumn Header="Môn Đã Học" Binding="{Binding TotalSubjectsCompleted, StringFormat='{}{0} môn'}" Width="100">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock">
                                                     <Setter Property="VerticalAlignment" Value="Center"/>
@@ -214,7 +286,7 @@
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
 
-                                        <DataGridTextColumn Header="Tổng Tín Chỉ" Binding="{Binding TotalCreditsEarned, StringFormat='{}{0} TC'}" Width="100">
+                                        <DataGridTextColumn Header="Tổng Tín Chỉ" Binding="{Binding TotalCreditsEarned, StringFormat='{}{0:F2} TC'}" Width="105">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock">
                                                     <Setter Property="FontWeight" Value="Bold"/>
@@ -225,8 +297,8 @@
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
 
-                                        <!-- CỘT ĐIỂM TB (GPA) NỔI BẬT THEO CÔNG THỨC TRỌNG SỐ TÍN CHỈ -->
-                                        <DataGridTemplateColumn Header="ĐIỂM TB (GPA)" Width="120">
+                                        <!-- CỘT ĐIỂM TB (TBM) CHUẨN ROUNDDOWN TRỌNG SỐ TÍN CHỈ -->
+                                        <DataGridTemplateColumn Header="ĐIỂM TB (TBM)" Width="120">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <Border Background="{Binding RatingBackground, Converter={StaticResource StringToBrush}}" 
@@ -239,8 +311,8 @@
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
 
-                                        <!-- XẾP LOẠI HỌC LỰC -->
-                                        <DataGridTemplateColumn Header="XẾP LOẠI" Width="110">
+                                        <!-- XẾP LOẠI HỌC TẬP -->
+                                        <DataGridTemplateColumn Header="XẾP LOẠI" Width="100">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <Border Background="{Binding RatingBackground, Converter={StaticResource StringToBrush}}" 
@@ -252,14 +324,34 @@
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
 
-                                        <!-- THAO TÁC -->
-                                        <DataGridTemplateColumn Header="Thao Tác" Width="100">
+                                        <!-- CỘT TRẠNG THÁI MÔN (NHẬN DIỆN HỌC VIÊN THIẾU MÔN - DÒNG MÀU VÀNG) -->
+                                        <DataGridTemplateColumn Header="Trạng Thái Môn" Width="140">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <Button Content="✏️ Nhập điểm" Style="{StaticResource SecondaryButtonStyle}" 
-                                                            Padding="6,2" FontSize="11"
-                                                            Command="{Binding DataContext.OpenAddScoreFormCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                            CommandParameter="{Binding}"/>
+                                                    <Border Background="{Binding StatusBadgeBg, Converter={StaticResource StringToBrush}}" 
+                                                            CornerRadius="4" Padding="8,3" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                            ToolTip="{Binding MissingSubjectsDisplay}">
+                                                        <TextBlock Text="{Binding StatusDisplay}" FontSize="11" FontWeight="Bold" 
+                                                                   Foreground="{Binding StatusBadgeColor, Converter={StaticResource StringToBrush}}"/>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+
+                                        <!-- THAO TÁC -->
+                                        <DataGridTemplateColumn Header="Thao Tác" Width="165">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                        <Button Content="🔍 Chi tiết" Style="{StaticResource SecondaryButtonStyle}" 
+                                                                Padding="6,2" Margin="0,0,4,0" FontSize="11" ToolTip="Xem phân rã điểm thành phần môn học"
+                                                                Command="{Binding DataContext.OpenBreakdownModalCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                                CommandParameter="{Binding}"/>
+                                                        <Button Content="✏️ Nhập điểm" Style="{StaticResource SecondaryButtonStyle}" 
+                                                                Padding="6,2" FontSize="11"
+                                                                Command="{Binding DataContext.OpenAddScoreFormCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                                CommandParameter="{Binding}"/>
+                                                    </StackPanel>
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
@@ -319,6 +411,16 @@
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
 
+                                        <DataGridTemplateColumn Header="Số Đợt Thi" Width="100">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Border Background="#F1F5F9" CornerRadius="4" Padding="8,3" HorizontalAlignment="Center">
+                                                        <TextBlock Text="{Binding ComponentCount, StringFormat='{}{0} đợt'}" FontWeight="SemiBold" Foreground="#334155"/>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+
                                         <DataGridTemplateColumn Header="Dạng Đánh Giá" Width="170">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
@@ -338,7 +440,7 @@
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
 
-                                        <DataGridTemplateColumn Header="Hành Động" Width="130">
+                                        <DataGridTemplateColumn Header="Hành Động" Width="110">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
@@ -364,49 +466,132 @@
 
             <!-- ==================== MODAL FORM: THÊM / SỬA MÔN HỌC TÍN CHỈ ==================== -->
             <Grid Background="#80000000" Visibility="{Binding IsSubjectFormVisible, Converter={StaticResource BoolToVis}}">
-                <Border Background="White" CornerRadius="10" Width="480" VerticalAlignment="Center" HorizontalAlignment="Center"
+                <Border Background="White" CornerRadius="12" Width="520" MaxHeight="660" VerticalAlignment="Center" HorizontalAlignment="Center"
                         Padding="24" Effect="{StaticResource ShadowEffect}">
-                    <StackPanel>
-                        <TextBlock Text="THÔNG TIN MÔN HỌC TÍN CHỈ" 
-                                   FontSize="16" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,16"/>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
 
-                        <!-- Mã môn -->
-                        <TextBlock Text="Mã môn học:*" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
-                        <TextBox Text="{Binding SubjectCode, UpdateSourceTrigger=PropertyChanged}" Height="34" 
-                                 Style="{StaticResource ModernTextBoxStyle}" Margin="0,0,0,12"/>
+                        <!-- Header Modal -->
+                        <TextBlock Grid.Row="0" Text="THÔNG TIN MÔN HỌC &amp; CÁC ĐỢT KIỂM TRA" 
+                                   FontSize="16" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,14"/>
 
-                        <!-- Tên môn -->
-                        <TextBlock Text="Tên môn học:*" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
-                        <TextBox Text="{Binding SubjectName, UpdateSourceTrigger=PropertyChanged}" Height="34" 
-                                 Style="{StaticResource ModernTextBoxStyle}" Margin="0,0,0,12"/>
+                        <!-- Nội dung Form (Cuộn được) -->
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,0,0,14">
+                            <StackPanel>
+                                <!-- Mã môn & Tên môn -->
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="140"/>
+                                        <ColumnDefinition Width="12"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
 
-                        <!-- Số tín chỉ & Dạng đánh giá -->
-                        <Grid Margin="0,0,0,12">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="12"/>
-                                <ColumnDefinition Width="1.5*"/>
-                            </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Mã môn học:*" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                        <TextBox Text="{Binding SubjectCode, UpdateSourceTrigger=PropertyChanged}" Height="34" 
+                                                 Style="{StaticResource ModernTextBoxStyle}" Tag="VD: CNTT"/>
+                                    </StackPanel>
 
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="Số tín chỉ:*" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
-                                <TextBox Text="{Binding Credits, UpdateSourceTrigger=PropertyChanged}" Height="34" 
-                                         Style="{StaticResource ModernTextBoxStyle}"/>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Tên môn học:*" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                        <TextBox Text="{Binding SubjectName, UpdateSourceTrigger=PropertyChanged}" Height="34" 
+                                                 Style="{StaticResource ModernTextBoxStyle}" Tag="VD: Công nghệ thông tin"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <!-- Tổng tín chỉ & Dạng đánh giá -->
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="140"/>
+                                        <ColumnDefinition Width="12"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Tổng số tín chỉ:*" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                        <TextBox Text="{Binding Credits, UpdateSourceTrigger=PropertyChanged}" Height="34" 
+                                                 FontWeight="Bold" Foreground="#1E3A8A" Style="{StaticResource ModernTextBoxStyle}" Tag="VD: 2.4"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Dạng kiểm tra/thi:*" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                        <ComboBox ItemsSource="{Binding AssessmentTypes}" SelectedItem="{Binding AssessmentType}" Height="34"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <!-- Danh sách các đợt thi / kiểm tra trực thuộc môn -->
+                                <Border Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="14,12" Margin="0,0,0,12">
+                                    <StackPanel>
+                                        <Grid Margin="0,0,0,8">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <TextBlock Text="🎯 Các đợt thi / kiểm tra:" FontSize="13" FontWeight="Bold" Foreground="#1E3A8A"/>
+                                                <TextBlock Text=" (Tùy ý tạo 1, 2, 3... đợt)" FontSize="11" Foreground="#64748B" Margin="6,2,0,0"/>
+                                            </StackPanel>
+                                            <Button Content="➕ Thêm đợt" Style="{StaticResource SecondaryButtonStyle}" 
+                                                    HorizontalAlignment="Right" Padding="12,3" FontSize="11.5" Height="28"
+                                                    Command="{Binding AddComponentRowCommand}"/>
+                                        </Grid>
+
+                                        <!-- Tiêu đề cột các đợt -->
+                                        <Grid Margin="0,4,0,6">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="10"/>
+                                                <ColumnDefinition Width="110"/>
+                                                <ColumnDefinition Width="8"/>
+                                                <ColumnDefinition Width="36"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Tên đợt thi / kiểm tra" FontSize="11.5" FontWeight="SemiBold" Foreground="#64748B"/>
+                                            <TextBlock Grid.Column="2" Text="Tín chỉ (TC)" FontSize="11.5" FontWeight="SemiBold" Foreground="#64748B" HorizontalAlignment="Center"/>
+                                        </Grid>
+
+                                        <ScrollViewer MaxHeight="220" VerticalScrollBarVisibility="Auto">
+                                            <ItemsControl ItemsSource="{Binding FormComponents}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Grid Margin="0,0,0,8">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="10"/>
+                                                                <ColumnDefinition Width="110"/>
+                                                                <ColumnDefinition Width="8"/>
+                                                                <ColumnDefinition Width="36"/>
+                                                            </Grid.ColumnDefinitions>
+
+                                                            <TextBox Grid.Column="0" Text="{Binding ComponentName, UpdateSourceTrigger=PropertyChanged}" 
+                                                                     Height="36" FontSize="13" Padding="10,0" VerticalContentAlignment="Center"
+                                                                     Style="{StaticResource ModernTextBoxStyle}" Tag="Tên đợt (VD: Kiểm tra thường xuyên, Thi kết thúc...)"/>
+                                                            <TextBox Grid.Column="2" Text="{Binding Credits, UpdateSourceTrigger=PropertyChanged}" 
+                                                                     Height="36" FontSize="13" Padding="6,0" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"
+                                                                     FontWeight="Bold" Foreground="#1E3A8A"
+                                                                     Style="{StaticResource ModernTextBoxStyle}" Tag="Tín chỉ"/>
+                                                            <Button Grid.Column="4" Content="🗑️" Style="{StaticResource DangerButtonStyle}" 
+                                                                    Height="36" Width="36" Padding="0" FontSize="12" ToolTip="Xóa đợt này"
+                                                                    Command="{Binding DataContext.RemoveComponentRowCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                                    CommandParameter="{Binding}"/>
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </ScrollViewer>
+                                        <TextBlock Text="* Tổng tín chỉ của môn tự động cộng dồn từ số tín chỉ các đợt kiểm tra trên." 
+                                                   FontSize="11" FontStyle="Italic" Foreground="#64748B" Margin="0,6,0,0"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Mô tả -->
+                                <TextBlock Text="Mô tả / Ghi chú:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                <TextBox Text="{Binding SubjectDescription, UpdateSourceTrigger=PropertyChanged}" Height="50" 
+                                         TextWrapping="Wrap" AcceptsReturn="True" Style="{StaticResource ModernTextBoxStyle}"/>
                             </StackPanel>
-
-                            <StackPanel Grid.Column="2">
-                                <TextBlock Text="Dạng kiểm tra/thi:*" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
-                                <ComboBox ItemsSource="{Binding AssessmentTypes}" SelectedItem="{Binding AssessmentType}" Height="34"/>
-                            </StackPanel>
-                        </Grid>
-
-                        <!-- Mô tả -->
-                        <TextBlock Text="Mô tả / Ghi chú:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
-                        <TextBox Text="{Binding SubjectDescription, UpdateSourceTrigger=PropertyChanged}" Height="60" 
-                                 TextWrapping="Wrap" AcceptsReturn="True" Style="{StaticResource ModernTextBoxStyle}" Margin="0,0,0,16"/>
+                        </ScrollViewer>
 
                         <!-- Nút Lưu & Hủy -->
-                        <Grid>
+                        <Grid Grid.Row="2">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="10"/>
@@ -418,95 +603,541 @@
                             <Button Grid.Column="2" Content="Lưu Môn Học" Style="{StaticResource PrimaryButtonStyle}" Height="36"
                                     Command="{Binding SaveSubjectFormCommand}"/>
                         </Grid>
-                    </StackPanel>
+                    </Grid>
                 </Border>
             </Grid>
 
             <!-- ==================== MODAL FORM: NHẬP / SỬA ĐIỂM HỌC VIÊN ==================== -->
-            <Grid Background="#80000000" Visibility="{Binding IsScoreFormVisible, Converter={StaticResource BoolToVis}}">
-                <Border Background="White" CornerRadius="10" Width="520" VerticalAlignment="Center" HorizontalAlignment="Center"
+            <Grid Background="#80000000" Visibility="{Binding IsCadetScoreModalVisible, Converter={StaticResource BoolToVis}}">
+                <Border Background="White" CornerRadius="12" Width="680" MaxHeight="650" VerticalAlignment="Center" HorizontalAlignment="Center"
                         Padding="24" Effect="{StaticResource ShadowEffect}">
-                    <StackPanel>
-                        <TextBlock Text="NHẬP ĐIỂM HỌC PHẦN TÍN CHỈ" FontSize="16" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,16"/>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
 
-                        <!-- Chọn học viên -->
-                        <TextBlock Text="Học viên:*" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
-                        <ComboBox ItemsSource="{Binding AllCadets}" SelectedItem="{Binding SelectedCadetForScore}" 
-                                  DisplayMemberPath="FullName" Height="34" Margin="0,0,0,12"/>
-
-                        <!-- Chọn môn học -->
-                        <TextBlock Text="Môn học tín chỉ:*" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
-                        <ComboBox ItemsSource="{Binding Subjects}" SelectedItem="{Binding SelectedSubjectForScore}" 
-                                  DisplayMemberPath="SubjectName" Height="34" Margin="0,0,0,12"/>
-
-                        <!-- Điểm KTTX & Điểm Thi & Điểm Tổng Kết -->
-                        <Grid Margin="0,0,0,12">
+                        <!-- Row 0: Header Modal -->
+                        <Grid Grid.Row="0" Margin="0,0,0,16">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="10"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="10"/>
-                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
 
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="Điểm KTTX:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
-                                <TextBox Text="{Binding InputRegularScore, UpdateSourceTrigger=PropertyChanged}" Height="34" 
-                                         Style="{StaticResource ModernTextBoxStyle}"/>
+                                <TextBlock Text="{Binding CadetScoreModalTitle}" FontSize="15" FontWeight="Bold" Foreground="#0F172A" TextWrapping="Wrap"/>
+                                <TextBlock Text="Nhập điểm các đợt kiểm tra / thi của môn học. Cột chưa thi để trống." 
+                                           FontSize="12" Foreground="#64748B" Margin="0,4,0,0"/>
                             </StackPanel>
 
-                            <StackPanel Grid.Column="2">
-                                <TextBlock Text="Điểm Thi:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
-                                <TextBox Text="{Binding InputExamScore, UpdateSourceTrigger=PropertyChanged}" Height="34" 
-                                         Style="{StaticResource ModernTextBoxStyle}"/>
-                            </StackPanel>
-
-                            <StackPanel Grid.Column="4">
-                                <TextBlock Text="Điểm Tổng Kết:*" FontSize="12" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,4"/>
-                                <TextBox Text="{Binding InputFinalScore, UpdateSourceTrigger=PropertyChanged}" Height="34" 
-                                         FontWeight="Bold" Foreground="#1E3A8A" Style="{StaticResource ModernTextBoxStyle}"/>
-                            </StackPanel>
+                            <Button Grid.Column="1" Content="✕" Width="30" Height="30" VerticalAlignment="Top"
+                                    Background="Transparent" BorderThickness="0" Foreground="#94A3B8" Cursor="Hand" FontSize="14"
+                                    Command="{Binding CloseCadetScoreModalCommand}"/>
                         </Grid>
 
-                        <!-- Đợt thi & Ngày thi -->
-                        <Grid Margin="0,0,0,12">
+                        <!-- Row 1: Chọn Môn Học Cần Nhập -->
+                        <Border Grid.Row="1" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="14,10" Margin="0,0,0,14">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="200"/>
+                                    <ColumnDefinition Width="12"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Ô tìm kiếm môn -->
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="🔍 Tìm môn học:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                    <TextBox Text="{Binding CadetModalSearchSubjectText, UpdateSourceTrigger=PropertyChanged}" Height="34" 
+                                             Style="{StaticResource ModernTextBoxStyle}" Tag="Mã hoặc tên môn..."/>
+                                </StackPanel>
+
+                                <!-- ComboBox chọn môn -->
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Môn học tín chỉ:*" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                    <ComboBox ItemsSource="{Binding FilteredSubjectsForCadet}" 
+                                              SelectedItem="{Binding SelectedSubjectForCadetScore}" 
+                                              DisplayMemberPath="SubjectName" Height="34"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- Row 2: Danh sách các đợt kiểm tra trực thuộc môn học -->
+                        <Border Grid.Row="2" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="14" Margin="0,0,0,14">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- Header bảng đợt thi -->
+                                <Grid Grid.Row="0" Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="40"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="100"/>
+                                        <ColumnDefinition Width="120"/>
+                                        <ColumnDefinition Width="60"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="STT" FontSize="11.5" FontWeight="Bold" Foreground="#64748B" HorizontalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" Text="Tên Đợt Thi / Kiểm Tra" FontSize="11.5" FontWeight="Bold" Foreground="#64748B"/>
+                                    <TextBlock Grid.Column="2" Text="Số Tín Chỉ" FontSize="11.5" FontWeight="Bold" Foreground="#64748B" HorizontalAlignment="Center"/>
+                                    <TextBlock Grid.Column="3" Text="Điểm Số (0-10)" FontSize="11.5" FontWeight="Bold" Foreground="#1E3A8A" HorizontalAlignment="Center"/>
+                                    <TextBlock Grid.Column="4" Text="Cảnh Báo" FontSize="11.5" FontWeight="Bold" Foreground="#64748B" HorizontalAlignment="Center"/>
+                                </Grid>
+
+                                <Separator Grid.Row="0" VerticalAlignment="Bottom" Background="#CBD5E1" Margin="0,0,0,-4"/>
+
+                                <!-- Items đợt thi -->
+                                <ScrollViewer Grid.Row="1" MaxHeight="240" VerticalScrollBarVisibility="Auto" Margin="0,6,0,0">
+                                    <ItemsControl ItemsSource="{Binding CadetComponentGradeItems}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border BorderBrush="#F1F5F9" BorderThickness="0,0,0,1" Padding="0,6">
+                                                    <Grid VerticalAlignment="Center">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="40"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="100"/>
+                                                            <ColumnDefinition Width="120"/>
+                                                            <ColumnDefinition Width="60"/>
+                                                        </Grid.ColumnDefinitions>
+
+                                                        <TextBlock Grid.Column="0" Text="•" FontSize="16" FontWeight="Bold" Foreground="#3B82F6" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+                                                        <TextBlock Grid.Column="1" Text="{Binding ComponentName}" FontSize="13" FontWeight="SemiBold" Foreground="#0F172A" VerticalAlignment="Center"/>
+
+                                                        <Border Grid.Column="2" Background="#EFF6FF" CornerRadius="4" Padding="6,2" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                            <TextBlock Text="{Binding Credits, StringFormat='{}{0:F2} TC'}" FontSize="11.5" FontWeight="Bold" Foreground="#1E40AF"/>
+                                                        </Border>
+
+                                                        <TextBox Grid.Column="3" 
+                                                                 Text="{Binding Score, Converter={StaticResource NullableDoubleConverter}, UpdateSourceTrigger=LostFocus}"
+                                                                 Style="{StaticResource MatrixScoreTextBoxStyle}"
+                                                                 Height="32" Width="90"
+                                                                 HorizontalAlignment="Center"
+                                                                 GotFocus="ScoreTextBox_GotFocus"
+                                                                 PreviewMouseLeftButtonDown="ScoreTextBox_PreviewMouseLeftButtonDown"
+                                                                 KeyDown="ScoreTextBox_KeyDown"/>
+
+                                                        <StackPanel Grid.Column="4" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                            <TextBlock Text="⚠️" FontSize="14" ToolTip="{Binding WarningTooltip}"
+                                                                       Visibility="{Binding HasMissingWarning, Converter={StaticResource BoolToVis}}"/>
+                                                        </StackPanel>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+                            </Grid>
+                        </Border>
+
+                        <!-- Row 3: Thanh Tóm Tắt Điểm Môn -->
+                        <Border Grid.Row="3" Background="#F0FDF4" BorderBrush="#BBF7D0" BorderThickness="1" CornerRadius="8" Padding="14,10" Margin="0,0,0,16">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="12"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                    <TextBlock Text="Điểm trung bình môn (tính tự động theo trọng số tín chỉ):" FontSize="12" Foreground="#166534"/>
+                                    <TextBlock Text="Công thức: Tổng (Điểm đợt × Tín chỉ đợt) / Tổng tín chỉ môn" FontSize="10.5" Foreground="#64748B" FontStyle="Italic"/>
+                                </StackPanel>
+
+                                <Border Grid.Column="1" Background="#DCFCE7" CornerRadius="6" Padding="12,4" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding CadetCalculatedSubjectScoreDisplay}" FontSize="16" FontWeight="ExtraBold" Foreground="#15803D"/>
+                                </Border>
+
+                                <Border Grid.Column="3" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="8,4" VerticalAlignment="Center"
+                                        ToolTip="{Binding CadetSubjectStatusTooltip}">
+                                    <TextBlock Text="{Binding CadetSubjectStatusIcon}" FontSize="15" FontWeight="Bold"/>
+                                </Border>
+                            </Grid>
+                        </Border>
+
+                        <!-- Row 4: Nút Đóng & Lưu -->
+                        <Grid Grid.Row="4">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="12"/>
                                 <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Button Grid.Column="0" Content="✕ Đóng" Style="{StaticResource SecondaryButtonStyle}" Height="36"
+                                    Command="{Binding CloseCadetScoreModalCommand}"/>
+                            <Button Grid.Column="2" Content="💾 Lưu Điểm Học Viên" Style="{StaticResource PrimaryButtonStyle}" Height="36"
+                                    Command="{Binding SaveCadetScoreModalCommand}"/>
+                        </Grid>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- ==================== MODAL: MA TRẬN BẢNG NHẬP ĐIỂM THEO MÔN HỌC ==================== -->
+            <Grid Background="#80000000" Visibility="{Binding IsGradeMatrixModalVisible, Converter={StaticResource BoolToVis}}">
+                <Border Background="White" CornerRadius="12" Width="980" MaxHeight="680" VerticalAlignment="Center" HorizontalAlignment="Center"
+                        Padding="24" Effect="{StaticResource ShadowEffect}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Header Modal -->
+                        <Grid Grid.Row="0" Margin="0,0,0,14">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
 
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="Học kỳ / Đợt thi:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
-                                <TextBox Text="{Binding InputExamSession, UpdateSourceTrigger=PropertyChanged}" Height="34" 
-                                         Style="{StaticResource ModernTextBoxStyle}"/>
+                                <TextBlock Text="📝 BẢNG NHẬP ĐIỂM THEO MÔN HỌC" FontSize="17" FontWeight="ExtraBold" Foreground="#0F172A"/>
+                                <TextBlock Text="Cột điểm tự động thay đổi theo các đợt thi/kiểm tra trực thuộc. Cột chưa thi để trống. Đợt đã có trên 10 học viên thi sẽ đánh dấu dòng vàng." 
+                                           FontSize="12" Foreground="#64748B" Margin="0,4,0,0"/>
                             </StackPanel>
 
-                            <StackPanel Grid.Column="2">
-                                <TextBlock Text="Ngày kiểm tra/thi:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
-                                <DatePicker SelectedDate="{Binding InputExamDate}" Height="34"/>
+                            <Button Grid.Column="1" Content="✕" Width="30" Height="30" VerticalAlignment="Top"
+                                    Background="Transparent" BorderThickness="0" Foreground="#94A3B8" Cursor="Hand" FontSize="14"
+                                    Command="{Binding CloseGradeMatrixModalCommand}"/>
+                        </Grid>
+
+                        <!-- Thanh chọn & Tìm kiếm Môn học -->
+                        <Border Grid.Row="1" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="14,10" Margin="0,0,0,12">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="220"/>
+                                    <ColumnDefinition Width="10"/>
+                                    <ColumnDefinition Width="280"/>
+                                    <ColumnDefinition Width="12"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Ô tìm kiếm môn -->
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="🔍 Tìm môn học:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,3"/>
+                                    <TextBox Text="{Binding SearchSubjectText, UpdateSourceTrigger=PropertyChanged}" Height="32" 
+                                             Style="{StaticResource ModernTextBoxStyle}" Tag="Gõ mã hoặc tên môn..."/>
+                                </StackPanel>
+
+                                <!-- ComboBox chọn môn -->
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Chọn môn học cần nhập:*" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,3"/>
+                                    <ComboBox ItemsSource="{Binding FilteredSubjectsForGrading}" 
+                                              SelectedItem="{Binding SelectedSubjectForGrading}" 
+                                              DisplayMemberPath="SubjectName" Height="32"/>
+                                </StackPanel>
+
+                                <!-- Thông tin tóm tắt môn -->
+                                <Border Grid.Column="4" Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="6" Padding="10,4" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding CurrentSubjectInfoText}" FontSize="12" FontWeight="SemiBold" Foreground="#1E40AF" TextWrapping="Wrap"/>
+                                </Border>
+                            </Grid>
+                        </Border>
+
+                        <!-- DataGrid Ma Trận Điểm -->
+                        <DataGrid Grid.Row="2" ItemsSource="{Binding SubjectGradeRows}"
+                                  AutoGenerateColumns="False" CanUserAddRows="False"
+                                  IsReadOnly="False" SelectionUnit="FullRow"
+                                  GridLinesVisibility="Horizontal" HeadersVisibility="Column"
+                                  Background="White" RowHeight="38" MaxHeight="430"
+                                  BorderBrush="#CBD5E1" BorderThickness="1">
+                            <DataGrid.RowStyle>
+                                <Style TargetType="DataGridRow">
+                                    <Setter Property="Background" Value="{Binding RowBackground, Converter={StaticResource StringToBrush}}"/>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter Property="Background" Value="#DBEAFE"/>
+                                            <Setter Property="Foreground" Value="#0F172A"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DataGrid.RowStyle>
+
+                            <DataGrid.Columns>
+                                <!-- Cột Mã HV -->
+                                <DataGridTextColumn Header="Mã HV" Binding="{Binding CadetCode}" Width="85" IsReadOnly="True">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="FontWeight" Value="Bold"/>
+                                            <Setter Property="Foreground" Value="#1E3A8A"/>
+                                            <Setter Property="VerticalAlignment" Value="Center"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+
+                                <!-- Cột Họ và tên -->
+                                <DataGridTextColumn Header="Họ và Tên" Binding="{Binding FullName}" Width="160" IsReadOnly="True">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                            <Setter Property="Foreground" Value="#0F172A"/>
+                                            <Setter Property="VerticalAlignment" Value="Center"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+
+                                <!-- Cột Đơn vị -->
+                                <DataGridTextColumn Header="Đơn Vị" Binding="{Binding Unit}" Width="75" IsReadOnly="True">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="VerticalAlignment" Value="Center"/>
+                                            <Setter Property="Foreground" Value="#475569"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+
+                                <!-- Cột Đợt 1 -->
+                                <DataGridTemplateColumn Header="{Binding Data.Col1Header, Source={StaticResource Proxy}}"
+                                                        Visibility="{Binding Data.IsCol1Visible, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}"
+                                                        Width="110">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBox Text="{Binding Score1, Converter={StaticResource NullableDoubleConverter}, UpdateSourceTrigger=LostFocus}"
+                                                     Style="{StaticResource MatrixScoreTextBoxStyle}"
+                                                     Height="28" Width="80"
+                                                     GotFocus="ScoreTextBox_GotFocus"
+                                                     PreviewMouseLeftButtonDown="ScoreTextBox_PreviewMouseLeftButtonDown"
+                                                     KeyDown="ScoreTextBox_KeyDown"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <!-- Cột Đợt 2 -->
+                                <DataGridTemplateColumn Header="{Binding Data.Col2Header, Source={StaticResource Proxy}}"
+                                                        Visibility="{Binding Data.IsCol2Visible, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}"
+                                                        Width="110">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBox Text="{Binding Score2, Converter={StaticResource NullableDoubleConverter}, UpdateSourceTrigger=LostFocus}"
+                                                     Style="{StaticResource MatrixScoreTextBoxStyle}"
+                                                     Height="28" Width="80"
+                                                     GotFocus="ScoreTextBox_GotFocus"
+                                                     PreviewMouseLeftButtonDown="ScoreTextBox_PreviewMouseLeftButtonDown"
+                                                     KeyDown="ScoreTextBox_KeyDown"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <!-- Cột Đợt 3 -->
+                                <DataGridTemplateColumn Header="{Binding Data.Col3Header, Source={StaticResource Proxy}}"
+                                                        Visibility="{Binding Data.IsCol3Visible, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}"
+                                                        Width="110">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBox Text="{Binding Score3, Converter={StaticResource NullableDoubleConverter}, UpdateSourceTrigger=LostFocus}"
+                                                     Style="{StaticResource MatrixScoreTextBoxStyle}"
+                                                     Height="28" Width="80"
+                                                     GotFocus="ScoreTextBox_GotFocus"
+                                                     PreviewMouseLeftButtonDown="ScoreTextBox_PreviewMouseLeftButtonDown"
+                                                     KeyDown="ScoreTextBox_KeyDown"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <!-- Cột Đợt 4 -->
+                                <DataGridTemplateColumn Header="{Binding Data.Col4Header, Source={StaticResource Proxy}}"
+                                                        Visibility="{Binding Data.IsCol4Visible, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}"
+                                                        Width="110">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBox Text="{Binding Score4, Converter={StaticResource NullableDoubleConverter}, UpdateSourceTrigger=LostFocus}"
+                                                     Style="{StaticResource MatrixScoreTextBoxStyle}"
+                                                     Height="28" Width="80"
+                                                     GotFocus="ScoreTextBox_GotFocus"
+                                                     PreviewMouseLeftButtonDown="ScoreTextBox_PreviewMouseLeftButtonDown"
+                                                     KeyDown="ScoreTextBox_KeyDown"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <!-- Cột Đợt 5 -->
+                                <DataGridTemplateColumn Header="{Binding Data.Col5Header, Source={StaticResource Proxy}}"
+                                                        Visibility="{Binding Data.IsCol5Visible, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}"
+                                                        Width="110">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBox Text="{Binding Score5, Converter={StaticResource NullableDoubleConverter}, UpdateSourceTrigger=LostFocus}"
+                                                     Style="{StaticResource MatrixScoreTextBoxStyle}"
+                                                     Height="28" Width="80"
+                                                     GotFocus="ScoreTextBox_GotFocus"
+                                                     PreviewMouseLeftButtonDown="ScoreTextBox_PreviewMouseLeftButtonDown"
+                                                     KeyDown="ScoreTextBox_KeyDown"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <!-- Cột Đợt 6 -->
+                                <DataGridTemplateColumn Header="{Binding Data.Col6Header, Source={StaticResource Proxy}}"
+                                                        Visibility="{Binding Data.IsCol6Visible, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}"
+                                                        Width="110">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBox Text="{Binding Score6, Converter={StaticResource NullableDoubleConverter}, UpdateSourceTrigger=LostFocus}"
+                                                     Style="{StaticResource MatrixScoreTextBoxStyle}"
+                                                     Height="28" Width="80"
+                                                     GotFocus="ScoreTextBox_GotFocus"
+                                                     PreviewMouseLeftButtonDown="ScoreTextBox_PreviewMouseLeftButtonDown"
+                                                     KeyDown="ScoreTextBox_KeyDown"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <!-- Cột Điểm Môn (Tổng kết) -->
+                                <DataGridTemplateColumn Header="Điểm Môn" Width="95" IsReadOnly="True">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border Background="#EFF6FF" CornerRadius="4" Padding="6,2" HorizontalAlignment="Center">
+                                                <TextBlock Text="{Binding CalculatedSubjectScoreDisplay}" 
+                                                           FontWeight="ExtraBold" Foreground="#1D4ED8" HorizontalAlignment="Center"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <!-- Cột Trạng thái cảnh báo (Chưa thi / Dòng vàng) -->
+                                <DataGridTemplateColumn Header="Trạng Thái" Width="65">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{Binding StatusBadgeBg, Converter={StaticResource StringToBrush}}"
+                                                    CornerRadius="4" Padding="6,2" HorizontalAlignment="Center"
+                                                    ToolTip="{Binding StatusBadgeTooltip}">
+                                                <TextBlock Text="{Binding StatusBadgeText}" 
+                                                           FontSize="14" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <!-- Footer Modal: Chú thích & Nút Lưu/Đóng -->
+                        <Grid Grid.Row="3" Margin="0,14,0,0">
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="* Dòng màu vàng: Học viên chưa thi ở các đợt kiểm tra đã được tổ chức (đã có trên 10 học viên có điểm)." 
+                                           FontSize="11.5" FontWeight="SemiBold" Foreground="#B45309"/>
+                                <TextBlock Text="* Điểm môn được tính: Tổng (Điểm đợt × Tín chỉ đợt) / Tổng tín chỉ môn." 
+                                           FontSize="11" Foreground="#64748B" Margin="0,2,0,0"/>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                <Button Content="✕ Đóng" Style="{StaticResource SecondaryButtonStyle}" Height="36" Width="90" Margin="0,0,10,0"
+                                        Command="{Binding CloseGradeMatrixModalCommand}"/>
+                                <Button Content="💾 Lưu Bảng Điểm" Style="{StaticResource PrimaryButtonStyle}" Height="36" Padding="18,0"
+                                        Command="{Binding SaveGradeMatrixCommand}"/>
                             </StackPanel>
                         </Grid>
+                    </Grid>
+                </Border>
+            </Grid>
 
-                        <!-- Ghi chú -->
-                        <TextBlock Text="Ghi chú:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
-                        <TextBox Text="{Binding InputScoreNotes, UpdateSourceTrigger=PropertyChanged}" Height="46" 
-                                 Style="{StaticResource ModernTextBoxStyle}" Margin="0,0,0,16"/>
+            <!-- ==================== MODAL: XEM CHI TIẾT PHÂN RÃ THÀNH PHẦN MÔN HỌC ==================== -->
+            <Grid Background="#80000000" Visibility="{Binding IsBreakdownModalVisible, Converter={StaticResource BoolToVis}}">
+                <Border Background="White" CornerRadius="12" Width="680" MaxHeight="640" VerticalAlignment="Center" HorizontalAlignment="Center"
+                        Padding="24" Effect="{StaticResource ShadowEffect}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
 
-                        <!-- Nút Lưu & Hủy -->
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="10"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-
-                            <Button Grid.Column="0" Content="Đóng" Style="{StaticResource SecondaryButtonStyle}" Height="36"
-                                    Command="{Binding CloseScoreFormCommand}"/>
-                            <Button Grid.Column="2" Content="Lưu Điểm" Style="{StaticResource PrimaryButtonStyle}" Height="36"
-                                    Command="{Binding SaveScoreFormCommand}"/>
+                        <!-- Header Modal -->
+                        <Grid Grid.Row="0" Margin="0,0,0,16">
+                            <StackPanel>
+                                <TextBlock Text="CHI TIẾT ĐIỂM THÀNH PHẦN &amp; TBM TOÀN KHÓA" FontSize="16" FontWeight="ExtraBold" Foreground="#0F172A"/>
+                                <TextBlock Text="{Binding BreakdownCadetInfo}" FontSize="12" Foreground="#64748B" Margin="0,4,0,0"/>
+                            </StackPanel>
+                            <Button Content="✕" Width="28" Height="28" HorizontalAlignment="Right" VerticalAlignment="Top"
+                                    Background="Transparent" BorderThickness="0" Foreground="#94A3B8" Cursor="Hand"
+                                    Command="{Binding CloseBreakdownModalCommand}"/>
                         </Grid>
-                    </StackPanel>
+
+                        <!-- Danh sách phân rã các môn lớn và thành phần con -->
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,0,0,16">
+                            <ItemsControl ItemsSource="{Binding CadetBreakdowns}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,12">
+                                            <StackPanel>
+                                                <!-- Tiêu đề môn lớn -->
+                                                <Grid Margin="0,0,0,10">
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <TextBlock Text="📖 " FontSize="14"/>
+                                                        <TextBlock Text="{Binding MajorSubjectName}" FontWeight="ExtraBold" FontSize="14" Foreground="#1E3A8A"/>
+                                                        <TextBlock Text="{Binding TotalCredits, StringFormat='{} ({0:F2} Tín chỉ)'}" FontSize="12" FontWeight="SemiBold" Foreground="#64748B" Margin="8,1,0,0"/>
+                                                    </StackPanel>
+                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                                        <TextBlock Text="Điểm tổng kết môn:" FontSize="12" Foreground="#475569" VerticalAlignment="Center"/>
+                                                        <Border Background="#DBEAFE" CornerRadius="4" Padding="8,2" Margin="6,0,0,0">
+                                                            <TextBlock Text="{Binding FinalScore, StringFormat='{}{0:F2}', TargetNullValue='Chưa đủ điểm'}" 
+                                                                       FontWeight="ExtraBold" Foreground="#1D4ED8" FontSize="13"/>
+                                                        </Border>
+                                                    </StackPanel>
+                                                </Grid>
+
+                                                <!-- Bảng các thành phần con cấu thành nên môn học -->
+                                                <ItemsControl ItemsSource="{Binding Components}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Border Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="12,8" Margin="0,3">
+                                                                <Grid>
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="2.2*"/>
+                                                                        <ColumnDefinition Width="1*"/>
+                                                                        <ColumnDefinition Width="1*"/>
+                                                                        <ColumnDefinition Width="1.8*"/>
+                                                                    </Grid.ColumnDefinitions>
+
+                                                                    <!-- Tên thành phần & Số tín chỉ -->
+                                                                    <StackPanel Grid.Column="0">
+                                                                        <TextBlock Text="{Binding ComponentName}" FontWeight="SemiBold" FontSize="12.5" Foreground="#0F172A"/>
+                                                                        <TextBlock Text="{Binding Credits, StringFormat='{}Số TC: {0:F2}'}" FontSize="11" Foreground="#64748B"/>
+                                                                    </StackPanel>
+
+                                                                    <!-- Điểm ghi nhận -->
+                                                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                                        <TextBlock Text="Điểm đạt" FontSize="10" Foreground="#64748B"/>
+                                                                        <TextBlock Text="{Binding ScoreDisplay}" FontWeight="Bold" FontSize="12.5" Foreground="#1E40AF"/>
+                                                                    </StackPanel>
+
+                                                                    <!-- Tỷ trọng trong môn -->
+                                                                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                                                        <TextBlock Text="Tỷ trọng" FontSize="10" Foreground="#64748B"/>
+                                                                        <TextBlock Text="{Binding WeightRatio, StringFormat='{}{0:P0}'}" FontWeight="SemiBold" FontSize="12" Foreground="#475569"/>
+                                                                    </StackPanel>
+
+                                                                    <!-- Điểm thành phần chiếm trong môn = (Điểm * TC) / Tổng_TC -->
+                                                                    <StackPanel Grid.Column="3" VerticalAlignment="Center" HorizontalAlignment="Right">
+                                                                        <TextBlock Text="Đóng góp vào môn" FontSize="10" Foreground="#64748B" HorizontalAlignment="Right"/>
+                                                                        <TextBlock Text="{Binding ContributionDisplay}" FontWeight="ExtraBold" FontSize="13" Foreground="#15803D" HorizontalAlignment="Right"/>
+                                                                    </StackPanel>
+                                                                </Grid>
+                                                            </Border>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+
+                        <!-- Footer Modal -->
+                        <Grid Grid.Row="2">
+                            <TextBlock Text="* Công thức: Điểm thành phần chiếm = (Điểm ghi nhận × Số tín chỉ) / Tổng tín chỉ môn" 
+                                       FontSize="11" FontStyle="Italic" Foreground="#64748B" VerticalAlignment="Center"/>
+                            <Button Content="Đóng" Style="{StaticResource PrimaryButtonStyle}" Height="34" Width="90" HorizontalAlignment="Right"
+                                    Command="{Binding CloseBreakdownModalCommand}"/>
+                        </Grid>
+                    </Grid>
                 </Border>
             </Grid>
         </Grid>
