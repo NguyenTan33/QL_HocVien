@@ -32,7 +32,7 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,4">
-                    <TextBlock Text="PHÂN TÍCH &amp; SO SÁNH BIẾN ĐỘNG THÀNH TÍCH ĐỢT THI" 
+                    <TextBlock Text="PHÂN TÍCH THỂ LỰC (CHUẨN TT 32/2009)" 
                                FontSize="19" FontWeight="Bold" Foreground="#0F172A" TextWrapping="Wrap"/>
                     <TextBlock Text="Đo lường sự tăng trưởng (▲), giữ nguyên (—) hoặc thụt lùi (▼) theo phân cấp từ Đại đội ➔ Lớp/Tiểu đội ➔ Cá nhân theo TT 32/2009" 
                                FontSize="12" Foreground="#64748B" Margin="0,4,0,0" TextWrapping="Wrap"/>

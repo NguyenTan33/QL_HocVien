@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:QL_HocVien.ViewModels"
         xmlns:views="clr-namespace:QL_HocVien.Views.UserControls"
+        xmlns:local_cv="clr-namespace:QL_HocVien.Converters"
         mc:Ignorable="d"
         Title="Hệ Thống Quản Lý Học Viên Quân Đội - Tiêu Chuẩn Thể Lực TT32"
         Icon="pack://application:,,,/QL_HocVien;component/Resources/app_icon.ico"
@@ -108,8 +109,50 @@
                     <TextBlock Text="  HỆ THỐNG QUẢN LÝ HỌC VIÊN &amp; RÈN LUYỆN THỂ LỰC (TT 32/2009)" Foreground="#E2E8F0" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
                 </StackPanel>
 
-                <!-- Các nút điều khiển cửa sổ -->
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <!-- Widget Khóa Bảo Mật Cấp 2 + Các nút điều khiển cửa sổ -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <!-- Widget Khóa bảo mật -->
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0"
+                                Visibility="{Binding IsSecurityProtectionEnabled, Converter={x:Static local_cv:BooleanToVisibilityConverter.Instance}}">
+                        <!-- Trạng thái: Đang mở khóa (có đếm ngược) -->
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center"
+                                    Visibility="{Binding IsSecurityUnlocked, Converter={x:Static local_cv:BooleanToVisibilityConverter.Instance}}">
+                            <Border Background="#064E3B" BorderBrush="#059669" BorderThickness="1" CornerRadius="4" Padding="8,2" Margin="0,0,8,0">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="🔓" FontSize="11" Margin="0,0,4,0"/>
+                                    <TextBlock Text="MỞ KHÓA: " FontSize="10" FontWeight="Bold" Foreground="#34D399"/>
+                                    <TextBlock Text="{Binding SecurityRemainingTime}" FontSize="11" FontWeight="ExtraBold" Foreground="#6EE7B7"/>
+                                </StackPanel>
+                            </Border>
+                            <Button Content="🔒 Khóa Ngay" Height="24" Padding="8,0" Background="#DC2626" Foreground="White" BorderThickness="0"
+                                    FontSize="10" FontWeight="Bold" Cursor="Hand" ToolTip="Lập tức khóa màn hình để bảo vệ dữ liệu khi rời máy"
+                                    Command="{Binding QuickLockCommand}">
+                                <Button.Resources>
+                                    <Style TargetType="Border">
+                                        <Setter Property="CornerRadius" Value="4"/>
+                                    </Style>
+                                </Button.Resources>
+                            </Button>
+                        </StackPanel>
+
+                        <!-- Trạng thái: Đang khóa (bấm để mở khóa) -->
+                        <Button Background="#1E293B" BorderBrush="#475569" BorderThickness="1" Padding="8,2" Height="24" Cursor="Hand"
+                                ToolTip="{Binding SecurityStatusTooltip}"
+                                Command="{Binding QuickUnlockCommand}"
+                                Visibility="{Binding IsSecurityUnlocked, Converter={x:Static local_cv:InvertedBooleanToVisibilityConverter.Instance}}">
+                            <Button.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="CornerRadius" Value="4"/>
+                                </Style>
+                            </Button.Resources>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="🔒" FontSize="10" Margin="0,0,4,0"/>
+                                <TextBlock Text="KHÓA BẢO MẬT (CHỈ XEM)" FontSize="10" FontWeight="Bold" Foreground="#F59E0B"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+
+                    <!-- Các nút điều khiển cửa sổ -->
                     <Button Content="—" Width="36" Height="30" Background="Transparent" Foreground="#94A3B8" BorderThickness="0"
                             Cursor="Hand" Click="BtnMinimize_Click"/>
                     <Button x:Name="BtnMax" Content="☐" Width="36" Height="30" Background="Transparent" Foreground="#94A3B8" BorderThickness="0"
@@ -206,8 +249,8 @@
                                     Style="{StaticResource SidebarNavButtonStyle}"
                                     Command="{Binding NavigateToPhysicalExamCommand}"/>
 
-                            <!-- 6. Phân Tích & So Sánh Đợt Thi -->
-                            <Button Content="📈   Phân Tích &amp; So Sánh" 
+                            <!-- 6. Phân Tích Thể Lực -->
+                            <Button Content="📈   Phân Tích Thể Lực" 
                                     Style="{StaticResource SidebarNavButtonStyle}"
                                     Command="{Binding NavigateToExamAnalyticsCommand}"/>
 

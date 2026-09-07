@@ -121,6 +121,8 @@ namespace QL_HocVien
             services.AddScoped<ICreditGradeCalculator, CreditGradeCalculator>();
             services.AddScoped<ICreditSubjectService, CreditSubjectService>();
             services.AddScoped<IAcademicAnalyticsService, AcademicAnalyticsService>();
+            services.AddSingleton<ISecurityDialogService, SecurityDialogService>();
+            services.AddSingleton<ISecurityGateService, SecurityGateService>();
 
             // Đăng ký Infrastructure (Validation Factory & Security Services - OOP & SOLID)
             services.AddAppInfrastructureValidation();

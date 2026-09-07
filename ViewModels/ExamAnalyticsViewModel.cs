@@ -20,6 +20,7 @@ namespace QL_HocVien.ViewModels
         private readonly IClassService _classService;
         private readonly IExcelService _excelService;
         private readonly IFileDialogService _fileDialogService;
+        private readonly ISecurityGateService _securityGate;
 
         [ObservableProperty]
         private ObservableCollection<string> _availableSessions = new();
@@ -99,15 +100,17 @@ namespace QL_HocVien.ViewModels
             ICatalogService catalogService,
             IClassService classService,
             IExcelService excelService,
-            IFileDialogService fileDialogService)
+            IFileDialogService fileDialogService,
+            ISecurityGateService securityGate)
         {
             _analyticsService = analyticsService;
             _catalogService = catalogService;
             _classService = classService;
             _excelService = excelService;
             _fileDialogService = fileDialogService;
+            _securityGate = securityGate;
 
-            Title = "Phân Tích & So Sánh Đợt Thi Rèn Luyện Thể Lực";
+            Title = "Phân Tích Thể Lực (Chuẩn TT 32/2009)";
             _ = InitializeAsync();
         }
 
@@ -304,6 +307,11 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         public async Task ExportExcelAsync()
         {
+            if (!await _securityGate.EnsureUnlockedAsync("Xuất Báo Cáo Phân Tích Thể Lực ra file Excel"))
+            {
+                return;
+            }
+
             if (ComparisonResult == null || (!UnitComparisons.Any() && !CadetTrends.Any()))
             {
                 MessageBox.Show("Không có dữ liệu đối soát để xuất báo cáo.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);

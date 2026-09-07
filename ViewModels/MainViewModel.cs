@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,6 +12,7 @@ namespace QL_HocVien.ViewModels
     {
         private readonly IAuthService _authService;
         private readonly IServiceProvider _serviceProvider;
+        private readonly ISecurityGateService _securityGate;
 
         [ObservableProperty]
         private ViewModelBase? _currentView;
@@ -21,17 +23,65 @@ namespace QL_HocVien.ViewModels
         [ObservableProperty]
         private User? _currentUser;
 
+        [ObservableProperty]
+        private bool _isSecurityProtectionEnabled;
+
+        [ObservableProperty]
+        private bool _isSecurityUnlocked;
+
+        [ObservableProperty]
+        private string _securityRemainingTime = "00:00";
+
+        [ObservableProperty]
+        private string _securityStatusTooltip = string.Empty;
+
         public event Action? OnLogout;
 
-        public MainViewModel(IAuthService authService, IServiceProvider serviceProvider)
+        public MainViewModel(IAuthService authService, IServiceProvider serviceProvider, ISecurityGateService securityGate)
         {
             _authService = authService;
             _serviceProvider = serviceProvider;
+            _securityGate = securityGate;
             Title = "Hệ Thống Quản Lý Học Viên Quân Đội";
             CurrentUser = _authService.CurrentUser;
 
+            _securityGate.OnSecurityStateChanged += UpdateSecurityStatus;
+            UpdateSecurityStatus();
+
             // Mặc định mở màn hình Tổng quan (Dashboard)
             NavigateToDashboard();
+        }
+
+        private void UpdateSecurityStatus()
+        {
+            IsSecurityProtectionEnabled = _securityGate.IsProtectionEnabled;
+            IsSecurityUnlocked = _securityGate.IsUnlocked;
+            SecurityRemainingTime = _securityGate.FormattedRemainingTime;
+
+            if (!IsSecurityProtectionEnabled)
+            {
+                SecurityStatusTooltip = "Khóa bảo mật Cấp 2 đang tắt";
+            }
+            else if (IsSecurityUnlocked)
+            {
+                SecurityStatusTooltip = $"Đang mở khóa thao tác (Còn lại: {SecurityRemainingTime}). Bấm 'Khóa Ngay' để thu hồi quyền.";
+            }
+            else
+            {
+                SecurityStatusTooltip = "Hệ thống đang khóa bảo vệ (Chỉ xem). Bấm để nhập mật khẩu mở khóa thao tác.";
+            }
+        }
+
+        [RelayCommand]
+        public void QuickLock()
+        {
+            _securityGate.LockNow();
+        }
+
+        [RelayCommand]
+        public async Task QuickUnlock()
+        {
+            await _securityGate.EnsureUnlockedAsync("mở khóa quyền thao tác");
         }
 
         [RelayCommand]

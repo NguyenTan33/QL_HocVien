@@ -4,11 +4,14 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using QL_HocVien.Services;
 
 namespace QL_HocVien.ViewModels
 {
     public partial class SettingsViewModel : ViewModelBase
     {
+        private readonly ISecurityGateService _securityGate;
+
         [ObservableProperty]
         private string _smtpServer = "smtp.gmail.com";
 
@@ -36,10 +39,68 @@ namespace QL_HocVien.ViewModels
         [ObservableProperty]
         private string _databasePath = "ql_hocvien.db";
 
-        public SettingsViewModel()
+        // ==================== BẢO MẬT CẤP 2 (KHÓA RƯƠNG) ====================
+        [ObservableProperty]
+        private bool _isProtectionEnabled;
+
+        [ObservableProperty]
+        private bool _isUnlocked;
+
+        [ObservableProperty]
+        private string _securityStatusDisplay = string.Empty;
+
+        [ObservableProperty]
+        private string _enablePassword = string.Empty;
+
+        [ObservableProperty]
+        private string _enableConfirmPassword = string.Empty;
+
+        [ObservableProperty]
+        private string _disablePassword = string.Empty;
+
+        [ObservableProperty]
+        private string _changeOldPassword = string.Empty;
+
+        [ObservableProperty]
+        private string _changeNewPassword = string.Empty;
+
+        [ObservableProperty]
+        private string _changeConfirmPassword = string.Empty;
+
+        [ObservableProperty]
+        private string _securityMessage = string.Empty;
+
+        [ObservableProperty]
+        private bool _isSecuritySuccess;
+
+        public SettingsViewModel(ISecurityGateService securityGate)
         {
+            _securityGate = securityGate;
             Title = "Cài Đặt Hệ Thống";
+
             LoadSettings();
+
+            _securityGate.OnSecurityStateChanged += RefreshSecurityState;
+            RefreshSecurityState();
+        }
+
+        private void RefreshSecurityState()
+        {
+            IsProtectionEnabled = _securityGate.IsProtectionEnabled;
+            IsUnlocked = _securityGate.IsUnlocked;
+
+            if (!IsProtectionEnabled)
+            {
+                SecurityStatusDisplay = "⚪ Khóa bảo mật Cấp 2 đang TẮT (Cho phép mọi thao tác)";
+            }
+            else if (IsUnlocked)
+            {
+                SecurityStatusDisplay = $"🔓 Đang MỞ KHÓA tạm thời (Thời gian tự do còn lại: {_securityGate.FormattedRemainingTime})";
+            }
+            else
+            {
+                SecurityStatusDisplay = "🔒 Đang KHÓA BẢO VỆ (Chỉ xem - Thao tác thêm/sửa/xóa/xuất cần mật khẩu)";
+            }
         }
 
         private void LoadSettings()
@@ -106,6 +167,131 @@ namespace QL_HocVien.ViewModels
             {
                 StatusMessage = $"Lỗi lưu cấu hình: {ex.Message}";
             }
+        }
+
+        [RelayCommand]
+        public void EnableProtection()
+        {
+            SecurityMessage = string.Empty;
+            if (string.IsNullOrWhiteSpace(EnablePassword))
+            {
+                IsSecuritySuccess = false;
+                SecurityMessage = "Vui lòng nhập mật khẩu muốn cài đặt!";
+                return;
+            }
+
+            if (EnablePassword.Length < 4)
+            {
+                IsSecuritySuccess = false;
+                SecurityMessage = "Mật khẩu bảo mật phải có ít nhất 4 ký tự!";
+                return;
+            }
+
+            if (EnablePassword != EnableConfirmPassword)
+            {
+                IsSecuritySuccess = false;
+                SecurityMessage = "Mật khẩu xác nhận không khớp!";
+                return;
+            }
+
+            var ok = _securityGate.EnableProtection(EnablePassword);
+            if (ok)
+            {
+                IsSecuritySuccess = true;
+                SecurityMessage = "Đã kích hoạt Khóa bảo mật cấp 2 thành công! Hệ thống được mở khóa tự do trong 5 phút.";
+                EnablePassword = string.Empty;
+                EnableConfirmPassword = string.Empty;
+                RefreshSecurityState();
+            }
+            else
+            {
+                IsSecuritySuccess = false;
+                SecurityMessage = "Không thể kích hoạt bảo mật. Vui lòng thử lại!";
+            }
+        }
+
+        [RelayCommand]
+        public void DisableProtection()
+        {
+            SecurityMessage = string.Empty;
+            if (string.IsNullOrWhiteSpace(DisablePassword))
+            {
+                IsSecuritySuccess = false;
+                SecurityMessage = "Vui lòng nhập mật khẩu hiện tại để tắt bảo mật!";
+                return;
+            }
+
+            var ok = _securityGate.DisableProtection(DisablePassword);
+            if (ok)
+            {
+                IsSecuritySuccess = true;
+                SecurityMessage = "Đã tắt Khóa bảo mật cấp 2. Hệ thống hiện không yêu cầu mật khẩu thao tác.";
+                DisablePassword = string.Empty;
+                RefreshSecurityState();
+            }
+            else
+            {
+                IsSecuritySuccess = false;
+                SecurityMessage = "Mật khẩu hiện tại không chính xác!";
+            }
+        }
+
+        [RelayCommand]
+        public void ChangePassword()
+        {
+            SecurityMessage = string.Empty;
+            if (string.IsNullOrWhiteSpace(ChangeOldPassword))
+            {
+                IsSecuritySuccess = false;
+                SecurityMessage = "Vui lòng nhập mật khẩu hiện tại!";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(ChangeNewPassword))
+            {
+                IsSecuritySuccess = false;
+                SecurityMessage = "Vui lòng nhập mật khẩu mới!";
+                return;
+            }
+
+            if (ChangeNewPassword.Length < 4)
+            {
+                IsSecuritySuccess = false;
+                SecurityMessage = "Mật khẩu mới phải có ít nhất 4 ký tự!";
+                return;
+            }
+
+            if (ChangeNewPassword != ChangeConfirmPassword)
+            {
+                IsSecuritySuccess = false;
+                SecurityMessage = "Xác nhận mật khẩu mới không khớp!";
+                return;
+            }
+
+            var ok = _securityGate.ChangePassword(ChangeOldPassword, ChangeNewPassword);
+            if (ok)
+            {
+                IsSecuritySuccess = true;
+                SecurityMessage = "Đổi mật khẩu cấp 2 thành công! Bạn có 5 phút thao tác tự do.";
+                ChangeOldPassword = string.Empty;
+                ChangeNewPassword = string.Empty;
+                ChangeConfirmPassword = string.Empty;
+                RefreshSecurityState();
+            }
+            else
+            {
+                IsSecuritySuccess = false;
+                SecurityMessage = "Mật khẩu hiện tại không chính xác!";
+            }
+        }
+
+        [RelayCommand]
+        public void LockNow()
+        {
+            _securityGate.LockNow();
+            IsSecuritySuccess = true;
+            SecurityMessage = "Đã khóa bảo mật ngay lập tức! Thao tác tiếp theo sẽ yêu cầu mật khẩu.";
+            RefreshSecurityState();
         }
     }
 }

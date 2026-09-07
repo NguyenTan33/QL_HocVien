@@ -288,26 +288,5 @@ namespace QL_HocVien.Tests
 
             Assert.Null(exception);
         }
-
-        [Fact]
-        public async Task ExecuteRealDbResetAndImportFromExcel()
-        {
-            string dbPath = @"d:\AppDesktop\QL_HocVien\ql_hocvien.db";
-            string excelPath = @"C:\Users\minht\Downloads\Điểm TBM chuẩn .xlsx";
-            if (!File.Exists(excelPath)) return;
-
-            var options = new DbContextOptionsBuilder<AppDbContext>()
-                .UseSqlite($"Data Source={dbPath}")
-                .Options;
-
-            using var realContext = new AppDbContext(options);
-            var calc = new QL_HocVien.Services.Calculators.CreditGradeCalculator();
-            var service = new CreditSubjectService(realContext, calc);
-
-            var res = await service.ResetAndImportFreshFromExcelAsync(excelPath);
-            Assert.True(res.Success, res.Message);
-            Assert.Equal(65, res.Cadets);
-            Assert.Equal(41, res.Subjects);
-        }
     }
 }

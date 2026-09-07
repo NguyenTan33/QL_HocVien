@@ -4,19 +4,155 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local_cv="clr-namespace:QL_HocVien.Converters"
+             xmlns:helpers="clr-namespace:QL_HocVien.Helpers"
              mc:Ignorable="d" 
-             d:DesignHeight="700" d:DesignWidth="900">
+             d:DesignHeight="950" d:DesignWidth="900">
     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24">
-        <StackPanel MaxWidth="750" HorizontalAlignment="Left">
-            <TextBlock Text="CÀI ĐẶT HỆ THỐNG &amp; MÁY CHỦ EMAIL (SMTP)" FontSize="22" FontWeight="Bold" Foreground="#0F172A"/>
-            <TextBlock Text="Cấu hình dịch vụ gửi mã xác thực OTP qua Email phục vụ cấp lại mật khẩu tài khoản" FontSize="13" Foreground="#64748B" Margin="0,4,0,24"/>
+        <StackPanel MaxWidth="800" HorizontalAlignment="Left">
+            <TextBlock Text="CÀI ĐẶT HỆ THỐNG &amp; BẢO MẬT DỮ LIỆU" FontSize="22" FontWeight="Bold" Foreground="#0F172A"/>
+            <TextBlock Text="Cấu hình Khóa bảo vệ dữ liệu cấp 2 (Khóa rương) và dịch vụ gửi Email xác thực OTP" FontSize="13" Foreground="#64748B" Margin="0,4,0,20"/>
 
+            <!-- THÔNG BÁO CHUNG -->
             <Border Background="#F0FDF4" BorderBrush="#86EFAC" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,16"
                     Visibility="{Binding StatusMessage, Converter={x:Static local_cv:StringToVisibilityConverter.Instance}}">
                 <TextBlock Text="{Binding StatusMessage}" Foreground="#16A34A" FontSize="13" FontWeight="SemiBold"/>
             </Border>
 
-            <!-- Cấu hình SMTP -->
+            <!-- ==================== KHÓA BẢO MẬT CẤP 2 (KHÓA RƯƠNG) ==================== -->
+            <Border Style="{StaticResource CardBorderStyle}" Padding="24" Margin="0,0,0,24" BorderBrush="#3B82F6" BorderThickness="1.5">
+                <StackPanel>
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🛡️" FontSize="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Khóa Bảo Mật Cấp 2 (Bảo Vệ Dữ Liệu An Toàn)" FontSize="16" FontWeight="Bold" Foreground="#1E3A8A" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <TextBlock Text="Chặn mọi hành vi Thêm, Sửa, Xóa, Nhập/Xuất Excel (chỉ cho phép xem). Mở khóa 1 lần được tự do 5 phút; quá 5 phút hệ thống tự động khóa lại." 
+                                       FontSize="12" Foreground="#64748B" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                        </StackPanel>
+
+                        <!-- Nút khóa ngay nếu đang mở khóa -->
+                        <Button Grid.Column="1" Content="🔒 Khóa Ngay Lập Tức" Height="36" Padding="12,0"
+                                Background="#DC2626" Foreground="White" BorderThickness="0" FontWeight="Bold" Cursor="Hand"
+                                Command="{Binding LockNowCommand}"
+                                Visibility="{Binding IsUnlocked, Converter={x:Static local_cv:BooleanToVisibilityConverter.Instance}}">
+                            <Button.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="CornerRadius" Value="6"/>
+                                </Style>
+                            </Button.Resources>
+                        </Button>
+                    </Grid>
+
+                    <!-- Trạng thái bảo mật hiện tại -->
+                    <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="14" Margin="0,0,0,16">
+                        <StackPanel>
+                            <TextBlock Text="Trạng thái hiện tại:" FontSize="11" FontWeight="Bold" Foreground="#64748B"/>
+                            <TextBlock Text="{Binding SecurityStatusDisplay}" FontSize="13" FontWeight="Bold" Margin="0,4,0,0"
+                                       Foreground="{Binding IsProtectionEnabled, Converter={x:Static local_cv:GradeToBrushConverter.Instance}}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Thông báo phản hồi bảo mật -->
+                    <Border Background="#FEF2F2" BorderBrush="#FCA5A5" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,14"
+                            Visibility="{Binding SecurityMessage, Converter={x:Static local_cv:StringToVisibilityConverter.Instance}}">
+                        <TextBlock Text="{Binding SecurityMessage}" FontSize="12" FontWeight="SemiBold"
+                                   Foreground="{Binding IsSecuritySuccess, Converter={x:Static local_cv:GradeToBrushConverter.Instance}}"/>
+                    </Border>
+
+                    <!-- KHU VỰC KÍCH HOẠT (Nếu chưa bật) -->
+                    <StackPanel Visibility="{Binding IsProtectionEnabled, Converter={x:Static local_cv:InvertedBooleanToVisibilityConverter.Instance}}">
+                        <TextBlock Text="KÍCH HOẠT KHÓA BẢO VỆ CẤP 2" FontSize="13" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,10"/>
+                        <Grid Margin="0,0,0,14">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="14"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Thiết lập Mật khẩu mới:" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                                <PasswordBox Height="38" helpers:PasswordBoxHelper.BindPassword="True"
+                                             helpers:PasswordBoxHelper.BoundPassword="{Binding EnablePassword, Mode=TwoWay}"
+                                             Style="{StaticResource ModernPasswordBoxStyle}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Xác nhận lại Mật khẩu mới:" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                                <PasswordBox Height="38" helpers:PasswordBoxHelper.BindPassword="True"
+                                             helpers:PasswordBoxHelper.BoundPassword="{Binding EnableConfirmPassword, Mode=TwoWay}"
+                                             Style="{StaticResource ModernPasswordBoxStyle}"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <Button Content="🛡️ Kích Hoạt Khóa Bảo Mật Cấp 2" Height="40" Width="260" HorizontalAlignment="Left"
+                                Style="{StaticResource PrimaryButtonStyle}"
+                                Command="{Binding EnableProtectionCommand}"/>
+                    </StackPanel>
+
+                    <!-- KHU VỰC QUẢN LÝ (Khi đã bật: Đổi mật khẩu & Tắt khóa) -->
+                    <Grid Visibility="{Binding IsProtectionEnabled, Converter={x:Static local_cv:BooleanToVisibilityConverter.Instance}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1.4*"/>
+                            <ColumnDefinition Width="20"/>
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Đổi mật khẩu -->
+                        <Border Grid.Column="0" Background="#F1F5F9" CornerRadius="8" Padding="16">
+                            <StackPanel>
+                                <TextBlock Text="🔑 ĐỔI MẬT KHẨU CẤP 2" FontSize="13" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,10"/>
+
+                                <TextBlock Text="Mật khẩu hiện tại:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                <PasswordBox Height="36" helpers:PasswordBoxHelper.BindPassword="True"
+                                             helpers:PasswordBoxHelper.BoundPassword="{Binding ChangeOldPassword, Mode=TwoWay}"
+                                             Style="{StaticResource ModernPasswordBoxStyle}" Margin="0,0,0,10"/>
+
+                                <TextBlock Text="Mật khẩu mới:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                <PasswordBox Height="36" helpers:PasswordBoxHelper.BindPassword="True"
+                                             helpers:PasswordBoxHelper.BoundPassword="{Binding ChangeNewPassword, Mode=TwoWay}"
+                                             Style="{StaticResource ModernPasswordBoxStyle}" Margin="0,0,0,10"/>
+
+                                <TextBlock Text="Xác nhận mật khẩu mới:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                <PasswordBox Height="36" helpers:PasswordBoxHelper.BindPassword="True"
+                                             helpers:PasswordBoxHelper.BoundPassword="{Binding ChangeConfirmPassword, Mode=TwoWay}"
+                                             Style="{StaticResource ModernPasswordBoxStyle}" Margin="0,0,0,14"/>
+
+                                <Button Content="💾 Lưu Mật Khẩu Mới" Height="38" Style="{StaticResource PrimaryButtonStyle}"
+                                        Command="{Binding ChangePasswordCommand}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Tắt bảo mật -->
+                        <Border Grid.Column="2" Background="#FEF2F2" BorderBrush="#FECACA" BorderThickness="1" CornerRadius="8" Padding="16">
+                            <StackPanel>
+                                <TextBlock Text="⚠️ TẮT BẢO MẬT CẤP 2" FontSize="13" FontWeight="Bold" Foreground="#991B1B" Margin="0,0,0,6"/>
+                                <TextBlock Text="Hệ thống sẽ cho phép mọi người dùng thêm/sửa/xóa mà không cần mật khẩu." 
+                                           FontSize="11" Foreground="#7F1D1D" Margin="0,0,0,10" TextWrapping="Wrap"/>
+
+                                <TextBlock Text="Mật khẩu hiện tại để xác thực:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                                <PasswordBox Height="36" helpers:PasswordBoxHelper.BindPassword="True"
+                                             helpers:PasswordBoxHelper.BoundPassword="{Binding DisablePassword, Mode=TwoWay}"
+                                             Style="{StaticResource ModernPasswordBoxStyle}" Margin="0,0,0,14"/>
+
+                                <Button Content="⚪ Tắt Bảo Mật Cấp 2" Height="38" Background="#DC2626" Foreground="White" BorderThickness="0"
+                                        FontWeight="Bold" Cursor="Hand"
+                                        Command="{Binding DisableProtectionCommand}">
+                                    <Button.Resources>
+                                        <Style TargetType="Border">
+                                            <Setter Property="CornerRadius" Value="6"/>
+                                        </Style>
+                                    </Button.Resources>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- ==================== CẤU HÌNH SMTP ==================== -->
             <Border Style="{StaticResource CardBorderStyle}" Padding="24" Margin="0,0,0,20">
                 <StackPanel>
                     <TextBlock Text="Cấu hình Dịch vụ Gửi Email Xác thực (SMTP)" FontSize="16" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,16"/>
