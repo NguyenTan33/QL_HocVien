@@ -255,6 +255,11 @@ namespace QL_HocVien.Data
                 context.Database.ExecuteSqlRaw(@"ALTER TABLE ""Users"" ADD COLUMN ""PasskeyActivatedAt"" TEXT NULL;");
             }
             catch { }
+            try
+            {
+                context.Database.ExecuteSqlRaw(@"ALTER TABLE ""PasswordResetTokens"" ADD COLUMN ""AttemptCount"" INTEGER NOT NULL DEFAULT 0;");
+            }
+            catch { }
 
             // Khởi tạo 10 Passkey bản quyền gắn liền theo tài khoản nếu chưa có
             if (!context.AccountPasskeys.Any())

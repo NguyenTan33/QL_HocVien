@@ -36,11 +36,11 @@ namespace QL_HocVien.Models.DTOs
             ? $"⚠️ Thiếu {MissingSubjectsCount} môn"
             : "✅ Đủ môn";
 
-        public string StatusBadgeColor => HasMissingSubjects ? "#B45309" : "#15803D";
-        public string StatusBadgeBg => HasMissingSubjects ? "#FEF08A" : "#DCFCE7";
+        public string StatusBadgeColor => HasMissingSubjects ? "#FBBF24" : "#4ADE80";
+        public string StatusBadgeBg => HasMissingSubjects ? "#4A3315" : "#143820";
         
-        // Màu nền dòng: Vàng nhạt cảnh báo cho học viên thiếu môn (khớp dòng màu vàng trong Excel)
-        public string RowBackground => HasMissingSubjects ? "#FFFBEB" : "Transparent";
+        // Màu nền dòng: Nâu hổ phách tác chiến cảnh báo tương phản cao cho học viên thiếu môn (thay thế màu vàng thô)
+        public string RowBackground => HasMissingSubjects ? "#382914" : "Transparent";
 
         // Danh sách phân rã điểm thành phần của các môn lớn
         public List<MajorSubjectBreakdownDto> MajorSubjectBreakdowns { get; set; } = new();
@@ -62,11 +62,11 @@ namespace QL_HocVien.Models.DTOs
         {
             get => AcademicRating switch
             {
-                "Giỏi" => "#2563EB",
-                "Khá" => "#16A34A",
-                "TB" => "#D97706",
-                "Yếu" => "#DC2626",
-                _ => "#64748B"
+                "Giỏi" => "#93C5FD",
+                "Khá" => "#86EFAC",
+                "TB" => "#FCD34D",
+                "Yếu" => "#FCA5A5",
+                _ => "#CBD5E1"
             };
             set { }
         }
@@ -75,11 +75,11 @@ namespace QL_HocVien.Models.DTOs
         {
             get => AcademicRating switch
             {
-                "Giỏi" => "#DBEAFE",
-                "Khá" => "#DCFCE7",
-                "TB" => "#FEF3C7",
-                "Yếu" => "#FEE2E2",
-                _ => "#F1F5F9"
+                "Giỏi" => "#1E3A5F",
+                "Khá" => "#143D24",
+                "TB" => "#452A12",
+                "Yếu" => "#4A1A1A",
+                _ => "#253628"
             };
             set { }
         }

@@ -18,9 +18,9 @@
 
             <!-- 1. Tiêu đề trang (Page Header) -->
             <StackPanel Grid.Row="0" VerticalAlignment="Center" Margin="0,0,0,10">
-                <TextBlock Text="QUẢN LÝ MÔN HỌC &amp; TIÊU CHUẨN RÈN LUYỆN THỂ LỰC" FontSize="20" FontWeight="Bold" Foreground="#0F172A" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                <TextBlock Text="QUẢN LÝ MÔN HỌC &amp; TIÊU CHUẨN RÈN LUYỆN THỂ LỰC" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
                 <TextBlock Text="Danh mục các môn rèn luyện, chuẩn đánh giá theo Thông tư 32/2009/TTLT-BQP-BVHTTDL" 
-                           FontSize="13" Foreground="#64748B" Margin="0,4,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                           FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
             </StackPanel>
 
             <!-- 2. Thanh công cụ thao tác (Page Toolbar) -->
@@ -58,21 +58,21 @@
 
                         <!-- Lọc theo ID / Mã Môn -->
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="Lọc theo ID / Mã môn:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                            <TextBlock Text="Lọc theo ID / Mã môn:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
                             <TextBox Text="{Binding FilterSubjectCode, UpdateSourceTrigger=PropertyChanged}" 
                                      Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
                         </StackPanel>
 
                         <!-- Lọc theo Tên Môn Học -->
                         <StackPanel Grid.Column="2">
-                            <TextBlock Text="Lọc theo Tên môn học:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                            <TextBlock Text="Lọc theo Tên môn học:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
                             <TextBox Text="{Binding FilterSubjectName, UpdateSourceTrigger=PropertyChanged}" 
                                      Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
                         </StackPanel>
 
                         <!-- Lọc Thể loại / Tố chất -->
                         <StackPanel Grid.Column="4">
-                            <TextBlock Text="Nhóm tố chất thể lực:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                            <TextBlock Text="Nhóm tố chất thể lực:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
                             <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" 
                                       Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
                         </StackPanel>
@@ -88,7 +88,7 @@
 
                     <!-- Khung mở rộng: Lọc Nâng Cao Môn Học -->
                     <Border Visibility="{Binding IsAdvancedFilterVisible, Converter={x:Static local_cv:BooleanToVisibilityConverter.Instance}}"
-                            Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,12,0,0">
+                            Background="{DynamicResource PageBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,12,0,0">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
@@ -96,7 +96,7 @@
                             </Grid.RowDefinitions>
 
                             <TextBlock Grid.Row="0" Text="🎯 BỘ LỌC NÂNG CAO MÔN HỌC (Đơn vị tính &amp; Quy luật tính thành tích)" 
-                                       FontSize="12" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,10"/>
+                                       FontSize="12" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" Margin="0,0,0,10"/>
 
                             <Grid Grid.Row="1">
                                 <Grid.ColumnDefinitions>
@@ -107,14 +107,14 @@
 
                                 <!-- Lọc Đơn vị tính -->
                                 <StackPanel Grid.Column="0">
-                                    <TextBlock Text="Đơn vị tính kết quả:" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" Margin="0,0,0,3"/>
+                                    <TextBlock Text="Đơn vị tính kết quả:" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,3"/>
                                     <ComboBox ItemsSource="{Binding FilterUnits}" SelectedItem="{Binding SelectedUnit}" 
                                               Style="{StaticResource ModernComboBoxStyle}" Height="34"/>
                                 </StackPanel>
 
                                 <!-- Lọc Quy luật thành tích -->
                                 <StackPanel Grid.Column="2">
-                                    <TextBlock Text="Quy luật xếp loại thành tích:" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" Margin="0,0,0,3"/>
+                                    <TextBlock Text="Quy luật xếp loại thành tích:" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,3"/>
                                     <ComboBox ItemsSource="{Binding RuleOptions}" SelectedItem="{Binding SelectedRule}" 
                                               Style="{StaticResource ModernComboBoxStyle}" Height="34"/>
                                 </StackPanel>
@@ -127,8 +127,10 @@
             <!-- 4. Bảng Dữ Liệu Môn Học -->
             <Border Grid.Row="3" Style="{StaticResource CardBorderStyle}" Padding="0">
                 <DataGrid ItemsSource="{Binding Subjects}" SelectedItem="{Binding SelectedSubject}"
+                          Style="{StaticResource MilitaryDataGridStyle}"
                           AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
-                          GridLinesVisibility="Horizontal" HeadersVisibility="Column" Background="White"
+                          GridLinesVisibility="Horizontal" HeadersVisibility="Column"
+                          RowHeaderWidth="0"
                           BorderThickness="0" RowHeight="42" SelectionMode="Single"
                           AlternationCount="2"
                           ScrollViewer.HorizontalScrollBarVisibility="Auto"
@@ -162,14 +164,14 @@
 
         <!-- ==================== MODAL THÊM / SỬA MÔN HỌC ==================== -->
         <Grid Background="#7F000000" Visibility="{Binding IsFormVisible, Converter={x:Static local_cv:BooleanToVisibilityConverter.Instance}}">
-            <Border Background="White" CornerRadius="12" Width="600" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="28">
+            <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Width="600" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="28">
                 <Border.Effect>
                     <DropShadowEffect BlurRadius="25" Color="#000000" Opacity="0.3" ShadowDepth="5"/>
                 </Border.Effect>
                 <StackPanel>
                     <TextBlock Text="{Binding IsEditing, StringFormat='{}CẬP NHẬT MÔN HỌC', Converter={x:Static local_cv:StringToVisibilityConverter.Instance}}" 
-                               FontSize="18" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,4"/>
-                    <TextBlock Text="Thiết lập mã môn, tên môn và các ngưỡng xếp loại thể lực quân sự" FontSize="12" Foreground="#64748B" Margin="0,0,0,16"/>
+                               FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                    <TextBlock Text="Thiết lập mã môn, tên môn và các ngưỡng xếp loại thể lực quân sự" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,16"/>
 
                     <!-- Thông báo lỗi modal -->
                     <Border Background="#FEF2F2" BorderBrush="#FCA5A5" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,14"
@@ -185,11 +187,11 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="Mã môn (ID):" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                            <TextBlock Text="Mã môn (ID):" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
                             <TextBox Text="{Binding FormSubjectCode, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
                         </StackPanel>
                         <StackPanel Grid.Column="2">
-                            <TextBlock Text="Tên môn rèn luyện (*):" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                            <TextBlock Text="Tên môn rèn luyện (*):" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
                             <TextBox Text="{Binding FormSubjectName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
                         </StackPanel>
                     </Grid>
@@ -202,11 +204,11 @@
                             <ColumnDefinition Width="140"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="Nhóm tố chất:" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                            <TextBlock Text="Nhóm tố chất:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
                             <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding FormCategory}" Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
                         </StackPanel>
                         <StackPanel Grid.Column="2">
-                            <TextBlock Text="Đơn vị tính:" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                            <TextBlock Text="Đơn vị tính:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
                             <TextBox Text="{Binding FormUnit, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
                         </StackPanel>
                     </Grid>
@@ -221,22 +223,22 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="Chuẩn Giỏi:" FontSize="12" FontWeight="SemiBold" Foreground="#1E40AF" Margin="0,0,0,4"/>
+                            <TextBlock Text="Chuẩn Giỏi:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" Margin="0,0,0,4"/>
                             <TextBox Text="{Binding FormExcellentThreshold, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
                         </StackPanel>
                         <StackPanel Grid.Column="2">
-                            <TextBlock Text="Chuẩn Khá:" FontSize="12" FontWeight="SemiBold" Foreground="#166534" Margin="0,0,0,4"/>
+                            <TextBlock Text="Chuẩn Khá:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
                             <TextBox Text="{Binding FormGoodThreshold, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
                         </StackPanel>
                         <StackPanel Grid.Column="4">
-                            <TextBlock Text="Chuẩn Đạt:" FontSize="12" FontWeight="SemiBold" Foreground="#854D0E" Margin="0,0,0,4"/>
+                            <TextBlock Text="Chuẩn Đạt:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
                             <TextBox Text="{Binding FormPassThreshold, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
                         </StackPanel>
                     </Grid>
 
                     <!-- Mô tả -->
                     <StackPanel Margin="0,0,0,16">
-                        <TextBlock Text="Mô tả kỹ thuật &amp; yêu cầu kiểm tra:" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                        <TextBlock Text="Mô tả kỹ thuật &amp; yêu cầu kiểm tra:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
                         <TextBox Text="{Binding FormDescription, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="60" TextWrapping="Wrap"/>
                     </StackPanel>
 

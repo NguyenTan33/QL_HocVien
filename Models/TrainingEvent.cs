@@ -15,5 +15,57 @@ namespace QL_HocVien.Models
         public string Status { get; set; } = "Đang chuẩn bị"; // "Đang chuẩn bị", "Đang diễn ra", "Đã hoàn thành", "Tạm hoãn"
         public string Description { get; set; } = string.Empty; // Nội dung chỉ thị, ghi chú chi tiết
         public DateTime CreatedAt { get; set; } = DateTime.Now;
+
+        // Thuộc tính hiển thị UI theo chuẩn Celandar.png (Không lưu CSDL)
+        public string DayOfWeekVietnamese => StartDate.DayOfWeek switch
+        {
+            DayOfWeek.Monday => "Thứ Hai",
+            DayOfWeek.Tuesday => "Thứ Ba",
+            DayOfWeek.Wednesday => "Thứ Tư",
+            DayOfWeek.Thursday => "Thứ Năm",
+            DayOfWeek.Friday => "Thứ Sáu",
+            DayOfWeek.Saturday => "Thứ Bảy",
+            DayOfWeek.Sunday => "Chủ Nhật",
+            _ => string.Empty
+        };
+
+        public string CategoryBg => Category switch
+        {
+            "Kiểm tra thể lực" => "#065F46",
+            "Thi cử quân sự" => "#0E7490",
+            "Tập luyện / Rèn luyện" => "#15803D",
+            "Hội thao / Sự kiện" => "#1D4ED8",
+            _ => "#334155"
+        };
+
+        public string PriorityBg => Priority switch
+        {
+            "Khẩn cấp" => "#DC2626",
+            "Cao" => "#FEE2E2",
+            _ => "#E2E8F0"
+        };
+
+        public string PriorityFg => Priority switch
+        {
+            "Khẩn cấp" => "#FFFFFF",
+            "Cao" => "#DC2626",
+            _ => "#475569"
+        };
+
+        public string StatusBg => Status switch
+        {
+            "Đã hoàn thành" => "#DCFCE7",
+            "Đang diễn ra" => "#DBEAFE",
+            "Đang chuẩn bị" => "#ECFCCB",
+            _ => "#F1F5F9"
+        };
+
+        public string StatusFg => Status switch
+        {
+            "Đã hoàn thành" => "#15803D",
+            "Đang diễn ra" => "#1D4ED8",
+            "Đang chuẩn bị" => "#3F6212",
+            _ => "#475569"
+        };
     }
 }

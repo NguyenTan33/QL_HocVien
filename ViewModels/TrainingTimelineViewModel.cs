@@ -200,6 +200,14 @@ namespace QL_HocVien.ViewModels
                 }
 
                 GenerateCalendarGrid();
+
+                var today = DateTime.Today;
+                SelectedDayTitle = $"Sự kiện ngày {today:dd/MM/yyyy} ({GetVietnameseDayOfWeek(today.DayOfWeek)})";
+                SelectedDayEvents.Clear();
+                foreach (var evt in Events.Where(e => e.StartDate.Date <= today.Date && e.EndDate.Date >= today.Date).OrderBy(e => e.StartDate))
+                {
+                    SelectedDayEvents.Add(evt);
+                }
             }
             catch (Exception ex)
             {
@@ -252,6 +260,19 @@ namespace QL_HocVien.ViewModels
             EditDescription = target.Description;
 
             IsFormVisible = true;
+        }
+
+        [RelayCommand]
+        public void SelectEvent(TrainingEvent? evt)
+        {
+            if (evt == null) return;
+            SelectedEvent = evt;
+            SelectedDayTitle = $"Sự kiện ngày {evt.StartDate:dd/MM/yyyy} ({GetVietnameseDayOfWeek(evt.StartDate.DayOfWeek)})";
+            SelectedDayEvents.Clear();
+            foreach (var e in Events.Where(x => x.StartDate.Date <= evt.StartDate.Date && x.EndDate.Date >= evt.StartDate.Date).OrderBy(x => x.StartDate))
+            {
+                SelectedDayEvents.Add(e);
+            }
         }
 
         [RelayCommand]

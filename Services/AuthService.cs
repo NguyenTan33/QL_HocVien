@@ -167,6 +167,22 @@ namespace QL_HocVien.Services
                 return (false, "Không tìm thấy tài khoản tương ứng với thông tin đã nhập.", null);
             }
 
+            // Chống Spam / Tấn công DoS OTP: Giới hạn tối thiểu 60 giây giữa 2 lần yêu cầu
+            var lastRecentToken = await _context.PasswordResetTokens
+                .Where(t => t.Email.ToLower() == user.Email.ToLower())
+                .OrderByDescending(t => t.CreatedAt)
+                .FirstOrDefaultAsync();
+
+            if (lastRecentToken != null)
+            {
+                var elapsed = (DateTime.Now - lastRecentToken.CreatedAt).TotalSeconds;
+                if (elapsed < 60)
+                {
+                    int waitSec = 60 - (int)elapsed;
+                    return (false, $"Yêu cầu OTP quá nhanh. Vui lòng đợi {waitSec} giây trước khi gửi lại.", null);
+                }
+            }
+
             // Sinh mã OTP ngẫu nhiên 6 chữ số
             var otp = RandomNumberGenerator.GetInt32(100000, 999999).ToString();
 
@@ -186,6 +202,7 @@ namespace QL_HocVien.Services
                 Token = otp,
                 ExpiryTime = DateTime.Now.AddMinutes(10),
                 IsUsed = false,
+                AttemptCount = 0,
                 CreatedAt = DateTime.Now
             };
 
@@ -194,6 +211,10 @@ namespace QL_HocVien.Services
 
             // Gửi email
             var emailResult = await _emailService.SendOtpEmailAsync(user.Email, otp, user.FullName);
+            if (!emailResult.Success)
+            {
+                return (false, emailResult.Message, null);
+            }
 
             return (true, emailResult.Message, otp);
         }
@@ -210,18 +231,35 @@ namespace QL_HocVien.Services
                 return (false, "Mật khẩu mới phải có ít nhất 6 ký tự.");
 
             var token = await _context.PasswordResetTokens
-                .Where(t => t.Email.ToLower() == email.Trim().ToLower() && t.Token == otpCode.Trim() && !t.IsUsed)
+                .Where(t => t.Email.ToLower() == email.Trim().ToLower() && !t.IsUsed)
                 .OrderByDescending(t => t.CreatedAt)
                 .FirstOrDefaultAsync();
 
             if (token == null)
             {
-                return (false, "Mã xác thực không chính xác.");
+                return (false, "Không tìm thấy yêu cầu xác thực OTP còn hiệu lực. Vui lòng yêu cầu mã mới.");
             }
 
             if (token.ExpiryTime < DateTime.Now)
             {
+                token.IsUsed = true;
+                await _context.SaveChangesAsync();
                 return (false, "Mã xác thực đã hết hạn (chỉ có hiệu lực trong 10 phút). Vui lòng yêu cầu mã mới.");
+            }
+
+            // Chống tấn công vét cạn OTP (Brute-force): Giới hạn tối đa 5 lần nhập sai
+            if (!string.Equals(token.Token.Trim(), otpCode.Trim(), StringComparison.Ordinal))
+            {
+                token.AttemptCount++;
+                if (token.AttemptCount >= 5)
+                {
+                    token.IsUsed = true;
+                    await _context.SaveChangesAsync();
+                    return (false, "Mã xác thực đã bị hủy do nhập sai quá 5 lần liên tiếp để bảo đảm an ninh.");
+                }
+
+                await _context.SaveChangesAsync();
+                return (false, $"Mã xác thực không chính xác! Đồng chí còn {5 - token.AttemptCount} lần thử.");
             }
 
             var user = await _userRepository.GetByEmailAsync(email);

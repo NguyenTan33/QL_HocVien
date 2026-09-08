@@ -13,6 +13,7 @@ namespace QL_HocVien.ViewModels
         private readonly IAuthService _authService;
         private readonly IServiceProvider _serviceProvider;
         private readonly ISecurityGateService _securityGate;
+        private readonly IThemeService _themeService;
 
         [ObservableProperty]
         private ViewModelBase? _currentView;
@@ -22,6 +23,19 @@ namespace QL_HocVien.ViewModels
 
         [ObservableProperty]
         private User? _currentUser;
+
+        public bool IsAdmin => string.Equals(CurrentUser?.Role, "Admin", StringComparison.OrdinalIgnoreCase);
+        public bool IsCanBo => string.Equals(CurrentUser?.Role, "CanBo", StringComparison.OrdinalIgnoreCase);
+        public bool IsOfficerOrAdmin => IsAdmin || IsCanBo;
+        public bool IsHocVien => string.Equals(CurrentUser?.Role, "HocVien", StringComparison.OrdinalIgnoreCase);
+
+        partial void OnCurrentUserChanged(User? value)
+        {
+            OnPropertyChanged(nameof(IsAdmin));
+            OnPropertyChanged(nameof(IsCanBo));
+            OnPropertyChanged(nameof(IsOfficerOrAdmin));
+            OnPropertyChanged(nameof(IsHocVien));
+        }
 
         [ObservableProperty]
         private bool _isSecurityProtectionEnabled;
@@ -35,13 +49,24 @@ namespace QL_HocVien.ViewModels
         [ObservableProperty]
         private string _securityStatusTooltip = string.Empty;
 
+        // DUAL-THEME: CHẾ ĐỘ TÁC CHIẾN (COMBAT COMMAND CENTER) ⮂ CHẾ ĐỘ HÀNH CHÍNH (ADMINISTRATIVE)
+        [ObservableProperty]
+        private bool _isCombatMode = true;
+
+        [ObservableProperty]
+        private string _themeModeButtonText = "CHẾ ĐỘ HÀNH CHÍNH";
+
+        [ObservableProperty]
+        private string _themeModeTooltip = "Bấm để chuyển sang Chế độ Giao diện Hành chính công vụ sáng";
+
         public event Action? OnLogout;
 
-        public MainViewModel(IAuthService authService, IServiceProvider serviceProvider, ISecurityGateService securityGate)
+        public MainViewModel(IAuthService authService, IServiceProvider serviceProvider, ISecurityGateService securityGate, IThemeService themeService)
         {
             _authService = authService;
             _serviceProvider = serviceProvider;
             _securityGate = securityGate;
+            _themeService = themeService;
             Title = "Hệ Thống Quản Lý Học Viên Quân Đội";
             CurrentUser = _authService.CurrentUser;
 
@@ -82,6 +107,23 @@ namespace QL_HocVien.ViewModels
         public async Task QuickUnlock()
         {
             await _securityGate.EnsureUnlockedAsync("mở khóa quyền thao tác");
+        }
+
+        [RelayCommand]
+        public void ToggleThemeMode()
+        {
+            _themeService.ToggleTheme();
+            IsCombatMode = _themeService.IsCombatMode;
+            if (IsCombatMode)
+            {
+                ThemeModeButtonText = "CHẾ ĐỘ HÀNH CHÍNH";
+                ThemeModeTooltip = "Bấm để chuyển sang Chế độ Giao diện Hành chính công vụ sáng";
+            }
+            else
+            {
+                ThemeModeButtonText = "CHẾ ĐỘ TÁC CHIẾN";
+                ThemeModeTooltip = "Bấm để kích hoạt Trung tâm Chỉ huy Tác chiến Quân đội";
+            }
         }
 
         [RelayCommand]
@@ -150,6 +192,13 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         public void NavigateToOfficerManagement()
         {
+            if (!IsAdmin)
+            {
+                System.Windows.MessageBox.Show(
+                    "CẢNH BÁO AN NINH: Đồng chí không có quyền truy cập Danh mục Cán bộ Sĩ quan!\nChức năng này chỉ dành riêng cho Quản Trị Viên (Admin).",
+                    "Truy Cập Bị Từ Chối (403)", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                return;
+            }
             ActiveMenu = "OfficerManagement";
             CurrentView = _serviceProvider.GetRequiredService<OfficerManagementViewModel>();
         }
@@ -157,6 +206,13 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         public void NavigateToCatalogManagement()
         {
+            if (!IsAdmin)
+            {
+                System.Windows.MessageBox.Show(
+                    "CẢNH BÁO AN NINH: Đồng chí không có quyền chỉnh sửa Danh mục Tổ chức Quân sự!\nChức năng này chỉ dành riêng cho Quản Trị Viên (Admin).",
+                    "Truy Cập Bị Từ Chối (403)", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                return;
+            }
             ActiveMenu = "CatalogManagement";
             CurrentView = _serviceProvider.GetRequiredService<CatalogManagementViewModel>();
         }
@@ -192,6 +248,13 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         public void NavigateToSettings()
         {
+            if (!IsAdmin)
+            {
+                System.Windows.MessageBox.Show(
+                    "CẢNH BÁO AN NINH: Cài đặt hệ thống và cấu hình máy chủ chỉ dành riêng cho Quản Trị Viên (Admin).",
+                    "Truy Cập Bị Từ Chối (403)", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                return;
+            }
             ActiveMenu = "Settings";
             CurrentView = _serviceProvider.GetRequiredService<SettingsViewModel>();
         }

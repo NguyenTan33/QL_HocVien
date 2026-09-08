@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Windows.Threading;
 
@@ -11,6 +13,7 @@ namespace QL_HocVien.Services
         private const int BaseLockoutSeconds = 60; // 1 phút = 60 giây
         private const int MaxLockoutSeconds = 3600; // Khóa tối đa 60 phút
         private const string StateFileName = "lockout_state.json";
+        private static readonly byte[] LockoutEntropy = Encoding.UTF8.GetBytes("MOD_Lockout_State_Entropy_2026!#");
 
         private readonly string _stateFilePath;
         private readonly DispatcherTimer _timer;
@@ -183,7 +186,20 @@ namespace QL_HocVien.Services
                 {
                     if (File.Exists(_stateFilePath))
                     {
-                        string json = File.ReadAllText(_stateFilePath);
+                        byte[] fileBytes = File.ReadAllBytes(_stateFilePath);
+                        string json;
+
+                        try
+                        {
+                            byte[] decrypted = ProtectedData.Unprotect(fileBytes, LockoutEntropy, DataProtectionScope.CurrentUser);
+                            json = Encoding.UTF8.GetString(decrypted);
+                        }
+                        catch
+                        {
+                            // Hỗ trợ đọc file cấu trúc cũ (nếu chưa mã hóa)
+                            json = Encoding.UTF8.GetString(fileBytes);
+                        }
+
                         var data = JsonSerializer.Deserialize<LockoutStateDto>(json);
                         if (data != null)
                         {
@@ -204,9 +220,13 @@ namespace QL_HocVien.Services
                 }
                 catch
                 {
-                    _failedAttempts = 0;
-                    _lockoutUntilUtc = null;
-                    _remainingSeconds = 0;
+                    // Nếu phát hiện file bị can thiệp lỗi cấu trúc, không reset nếu đang trong bộ nhớ
+                    if (!_lockoutUntilUtc.HasValue)
+                    {
+                        _failedAttempts = 0;
+                        _lockoutUntilUtc = null;
+                        _remainingSeconds = 0;
+                    }
                 }
             }
         }
@@ -221,7 +241,11 @@ namespace QL_HocVien.Services
                     LockoutUntilUtc = _lockoutUntilUtc
                 };
                 string json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
-                File.WriteAllText(_stateFilePath, json);
+                byte[] plainBytes = Encoding.UTF8.GetBytes(json);
+
+                // Mã hóa bảo vệ toàn vẹn bằng Windows DPAPI
+                byte[] cipherBytes = ProtectedData.Protect(plainBytes, LockoutEntropy, DataProtectionScope.CurrentUser);
+                File.WriteAllBytes(_stateFilePath, cipherBytes);
             }
             catch
             {

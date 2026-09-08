@@ -119,20 +119,20 @@ namespace QL_HocVien.Models.DTOs
 
         public string RatingColor => AcademicRating switch
         {
-            "Giỏi" => "#2563EB",
-            "Khá" => "#16A34A",
-            "Trung bình" => "#D97706",
-            "Yếu" => "#DC2626",
-            _ => "#64748B"
+            "Giỏi" => "#93C5FD",
+            "Khá" => "#86EFAC",
+            "Trung bình" => "#FDE047",
+            "Yếu" => "#FCA5A5",
+            _ => "#B9B99E"
         };
 
         public string RatingBackground => AcademicRating switch
         {
-            "Giỏi" => "#DBEAFE",
-            "Khá" => "#DCFCE7",
-            "Trung bình" => "#FEF3C7",
-            "Yếu" => "#FEE2E2",
-            _ => "#F1F5F9"
+            "Giỏi" => "#1E3048",
+            "Khá" => "#183622",
+            "Trung bình" => "#3D3014",
+            "Yếu" => "#421818",
+            _ => "#253628"
         };
 
         // Cảnh báo thiếu môn / đợt kiểm tra
@@ -141,7 +141,7 @@ namespace QL_HocVien.Models.DTOs
         public string MissingSubjectsDisplay { get; set; } = string.Empty;
 
         // Dòng màu vàng cho học viên chưa làm bài
-        public string RowBackground => HasMissingSubjects ? "#FEF9C3" : "Transparent";
+        public string RowBackground => HasMissingSubjects ? "#3D3414" : "Transparent";
 
         public string SummaryText => $"TBM: {Gpa:F2}  |  Xếp loại: {AcademicRating}  |  Đã tích lũy: {TotalCreditsEarned:F2}/{TotalCurriculumCredits:F2} TC  |  {(HasMissingSubjects ? $"⚠️ Thiếu {MissingSubjectsCount} nội dung" : "✅ Hoàn thành đầy đủ")}";
 
@@ -174,12 +174,12 @@ namespace QL_HocVien.Models.DTOs
 
         public string RatingColor => Rating switch
         {
-            "Xuất sắc" => "#7C3AED",
-            "Giỏi" => "#2563EB",
-            "Khá" => "#16A34A",
-            "Đạt (TB)" => "#D97706",
-            "Không đạt" => "#DC2626",
-            _ => "#64748B"
+            "Xuất sắc" => "#C084FC",
+            "Giỏi" => "#93C5FD",
+            "Khá" => "#86EFAC",
+            "Đạt (TB)" => "#FDE047",
+            "Không đạt" => "#FCA5A5",
+            _ => "#B9B99E"
         };
 
         public bool IsWarning { get; set; }

@@ -7,12 +7,18 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <ApplicationIcon>Resources\app_icon.ico</ApplicationIcon>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
   </PropertyGroup>
 
   <ItemGroup>
     <Resource Include="Resources\app_icon.ico" />
     <Resource Include="Resources\app_icon.png" />
     <Resource Include="Resources\auth_bg.jpg" />
+    <Resource Include="Assets\Images\*.png" />
   </ItemGroup>
 
   <ItemGroup>

@@ -550,6 +550,14 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         private async Task DeleteCadetAsync()
         {
+            if (_authService.CurrentUser?.Role == "HocVien")
+            {
+                System.Windows.MessageBox.Show(
+                    "CẢNH BÁO AN NINH: Học viên không có thẩm quyền thực hiện thao tác xóa dữ liệu!",
+                    "Từ Chối Thao Tác (403)", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                return;
+            }
+
             if (!await _securityGate.EnsureUnlockedAsync("Xóa học viên khỏi hệ thống")) return;
             var selected = Cadets.Where(c => c.IsSelected).ToList();
             if (!selected.Any() && SelectedCadet != null)
@@ -597,6 +605,14 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         private async Task DeleteSelectedAsync()
         {
+            if (_authService.CurrentUser?.Role == "HocVien")
+            {
+                System.Windows.MessageBox.Show(
+                    "CẢNH BÁO AN NINH: Học viên không có thẩm quyền thực hiện thao tác xóa dữ liệu!",
+                    "Từ Chối Thao Tác (403)", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                return;
+            }
+
             var selectedIds = Cadets.Where(c => c.IsSelected).Select(c => c.Id).ToList();
             if (!selectedIds.Any())
             {
@@ -640,6 +656,14 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         private async Task DeleteAllFilteredAsync()
         {
+            if (_authService.CurrentUser?.Role == "HocVien")
+            {
+                System.Windows.MessageBox.Show(
+                    "CẢNH BÁO AN NINH: Học viên không có thẩm quyền thực hiện thao tác xóa dữ liệu!",
+                    "Từ Chối Thao Tác (403)", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                return;
+            }
+
             var allIds = Cadets.Select(c => c.Id).ToList();
             if (!allIds.Any())
             {

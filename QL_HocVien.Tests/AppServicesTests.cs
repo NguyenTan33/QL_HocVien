@@ -59,7 +59,7 @@ namespace QL_HocVien.Tests
             _positionRepository = new PositionRepository(_context);
             _unitRepository = new UnitRepository(_context);
             _majorRepository = new MajorRepository(_context);
-            _emailService = new EmailService();
+            _emailService = new EmailService(isTestMode: true);
 
             _authService = new AuthService(_userRepository, _cadetRepository, _context, _emailService);
             _classService = new ClassService(_classRepository);
@@ -929,7 +929,8 @@ namespace QL_HocVien.Tests
                         _authService,
                         _excelService,
                         new TestFileDialogService(),
-                        _catalogService);
+                        _catalogService,
+                        new QL_HocVien.Tests.TestDoubles.FakeSecurityGateService());
                     view.DataContext = vm;
                     view.Measure(new System.Windows.Size(1000, 800));
                     view.Arrange(new System.Windows.Rect(0, 0, 1000, 800));
@@ -960,7 +961,8 @@ namespace QL_HocVien.Tests
                 _authService,
                 _excelService,
                 new TestFileDialogService(),
-                _catalogService);
+                _catalogService,
+                new QL_HocVien.Tests.TestDoubles.FakeSecurityGateService());
 
             // Wait a bit for _ = InitializeAsync() to finish
             await Task.Delay(1000);

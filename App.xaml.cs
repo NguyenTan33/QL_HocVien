@@ -12,6 +12,8 @@ using QL_HocVien.Services;
 using QL_HocVien.Services.Calculators;
 using QL_HocVien.ViewModels;
 using QL_HocVien.Views.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using SQLitePCL;
 
 namespace QL_HocVien
@@ -27,9 +29,24 @@ namespace QL_HocVien
 
             base.OnStartup(e);
 
+            var culture = new System.Globalization.CultureInfo("vi-VN");
+            System.Globalization.CultureInfo.DefaultThreadCurrentCulture = culture;
+            System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = culture;
+            System.Threading.Thread.CurrentThread.CurrentCulture = culture;
+            System.Threading.Thread.CurrentThread.CurrentUICulture = culture;
+            FrameworkElement.LanguageProperty.OverrideMetadata(typeof(FrameworkElement), 
+                new FrameworkPropertyMetadata(System.Windows.Markup.XmlLanguage.GetLanguage(culture.IetfLanguageTag)));
+
             DispatcherUnhandledException += (sender, args) =>
             {
-                MessageBox.Show($"Đã xảy ra lỗi không mong muốn:\n{args.Exception.Message}\n\nChi tiết:\n{args.Exception}",
+                try
+                {
+                    File.AppendAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "system_error.log"),
+                        $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] Lỗi: {args.Exception.Message}\nChi tiết:\n{args.Exception}\n-----------------------------------\n");
+                }
+                catch { }
+
+                MessageBox.Show("Đã xảy ra sự cố không mong muốn trong quá trình thực thi.\nThông tin lỗi đã được ghi lại an toàn vào tệp nhật ký.",
                                 "Lỗi Hệ Thống QL_HocVien", MessageBoxButton.OK, MessageBoxImage.Error);
                 args.Handled = true;
             };
@@ -47,6 +64,72 @@ namespace QL_HocVien
                     DbInitializer.Initialize(dbContext);
                 }
 
+                // Khởi tạo giao diện Chế độ Tác chiến (Combat Command Center) theo promt.txt & DemoUI.png
+                ServiceProvider.GetRequiredService<IThemeService>().ApplyTheme(true);
+
+                // Hỗ trợ kiểm thử chụp ảnh màn hình tự động (--screenshot)
+                if (Array.Exists(e.Args, a => a == "--screenshot"))
+                {
+                    string outPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "scratch", "app_screenshot.png");
+                    int idx = Array.IndexOf(e.Args, "--screenshot");
+                    if (idx >= 0 && idx < e.Args.Length - 1 && !e.Args[idx + 1].StartsWith("-"))
+                    {
+                        outPath = e.Args[idx + 1];
+                    }
+
+                    var authService = ServiceProvider.GetRequiredService<IAuthService>();
+                    authService.LoginAsync("admin", "Admin@123").GetAwaiter().GetResult();
+
+                    var mainWindow = ServiceProvider.GetRequiredService<MainWindow>();
+                    mainWindow.Width = 1600;
+                    mainWindow.Height = 900;
+
+                    if (Array.Exists(e.Args, a => a == "--page"))
+                    {
+                        int pIdx = Array.IndexOf(e.Args, "--page");
+                        if (pIdx >= 0 && pIdx < e.Args.Length - 1 && mainWindow.DataContext is MainViewModel mainVm)
+                        {
+                            string target = e.Args[pIdx + 1].ToLowerInvariant();
+                            if (target.Contains("officer")) mainVm.NavigateToOfficerManagement();
+                            else if (target.Contains("credit") || target.Contains("subject")) mainVm.NavigateToCreditSubjectManagement();
+                            else if (target.Contains("timeline") || target.Contains("calendar")) mainVm.NavigateToTrainingTimeline();
+                            else if (target.Contains("academic")) mainVm.NavigateToAcademicAnalytics();
+                            else if (target.Contains("exam")) mainVm.NavigateToExamAnalytics();
+                            else if (target.Contains("setting")) mainVm.NavigateToSettings();
+                            else if (target.Contains("cadet")) mainVm.NavigateToCadetManagement();
+                            else if (target.Contains("class")) mainVm.NavigateToClassManagement();
+                        }
+                    }
+
+                    mainWindow.Show();
+                    mainWindow.UpdateLayout();
+                    mainWindow.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+                    System.Threading.Thread.Sleep(500);
+                    mainWindow.UpdateLayout();
+                    mainWindow.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+
+                    int w = (int)Math.Max(1600, mainWindow.ActualWidth);
+                    int h = (int)Math.Max(900, mainWindow.ActualHeight);
+                    var rtb = new RenderTargetBitmap(w, h, 96, 96, PixelFormats.Pbgra32);
+                    rtb.Render(mainWindow);
+
+                    var dir = Path.GetDirectoryName(outPath);
+                    if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+                    {
+                        Directory.CreateDirectory(dir);
+                    }
+
+                    var encoder = new PngBitmapEncoder();
+                    encoder.Frames.Add(BitmapFrame.Create(rtb));
+                    using (var fs = File.Create(outPath))
+                    {
+                        encoder.Save(fs);
+                    }
+
+                    Shutdown(0);
+                    return;
+                }
+
                 // Hiển thị màn hình Đăng nhập đầu tiên
                 var loginWindow = ServiceProvider.GetRequiredService<LoginWindow>();
                 MainWindow = loginWindow;
@@ -54,9 +137,14 @@ namespace QL_HocVien
             }
             catch (Exception ex)
             {
-                File.WriteAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "startup_error.log"),
-                    $"[ERROR] {ex.Message}\n\n{ex.StackTrace}\n\nInner: {ex.InnerException?.Message}\n{ex.InnerException?.StackTrace}");
-                MessageBox.Show($"Không thể khởi động ứng dụng:\n{ex.Message}\n\n{ex.StackTrace}",
+                try
+                {
+                    File.WriteAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "startup_error.log"),
+                        $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [CRITICAL] Không thể khởi động ứng dụng:\n{ex.Message}\n\nStack Trace:\n{ex.StackTrace}\n\nInner: {ex.InnerException?.Message}\n{ex.InnerException?.StackTrace}");
+                }
+                catch { }
+
+                MessageBox.Show("Không thể khởi động ứng dụng do xảy ra sự cố nội bộ.\nChi tiết lỗi đã được ghi vào tập tin 'startup_error.log'.\nVui lòng liên hệ quản trị viên hệ thống để được hỗ trợ.",
                                 "Lỗi Khởi Động", MessageBoxButton.OK, MessageBoxImage.Error);
                 Shutdown();
             }
@@ -126,6 +214,7 @@ namespace QL_HocVien
             services.AddSingleton<ISecurityGateService, SecurityGateService>();
             services.AddSingleton<ISecureKeyVault, SecureKeyVault>();
             services.AddSingleton<ILoginLockoutService, LoginLockoutService>();
+            services.AddSingleton<IThemeService, ThemeService>();
 
             // Đăng ký Infrastructure (Validation Factory & Security Services - OOP & SOLID)
             services.AddAppInfrastructureValidation();

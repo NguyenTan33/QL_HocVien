@@ -78,11 +78,14 @@ namespace QL_HocVien.Data
                 // Giải phóng hoàn toàn file handle từ connection pool
                 SqliteConnection.ClearAllPools();
 
-                // Sao lưu file plaintext cũ
-                File.Copy(dbPath, backupPath, overwrite: true);
-
-                // Thay thế file cũ bằng file đã mã hóa AES-256
+                // Thay thế file cũ bằng file đã mã hóa AES-256 an toàn
                 File.Move(tempEncryptedPath, dbPath, overwrite: true);
+
+                // Tuyệt đối không lưu trữ bản sao rõ (plaintext_backup) trên đĩa để chống trích xuất dữ liệu
+                if (File.Exists(backupPath))
+                {
+                    try { File.Delete(backupPath); } catch { }
+                }
             }
             catch (Exception ex)
             {

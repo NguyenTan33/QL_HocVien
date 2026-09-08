@@ -174,4 +174,20 @@ namespace QL_HocVien.Converters
             return null;
         }
     }
+
+    public class MenuMatchToBooleanConverter : IMultiValueConverter
+    {
+        public static readonly MenuMatchToBooleanConverter Instance = new();
+
+        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (values.Length >= 2 && values[0] is string active && values[1] is string target)
+            {
+                return string.Equals(active, target, StringComparison.OrdinalIgnoreCase);
+            }
+            return false;
+        }
+
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture) => throw new NotImplementedException();
+    }
 }

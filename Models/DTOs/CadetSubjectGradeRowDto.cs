@@ -130,12 +130,12 @@ namespace QL_HocVien.Models.DTOs
             }
         }
 
-        public string RowBackground => HasMissingInActiveComponent ? "#FEF9C3" : "White";
+        public string RowBackground => HasMissingInActiveComponent ? "#382914" : "Transparent";
 
         public string StatusBadgeText => HasMissingInActiveComponent ? "⚠️" : (CalculatedSubjectScore.HasValue ? "✅" : "⚪");
         public string StatusBadgeTooltip => HasMissingInActiveComponent ? "Chưa thi (đợt thi đã có >10 học viên có điểm)" : (CalculatedSubjectScore.HasValue ? "Đã có điểm đầy đủ" : "Chưa mở đợt thi");
-        public string StatusBadgeBg => HasMissingInActiveComponent ? "#FEF08A" : (CalculatedSubjectScore.HasValue ? "#DCFCE7" : "#F1F5F9");
-        public string StatusBadgeFg => HasMissingInActiveComponent ? "#854D0E" : (CalculatedSubjectScore.HasValue ? "#15803D" : "#64748B");
+        public string StatusBadgeBg => HasMissingInActiveComponent ? "#4A3315" : (CalculatedSubjectScore.HasValue ? "#143820" : "#253628");
+        public string StatusBadgeFg => HasMissingInActiveComponent ? "#FBBF24" : (CalculatedSubjectScore.HasValue ? "#4ADE80" : "#94A3B8");
 
         public string MissingComponentsDisplay { get; set; } = string.Empty;
 

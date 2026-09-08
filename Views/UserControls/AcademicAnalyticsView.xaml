@@ -9,9 +9,10 @@
 
     <UserControl.Resources>
         <cv:BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <cv:StringToBrushConverter x:Key="StringToBrush"/>
     </UserControl.Resources>
 
-    <Border Padding="24">
+    <Border Padding="20">
         <Grid>
             <Grid.RowDefinitions>
                 <!-- 0. Tiêu đề trang -->
@@ -29,9 +30,9 @@
             <!-- HÀNG 0: TIÊU ĐỀ TRANG -->
             <StackPanel Grid.Row="0" VerticalAlignment="Center" Margin="0,0,0,10">
                 <TextBlock Text="PHÂN TÍCH &amp; SO SÁNH HỌC LỰC - BẢNG ĐIỂM TOÀN KHÓA" 
-                           FontSize="19" FontWeight="Bold" Foreground="#0F172A" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                           FontSize="20" FontWeight="Bold" Foreground="{DynamicResource AccentLightBrush}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
                 <TextBlock Text="Thống kê, so sánh kết quả học tập và phân tích học lực theo phân cấp từ Đại đội ➔ Lớp ➔ Cá nhân học viên" 
-                           FontSize="12" Foreground="#64748B" Margin="0,4,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                           FontSize="12.5" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
             </StackPanel>
 
             <!-- HÀNG 1: THANH CÔNG CỤ THAO TÁC -->
@@ -60,25 +61,25 @@
 
                         <!-- Đơn vị -->
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="Phân cấp Đơn vị:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                            <TextBlock Text="Phân cấp Đơn vị:" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
                             <ComboBox ItemsSource="{Binding UnitOptions}" SelectedItem="{Binding SelectedUnit}" Height="34"/>
                         </StackPanel>
 
                         <!-- Lớp -->
                         <StackPanel Grid.Column="2">
-                            <TextBlock Text="Cấp Lớp / Phân đội:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                            <TextBlock Text="Cấp Lớp / Phân đội:" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
                             <ComboBox ItemsSource="{Binding ClassOptions}" SelectedItem="{Binding SelectedClass}" Height="34"/>
                         </StackPanel>
 
                         <!-- Lọc theo Xếp loại -->
                         <StackPanel Grid.Column="4">
-                            <TextBlock Text="Xếp loại học lực:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                            <TextBlock Text="Xếp loại học lực:" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
                             <ComboBox ItemsSource="{Binding RatingOptions}" SelectedItem="{Binding SelectedRating}" Height="34"/>
                         </StackPanel>
 
                         <!-- Lọc theo Trạng thái môn -->
                         <StackPanel Grid.Column="6">
-                            <TextBlock Text="Tình trạng môn thi:" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                            <TextBlock Text="Tình trạng môn thi:" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
                             <ComboBox ItemsSource="{Binding StatusOptions}" SelectedItem="{Binding SelectedStatus}" Height="34"/>
                         </StackPanel>
 
@@ -100,8 +101,9 @@
 
                         <!-- Tìm học viên theo mã hoặc tên -->
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="Tìm kiếm cá nhân (Mã HV hoặc Họ và tên):" FontSize="11" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,4"/>
+                            <TextBlock Text="Tìm kiếm cá nhân (Mã HV hoặc Họ và tên):" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
                             <TextBox Text="{Binding SearchKeyword, UpdateSourceTrigger=PropertyChanged}" 
+                                     Style="{StaticResource ModernTextBoxStyle}"
                                      Height="34" VerticalContentAlignment="Center" Padding="8,0">
                                 <TextBox.InputBindings>
                                     <KeyBinding Key="Enter" Command="{Binding ExecuteAnalyticsCommand}"/>
@@ -135,54 +137,54 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- KPI 1: Quân số & TBM chung -->
-                <Border Grid.Column="0" Style="{StaticResource CardBorderStyle}" Padding="14,10" Background="#FFFFFF">
+                <Border Grid.Column="0" Background="{DynamicResource KpiCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,10">
                     <StackPanel>
-                        <TextBlock Text="QUÂN SỐ PHÂN TÍCH" FontSize="11" FontWeight="Bold" Foreground="#64748B"/>
-                        <TextBlock Text="{Binding TotalCadets}" FontSize="22" FontWeight="ExtraBold" Foreground="#0F172A" Margin="0,4,0,0"/>
-                        <TextBlock FontSize="11" Foreground="#475569" Margin="0,2,0,0">
+                        <TextBlock Text="QUÂN SỐ PHÂN TÍCH" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                        <TextBlock Text="{Binding TotalCadets}" FontSize="22" FontWeight="ExtraBold" Foreground="{DynamicResource AccentLightBrush}" Margin="0,4,0,0"/>
+                        <TextBlock FontSize="11" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,2,0,0">
                             <Run Text="TBM bình quân: "/>
-                            <Run Text="{Binding AverageGpa, StringFormat={}{0:F2}}" FontWeight="Bold" Foreground="#1E3A8A"/>
+                            <Run Text="{Binding AverageGpa, StringFormat={}{0:F2}}" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}"/>
                         </TextBlock>
                     </StackPanel>
                 </Border>
 
                 <!-- KPI 2: HỌC LỰC GIỎI -->
-                <Border Grid.Column="2" Style="{StaticResource CardBorderStyle}" Padding="14,10" Background="#EFF6FF" BorderBrush="#93C5FD">
+                <Border Grid.Column="2" Background="{DynamicResource KpiCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,10">
                     <StackPanel>
-                        <TextBlock Text="HỌC LỰC GIỎI (≥ 8.0)" FontSize="11" FontWeight="Bold" Foreground="#1D4ED8"/>
+                        <TextBlock Text="HỌC LỰC GIỎI (≥ 8.0)" FontSize="11" FontWeight="Bold" Foreground="#93C5FD"/>
                         <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                            <TextBlock Text="{Binding ExcellentCount}" FontSize="22" FontWeight="ExtraBold" Foreground="#2563EB"/>
-                            <TextBlock Text=" đ/c" FontSize="14" FontWeight="Bold" Foreground="#2563EB" VerticalAlignment="Bottom" Margin="2,0,0,3"/>
+                            <TextBlock Text="{Binding ExcellentCount}" FontSize="22" FontWeight="ExtraBold" Foreground="#60A5FA"/>
+                            <TextBlock Text=" đ/c" FontSize="14" FontWeight="Bold" Foreground="#60A5FA" VerticalAlignment="Bottom" Margin="2,0,0,3"/>
                         </StackPanel>
-                        <TextBlock FontSize="11" Foreground="#2563EB" FontWeight="SemiBold" Margin="0,2,0,0">
+                        <TextBlock FontSize="11" Foreground="#93C5FD" FontWeight="SemiBold" Margin="0,2,0,0">
                             <Run Text="{Binding ExcellentPercentage, StringFormat={}{0:F1}% quân số}"/>
                         </TextBlock>
                     </StackPanel>
                 </Border>
 
                 <!-- KPI 3: HỌC LỰC KHÁ -->
-                <Border Grid.Column="4" Style="{StaticResource CardBorderStyle}" Padding="14,10" Background="#F0FDF4" BorderBrush="#86EFAC">
+                <Border Grid.Column="4" Background="{DynamicResource KpiCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,10">
                     <StackPanel>
-                        <TextBlock Text="HỌC LỰC KHÁ (7.0 - 7.9)" FontSize="11" FontWeight="Bold" Foreground="#15803D"/>
+                        <TextBlock Text="HỌC LỰC KHÁ (7.0 - 7.9)" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}"/>
                         <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                            <TextBlock Text="{Binding GoodCount}" FontSize="22" FontWeight="ExtraBold" Foreground="#16A34A"/>
-                            <TextBlock Text=" đ/c" FontSize="14" FontWeight="Bold" Foreground="#16A34A" VerticalAlignment="Bottom" Margin="2,0,0,3"/>
+                            <TextBlock Text="{Binding GoodCount}" FontSize="22" FontWeight="ExtraBold" Foreground="#4ADE80"/>
+                            <TextBlock Text=" đ/c" FontSize="14" FontWeight="Bold" Foreground="#4ADE80" VerticalAlignment="Bottom" Margin="2,0,0,3"/>
                         </StackPanel>
-                        <TextBlock FontSize="11" Foreground="#16A34A" FontWeight="SemiBold" Margin="0,2,0,0">
+                        <TextBlock FontSize="11" Foreground="#86EFAC" FontWeight="SemiBold" Margin="0,2,0,0">
                             <Run Text="{Binding GoodPercentage, StringFormat={}{0:F1}% quân số}"/>
                         </TextBlock>
                     </StackPanel>
                 </Border>
 
                 <!-- KPI 4: THIẾU MÔN / CHƯA HOÀN THÀNH -->
-                <Border Grid.Column="6" Style="{StaticResource CardBorderStyle}" Padding="14,10" Background="#FEF2F2" BorderBrush="#FECACA">
+                <Border Grid.Column="6" Background="#2A1515" BorderBrush="{DynamicResource DangerBrush}" BorderThickness="1" CornerRadius="8" Padding="14,10">
                     <StackPanel>
-                        <TextBlock Text="THIẾU MÔN / CHƯA THI (⚠️)" FontSize="11" FontWeight="Bold" Foreground="#B91C1C"/>
+                        <TextBlock Text="THIẾU MÔN / CHƯA THI (⚠️)" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource DangerBrush}"/>
                         <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                            <TextBlock Text="{Binding MissingCount}" FontSize="22" FontWeight="ExtraBold" Foreground="#DC2626"/>
-                            <TextBlock Text=" đ/c" FontSize="14" FontWeight="Bold" Foreground="#DC2626" VerticalAlignment="Bottom" Margin="2,0,0,3"/>
+                            <TextBlock Text="{Binding MissingCount}" FontSize="22" FontWeight="ExtraBold" Foreground="#F87171"/>
+                            <TextBlock Text=" đ/c" FontSize="14" FontWeight="Bold" Foreground="#F87171" VerticalAlignment="Bottom" Margin="2,0,0,3"/>
                         </StackPanel>
-                        <TextBlock FontSize="11" Foreground="#DC2626" FontWeight="SemiBold" Margin="0,2,0,0">
+                        <TextBlock FontSize="11" Foreground="#FCA5A5" FontWeight="SemiBold" Margin="0,2,0,0">
                             <Run Text="{Binding MissingPercentage, StringFormat={}{0:F1}% quân số}"/>
                         </TextBlock>
                     </StackPanel>
@@ -193,23 +195,22 @@
             <Border Grid.Row="4" Style="{StaticResource CardBorderStyle}" Padding="0">
                 <TabControl BorderThickness="0" Background="Transparent" SelectedIndex="{Binding SelectedTabIndex}">
                     <!-- TAB 1: CẤP ĐẠI ĐỘI & TOÀN ĐƠN VỊ -->
-                    <TabItem Header="🏛️  Cấp Đại Đội &amp; Toàn Đơn Vị" FontSize="13" FontWeight="SemiBold" Padding="16,8">
+                    <TabItem Header="🏛️  Cấp Đại Đội &amp; Toàn Đơn Vị" Style="{StaticResource TabHeaderStyle}">
                         <Border Padding="12">
                             <DataGrid ItemsSource="{Binding UnitComparisons}" 
                                       Style="{StaticResource MilitaryDataGridStyle}" 
-                                      AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
-                                      AlternatingRowBackground="#F8FAFC">
+                                      AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Thứ hạng" Binding="{Binding RankInBattalion, StringFormat={}Hạng {0}}" FontWeight="Bold" Width="0.9*"/>
                                     <DataGridTextColumn Header="Đơn vị / Đại đội" Binding="{Binding UnitName}" FontWeight="Bold" Width="1.5*"/>
                                     <DataGridTextColumn Header="Quân số" Binding="{Binding TotalCadets}" Width="0.8*"/>
-                                    <DataGridTextColumn Header="TBM Bình Quân" Binding="{Binding AverageGpa, StringFormat={}{0:F2}}" FontWeight="Bold" Width="1.2*"/>
+                                    <DataGridTextColumn Header="TBM Bình Quân" Binding="{Binding AverageGpa, StringFormat={}{0:F2}}" FontWeight="Bold" Foreground="{DynamicResource AccentLightBrush}" Width="1.2*"/>
                                     <DataGridTextColumn Header="% Giỏi" Binding="{Binding ExcellentRate, StringFormat={}{0:F1}%}" Width="0.9*"/>
                                     <DataGridTextColumn Header="% Khá" Binding="{Binding GoodRate, StringFormat={}{0:F1}%}" Width="0.9*"/>
                                     <DataGridTextColumn Header="% TB" Binding="{Binding AverageRate, StringFormat={}{0:F1}%}" Width="0.9*"/>
                                     <DataGridTextColumn Header="% Yếu" Binding="{Binding WeakRate, StringFormat={}{0:F1}%}" Width="0.9*"/>
-                                    <DataGridTextColumn Header="Đủ môn" Binding="{Binding CompletedCount}" FontWeight="Bold" Foreground="#16A34A" Width="0.9*"/>
-                                    <DataGridTextColumn Header="Nợ/Thiếu môn" Binding="{Binding MissingCount}" FontWeight="Bold" Foreground="#DC2626" Width="1.1*"/>
+                                    <DataGridTextColumn Header="Đủ môn" Binding="{Binding CompletedCount}" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}" Width="0.9*"/>
+                                    <DataGridTextColumn Header="Nợ/Thiếu môn" Binding="{Binding MissingCount}" FontWeight="Bold" Foreground="{DynamicResource DangerBrush}" Width="1.1*"/>
                                     <DataGridTextColumn Header="Đánh giá thi đua học tập" Binding="{Binding EvaluationComment}" Width="2.5*"/>
                                 </DataGrid.Columns>
                             </DataGrid>
@@ -217,23 +218,22 @@
                     </TabItem>
 
                     <!-- TAB 2: CẤP LỚP & PHÂN ĐỘI -->
-                    <TabItem Header="🏫  Cấp Lớp &amp; Phân Đội" FontSize="13" FontWeight="SemiBold" Padding="16,8">
+                    <TabItem Header="🏫  Cấp Lớp &amp; Phân Đội" Style="{StaticResource TabHeaderStyle}">
                         <Border Padding="12">
                             <DataGrid ItemsSource="{Binding ClassComparisons}" 
                                       Style="{StaticResource MilitaryDataGridStyle}" 
-                                      AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
-                                      AlternatingRowBackground="#F8FAFC">
+                                      AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Thứ hạng" Binding="{Binding RankInUnit, StringFormat={}Hạng {0}}" FontWeight="Bold" Width="0.9*"/>
                                     <DataGridTextColumn Header="Lớp / Phân đội" Binding="{Binding ClassName}" FontWeight="Bold" Width="1.8*"/>
                                     <DataGridTextColumn Header="Đại đội" Binding="{Binding Unit}" Width="1.2*"/>
                                     <DataGridTextColumn Header="Quân số" Binding="{Binding TotalCadets}" Width="0.8*"/>
-                                    <DataGridTextColumn Header="TBM Bình Quân" Binding="{Binding AverageGpa, StringFormat={}{0:F2}}" FontWeight="Bold" Width="1.2*"/>
-                                    <DataGridTextColumn Header="% Khá/Giỏi" Binding="{Binding GoodOrAboveRate, StringFormat={}{0:F1}%}" FontWeight="SemiBold" Width="1.1*"/>
-                                    <DataGridTextColumn Header="Số Giỏi" Binding="{Binding ExcellentCount}" FontWeight="Bold" Foreground="#2563EB" Width="0.8*"/>
-                                    <DataGridTextColumn Header="Số Khá" Binding="{Binding GoodCount}" FontWeight="Bold" Foreground="#16A34A" Width="0.8*"/>
-                                    <DataGridTextColumn Header="Số TB/Yếu" Binding="{Binding AverageWeakCount}" FontWeight="Bold" Foreground="#D97706" Width="0.9*"/>
-                                    <DataGridTextColumn Header="Nợ môn" Binding="{Binding MissingCount}" FontWeight="Bold" Foreground="#DC2626" Width="0.9*"/>
+                                    <DataGridTextColumn Header="TBM Bình Quân" Binding="{Binding AverageGpa, StringFormat={}{0:F2}}" FontWeight="Bold" Foreground="{DynamicResource AccentLightBrush}" Width="1.2*"/>
+                                    <DataGridTextColumn Header="% Khá/Giỏi" Binding="{Binding GoodOrAboveRate, StringFormat={}{0:F1}%}" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" Width="1.1*"/>
+                                    <DataGridTextColumn Header="Số Giỏi" Binding="{Binding ExcellentCount}" FontWeight="Bold" Foreground="#93C5FD" Width="0.8*"/>
+                                    <DataGridTextColumn Header="Số Khá" Binding="{Binding GoodCount}" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}" Width="0.8*"/>
+                                    <DataGridTextColumn Header="Số TB/Yếu" Binding="{Binding AverageWeakCount}" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" Width="0.9*"/>
+                                    <DataGridTextColumn Header="Nợ môn" Binding="{Binding MissingCount}" FontWeight="Bold" Foreground="{DynamicResource DangerBrush}" Width="0.9*"/>
                                     <DataGridTextColumn Header="Đánh giá học tập" Binding="{Binding EvaluationComment}" Width="2.2*"/>
                                 </DataGrid.Columns>
                             </DataGrid>
@@ -241,7 +241,7 @@
                     </TabItem>
 
                     <!-- TAB 3: CHI TIẾT CÁ NHÂN HỌC VIÊN (MASTER - DETAIL) -->
-                    <TabItem Header="👨‍✈️  Chi Tiết Từng Học Viên" FontSize="13" FontWeight="SemiBold" Padding="16,8">
+                    <TabItem Header="👨‍✈️  Chi Tiết Từng Học Viên" Style="{StaticResource TabHeaderStyle}">
                         <Grid Margin="12">
                             <Grid.ColumnDefinitions>
                                 <!-- Danh sách học viên bên trái -->
@@ -252,38 +252,37 @@
                             </Grid.ColumnDefinitions>
 
                             <!-- Bảng học viên bên trái -->
-                            <Border Grid.Column="0" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6">
+                            <Border Grid.Column="0" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="6">
                                 <DataGrid ItemsSource="{Binding CadetAnalytics}" 
                                           SelectedItem="{Binding SelectedCadet}"
                                           Style="{StaticResource MilitaryDataGridStyle}" 
-                                          AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
-                                          AlternatingRowBackground="#F8FAFC">
+                                          AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True">
                                     <DataGrid.RowStyle>
                                         <Style TargetType="DataGridRow">
-                                            <Setter Property="Background" Value="{Binding RowBackground}"/>
+                                            <Setter Property="Background" Value="{Binding RowBackground, Converter={StaticResource StringToBrush}}"/>
                                             <Style.Triggers>
                                                 <Trigger Property="IsSelected" Value="True">
-                                                    <Setter Property="Background" Value="#BFDBFE"/>
-                                                    <Setter Property="Foreground" Value="#0F172A"/>
+                                                    <Setter Property="Background" Value="{DynamicResource DataGridSelectedBackgroundBrush}"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource DataGridSelectedForegroundBrush}"/>
                                                 </Trigger>
                                             </Style.Triggers>
                                         </Style>
                                     </DataGrid.RowStyle>
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Mã HV" Binding="{Binding CadetCode}" FontWeight="Bold" Width="1.1*"/>
+                                        <DataGridTextColumn Header="Mã HV" Binding="{Binding CadetCode}" FontWeight="Bold" Foreground="{DynamicResource AccentLightBrush}" Width="1.1*"/>
                                         <DataGridTextColumn Header="Họ và tên" Binding="{Binding FullName}" FontWeight="SemiBold" Width="1.6*"/>
                                         <DataGridTextColumn Header="Cấp bậc" Binding="{Binding Rank}" Width="0.9*"/>
                                         <DataGridTextColumn Header="Đơn vị" Binding="{Binding Unit}" Width="0.9*"/>
                                         <DataGridTextColumn Header="Lớp" Binding="{Binding ClassName}" Width="1.1*"/>
 
-                                        <DataGridTextColumn Header="TBM" Binding="{Binding Gpa, StringFormat={}{0:F2}}" FontWeight="Bold" Width="0.9*"/>
+                                        <DataGridTextColumn Header="TBM" Binding="{Binding Gpa, StringFormat={}{0:F2}}" FontWeight="Bold" Foreground="{DynamicResource AccentLightBrush}" Width="0.9*"/>
 
                                         <!-- Xếp loại -->
                                         <DataGridTemplateColumn Header="Xếp loại" Width="1.1*">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <Border Background="{Binding RatingBackground}" CornerRadius="4" Padding="6,2" HorizontalAlignment="Left">
-                                                        <TextBlock Text="{Binding AcademicRating}" FontWeight="Bold" Foreground="{Binding RatingColor}"/>
+                                                    <Border Background="{Binding RatingBackground, Converter={StaticResource StringToBrush}}" CornerRadius="4" Padding="6,2" HorizontalAlignment="Left">
+                                                        <TextBlock Text="{Binding AcademicRating}" FontWeight="Bold" Foreground="{Binding RatingColor, Converter={StaticResource StringToBrush}}"/>
                                                     </Border>
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
@@ -294,8 +293,8 @@
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                        <TextBlock Text="⚠️ " Visibility="{Binding HasMissingSubjects, Converter={StaticResource BoolToVis}}" Foreground="#DC2626"/>
-                                                        <TextBlock Text="{Binding MissingSubjectsDisplay}" Foreground="{Binding HasMissingSubjects, Converter={StaticResource BoolToVis}}"/>
+                                                        <TextBlock Text="⚠️ " Visibility="{Binding HasMissingSubjects, Converter={StaticResource BoolToVis}}" Foreground="{DynamicResource DangerBrush}"/>
+                                                        <TextBlock Text="{Binding MissingSubjectsDisplay}" Foreground="{DynamicResource DangerBrush}"/>
                                                     </StackPanel>
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
@@ -313,37 +312,36 @@
                                     </Grid.RowDefinitions>
 
                                     <!-- Header thông tin học viên được chọn -->
-                                    <Border Grid.Row="0" Margin="0,0,0,10" Padding="0,0,0,8" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1">
+                                    <Border Grid.Row="0" Margin="0,0,0,10" Padding="0,0,0,8" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,0,0,1">
                                         <StackPanel>
-                                            <TextBlock Text="BẢNG ĐIỂM CHI TIẾT CÁC ĐỢT THI &amp; KIỂM TRA" FontSize="12" FontWeight="Bold" Foreground="#1E293B"/>
+                                            <TextBlock Text="BẢNG ĐIỂM CHI TIẾT CÁC ĐỢT THI &amp; KIỂM TRA" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource AccentLightBrush}"/>
                                             <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                                                <TextBlock Text="{Binding SelectedCadet.FullName}" FontWeight="Bold" FontSize="14" Foreground="#1E3A8A"/>
-                                                <TextBlock Text=" (" Foreground="#64748B" FontSize="13"/>
-                                                <TextBlock Text="{Binding SelectedCadet.CadetCode}" Foreground="#64748B" FontSize="13"/>
-                                                <TextBlock Text=" - " Foreground="#64748B" FontSize="13"/>
-                                                <TextBlock Text="{Binding SelectedCadet.Unit}" Foreground="#64748B" FontSize="13"/>
-                                                <TextBlock Text=")" Foreground="#64748B" FontSize="13"/>
+                                                <TextBlock Text="{Binding SelectedCadet.FullName}" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource AccentLightBrush}"/>
+                                                <TextBlock Text=" (" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13"/>
+                                                <TextBlock Text="{Binding SelectedCadet.CadetCode}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13"/>
+                                                <TextBlock Text=" - " Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13"/>
+                                                <TextBlock Text="{Binding SelectedCadet.Unit}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13"/>
+                                                <TextBlock Text=")" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="13"/>
                                             </StackPanel>
-                                            <TextBlock Text="{Binding SelectedCadet.SummaryText}" FontSize="11" Foreground="#475569" Margin="0,2,0,0"/>
+                                            <TextBlock Text="{Binding SelectedCadet.SummaryText}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0"/>
                                         </StackPanel>
                                     </Border>
 
                                     <!-- Bảng các đợt thi -->
                                     <DataGrid Grid.Row="1" ItemsSource="{Binding SelectedCadet.SubjectDetails}" 
                                               Style="{StaticResource MilitaryDataGridStyle}" 
-                                              AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
-                                              AlternatingRowBackground="#F8FAFC">
+                                              AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True">
                                         <DataGrid.Columns>
                                             <DataGridTextColumn Header="Môn chính" Binding="{Binding SubjectName}" Width="1.2*"/>
                                             <DataGridTextColumn Header="Đợt kiểm tra / thi" Binding="{Binding ComponentName}" FontWeight="Bold" Width="1.4*"/>
                                             <DataGridTextColumn Header="Số TC" Binding="{Binding Credits, StringFormat={}{0:F2}}" Width="0.7*"/>
-                                            <DataGridTextColumn Header="Điểm" Binding="{Binding ScoreDisplay}" FontWeight="Bold" Width="0.8*"/>
+                                            <DataGridTextColumn Header="Điểm" Binding="{Binding ScoreDisplay}" FontWeight="Bold" Foreground="{DynamicResource AccentLightBrush}" Width="0.8*"/>
 
                                             <!-- Đánh giá -->
                                             <DataGridTemplateColumn Header="Đánh giá" Width="1.1*">
                                                 <DataGridTemplateColumn.CellTemplate>
                                                     <DataTemplate>
-                                                        <TextBlock Text="{Binding Rating}" FontWeight="SemiBold" Foreground="{Binding RatingColor}"/>
+                                                        <TextBlock Text="{Binding Rating}" FontWeight="SemiBold" Foreground="{Binding RatingColor, Converter={StaticResource StringToBrush}}"/>
                                                     </DataTemplate>
                                                 </DataGridTemplateColumn.CellTemplate>
                                             </DataGridTemplateColumn>
@@ -353,8 +351,8 @@
                                                 <DataGridTemplateColumn.CellTemplate>
                                                     <DataTemplate>
                                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                            <TextBlock Text="⚠️ " Visibility="{Binding IsWarning, Converter={StaticResource BoolToVis}}" Foreground="#DC2626"/>
-                                                            <TextBlock Text="{Binding WarningMessage}" Foreground="#DC2626" FontSize="11" TextWrapping="Wrap"/>
+                                                            <TextBlock Text="⚠️ " Visibility="{Binding IsWarning, Converter={StaticResource BoolToVis}}" Foreground="{DynamicResource DangerBrush}"/>
+                                                            <TextBlock Text="{Binding WarningMessage}" Foreground="{DynamicResource DangerBrush}" FontSize="11" TextWrapping="Wrap"/>
                                                         </StackPanel>
                                                     </DataTemplate>
                                                 </DataGridTemplateColumn.CellTemplate>

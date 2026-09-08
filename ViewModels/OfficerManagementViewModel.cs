@@ -17,6 +17,7 @@ namespace QL_HocVien.ViewModels
         private readonly IExcelService _excelService;
         private readonly IFileDialogService _fileDialogService;
         private readonly ISecurityGateService _securityGate;
+        private readonly IAuthService? _authService;
 
         public ObservableCollection<Officer> Officers { get; } = new();
         public ObservableCollection<string> FilterRanks { get; } = new() { "Tất cả" };
@@ -193,13 +194,15 @@ namespace QL_HocVien.ViewModels
             ICatalogService catalogService,
             IExcelService excelService,
             IFileDialogService fileDialogService,
-            ISecurityGateService securityGate)
+            ISecurityGateService securityGate,
+            IAuthService? authService = null)
         {
             _officerService = officerService;
             _catalogService = catalogService;
             _excelService = excelService;
             _fileDialogService = fileDialogService;
             _securityGate = securityGate;
+            _authService = authService;
             Title = "Quản Lý Cán Bộ Quân Sự";
 
             _ = LoadDataAsync();
@@ -392,6 +395,12 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         public async Task SaveFormAsync()
         {
+            if (_authService?.CurrentUser != null && _authService.CurrentUser.Role != "Admin")
+            {
+                MessageBox.Show("CẢNH BÁO AN NINH: Chỉ có Quản Trị Viên (Admin) mới có quyền thêm/sửa hồ sơ cán bộ!", "Từ Chối Thao Tác (403)", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             if (!await _securityGate.EnsureUnlockedAsync("Lưu hồ sơ cán bộ")) return;
 
             if (string.IsNullOrWhiteSpace(FormOfficerCode) || string.IsNullOrWhiteSpace(FormFullName))
@@ -468,6 +477,12 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         public async Task DeleteOfficerAsync()
         {
+            if (_authService?.CurrentUser != null && _authService.CurrentUser.Role != "Admin")
+            {
+                MessageBox.Show("CẢNH BÁO AN NINH: Chỉ có Quản Trị Viên (Admin) mới có quyền xóa cán bộ sĩ quan!", "Từ Chối Thao Tác (403)", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             if (!await _securityGate.EnsureUnlockedAsync("Xóa cán bộ khỏi hệ thống")) return;
 
             var selected = Officers.Where(o => o.IsSelected).ToList();
@@ -516,6 +531,12 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         public async Task OpenResetPasswordDialogAsync()
         {
+            if (_authService?.CurrentUser != null && _authService.CurrentUser.Role != "Admin")
+            {
+                MessageBox.Show("CẢNH BÁO AN NINH: Chỉ có Quản Trị Viên (Admin) mới có quyền cấp lại mật khẩu cán bộ!", "Từ Chối Thao Tác (403)", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             if (SelectedOfficer == null)
             {
                 MessageBox.Show("Vui lòng chọn cán bộ cần đặt lại mật khẩu.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -539,6 +560,12 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         public async Task SaveResetPasswordAsync()
         {
+            if (_authService?.CurrentUser != null && _authService.CurrentUser.Role != "Admin")
+            {
+                MessageBox.Show("CẢNH BÁO AN NINH: Chỉ có Quản Trị Viên (Admin) mới có quyền cấp lại mật khẩu cán bộ!", "Từ Chối Thao Tác (403)", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             if (SelectedOfficer == null || string.IsNullOrWhiteSpace(ResetNewPassword))
             {
                 MessageBox.Show("Mật khẩu mới không được để trống.", "Cảnh báo", MessageBoxButton.OK, MessageBoxImage.Warning);

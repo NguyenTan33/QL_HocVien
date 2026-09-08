@@ -63,12 +63,12 @@ namespace QL_HocVien.Models.DTOs
         {
             get
             {
-                if (EventCount > 1) return "#FEF3C7";  // Amber nhạt
-                if (HasExamEvent) return "#FEE2E2";    // Đỏ nhạt
-                if (HasFitnessEvent) return "#CCFBF1";  // Teal nhạt
-                if (HasPracticeEvent) return "#DCFCE7"; // Lục nhạt
-                if (HasSportsEvent) return "#DBEAFE";   // Lam nhạt
-                return "#F1F5F9";
+                if (EventCount > 1) return "#3D3014";  // Hổ phách sẫm
+                if (HasExamEvent) return "#3D1616";    // Đỏ sẫm
+                if (HasFitnessEvent) return "#1A2F2B";  // Teal sẫm
+                if (HasPracticeEvent) return "#16331C"; // Lục sẫm
+                if (HasSportsEvent) return "#172A45";   // Lam sẫm
+                return "#253628";
             }
         }
 
@@ -76,12 +76,12 @@ namespace QL_HocVien.Models.DTOs
         {
             get
             {
-                if (EventCount > 1) return "#FDE68A";
-                if (HasExamEvent) return "#FECACA";
-                if (HasFitnessEvent) return "#99F6E4";
-                if (HasPracticeEvent) return "#BBF7D0";
-                if (HasSportsEvent) return "#BFDBFE";
-                return "#CBD5E1";
+                if (EventCount > 1) return "#8C7D46";
+                if (HasExamEvent) return "#DC2626";
+                if (HasFitnessEvent) return "#14B8A6";
+                if (HasPracticeEvent) return "#22C55E";
+                if (HasSportsEvent) return "#3B82F6";
+                return "#625C34";
             }
         }
 
@@ -89,12 +89,12 @@ namespace QL_HocVien.Models.DTOs
         {
             get
             {
-                if (EventCount > 1) return "#B45309";  // Cam đậm
-                if (HasExamEvent) return "#DC2626";    // Đỏ
-                if (HasFitnessEvent) return "#0F766E";  // Teal đậm
-                if (HasPracticeEvent) return "#16A34A"; // Lục đậm
-                if (HasSportsEvent) return "#2563EB";   // Lam đậm
-                return "#334155";
+                if (EventCount > 1) return "#FFE17A";  // Vàng sáng
+                if (HasExamEvent) return "#FCA5A5";    // Đỏ sáng
+                if (HasFitnessEvent) return "#99F6E4";  // Teal sáng
+                if (HasPracticeEvent) return "#86EFAC"; // Lục sáng
+                if (HasSportsEvent) return "#93C5FD";   // Lam sáng
+                return "#F7F1D4";
             }
         }
 

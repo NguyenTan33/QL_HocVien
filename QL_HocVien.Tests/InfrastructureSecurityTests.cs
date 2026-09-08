@@ -4,12 +4,16 @@ using System.IO.Compression;
 using System.Text;
 using System.Threading.Tasks;
 using ClosedXML.Excel;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using QL_HocVien.Data;
+using QL_HocVien.Data.Repositories;
 using QL_HocVien.Infrastructure.DTOs;
 using QL_HocVien.Infrastructure.Exceptions;
 using QL_HocVien.Infrastructure.Factory;
 using QL_HocVien.Infrastructure.Security;
 using QL_HocVien.Models;
+using QL_HocVien.Services;
 using Xunit;
 
 namespace QL_HocVien.Tests
@@ -302,6 +306,106 @@ namespace QL_HocVien.Tests
             finally
             {
                 if (File.Exists(tempExe)) File.Delete(tempExe);
+            }
+        }
+        #endregion
+
+        #region 6. KIỂM THỬ BẢO MẬT HỆ THỐNG NÂNG CAO (DPAPI, OTP RATE LIMIT, BRUTE FORCE PROTECTION)
+        [Fact]
+        public void Test_Dpapi_Secret_Encryption_And_Decryption()
+        {
+            string secret = "SuperSecretAdminPassword@2026";
+            string encrypted = EmailService.EncryptSecret(secret);
+
+            // Xác minh đã được mã hóa không còn dạng plaintext
+            Assert.StartsWith("enc:", encrypted);
+            Assert.DoesNotContain(secret, encrypted);
+
+            // Xác minh giải mã thành công về chuỗi ban đầu
+            string decrypted = EmailService.DecryptSecret(encrypted);
+            Assert.Equal(secret, decrypted);
+
+            // Xác minh xử lý chuỗi rỗng và chuỗi không mã hóa
+            Assert.Equal(string.Empty, EmailService.EncryptSecret(""));
+            Assert.Equal("plain_text_without_prefix", EmailService.DecryptSecret("plain_text_without_prefix"));
+        }
+
+        [Fact]
+        public async Task Test_Otp_RateLimiting_Cooldown()
+        {
+            string dbName = $"TestSecDb_{Guid.NewGuid():N}";
+            var options = new DbContextOptionsBuilder<AppDbContext>()
+                .UseSqlite($"Data Source={dbName}.db")
+                .Options;
+
+            using var context = new AppDbContext(options);
+            DbInitializer.Initialize(context);
+
+            var userRepo = new UserRepository(context);
+            var cadetRepo = new CadetRepository(context);
+            var emailService = new EmailService(isTestMode: true);
+            var authService = new AuthService(userRepo, cadetRepo, context, emailService);
+
+            try
+            {
+                // Yêu cầu OTP lần 1 -> Thành công
+                var firstReq = await authService.RequestPasswordResetOtpAsync("admin@mod.gov.vn");
+                Assert.True(firstReq.Success);
+
+                // Yêu cầu OTP lần 2 ngay lập tức -> Phải bị chặn bởi Rate Limiting Cooldown
+                var secondReq = await authService.RequestPasswordResetOtpAsync("admin@mod.gov.vn");
+                Assert.False(secondReq.Success);
+                Assert.Contains("đợi", secondReq.Message, StringComparison.OrdinalIgnoreCase);
+            }
+            finally
+            {
+                context.Database.EnsureDeleted();
+            }
+        }
+
+        [Fact]
+        public async Task Test_Otp_BruteForce_Lockout_After_5_Failed_Attempts()
+        {
+            string dbName = $"TestSecDb_{Guid.NewGuid():N}";
+            var options = new DbContextOptionsBuilder<AppDbContext>()
+                .UseSqlite($"Data Source={dbName}.db")
+                .Options;
+
+            using var context = new AppDbContext(options);
+            DbInitializer.Initialize(context);
+
+            var userRepo = new UserRepository(context);
+            var cadetRepo = new CadetRepository(context);
+            var emailService = new EmailService(isTestMode: true);
+            var authService = new AuthService(userRepo, cadetRepo, context, emailService);
+
+            try
+            {
+                // Yêu cầu mã OTP hợp lệ
+                var req = await authService.RequestPasswordResetOtpAsync("admin@mod.gov.vn");
+                Assert.True(req.Success);
+                string realOtp = req.Otp!;
+
+                // Thử sai 4 lần -> Đều thất bại và thông báo số lần còn lại
+                for (int i = 1; i <= 4; i++)
+                {
+                    var failRes = await authService.ResetPasswordWithOtpAsync("admin@mod.gov.vn", "000000", "NewPass@123");
+                    Assert.False(failRes.Success);
+                    Assert.Contains("không chính xác", failRes.Message, StringComparison.OrdinalIgnoreCase);
+                }
+
+                // Lần thử thứ 5 -> Phải bị vô hiệu hóa / hủy bỏ mã OTP vì vượt quá giới hạn
+                var fifthFail = await authService.ResetPasswordWithOtpAsync("admin@mod.gov.vn", "000000", "NewPass@123");
+                Assert.False(fifthFail.Success);
+                Assert.Contains("hủy", fifthFail.Message, StringComparison.OrdinalIgnoreCase);
+
+                // Bây giờ dùng mã OTP đúng thật -> Vẫn phải thất bại vì mã đã bị khóa và hủy
+                var tryRealOtp = await authService.ResetPasswordWithOtpAsync("admin@mod.gov.vn", realOtp, "NewPass@123");
+                Assert.False(tryRealOtp.Success);
+            }
+            finally
+            {
+                context.Database.EnsureDeleted();
             }
         }
         #endregion

@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using MailKit.Net.Smtp;
@@ -10,7 +12,14 @@ namespace QL_HocVien.Services
 {
     public class EmailService : IEmailService
     {
+        private readonly bool? _overrideTestMode;
+
         public string? LastGeneratedOtp { get; private set; }
+
+        public EmailService(bool? isTestMode = null)
+        {
+            _overrideTestMode = isTestMode;
+        }
 
         public async Task<(bool Success, string Message)> SendOtpEmailAsync(string toEmail, string otpCode, string recipientName)
         {
@@ -20,12 +29,19 @@ namespace QL_HocVien.Services
             {
                 // Đọc cấu hình từ appsettings.json
                 var config = GetSmtpConfig();
+                bool isTestMode = _overrideTestMode ?? config.IsTestMode;
 
-                // Nếu là chế độ Test hoặc chưa cấu hình password SMTP thực tế
-                if (config.IsTestMode || string.IsNullOrWhiteSpace(config.Password) || string.IsNullOrWhiteSpace(config.Username))
+                // Nếu là chế độ Test (phục vụ kiểm thử nội bộ tự động)
+                if (isTestMode)
                 {
-                    // Chế độ mô phỏng / thử nghiệm: Lưu mã và trả về thành công để người dùng test ngay mà không cần cấu hình email
-                    return (true, $"[CHẾ ĐỘ THỬ NGHIỆM] Mã xác thực OTP của bạn là: {otpCode} (Hiệu lực 10 phút)");
+                    // An toàn: Ghi nhận thành công nhưng KHÔNG BAO GIỜ để lộ OTP trong chuỗi thông báo trả về
+                    return (true, "Mã xác thực OTP đã được gửi thành công đến địa chỉ email của đồng chí. Vui lòng kiểm tra hộp thư đến.");
+                }
+
+                // Nếu chưa cấu hình thông tin đăng nhập SMTP
+                if (string.IsNullOrWhiteSpace(config.Password) || string.IsNullOrWhiteSpace(config.Username))
+                {
+                    return (false, "Máy chủ gửi thư (SMTP) chưa được thiết lập tài khoản. Vui lòng liên hệ Quản trị viên hệ thống.");
                 }
 
                 // Gửi email thực qua MailKit SMTP
@@ -57,12 +73,43 @@ namespace QL_HocVien.Services
                 await client.SendAsync(message);
                 await client.DisconnectAsync(true);
 
-                return (true, "Mã xác thực OTP đã được gửi thành công đến email của bạn.");
+                return (true, "Mã xác thực OTP đã được gửi thành công đến địa chỉ email của đồng chí.");
             }
             catch (Exception ex)
             {
-                // Fallback nếu kết nối SMTP ngoài đời gặp sự cố mạng
-                return (true, $"Không thể kết nối máy chủ gửi mail ({ex.Message}). [CHẾ ĐỘ DỰ PHÒNG] Mã xác thực OTP là: {otpCode}");
+                // An toàn tuyệt đối: Không trả về mã OTP trong thông báo lỗi khi gửi email thất bại
+                return (false, $"Không thể kết nối máy chủ gửi thư để chuyển mã OTP ({ex.Message}). Vui lòng kiểm tra lại đường truyền mạng hoặc cấu hình SMTP.");
+            }
+        }
+
+        public static string EncryptSecret(string plain)
+        {
+            if (string.IsNullOrEmpty(plain)) return string.Empty;
+            try
+            {
+                byte[] plainBytes = Encoding.UTF8.GetBytes(plain);
+                byte[] enc = ProtectedData.Protect(plainBytes, null, DataProtectionScope.CurrentUser);
+                return "enc:" + Convert.ToBase64String(enc);
+            }
+            catch
+            {
+                return plain;
+            }
+        }
+
+        public static string DecryptSecret(string cipher)
+        {
+            if (string.IsNullOrEmpty(cipher)) return string.Empty;
+            if (!cipher.StartsWith("enc:")) return cipher;
+            try
+            {
+                byte[] cipherBytes = Convert.FromBase64String(cipher.Substring(4));
+                byte[] plainBytes = ProtectedData.Unprotect(cipherBytes, null, DataProtectionScope.CurrentUser);
+                return Encoding.UTF8.GetString(plainBytes);
+            }
+            catch
+            {
+                return string.Empty;
             }
         }
 
@@ -77,6 +124,7 @@ namespace QL_HocVien.Services
                     using var doc = JsonDocument.Parse(json);
                     if (doc.RootElement.TryGetProperty("SmtpSettings", out var smtpProp))
                     {
+                        var rawPwd = smtpProp.GetProperty("Password").GetString() ?? "";
                         return new SmtpConfig
                         {
                             Server = smtpProp.GetProperty("Server").GetString() ?? "smtp.gmail.com",
@@ -84,7 +132,7 @@ namespace QL_HocVien.Services
                             SenderName = smtpProp.GetProperty("SenderName").GetString() ?? "Hệ thống Quản lý Học viên",
                             SenderEmail = smtpProp.GetProperty("SenderEmail").GetString() ?? "no-reply@mod.gov.vn",
                             Username = smtpProp.GetProperty("Username").GetString() ?? "",
-                            Password = smtpProp.GetProperty("Password").GetString() ?? "",
+                            Password = DecryptSecret(rawPwd),
                             EnableSsl = smtpProp.GetProperty("EnableSsl").GetBoolean(),
                             IsTestMode = smtpProp.TryGetProperty("IsTestMode", out var isTest) && isTest.GetBoolean()
                         };
@@ -108,7 +156,7 @@ namespace QL_HocVien.Services
             public string Username { get; set; } = "";
             public string Password { get; set; } = "";
             public bool EnableSsl { get; set; } = true;
-            public bool IsTestMode { get; set; } = true;
+            public bool IsTestMode { get; set; } = false;
         }
     }
 }

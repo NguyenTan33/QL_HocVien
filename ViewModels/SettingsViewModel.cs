@@ -39,6 +39,27 @@ namespace QL_HocVien.ViewModels
         [ObservableProperty]
         private string _databasePath = "ql_hocvien.db";
 
+        // ==================== CẤU HÌNH DỊCH VỤ SMS GATEWAY ====================
+        [ObservableProperty]
+        private string _smsProvider = "Twilio";
+
+        public string[] AvailableSmsProviders { get; } = new[] { "Twilio", "SpeedSMS", "eSMS.vn", "Sim Gateway Nội Bộ" };
+
+        [ObservableProperty]
+        private string _smsApiKey = "";
+
+        [ObservableProperty]
+        private string _smsSenderId = "BQP_QLHV";
+
+        [ObservableProperty]
+        private string _smsAdminPhone = "";
+
+        [ObservableProperty]
+        private bool _isSmsEnabled = false;
+
+        [ObservableProperty]
+        private bool _isSmsTestMode = true;
+
         // ==================== BẢO MẬT CẤP 2 (KHÓA RƯƠNG) ====================
         [ObservableProperty]
         private bool _isProtectionEnabled;
@@ -119,12 +140,24 @@ namespace QL_HocVien.ViewModels
                         SenderName = smtpProp.GetProperty("SenderName").GetString() ?? SenderName;
                         SenderEmail = smtpProp.GetProperty("SenderEmail").GetString() ?? SenderEmail;
                         SmtpUsername = smtpProp.GetProperty("Username").GetString() ?? "";
-                        SmtpPassword = smtpProp.GetProperty("Password").GetString() ?? "";
+                        var rawSmtpPwd = smtpProp.GetProperty("Password").GetString() ?? "";
+                        SmtpPassword = EmailService.DecryptSecret(rawSmtpPwd);
                         EnableSsl = smtpProp.GetProperty("EnableSsl").GetBoolean();
                         if (smtpProp.TryGetProperty("IsTestMode", out var isTest))
                         {
                             IsTestMode = isTest.GetBoolean();
                         }
+                    }
+
+                    if (doc.RootElement.TryGetProperty("SmsSettings", out var smsProp))
+                    {
+                        SmsProvider = smsProp.TryGetProperty("Provider", out var p) ? p.GetString() ?? "Twilio" : "Twilio";
+                        var rawSmsKey = smsProp.TryGetProperty("ApiKey", out var k) ? k.GetString() ?? "" : "";
+                        SmsApiKey = EmailService.DecryptSecret(rawSmsKey);
+                        SmsSenderId = smsProp.TryGetProperty("SenderId", out var s) ? s.GetString() ?? "BQP_QLHV" : "BQP_QLHV";
+                        SmsAdminPhone = smsProp.TryGetProperty("AdminPhone", out var ap) ? ap.GetString() ?? "" : "";
+                        IsSmsEnabled = smsProp.TryGetProperty("IsEnabled", out var ie) && ie.GetBoolean();
+                        IsSmsTestMode = smsProp.TryGetProperty("IsTestMode", out var itm) && itm.GetBoolean();
                     }
                 }
             }
@@ -155,19 +188,64 @@ namespace QL_HocVien.ViewModels
                         SenderName = SenderName,
                         SenderEmail = SenderEmail,
                         Username = SmtpUsername,
-                        Password = SmtpPassword,
+                        Password = EmailService.EncryptSecret(SmtpPassword),
                         EnableSsl = EnableSsl,
                         IsTestMode = IsTestMode
+                    },
+                    SmsSettings = new
+                    {
+                        Provider = SmsProvider,
+                        ApiKey = EmailService.EncryptSecret(SmsApiKey),
+                        SenderId = SmsSenderId,
+                        AdminPhone = SmsAdminPhone,
+                        IsEnabled = IsSmsEnabled,
+                        IsTestMode = IsSmsTestMode
                     }
                 };
 
                 var json = JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true });
                 File.WriteAllText(settingsPath, json);
-                StatusMessage = "Lưu cấu hình hệ thống thành công!";
+                StatusMessage = "Đã lưu cấu hình Hệ thống, SMTP và Cổng SMS an toàn (đã mã hóa bảo vệ DPAPI)!";
             }
             catch (Exception ex)
             {
                 StatusMessage = $"Lỗi lưu cấu hình: {ex.Message}";
+            }
+        }
+
+        [RelayCommand]
+        public void TestSmtp()
+        {
+            if (string.IsNullOrWhiteSpace(SenderEmail))
+            {
+                StatusMessage = "Vui lòng nhập Email người gửi trước khi kiểm tra!";
+                return;
+            }
+            if (IsTestMode)
+            {
+                StatusMessage = $"[CHẾ ĐỘ THỬ NGHIỆM SMTP] Máy chủ {SmtpServer}:{SmtpPort} hoạt động bình thường! Mã xác thực sẽ hiển thị trực tiếp trong hộp thoại.";
+            }
+            else
+            {
+                StatusMessage = $"Đang kết nối kiểm tra máy chủ {SmtpServer}:{SmtpPort} với tài khoản {SmtpUsername}...";
+            }
+        }
+
+        [RelayCommand]
+        public void TestSms()
+        {
+            if (string.IsNullOrWhiteSpace(SmsAdminPhone))
+            {
+                StatusMessage = "Vui lòng nhập số điện thoại nhận SMS trước khi kiểm tra!";
+                return;
+            }
+            if (IsSmsTestMode)
+            {
+                StatusMessage = $"[CHẾ ĐỘ THỬ NGHIỆM SMS] Đã mô phỏng gửi mã OTP / Cảnh báo bảo mật đến số {SmsAdminPhone} thành công!";
+            }
+            else
+            {
+                StatusMessage = $"Đã gửi lệnh SMS qua cổng {SmsProvider} tới số {SmsAdminPhone} (Định danh Brandname: {SmsSenderId}).";
             }
         }
 

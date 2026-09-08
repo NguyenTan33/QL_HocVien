@@ -16,6 +16,7 @@ namespace QL_HocVien.Services
     {
         private const int GracePeriodTotalSeconds = 300; // 5 phút = 300 giây
         private const string SaltPepper = "MOD_SECURITY_GATE_VN_2026";
+        private static readonly byte[] ConfigEntropy = Encoding.UTF8.GetBytes("MOD_SecGate_Config_Salt_2026#");
         private readonly string _configFilePath;
         private readonly ISecurityDialogService _dialogService;
         private readonly DispatcherTimer _countdownTimer;
@@ -83,7 +84,21 @@ namespace QL_HocVien.Services
             {
                 if (File.Exists(_configFilePath))
                 {
-                    var json = File.ReadAllText(_configFilePath);
+                    byte[] fileBytes = File.ReadAllBytes(_configFilePath);
+                    string json;
+
+                    // Thử giải mã khối DPAPI được bảo vệ chống can thiệp
+                    try
+                    {
+                        byte[] plainBytes = ProtectedData.Unprotect(fileBytes, ConfigEntropy, DataProtectionScope.CurrentUser);
+                        json = Encoding.UTF8.GetString(plainBytes);
+                    }
+                    catch
+                    {
+                        // Fallback hỗ trợ đọc tệp cấu hình cũ (nếu chưa nâng cấp DPAPI)
+                        json = Encoding.UTF8.GetString(fileBytes);
+                    }
+
                     using var doc = JsonDocument.Parse(json);
                     var root = doc.RootElement;
                     if (root.TryGetProperty("IsProtectionEnabled", out var pProp))
@@ -102,8 +117,8 @@ namespace QL_HocVien.Services
             }
             catch
             {
-                // Giữ trạng thái mặc định nếu lỗi đọc file
-                _isProtectionEnabled = false;
+                // Nguyên tắc phòng thủ Fail-Closed: Nếu tệp bị can thiệp trái phép, khóa chặt hệ thống
+                _isProtectionEnabled = true;
             }
         }
 
@@ -120,7 +135,11 @@ namespace QL_HocVien.Services
                 };
 
                 var json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
-                File.WriteAllText(_configFilePath, json);
+                byte[] plainBytes = Encoding.UTF8.GetBytes(json);
+
+                // Bảo vệ toàn vẹn và bí mật tệp bằng Windows DPAPI (ngăn chặn sửa file JSON bằng Notepad)
+                byte[] cipherBytes = ProtectedData.Protect(plainBytes, ConfigEntropy, DataProtectionScope.CurrentUser);
+                File.WriteAllBytes(_configFilePath, cipherBytes);
             }
             catch
             {
@@ -129,6 +148,18 @@ namespace QL_HocVien.Services
         }
 
         private static string ComputeHash(string password, string salt)
+        {
+            byte[] saltBytes = Encoding.UTF8.GetBytes(salt + SaltPepper);
+            byte[] hash = Rfc2898DeriveBytes.Pbkdf2(
+                Encoding.UTF8.GetBytes(password),
+                saltBytes,
+                100_000,
+                HashAlgorithmName.SHA256,
+                32);
+            return "pbkdf2$" + Convert.ToBase64String(hash);
+        }
+
+        private static string LegacySha256Hash(string password, string salt)
         {
             using var sha = SHA256.Create();
             var bytes = Encoding.UTF8.GetBytes(password + salt + SaltPepper);
@@ -184,8 +215,23 @@ namespace QL_HocVien.Services
                 return false;
             }
 
-            var hash = ComputeHash(password.Trim(), _salt);
-            return string.Equals(hash, _passwordHash, StringComparison.Ordinal);
+            if (_passwordHash.StartsWith("pbkdf2$"))
+            {
+                var hash = ComputeHash(password.Trim(), _salt);
+                return string.Equals(hash, _passwordHash, StringComparison.Ordinal);
+            }
+            else
+            {
+                // Hỗ trợ kiểm tra hash cũ và tự động nâng cấp lên chuẩn PBKDF2 100.000 vòng
+                var legacyHash = LegacySha256Hash(password.Trim(), _salt);
+                if (string.Equals(legacyHash, _passwordHash, StringComparison.Ordinal))
+                {
+                    _passwordHash = ComputeHash(password.Trim(), _salt);
+                    SaveConfiguration();
+                    return true;
+                }
+                return false;
+            }
         }
 
         public void UnlockForGracePeriod()

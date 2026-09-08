@@ -9,6 +9,7 @@ namespace QL_HocVien.Models
         public string Token { get; set; } = string.Empty; // Mã OTP 6 chữ số
         public DateTime ExpiryTime { get; set; }
         public bool IsUsed { get; set; } = false;
+        public int AttemptCount { get; set; } = 0;
         public DateTime CreatedAt { get; set; } = DateTime.Now;
     }
 }
