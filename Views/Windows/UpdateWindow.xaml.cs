@@ -157,9 +157,31 @@ namespace QL_HocVien.Views.Windows
                 btnSecondary.Content = _updateResult?.IsMandatory == true ? "Thoát ứng dụng" : "Để sau";
                 _isDownloading = false;
             }
+            catch (System.Net.Http.HttpRequestException httpEx)
+            {
+                if (httpEx.StatusCode == System.Net.HttpStatusCode.NotFound || httpEx.Message.Contains("404"))
+                {
+                    txtErrorMessage.Text = "Lỗi 404 (Not Found): Không tìm thấy file cập nhật trên máy chủ. Đường dẫn 'downloadUrl' chưa tồn tại hoặc chưa upload file lên GitHub Release.";
+                }
+                else
+                {
+                    txtErrorMessage.Text = $"Lỗi kết nối máy chủ tải: {httpEx.Message}";
+                }
+                spDownloadProgress.Visibility = Visibility.Collapsed;
+                btnUpdate.IsEnabled = true;
+                btnSecondary.Content = _updateResult?.IsMandatory == true ? "Thoát ứng dụng" : "Để sau";
+                _isDownloading = false;
+            }
             catch (Exception ex)
             {
-                txtErrorMessage.Text = $"Lỗi khi tải bản cập nhật: {ex.Message}";
+                if (ex.Message.Contains("404"))
+                {
+                    txtErrorMessage.Text = "Lỗi 404 (Not Found): Không tìm thấy file trên máy chủ. Vui lòng kiểm tra lại 'downloadUrl' trên GitHub Release.";
+                }
+                else
+                {
+                    txtErrorMessage.Text = $"Lỗi khi tải bản cập nhật: {ex.Message}";
+                }
                 spDownloadProgress.Visibility = Visibility.Collapsed;
                 btnUpdate.IsEnabled = true;
                 btnSecondary.Content = _updateResult?.IsMandatory == true ? "Thoát ứng dụng" : "Để sau";

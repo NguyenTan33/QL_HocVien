@@ -284,6 +284,53 @@
                     </StackPanel>
                 </StackPanel>
             </Border>
+
+            <!-- ==================== 4. THÔNG TIN PHIÊN BẢN & CẬP NHẬT TỰ ĐỘNG ==================== -->
+            <Border Style="{StaticResource CardBorderStyle}" Padding="22" Margin="0,0,0,24">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                        <TextBlock Text="🚀" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="THÔNG TIN PHIÊN BẢN &amp; TỰ ĐỘNG CẬP NHẬT (AUTO-UPDATE)" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource AccentLightBrush}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <TextBlock Text="Cấu hình địa chỉ kiểm tra phiên bản mới từ GitHub hoặc máy chủ riêng, hỗ trợ tải ngầm và tự động cập nhật khi có bản phát hành mới" 
+                               FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,14"/>
+
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Phiên bản phần mềm hiện tại:" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                        <Border Grid.Column="1" Background="#142016" BorderBrush="#22C55E" BorderThickness="1" CornerRadius="4" Padding="10,4" HorizontalAlignment="Left">
+                            <TextBlock Text="{Binding AppVersionDisplay}" FontSize="12.5" FontWeight="Bold" Foreground="#4ADE80"/>
+                        </Border>
+                    </Grid>
+
+                    <StackPanel Margin="0,0,0,14">
+                        <TextBlock Text="Đường dẫn máy chủ kiểm tra (URL version.json):" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                        <TextBox Text="{Binding VersionCheckUrl, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                        <TextBlock Text="* Hỗ trợ GitHub Raw Link (ví dụ: https://raw.githubusercontent.com/NguyenTan33/QL_HocVien/main/version.json) hoặc máy chủ nội bộ." 
+                                   FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0"/>
+                    </StackPanel>
+
+                    <!-- Trạng thái kiểm tra cập nhật -->
+                    <Border Background="#142016" BorderBrush="#625C34" BorderThickness="1" CornerRadius="6" Padding="12,8" Margin="0,0,0,14"
+                            Visibility="{Binding UpdateStatusText, Converter={x:Static local_cv:StringToVisibilityConverter.Instance}}">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="🔄 " FontSize="12"/>
+                            <TextBlock Text="{Binding UpdateStatusText}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AccentLightBrush}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="🔍 Kiểm Tra Cập Nhật Ngay" Style="{StaticResource SecondaryButtonStyle}" Height="36" Padding="14,0" Margin="0,0,10,0"
+                                Command="{Binding CheckForUpdateManualCommand}"
+                                IsEnabled="{Binding IsCheckingUpdate, Converter={x:Static local_cv:InvertedBooleanConverter.Instance}}"/>
+                        <Button Content="💾 Lưu Cấu Hình Cập Nhật" Style="{StaticResource PrimaryButtonStyle}" Height="36" Padding="16,0"
+                                Command="{Binding SaveSettingsCommand}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
         </StackPanel>
     </ScrollViewer>
 </UserControl>

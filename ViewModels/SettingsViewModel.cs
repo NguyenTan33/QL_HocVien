@@ -11,6 +11,8 @@ namespace QL_HocVien.ViewModels
     public partial class SettingsViewModel : ViewModelBase
     {
         private readonly ISecurityGateService _securityGate;
+        private readonly IUpdateService _updateService;
+        private readonly IServiceProvider _serviceProvider;
 
         [ObservableProperty]
         private string _smtpServer = "smtp.gmail.com";
@@ -60,6 +62,19 @@ namespace QL_HocVien.ViewModels
         [ObservableProperty]
         private bool _isSmsTestMode = true;
 
+        // ==================== CẤU HÌNH TỰ ĐỘNG CẬP NHẬT (AUTO-UPDATE) ====================
+        [ObservableProperty]
+        private string _appVersionDisplay = "v1.0.0";
+
+        [ObservableProperty]
+        private string _versionCheckUrl = "https://raw.githubusercontent.com/NguyenTan33/QL_HocVien/main/version.json";
+
+        [ObservableProperty]
+        private string _updateStatusText = string.Empty;
+
+        [ObservableProperty]
+        private bool _isCheckingUpdate;
+
         // ==================== BẢO MẬT CẤP 2 (KHÓA RƯƠNG) ====================
         [ObservableProperty]
         private bool _isProtectionEnabled;
@@ -94,10 +109,17 @@ namespace QL_HocVien.ViewModels
         [ObservableProperty]
         private bool _isSecuritySuccess;
 
-        public SettingsViewModel(ISecurityGateService securityGate)
+        public SettingsViewModel(
+            ISecurityGateService securityGate,
+            IUpdateService updateService,
+            IServiceProvider serviceProvider)
         {
             _securityGate = securityGate;
+            _updateService = updateService;
+            _serviceProvider = serviceProvider;
             Title = "Cài Đặt Hệ Thống";
+
+            AppVersionDisplay = $"v{_updateService.GetCurrentVersion()}";
 
             LoadSettings();
 
@@ -159,6 +181,14 @@ namespace QL_HocVien.ViewModels
                         IsSmsEnabled = smsProp.TryGetProperty("IsEnabled", out var ie) && ie.GetBoolean();
                         IsSmsTestMode = smsProp.TryGetProperty("IsTestMode", out var itm) && itm.GetBoolean();
                     }
+
+                    if (doc.RootElement.TryGetProperty("UpdateSettings", out var updateProp))
+                    {
+                        if (updateProp.TryGetProperty("VersionCheckUrl", out var urlProp) && !string.IsNullOrWhiteSpace(urlProp.GetString()))
+                        {
+                            VersionCheckUrl = urlProp.GetString()!;
+                        }
+                    }
                 }
             }
             catch (Exception ex)
@@ -200,16 +230,59 @@ namespace QL_HocVien.ViewModels
                         AdminPhone = SmsAdminPhone,
                         IsEnabled = IsSmsEnabled,
                         IsTestMode = IsSmsTestMode
+                    },
+                    UpdateSettings = new
+                    {
+                        VersionCheckUrl = VersionCheckUrl.Trim(),
+                        TimeoutSeconds = 8
                     }
                 };
 
                 var json = JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true });
                 File.WriteAllText(settingsPath, json);
-                StatusMessage = "Đã lưu cấu hình Hệ thống, SMTP và Cổng SMS an toàn (đã mã hóa bảo vệ DPAPI)!";
+                StatusMessage = "Đã lưu cấu hình Hệ thống, SMTP, Cổng SMS và Cập nhật Auto-Update an toàn!";
             }
             catch (Exception ex)
             {
                 StatusMessage = $"Lỗi lưu cấu hình: {ex.Message}";
+            }
+        }
+
+        [RelayCommand]
+        public async Task CheckForUpdateManualAsync()
+        {
+            IsCheckingUpdate = true;
+            UpdateStatusText = "Đang kết nối máy chủ để kiểm tra bản cập nhật mới...";
+
+            try
+            {
+                var result = await _updateService.CheckForUpdateAsync();
+                if (result.HasUpdate)
+                {
+                    UpdateStatusText = $"Phát hiện phiên bản mới: v{result.LatestVersion} (Hiện tại: {AppVersionDisplay})";
+                    var updateWindow = (Views.Windows.UpdateWindow)_serviceProvider.GetService(typeof(Views.Windows.UpdateWindow))!;
+                    if (updateWindow != null)
+                    {
+                        updateWindow.Initialize(result);
+                        updateWindow.ShowDialog();
+                    }
+                }
+                else if (result.Status == Models.UpdateStatus.UpToDate)
+                {
+                    UpdateStatusText = $"Hệ thống đang hoạt động ở phiên bản mới nhất ({AppVersionDisplay}). Không có bản cập nhật nào.";
+                }
+                else
+                {
+                    UpdateStatusText = $"Không thể kiểm tra: {result.ErrorMessage}";
+                }
+            }
+            catch (Exception ex)
+            {
+                UpdateStatusText = $"Lỗi kiểm tra cập nhật: {ex.Message}";
+            }
+            finally
+            {
+                IsCheckingUpdate = false;
             }
         }
 

@@ -62,6 +62,29 @@ namespace QL_HocVien.Converters
         }
     }
 
+    public class InvertedBooleanConverter : IValueConverter
+    {
+        public static readonly InvertedBooleanConverter Instance = new();
+
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is bool b)
+            {
+                return !b;
+            }
+            return true;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is bool b)
+            {
+                return !b;
+            }
+            return false;
+        }
+    }
+
     public class IntEqualsToVisibilityConverter : IValueConverter
     {
         public static readonly IntEqualsToVisibilityConverter Instance = new();
