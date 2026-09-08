@@ -63,10 +63,7 @@ namespace QL_HocVien.ViewModels
                 {
                     IsOtpSent = true;
                     InfoMessage = result.Message;
-                    if (Identifier.Contains("@"))
-                    {
-                        TargetEmail = Identifier.Trim();
-                    }
+                    TargetEmail = Identifier.Trim();
                 }
                 else
                 {

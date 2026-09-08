@@ -219,10 +219,10 @@ namespace QL_HocVien.Services
             return (true, emailResult.Message, otp);
         }
 
-        public async Task<(bool Success, string Message)> ResetPasswordWithOtpAsync(string email, string otpCode, string newPassword)
+        public async Task<(bool Success, string Message)> ResetPasswordWithOtpAsync(string emailOrIdentifier, string otpCode, string newPassword)
         {
-            if (string.IsNullOrWhiteSpace(email))
-                return (false, "Vui lòng nhập email xác nhận.");
+            if (string.IsNullOrWhiteSpace(emailOrIdentifier))
+                return (false, "Vui lòng nhập email hoặc tài khoản xác nhận.");
 
             if (string.IsNullOrWhiteSpace(otpCode))
                 return (false, "Vui lòng nhập mã xác thực OTP.");
@@ -230,8 +230,23 @@ namespace QL_HocVien.Services
             if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < 6)
                 return (false, "Mật khẩu mới phải có ít nhất 6 ký tự.");
 
+            string cleanId = emailOrIdentifier.Trim();
+            User? user = null;
+            string targetEmail = cleanId;
+
+            if (cleanId.Contains("@"))
+            {
+                user = await _userRepository.GetByEmailAsync(cleanId);
+                if (user != null) targetEmail = user.Email;
+            }
+            else
+            {
+                user = await _userRepository.GetByUsernameOrPhoneAsync(cleanId);
+                if (user != null) targetEmail = user.Email;
+            }
+
             var token = await _context.PasswordResetTokens
-                .Where(t => t.Email.ToLower() == email.Trim().ToLower() && !t.IsUsed)
+                .Where(t => t.Email.ToLower() == targetEmail.ToLower() && !t.IsUsed)
                 .OrderByDescending(t => t.CreatedAt)
                 .FirstOrDefaultAsync();
 
@@ -262,10 +277,14 @@ namespace QL_HocVien.Services
                 return (false, $"Mã xác thực không chính xác! Đồng chí còn {5 - token.AttemptCount} lần thử.");
             }
 
-            var user = await _userRepository.GetByEmailAsync(email);
             if (user == null)
             {
-                return (false, "Không tìm thấy người dùng có email này.");
+                user = await _userRepository.GetByEmailAsync(token.Email);
+            }
+
+            if (user == null)
+            {
+                return (false, "Không tìm thấy người dùng có thông tin này.");
             }
 
             // Cập nhật mật khẩu

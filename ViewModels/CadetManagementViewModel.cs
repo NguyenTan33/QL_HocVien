@@ -468,9 +468,23 @@ namespace QL_HocVien.ViewModels
             IsAllSelected = false;
         }
 
+        private bool CheckCanBoOrAdminPermission(string actionDescription)
+        {
+            if (_authService.CurrentUser?.Role == "HocVien")
+            {
+                System.Windows.MessageBox.Show(
+                    $"CẢNH BÁO AN NINH: Tài khoản Học viên không có quyền thực hiện thao tác '{actionDescription}'!\nChức năng này chỉ dành riêng cho Cán bộ Quản lý hoặc Quản trị viên.",
+                    "Từ Chối Thao Tác (403)", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                StatusMessage = $"[TỪ CHỐI 403] Không có quyền {actionDescription}.";
+                return false;
+            }
+            return true;
+        }
+
         [RelayCommand]
         private async Task RequestAddNewAsync()
         {
+            if (!CheckCanBoOrAdminPermission("thêm mới học viên")) return;
             if (!await _securityGate.EnsureUnlockedAsync("Thêm mới học viên vào hệ thống")) return;
             OnRequestAddCadet?.Invoke();
         }
@@ -478,6 +492,8 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         private async Task StartEditAsync()
         {
+            if (!CheckCanBoOrAdminPermission("chỉnh sửa học viên")) return;
+
             if (SelectedCadet == null)
             {
                 StatusMessage = "Vui lòng chọn học viên cần chỉnh sửa.";
@@ -500,6 +516,7 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         private async Task SaveEditAsync()
         {
+            if (!CheckCanBoOrAdminPermission("lưu thông tin học viên")) return;
             if (SelectedCadet == null) return;
             if (!await _securityGate.EnsureUnlockedAsync($"Cập nhật thông tin học viên '{SelectedCadet.FullName}'")) return;
 
@@ -707,6 +724,8 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         private async Task OpenResetPasswordAsync()
         {
+            if (!CheckCanBoOrAdminPermission("cấp lại mật khẩu học viên")) return;
+
             if (SelectedCadet == null)
             {
                 StatusMessage = "Vui lòng chọn một học viên để đặt lại mật khẩu.";
@@ -728,6 +747,7 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         private async Task ConfirmResetPasswordAsync()
         {
+            if (!CheckCanBoOrAdminPermission("đặt lại mật khẩu học viên")) return;
             if (SelectedCadet == null) return;
             if (!await _securityGate.EnsureUnlockedAsync($"Đặt lại mật khẩu cho học viên '{SelectedCadet.FullName}'")) return;
 
@@ -779,6 +799,7 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         private async Task ImportExcelAsync()
         {
+            if (!CheckCanBoOrAdminPermission("nhập danh sách học viên từ Excel")) return;
             if (!await _securityGate.EnsureUnlockedAsync("Nhập danh sách học viên từ file Excel")) return;
 
             var filePath = _fileDialogService.ShowOpenFileDialog("Excel Files (*.xlsx)|*.xlsx|All Files (*.*)|*.*", "Chọn tệp Excel danh sách học viên");

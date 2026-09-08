@@ -14,6 +14,7 @@ using QL_HocVien.Infrastructure.Factory;
 using QL_HocVien.Infrastructure.Security;
 using QL_HocVien.Models;
 using QL_HocVien.Services;
+using QL_HocVien.ViewModels;
 using Xunit;
 
 namespace QL_HocVien.Tests
@@ -402,6 +403,142 @@ namespace QL_HocVien.Tests
                 // Bây giờ dùng mã OTP đúng thật -> Vẫn phải thất bại vì mã đã bị khóa và hủy
                 var tryRealOtp = await authService.ResetPasswordWithOtpAsync("admin@mod.gov.vn", realOtp, "NewPass@123");
                 Assert.False(tryRealOtp.Success);
+            }
+            finally
+            {
+                context.Database.EnsureDeleted();
+            }
+        }
+
+        [Fact]
+        public async Task Test_Otp_ResetPassword_With_Username_Identifier()
+        {
+            string dbName = $"TestSecDb_{Guid.NewGuid():N}";
+            var options = new DbContextOptionsBuilder<AppDbContext>()
+                .UseSqlite($"Data Source={dbName}.db")
+                .Options;
+
+            using var context = new AppDbContext(options);
+            DbInitializer.Initialize(context);
+
+            var userRepo = new UserRepository(context);
+            var cadetRepo = new CadetRepository(context);
+            var emailService = new EmailService(isTestMode: true);
+            var authService = new AuthService(userRepo, cadetRepo, context, emailService);
+
+            try
+            {
+                // Yêu cầu OTP bằng Username ("admin") thay vì Email
+                var req = await authService.RequestPasswordResetOtpAsync("admin");
+                Assert.True(req.Success);
+                Assert.NotNull(req.Otp);
+
+                // Đổi mật khẩu với Username và OTP nhận được
+                var resetRes = await authService.ResetPasswordWithOtpAsync("admin", req.Otp!, "NewSecureAdminPass@123");
+                Assert.True(resetRes.Success);
+
+                // Xác minh đăng nhập thành công bằng mật khẩu mới
+                var loginRes = await authService.LoginAsync("admin", "NewSecureAdminPass@123");
+                Assert.True(loginRes.Success);
+                Assert.NotNull(loginRes.User);
+            }
+            finally
+            {
+                context.Database.EnsureDeleted();
+            }
+        }
+
+        [Fact]
+        public async Task Test_Otp_ResetPassword_With_Phone_Identifier()
+        {
+            string dbName = $"TestSecDb_{Guid.NewGuid():N}";
+            var options = new DbContextOptionsBuilder<AppDbContext>()
+                .UseSqlite($"Data Source={dbName}.db")
+                .Options;
+
+            using var context = new AppDbContext(options);
+            DbInitializer.Initialize(context);
+
+            var userRepo = new UserRepository(context);
+            var cadetRepo = new CadetRepository(context);
+            var emailService = new EmailService(isTestMode: true);
+            var authService = new AuthService(userRepo, cadetRepo, context, emailService);
+
+            try
+            {
+                // Admin user có số điện thoại "0988888888"
+                var adminUser = await userRepo.GetByUsernameOrPhoneAsync("admin");
+                Assert.NotNull(adminUser);
+                Assert.False(string.IsNullOrWhiteSpace(adminUser.PhoneNumber));
+
+                // Yêu cầu OTP bằng Số điện thoại
+                var req = await authService.RequestPasswordResetOtpAsync(adminUser.PhoneNumber);
+                Assert.True(req.Success);
+                Assert.NotNull(req.Otp);
+
+                // Đổi mật khẩu thành công bằng Số điện thoại
+                var resetRes = await authService.ResetPasswordWithOtpAsync(adminUser.PhoneNumber, req.Otp!, "NewPhoneAdminPass@123");
+                Assert.True(resetRes.Success);
+
+                // Xác minh đăng nhập thành công bằng mật khẩu mới
+                var loginRes = await authService.LoginAsync("admin", "NewPhoneAdminPass@123");
+                Assert.True(loginRes.Success);
+            }
+            finally
+            {
+                context.Database.EnsureDeleted();
+            }
+        }
+
+        [Fact]
+        public async Task Test_ForgotPasswordViewModel_Handles_Username_Reset_Flow()
+        {
+            string dbName = $"TestSecDb_{Guid.NewGuid():N}";
+            var options = new DbContextOptionsBuilder<AppDbContext>()
+                .UseSqlite($"Data Source={dbName}.db")
+                .Options;
+
+            using var context = new AppDbContext(options);
+            DbInitializer.Initialize(context);
+
+            var userRepo = new UserRepository(context);
+            var cadetRepo = new CadetRepository(context);
+            var emailService = new EmailService(isTestMode: true);
+            var authService = new AuthService(userRepo, cadetRepo, context, emailService);
+
+            try
+            {
+                var vm = new ForgotPasswordViewModel(authService);
+                vm.Identifier = "admin";
+
+                // Bước 1: Gửi yêu cầu OTP
+                await vm.SendOtpCommand.ExecuteAsync(null);
+                Assert.True(vm.IsOtpSent);
+                Assert.Equal("admin", vm.TargetEmail);
+
+                // Lấy OTP token từ database
+                var adminUser = await userRepo.GetByUsernameOrPhoneAsync("admin");
+                var tokenRecord = await context.PasswordResetTokens
+                    .Where(t => t.Email == adminUser!.Email && !t.IsUsed)
+                    .OrderByDescending(t => t.CreatedAt)
+                    .FirstOrDefaultAsync();
+
+                Assert.NotNull(tokenRecord);
+
+                // Bước 2: Nhập OTP và mật khẩu mới
+                vm.OtpCode = tokenRecord.Token;
+                vm.NewPassword = "VmResetPass@123";
+                vm.ConfirmNewPassword = "VmResetPass@123";
+
+                await vm.ResetPasswordCommand.ExecuteAsync(null);
+
+                // Xác minh thành công không báo lỗi
+                Assert.True(string.IsNullOrEmpty(vm.ErrorMessage));
+                Assert.Contains("thành công", vm.InfoMessage, StringComparison.OrdinalIgnoreCase);
+
+                // Xác minh đăng nhập thành công với mật khẩu vừa đặt lại
+                var loginRes = await authService.LoginAsync("admin", "VmResetPass@123");
+                Assert.True(loginRes.Success);
             }
             finally
             {

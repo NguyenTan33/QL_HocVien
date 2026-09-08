@@ -768,7 +768,7 @@ namespace QL_HocVien.Data
                 }
             }
 
-            // Seed các mốc thời gian huấn luyện và sự kiện quân sự (TrainingEvents)
+            // Seed các mốc thời gian huấn luyện và sự kiện quân sự (TrainingEvents) chuẩn 100% Celandar.png
             if (!context.TrainingEvents.Any())
             {
                 var events = new List<TrainingEvent>
@@ -777,8 +777,8 @@ namespace QL_HocVien.Data
                     {
                         Title = "Kiểm tra thể lực định kỳ Quý 4/2026",
                         Category = "Kiểm tra thể lực",
-                        StartDate = DateTime.Today.AddDays(-7),
-                        EndDate = DateTime.Today.AddDays(-5),
+                        StartDate = new DateTime(2026, 8, 28),
+                        EndDate = new DateTime(2026, 8, 30),
                         TargetUnit = "Toàn đơn vị",
                         Location = "Bãi tập thể lực & Thao trường 1",
                         Priority = "Cao",
@@ -789,8 +789,8 @@ namespace QL_HocVien.Data
                     {
                         Title = "Kiểm tra bắn súng AK bài 1 (Ban ngày)",
                         Category = "Thi cử quân sự",
-                        StartDate = DateTime.Today.AddDays(2),
-                        EndDate = DateTime.Today.AddDays(3),
+                        StartDate = new DateTime(2026, 9, 6),
+                        EndDate = new DateTime(2026, 9, 7),
                         TargetUnit = "Đại đội 1",
                         Location = "Trường bắn TB1",
                         Priority = "Khẩn cấp",
@@ -801,20 +801,20 @@ namespace QL_HocVien.Data
                     {
                         Title = "Hành quân rèn luyện dã ngoại 25km mang vác nặng",
                         Category = "Tập luyện / Rèn luyện",
-                        StartDate = DateTime.Today.AddDays(7),
-                        EndDate = DateTime.Today.AddDays(8),
+                        StartDate = new DateTime(2026, 9, 11),
+                        EndDate = new DateTime(2026, 9, 12),
                         TargetUnit = "Toàn đơn vị",
-                        Location = "Tuyến thao trường dã ngoại Ba Vì",
+                        Location = "Tuyến thao trường dã ngoại",
                         Priority = "Cao",
                         Status = "Đang chuẩn bị",
-                        Description = "Hành quân rèn sức bền, mang vũ khí trang bị 25kg, vượt dốc và sông suối."
+                        Description = "Rèn luyện hành quân đường dài 25km, mang vác nặng theo biên chế."
                     },
                     new TrainingEvent
                     {
                         Title = "Hội thao Chiến sĩ Khỏe & Vượt vật cản K91",
                         Category = "Hội thao / Sự kiện",
-                        StartDate = DateTime.Today.AddDays(15),
-                        EndDate = DateTime.Today.AddDays(17),
+                        StartDate = new DateTime(2026, 9, 20),
+                        EndDate = new DateTime(2026, 9, 22),
                         TargetUnit = "Toàn đơn vị",
                         Location = "Bãi vật cản K91 & Sân vận động trung tâm",
                         Priority = "Bình thường",
@@ -825,8 +825,8 @@ namespace QL_HocVien.Data
                     {
                         Title = "Sát hạch bơi vũ trang 100m vượt sông ngòi",
                         Category = "Kiểm tra thể lực",
-                        StartDate = DateTime.Today.AddDays(22),
-                        EndDate = DateTime.Today.AddDays(23),
+                        StartDate = new DateTime(2026, 9, 28),
+                        EndDate = new DateTime(2026, 9, 29),
                         TargetUnit = "Đại đội 2",
                         Location = "Bể bơi quân sự & Khu vực hồ thao trường",
                         Priority = "Bình thường",
@@ -836,6 +836,36 @@ namespace QL_HocVien.Data
                 };
 
                 context.TrainingEvents.AddRange(events);
+                context.SaveChanges();
+            }
+            else
+            {
+                // Đồng bộ ngày tháng chuẩn Celandar.png cho các sự kiện mẫu
+                var ev1 = context.TrainingEvents.FirstOrDefault(e => e.Title.Contains("Kiểm tra thể lực định kỳ"));
+                if (ev1 != null)
+                {
+                    ev1.StartDate = new DateTime(2026, 8, 28);
+                    ev1.EndDate = new DateTime(2026, 8, 30);
+                    ev1.Status = "Đã hoàn thành";
+                    ev1.Priority = "Cao";
+                }
+                var ev2 = context.TrainingEvents.FirstOrDefault(e => e.Title.Contains("bắn súng AK"));
+                if (ev2 != null)
+                {
+                    ev2.StartDate = new DateTime(2026, 9, 6);
+                    ev2.EndDate = new DateTime(2026, 9, 7);
+                    ev2.Priority = "Khẩn cấp";
+                    ev2.Status = "Đang chuẩn bị";
+                }
+                var ev3 = context.TrainingEvents.FirstOrDefault(e => e.Title.Contains("Hành quân rèn luyện"));
+                if (ev3 != null)
+                {
+                    ev3.StartDate = new DateTime(2026, 9, 11);
+                    ev3.EndDate = new DateTime(2026, 9, 12);
+                    ev3.Location = "Tuyến thao trường dã ngoại";
+                    ev3.Description = "Rèn luyện hành quân đường dài 25km, mang vác nặng theo biên chế.";
+                    ev3.Priority = "Cao";
+                }
                 context.SaveChanges();
             }
 

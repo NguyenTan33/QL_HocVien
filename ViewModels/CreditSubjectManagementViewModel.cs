@@ -18,6 +18,7 @@ namespace QL_HocVien.ViewModels
         private readonly IClassService _classService;
         private readonly IFileDialogService _fileDialogService;
         private readonly ISecurityGateService _securityGate;
+        private readonly IAuthService? _authService;
 
         #region PROPERTIES & COLLECTIONS
         public ObservableCollection<CreditSubject> Subjects { get; } = new();
@@ -201,13 +202,27 @@ namespace QL_HocVien.ViewModels
         private string _cadetSubjectStatusTooltip = "Chưa có điểm";
         #endregion
 
+        private bool CheckCanBoOrAdminPermission(string actionDescription)
+        {
+            if (_authService?.CurrentUser?.Role == "HocVien")
+            {
+                System.Windows.MessageBox.Show(
+                    $"CẢNH BÁO AN NINH: Tài khoản Học viên không có quyền {actionDescription}!\nChức năng này chỉ dành riêng cho Cán bộ Quản lý hoặc Quản trị viên.",
+                    "Từ Chối Thao Tác (403)", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                StatusMessage = $"[TỪ CHỐI 403] Không có quyền {actionDescription}.";
+                return false;
+            }
+            return true;
+        }
+
         public CreditSubjectManagementViewModel(
             ICreditSubjectService creditService,
             ICadetService cadetService,
             ICatalogService catalogService,
             IClassService classService,
             IFileDialogService fileDialogService,
-            ISecurityGateService securityGate)
+            ISecurityGateService securityGate,
+            IAuthService? authService = null)
         {
             _creditService = creditService;
             _cadetService = cadetService;
@@ -215,6 +230,7 @@ namespace QL_HocVien.ViewModels
             _classService = classService;
             _fileDialogService = fileDialogService;
             _securityGate = securityGate;
+            _authService = authService;
 
             _ = InitializeAsync();
         }
@@ -381,6 +397,7 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         public async Task OpenAddSubjectFormAsync()
         {
+            if (!CheckCanBoOrAdminPermission("thêm môn học tín chỉ")) return;
             if (!await _securityGate.EnsureUnlockedAsync("Thêm môn học tín chỉ mới")) return;
 
             IsEditingSubject = false;
@@ -406,6 +423,7 @@ namespace QL_HocVien.ViewModels
         public async Task OpenEditSubjectFormAsync(CreditSubject? subject)
         {
             if (subject == null) return;
+            if (!CheckCanBoOrAdminPermission("chỉnh sửa môn học tín chỉ")) return;
             if (!await _securityGate.EnsureUnlockedAsync($"Chỉnh sửa môn học '{subject.SubjectName}'")) return;
 
             IsEditingSubject = true;
@@ -453,6 +471,7 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         public async Task SaveSubjectFormAsync()
         {
+            if (!CheckCanBoOrAdminPermission("lưu môn học tín chỉ")) return;
             if (!await _securityGate.EnsureUnlockedAsync("Lưu thông tin môn học & đợt kiểm tra"))
                 return;
 
@@ -530,6 +549,7 @@ namespace QL_HocVien.ViewModels
         public async Task DeleteSubjectAsync(CreditSubject? subject)
         {
             if (subject == null) return;
+            if (!CheckCanBoOrAdminPermission("xóa môn học tín chỉ")) return;
             if (!await _securityGate.EnsureUnlockedAsync($"Xóa môn học '{subject.SubjectName}'"))
                 return;
 
@@ -697,6 +717,7 @@ namespace QL_HocVien.ViewModels
         public async Task SaveCadetScoreModalAsync()
         {
             if (CadetForScoreEntry == null || SelectedSubjectForCadetScore == null) return;
+            if (!CheckCanBoOrAdminPermission("nhập hoặc sửa điểm học viên")) return;
             if (!await _securityGate.EnsureUnlockedAsync($"Lưu điểm học viên '{CadetForScoreEntry.FullName}' môn '{SelectedSubjectForCadetScore.SubjectName}'"))
                 return;
 
@@ -740,6 +761,7 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         public async Task OpenGradeMatrixModalAsync(CreditSubject? subject = null)
         {
+            if (!CheckCanBoOrAdminPermission("mở bảng nhập điểm ma trận")) return;
             if (!await _securityGate.EnsureUnlockedAsync(subject != null ? $"Nhập điểm ma trận môn '{subject.SubjectName}'" : "Nhập điểm ma trận theo môn học")) return;
 
             SearchSubjectText = string.Empty;
@@ -843,6 +865,7 @@ namespace QL_HocVien.ViewModels
                 return;
             }
 
+            if (!CheckCanBoOrAdminPermission("lưu bảng điểm môn học")) return;
             if (!await _securityGate.EnsureUnlockedAsync($"Lưu bảng điểm môn '{SelectedSubjectForGrading.SubjectName}'"))
                 return;
 

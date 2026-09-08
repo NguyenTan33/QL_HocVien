@@ -159,6 +159,7 @@ namespace QL_HocVien.ViewModels
         private readonly IClassService? _classService;
         private readonly ICatalogService? _catalogService;
         private readonly ISecurityGateService _securityGate;
+        private readonly IAuthService? _authService;
 
         public PhysicalExamViewModel(
             IPhysicalExamService examService,
@@ -169,7 +170,8 @@ namespace QL_HocVien.ViewModels
             IFileDialogService fileDialogService,
             ISecurityGateService securityGate,
             IClassService? classService = null,
-            ICatalogService? catalogService = null)
+            ICatalogService? catalogService = null,
+            IAuthService? authService = null)
         {
             _examService = examService;
             _cadetService = cadetService;
@@ -180,9 +182,23 @@ namespace QL_HocVien.ViewModels
             _securityGate = securityGate;
             _classService = classService;
             _catalogService = catalogService;
+            _authService = authService;
             Title = "Kiểm Tra Rèn Luyện Thể Lực";
 
             _ = InitializeAsync();
+        }
+
+        private bool CheckCanBoOrAdminPermission(string actionDescription)
+        {
+            if (_authService?.CurrentUser?.Role == "HocVien")
+            {
+                System.Windows.MessageBox.Show(
+                    $"CẢNH BÁO AN NINH: Tài khoản Học viên không có quyền {actionDescription}!\nChức năng này chỉ dành riêng cho Cán bộ Quản lý hoặc Quản trị viên.",
+                    "Từ Chối Thao Tác (403)", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                StatusMessage = $"[TỪ CHỐI 403] Không có quyền {actionDescription}.";
+                return false;
+            }
+            return true;
         }
 
         private async Task InitializeAsync()
@@ -337,6 +353,8 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         private async Task OpenAddFormAsync()
         {
+            if (!CheckCanBoOrAdminPermission("nhập kết quả kiểm tra thể lực")) return;
+
             if (Cadets.Count == 0 || Subjects.Count == 0)
             {
                 StatusMessage = "Cần có ít nhất 1 học viên và 1 môn học để nhập điểm kiểm tra.";
@@ -365,6 +383,7 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         private async Task SaveRecordAsync()
         {
+            if (!CheckCanBoOrAdminPermission("lưu kết quả kiểm tra thể lực")) return;
             if (!await _securityGate.EnsureUnlockedAsync("Lưu kết quả kiểm tra thể lực")) return;
 
             FormErrorMessage = string.Empty;
@@ -419,6 +438,7 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         private async Task DeleteRecordAsync()
         {
+            if (!CheckCanBoOrAdminPermission("xóa kết quả kiểm tra thể lực")) return;
             if (!await _securityGate.EnsureUnlockedAsync("Xóa kết quả kiểm tra thể lực")) return;
 
             var selected = ExamRecords.Where(r => r.IsSelected).ToList();

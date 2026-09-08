@@ -14,6 +14,7 @@ namespace QL_HocVien.ViewModels
         private readonly IClassService _classService;
         private readonly ICatalogService _catalogService;
         private readonly ISecurityGateService _securityGate;
+        private readonly IAuthService? _authService;
 
         public ObservableCollection<MilitaryClass> AvailableClasses { get; } = new();
 
@@ -91,12 +92,14 @@ namespace QL_HocVien.ViewModels
             ICadetService cadetService,
             IClassService classService,
             ICatalogService catalogService,
-            ISecurityGateService securityGate)
+            ISecurityGateService securityGate,
+            IAuthService? authService = null)
         {
             _cadetService = cadetService;
             _classService = classService;
             _catalogService = catalogService;
             _securityGate = securityGate;
+            _authService = authService;
             Title = "Thêm Mới Học Viên";
 
             _ = InitializeAsync();
@@ -203,6 +206,15 @@ namespace QL_HocVien.ViewModels
 
         private async Task<bool> ExecuteSaveAsync()
         {
+            if (_authService?.CurrentUser?.Role == "HocVien")
+            {
+                ErrorMessage = "CẢNH BÁO AN NINH: Học viên không có quyền thêm mới hồ sơ học viên vào hệ thống!";
+                System.Windows.MessageBox.Show(
+                    "CẢNH BÁO AN NINH: Tài khoản Học viên không có thẩm quyền thêm mới học viên!\nChức năng này chỉ dành riêng cho Cán bộ Quản lý hoặc Quản trị viên.",
+                    "Từ Chối Thao Tác (403)", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                return false;
+            }
+
             if (!await _securityGate.EnsureUnlockedAsync("Thêm mới học viên vào hệ thống"))
                 return false;
 

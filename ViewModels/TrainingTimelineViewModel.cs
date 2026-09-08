@@ -133,17 +133,33 @@ namespace QL_HocVien.ViewModels
         [ObservableProperty]
         private string _selectedDayTitle = $"Sự kiện ngày {DateTime.Today:dd/MM/yyyy}";
 
+        private readonly IAuthService? _authService;
+
         public TrainingTimelineViewModel(
             ITrainingEventService eventService,
             ICatalogService catalogService,
-            ISecurityGateService securityGate)
+            ISecurityGateService securityGate,
+            IAuthService? authService = null)
         {
             _eventService = eventService;
             _catalogService = catalogService;
             _securityGate = securityGate;
+            _authService = authService;
 
             Title = "Lịch Huấn Luyện, Thi Cử & Mốc Sự Kiện Quân Sự";
             _ = InitializeAsync();
+        }
+
+        private bool CheckCanBoOrAdminPermission(string actionDescription)
+        {
+            if (_authService?.CurrentUser?.Role == "HocVien")
+            {
+                MessageBox.Show(
+                    $"CẢNH BÁO AN NINH: Tài khoản Học viên không có quyền {actionDescription}!\nChức năng này chỉ dành riêng cho Cán bộ Quản lý hoặc Quản trị viên.",
+                    "Từ Chối Thao Tác (403)", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+            return true;
         }
 
         public async Task InitializeAsync()
@@ -222,6 +238,7 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         public async Task OpenAddFormAsync()
         {
+            if (!CheckCanBoOrAdminPermission("thêm mốc sự kiện huấn luyện")) return;
             if (!await _securityGate.EnsureUnlockedAsync("Thêm mốc sự kiện huấn luyện")) return;
 
             FormHeader = "★ THÊM MỐC SỰ KIỆN HUẤN LUYỆN MỚI";
@@ -245,6 +262,7 @@ namespace QL_HocVien.ViewModels
             var target = evt ?? SelectedEvent;
             if (target == null) return;
 
+            if (!CheckCanBoOrAdminPermission("chỉnh sửa mốc sự kiện huấn luyện")) return;
             if (!await _securityGate.EnsureUnlockedAsync($"Chỉnh sửa mốc sự kiện '{target.Title}'")) return;
 
             FormHeader = "★ CHỈNH SỬA MỐC SỰ KIỆN HUẤN LUYỆN";
@@ -284,6 +302,7 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         public async Task SaveEventAsync()
         {
+            if (!CheckCanBoOrAdminPermission("lưu mốc sự kiện huấn luyện")) return;
             if (!await _securityGate.EnsureUnlockedAsync("Lưu mốc sự kiện huấn luyện")) return;
 
             if (string.IsNullOrWhiteSpace(EditTitle))
@@ -372,6 +391,8 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         public async Task DeleteEventAsync(TrainingEvent? evt)
         {
+            if (!CheckCanBoOrAdminPermission("xóa mốc sự kiện huấn luyện")) return;
+
             var target = evt ?? SelectedEvent;
             if (target == null) return;
 

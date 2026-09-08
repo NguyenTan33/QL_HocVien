@@ -29,25 +29,39 @@ namespace QL_HocVien.Models
             _ => string.Empty
         };
 
+        public string WatermarkArtPath
+        {
+            get
+            {
+                if (Category == "Kiểm tra thể lực" || Title.Contains("thể lực", StringComparison.OrdinalIgnoreCase))
+                    return "/Assets/Images/timeline_art_watchtower.png";
+                if (Category == "Thi cử quân sự" || Title.Contains("bắn súng", StringComparison.OrdinalIgnoreCase))
+                    return "/Assets/Images/timeline_art_ak_shooting.png";
+                if (Category == "Tập luyện / Rèn luyện" || Title.Contains("hành quân", StringComparison.OrdinalIgnoreCase))
+                    return "/Assets/Images/timeline_art_marching.png";
+                return "/Assets/Images/timeline_art_watchtower.png";
+            }
+        }
+
         public string CategoryBg => Category switch
         {
-            "Kiểm tra thể lực" => "#065F46",
-            "Thi cử quân sự" => "#0E7490",
-            "Tập luyện / Rèn luyện" => "#15803D",
+            "Kiểm tra thể lực" => "#0C683B",
+            "Thi cử quân sự" => "#0A6A45",
+            "Tập luyện / Rèn luyện" => "#0C683B",
             "Hội thao / Sự kiện" => "#1D4ED8",
             _ => "#334155"
         };
 
         public string PriorityBg => Priority switch
         {
-            "Khẩn cấp" => "#DC2626",
+            "Khẩn cấp" => "#FEE2E2",
             "Cao" => "#FEE2E2",
             _ => "#E2E8F0"
         };
 
         public string PriorityFg => Priority switch
         {
-            "Khẩn cấp" => "#FFFFFF",
+            "Khẩn cấp" => "#DC2626",
             "Cao" => "#DC2626",
             _ => "#475569"
         };
@@ -56,7 +70,7 @@ namespace QL_HocVien.Models
         {
             "Đã hoàn thành" => "#DCFCE7",
             "Đang diễn ra" => "#DBEAFE",
-            "Đang chuẩn bị" => "#ECFCCB",
+            "Đang chuẩn bị" => "#DCFCE7",
             _ => "#F1F5F9"
         };
 
@@ -64,7 +78,7 @@ namespace QL_HocVien.Models
         {
             "Đã hoàn thành" => "#15803D",
             "Đang diễn ra" => "#1D4ED8",
-            "Đang chuẩn bị" => "#3F6212",
+            "Đang chuẩn bị" => "#15803D",
             _ => "#475569"
         };
     }

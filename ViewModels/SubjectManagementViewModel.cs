@@ -157,20 +157,36 @@ namespace QL_HocVien.ViewModels
         private readonly IExcelService _excelService;
         private readonly IFileDialogService _fileDialogService;
         private readonly ISecurityGateService _securityGate;
+        private readonly IAuthService? _authService;
 
         public SubjectManagementViewModel(
             ISubjectService subjectService,
             IExcelService excelService,
             IFileDialogService fileDialogService,
-            ISecurityGateService securityGate)
+            ISecurityGateService securityGate,
+            IAuthService? authService = null)
         {
             _subjectService = subjectService;
             _excelService = excelService;
             _fileDialogService = fileDialogService;
             _securityGate = securityGate;
+            _authService = authService;
             Title = "Quản Lý Môn Học & Tiêu Chuẩn Thể Lực";
 
             _ = LoadSubjectsAsync();
+        }
+
+        private bool CheckCanBoOrAdminPermission(string actionDescription)
+        {
+            if (_authService?.CurrentUser?.Role == "HocVien")
+            {
+                System.Windows.MessageBox.Show(
+                    $"CẢNH BÁO AN NINH: Tài khoản Học viên không có quyền {actionDescription}!\nChức năng này chỉ dành riêng cho Cán bộ Quản lý hoặc Quản trị viên.",
+                    "Từ Chối Thao Tác (403)", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                StatusMessage = $"[TỪ CHỐI 403] Không có quyền {actionDescription}.";
+                return false;
+            }
+            return true;
         }
 
         [RelayCommand]
@@ -229,6 +245,7 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         private async Task OpenAddFormAsync()
         {
+            if (!CheckCanBoOrAdminPermission("thêm môn học thể lực")) return;
             if (!await _securityGate.EnsureUnlockedAsync("Thêm môn học thể lực mới")) return;
 
             IsEditing = false;
@@ -254,6 +271,7 @@ namespace QL_HocVien.ViewModels
                 return;
             }
 
+            if (!CheckCanBoOrAdminPermission("chỉnh sửa môn học thể lực")) return;
             if (!await _securityGate.EnsureUnlockedAsync($"Chỉnh sửa môn học '{SelectedSubject.SubjectName}'")) return;
 
             IsEditing = true;
@@ -279,6 +297,7 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         private async Task SaveFormAsync()
         {
+            if (!CheckCanBoOrAdminPermission("lưu môn học thể lực")) return;
             if (!await _securityGate.EnsureUnlockedAsync("Lưu thông tin môn học thể lực")) return;
 
             FormErrorMessage = string.Empty;
@@ -363,6 +382,8 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         private async Task DeleteSubjectAsync()
         {
+            if (!CheckCanBoOrAdminPermission("xóa môn học thể lực")) return;
+
             var selected = Subjects.Where(s => s.IsSelected).ToList();
             if (!selected.Any() && SelectedSubject != null)
             {
