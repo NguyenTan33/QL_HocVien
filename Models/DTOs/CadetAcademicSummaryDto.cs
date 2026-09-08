@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using QL_HocVien.Services;
 
 namespace QL_HocVien.Models.DTOs
 {
@@ -36,11 +37,18 @@ namespace QL_HocVien.Models.DTOs
             ? $"⚠️ Thiếu {MissingSubjectsCount} môn"
             : "✅ Đủ môn";
 
-        public string StatusBadgeColor => HasMissingSubjects ? "#FBBF24" : "#4ADE80";
-        public string StatusBadgeBg => HasMissingSubjects ? "#4A3315" : "#143820";
+        public string StatusBadgeColor => ThemeService.CurrentIsCombatMode
+            ? (HasMissingSubjects ? "#FBBF24" : "#4ADE80")
+            : (HasMissingSubjects ? "#92400E" : "#166534");
+
+        public string StatusBadgeBg => ThemeService.CurrentIsCombatMode
+            ? (HasMissingSubjects ? "#4A3315" : "#143820")
+            : (HasMissingSubjects ? "#FEF3C7" : "#DCFCE7");
         
-        // Màu nền dòng: Nâu hổ phách tác chiến cảnh báo tương phản cao cho học viên thiếu môn (thay thế màu vàng thô)
-        public string RowBackground => HasMissingSubjects ? "#382914" : "Transparent";
+        // Màu nền dòng: Nâu hổ phách tác chiến cảnh báo tương phản cao cho học viên thiếu môn; Pastel ấm nhẹ trong chế độ hành chính
+        public string RowBackground => HasMissingSubjects
+            ? (ThemeService.CurrentIsCombatMode ? "#382914" : "#FEF3C7")
+            : "Transparent";
 
         // Danh sách phân rã điểm thành phần của các môn lớn
         public List<MajorSubjectBreakdownDto> MajorSubjectBreakdowns { get; set; } = new();
@@ -60,27 +68,45 @@ namespace QL_HocVien.Models.DTOs
 
         public string RatingColor
         {
-            get => AcademicRating switch
-            {
-                "Giỏi" => "#93C5FD",
-                "Khá" => "#86EFAC",
-                "TB" => "#FCD34D",
-                "Yếu" => "#FCA5A5",
-                _ => "#CBD5E1"
-            };
+            get => ThemeService.CurrentIsCombatMode
+                ? (AcademicRating switch
+                {
+                    "Giỏi" => "#93C5FD",
+                    "Khá" => "#86EFAC",
+                    "TB" => "#FCD34D",
+                    "Yếu" => "#FCA5A5",
+                    _ => "#CBD5E1"
+                })
+                : (AcademicRating switch
+                {
+                    "Giỏi" => "#1E40AF",
+                    "Khá" => "#166534",
+                    "TB" => "#92400E",
+                    "Yếu" => "#991B1B",
+                    _ => "#475569"
+                });
             set { }
         }
 
         public string RatingBackground
         {
-            get => AcademicRating switch
-            {
-                "Giỏi" => "#1E3A5F",
-                "Khá" => "#143D24",
-                "TB" => "#452A12",
-                "Yếu" => "#4A1A1A",
-                _ => "#253628"
-            };
+            get => ThemeService.CurrentIsCombatMode
+                ? (AcademicRating switch
+                {
+                    "Giỏi" => "#1E3A5F",
+                    "Khá" => "#143D24",
+                    "TB" => "#452A12",
+                    "Yếu" => "#4A1A1A",
+                    _ => "#253628"
+                })
+                : (AcademicRating switch
+                {
+                    "Giỏi" => "#DBEAFE",
+                    "Khá" => "#DCFCE7",
+                    "TB" => "#FEF3C7",
+                    "Yếu" => "#FEE2E2",
+                    _ => "#F1F5F9"
+                });
             set { }
         }
     }

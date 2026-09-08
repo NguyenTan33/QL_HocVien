@@ -22,7 +22,7 @@ namespace QL_HocVien
     {
         public static IServiceProvider ServiceProvider { get; private set; } = null!;
 
-        protected override void OnStartup(StartupEventArgs e)
+        protected override async void OnStartup(StartupEventArgs e)
         {
             // 1. Nạp engine mã hóa SQLCipher AES-256 trước khi bất kỳ kết nối SQLite nào được mở
             Batteries_V2.Init();
@@ -80,6 +80,24 @@ namespace QL_HocVien
                     var authService = ServiceProvider.GetRequiredService<IAuthService>();
                     authService.LoginAsync("admin", "Admin@123").GetAwaiter().GetResult();
 
+                    if (Array.Exists(e.Args, a => a == "--theme"))
+                    {
+                        int tIdx = Array.IndexOf(e.Args, "--theme");
+                        if (tIdx >= 0 && tIdx < e.Args.Length - 1)
+                        {
+                            string themeArg = e.Args[tIdx + 1].ToLowerInvariant();
+                            var themeService = ServiceProvider.GetRequiredService<IThemeService>();
+                            if (themeArg.Contains("admin") || themeArg.Contains("light") || themeArg.Contains("basic"))
+                            {
+                                themeService.ApplyTheme(false);
+                            }
+                            else
+                            {
+                                themeService.ApplyTheme(true);
+                            }
+                        }
+                    }
+
                     var mainWindow = ServiceProvider.GetRequiredService<MainWindow>();
                     mainWindow.Width = 1600;
                     mainWindow.Height = 900;
@@ -98,6 +116,8 @@ namespace QL_HocVien
                             else if (target.Contains("setting")) mainVm.NavigateToSettings();
                             else if (target.Contains("cadet")) mainVm.NavigateToCadetManagement();
                             else if (target.Contains("class")) mainVm.NavigateToClassManagement();
+                            else if (target.Contains("catalog")) mainVm.NavigateToCatalogManagement();
+                            else if (target.Contains("dashboard")) mainVm.NavigateToDashboard();
                         }
                     }
 
@@ -128,6 +148,47 @@ namespace QL_HocVien
 
                     Shutdown(0);
                     return;
+                }
+
+                // Kiểm tra bản cập nhật hệ thống trước khi hiển thị màn hình Đăng nhập (Auto-Update)
+                if (!Array.Exists(e.Args, a => a == "--skip-update" || a == "--screenshot"))
+                {
+                    try
+                    {
+                        var updateService = ServiceProvider.GetRequiredService<IUpdateService>();
+                        var updateResult = await updateService.CheckForUpdateAsync();
+
+                        if (updateResult.HasUpdate)
+                        {
+                            var updateWindow = ServiceProvider.GetRequiredService<UpdateWindow>();
+                            updateWindow.Initialize(updateResult);
+
+                            bool? dialogResult = updateWindow.ShowDialog();
+
+                            // Nếu bản cập nhật bắt buộc mà không cập nhật -> Thoát hoàn toàn
+                            if (updateResult.IsMandatory && dialogResult != true)
+                            {
+                                Shutdown(0);
+                                return;
+                            }
+
+                            // Nếu người dùng đã bấm cập nhật và installer đã được kích hoạt -> Thoát
+                            if (dialogResult == true)
+                            {
+                                return;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // Lỗi mạng hoặc lỗi kiểm tra cập nhật không được làm sập ứng dụng
+                        try
+                        {
+                            File.AppendAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "update_error.log"),
+                                $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] Lỗi kiểm tra cập nhật: {ex.Message}\n");
+                        }
+                        catch { }
+                    }
                 }
 
                 // Hiển thị màn hình Đăng nhập đầu tiên
@@ -215,6 +276,8 @@ namespace QL_HocVien
             services.AddSingleton<ISecureKeyVault, SecureKeyVault>();
             services.AddSingleton<ILoginLockoutService, LoginLockoutService>();
             services.AddSingleton<IThemeService, ThemeService>();
+            services.AddSingleton<IDownloadUpdateService, DownloadUpdateService>();
+            services.AddSingleton<IUpdateService, UpdateService>();
 
             // Đăng ký Infrastructure (Validation Factory & Security Services - OOP & SOLID)
             services.AddAppInfrastructureValidation();
@@ -241,6 +304,7 @@ namespace QL_HocVien
             // Đăng ký Windows
             services.AddTransient<LoginWindow>();
             services.AddTransient<MainWindow>();
+            services.AddTransient<UpdateWindow>();
         }
     }
 }

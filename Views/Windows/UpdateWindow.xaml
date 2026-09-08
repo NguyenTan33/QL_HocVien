@@ -1,0 +1,215 @@
+<Window x:Class="QL_HocVien.Views.Windows.UpdateWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local_cv="clr-namespace:QL_HocVien.Converters"
+        mc:Ignorable="d"
+        Title="Thông Báo Cập Nhật Hệ Thống"
+        Height="540" Width="680"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize">
+
+    <Window.Resources>
+        <!-- Style Nút Đỏ Quân Đội -->
+        <Style x:Key="UpdateActionButtonStyle" TargetType="Button">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                        <GradientStop Color="#781113" Offset="0"/>
+                        <GradientStop Color="#9B1B1E" Offset="0.5"/>
+                        <GradientStop Color="#781113" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Foreground" Value="#FFE17A"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="BorderBrush" Value="#D4B547"/>
+            <Setter Property="BorderThickness" Value="1.2"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6" Padding="{TemplateBinding Padding}"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#B91C1C"/>
+                                <Setter TargetName="bd" Property="BorderBrush" Value="#FDE047"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="bd" Property="Opacity" Value="0.5"/>
+                                <Setter Property="Cursor" Value="No"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Style Nút Thứ Cấp (Để sau / Thoát) -->
+        <Style x:Key="UpdateSecondaryButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#1E2B20"/>
+            <Setter Property="Foreground" Value="#E2E8F0"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="BorderBrush" Value="#4B5563"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6" Padding="{TemplateBinding Padding}"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#2D3F30"/>
+                                <Setter TargetName="bd" Property="BorderBrush" Value="#9CA3AF"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <!-- Khung Cửa Sổ Viền Vàng Đồng Quân Đội -->
+    <Border CornerRadius="10" Background="#111B13" BorderBrush="#D4B547" BorderThickness="1.5" Margin="12">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="25" Color="#000000" Opacity="0.75" ShadowDepth="6"/>
+        </Border.Effect>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/> <!-- Header -->
+                <RowDefinition Height="*"/>    <!-- Content & Release Notes -->
+                <RowDefinition Height="Auto"/> <!-- Progress Bar -->
+                <RowDefinition Height="Auto"/> <!-- Footer Buttons -->
+            </Grid.RowDefinitions>
+
+            <!-- ==================== 1. HEADER ==================== -->
+            <Border Grid.Row="0" Background="#18271C" CornerRadius="9,9,0,0" Padding="20,16" BorderBrush="#2F4333" BorderThickness="0,0,0,1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Icon Cập nhật -->
+                    <Border Grid.Column="0" Width="44" Height="44" CornerRadius="22" Background="#243728" BorderBrush="#D4B547" BorderThickness="1.2" Margin="0,0,14,0">
+                        <TextBlock Text="🚀" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+
+                    <!-- Tiêu đề và Phiên bản -->
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="CẬP NHẬT PHIÊN BẢN HỆ THỐNG" FontSize="16" FontWeight="Bold" Foreground="#FFE17A" VerticalAlignment="Center"/>
+                            <Border x:Name="bdMandatoryBadge" Background="#7F1D1D" BorderBrush="#EF4444" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                                <TextBlock x:Name="txtBadgeText" Text="BẮT BUỘC" FontSize="10" FontWeight="Bold" Foreground="#FEE2E2"/>
+                            </Border>
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                            <TextBlock Text="Phiên bản hiện tại: " FontSize="12" Foreground="#94A3B8"/>
+                            <TextBlock x:Name="txtCurrentVersion" Text="v1.0.0" FontSize="12" FontWeight="Bold" Foreground="#CBD5E1" Margin="0,0,10,0"/>
+                            <TextBlock Text="➔  Phiên bản mới: " FontSize="12" Foreground="#94A3B8"/>
+                            <TextBlock x:Name="txtLatestVersion" Text="v1.3.0" FontSize="12" FontWeight="Bold" Foreground="#4ADE80"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Nút Đóng (Chỉ hiển thị nếu không phải mandatory) -->
+                    <Button Grid.Column="2" x:Name="btnCloseHeader" Content="✕" Width="28" Height="28"
+                            Background="Transparent" Foreground="#94A3B8" BorderThickness="0" FontSize="13" FontWeight="Bold" Cursor="Hand"
+                            Click="BtnClose_Click"/>
+                </Grid>
+            </Border>
+
+            <!-- ==================== 2. NỘI DUNG NHẬT KÝ BẢN PHÁT HÀNH (RELEASE NOTES) ==================== -->
+            <Grid Grid.Row="1" Margin="20,16,20,10">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Text="Nội dung cập nhật và cải tiến:" FontSize="12" FontWeight="SemiBold" Foreground="#E2E8F0" Margin="0,0,0,6"/>
+
+                <Border Grid.Row="1" Background="#0C140E" BorderBrush="#2F4333" BorderThickness="1" CornerRadius="6" Padding="12">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <TextBlock x:Name="txtReleaseNotes" Text="Đang tải thông tin bản phát hành..."
+                                   Foreground="#CBD5E1" FontSize="12.5" LineHeight="20" TextWrapping="Wrap" FontFamily="Segoe UI"/>
+                    </ScrollViewer>
+                </Border>
+            </Grid>
+
+            <!-- ==================== 3. KHU VỰC TIẾN ĐỘ TẢI (PROGRESS BAR) ==================== -->
+            <StackPanel Grid.Row="2" x:Name="spDownloadProgress" Margin="20,0,20,10" Visibility="Collapsed">
+                <Grid Margin="0,0,0,6">
+                    <TextBlock x:Name="txtDownloadStatus" Text="Đang tải gói cài đặt cập nhật..." FontSize="12" Foreground="#E2E8F0" FontWeight="SemiBold"/>
+                    <TextBlock x:Name="txtDownloadSpeed" Text="0.0 MB/s" HorizontalAlignment="Right" FontSize="12" Foreground="#38BDF8" FontWeight="SemiBold" FontFamily="Consolas"/>
+                </Grid>
+
+                <!-- Thanh Tiến độ hiện đại -->
+                <ProgressBar x:Name="pbDownload" Height="10" Value="0" Maximum="100" Background="#1E293B" Foreground="#22C55E" BorderThickness="0">
+                    <ProgressBar.Resources>
+                        <Style TargetType="ProgressBar">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ProgressBar">
+                                        <Border CornerRadius="5" Background="{TemplateBinding Background}" SnapsToDevicePixels="True">
+                                            <Grid x:Name="PART_Track">
+                                                <Rectangle x:Name="PART_Indicator" HorizontalAlignment="Left" RadiusX="5" RadiusY="5">
+                                                    <Rectangle.Fill>
+                                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                                            <GradientStop Color="#15803D" Offset="0"/>
+                                                            <GradientStop Color="#22C55E" Offset="1"/>
+                                                        </LinearGradientBrush>
+                                                    </Rectangle.Fill>
+                                                </Rectangle>
+                                            </Grid>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ProgressBar.Resources>
+                </ProgressBar>
+
+                <TextBlock x:Name="txtDownloadSize" Text="0 MB / 0 MB (0%)" FontSize="11" Foreground="#94A3B8" Margin="0,4,0,0" HorizontalAlignment="Right" FontFamily="Consolas"/>
+            </StackPanel>
+
+            <!-- ==================== 4. CỤM NÚT ĐIỀU KHIỂN THAO TÁC ==================== -->
+            <Border Grid.Row="3" Background="#142117" CornerRadius="0,0,9,9" Padding="20,14" BorderBrush="#2F4333" BorderThickness="0,1,0,0">
+                <Grid>
+                    <!-- Thông báo trạng thái lỗi (nếu có) -->
+                    <TextBlock x:Name="txtErrorMessage" Text="" FontSize="11.5" Foreground="#F87171" FontWeight="SemiBold" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="360" HorizontalAlignment="Left"/>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <!-- Nút Hủy / Để sau / Thoát -->
+                        <Button x:Name="btnSecondary" Content="Để sau" Style="{StaticResource UpdateSecondaryButtonStyle}"
+                                Height="36" Padding="16,0" Margin="0,0,10,0" Click="BtnSecondary_Click"/>
+
+                        <!-- Nút Thực hiện Cập nhật -->
+                        <Button x:Name="btnUpdate" Content="CẬP NHẬT NGAY" Style="{StaticResource UpdateActionButtonStyle}"
+                                Height="36" Padding="20,0" Click="BtnUpdate_Click"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+</Window>

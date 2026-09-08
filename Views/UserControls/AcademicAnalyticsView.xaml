@@ -30,7 +30,7 @@
             <!-- HÀNG 0: TIÊU ĐỀ TRANG -->
             <StackPanel Grid.Row="0" VerticalAlignment="Center" Margin="0,0,0,10">
                 <TextBlock Text="PHÂN TÍCH &amp; SO SÁNH HỌC LỰC - BẢNG ĐIỂM TOÀN KHÓA" 
-                           FontSize="20" FontWeight="Bold" Foreground="{DynamicResource AccentLightBrush}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                           FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
                 <TextBlock Text="Thống kê, so sánh kết quả học tập và phân tích học lực theo phân cấp từ Đại đội ➔ Lớp ➔ Cá nhân học viên" 
                            FontSize="12.5" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
             </StackPanel>
@@ -151,12 +151,12 @@
                 <!-- KPI 2: HỌC LỰC GIỎI -->
                 <Border Grid.Column="2" Background="{DynamicResource KpiCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,10">
                     <StackPanel>
-                        <TextBlock Text="HỌC LỰC GIỎI (≥ 8.0)" FontSize="11" FontWeight="Bold" Foreground="#93C5FD"/>
+                        <TextBlock Text="HỌC LỰC GIỎI (≥ 8.0)" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource InfoCardForegroundBrush}"/>
                         <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                            <TextBlock Text="{Binding ExcellentCount}" FontSize="22" FontWeight="ExtraBold" Foreground="#60A5FA"/>
-                            <TextBlock Text=" đ/c" FontSize="14" FontWeight="Bold" Foreground="#60A5FA" VerticalAlignment="Bottom" Margin="2,0,0,3"/>
+                            <TextBlock Text="{Binding ExcellentCount}" FontSize="22" FontWeight="ExtraBold" Foreground="{DynamicResource InfoCardForegroundBrush}"/>
+                            <TextBlock Text=" đ/c" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource InfoCardForegroundBrush}" VerticalAlignment="Bottom" Margin="2,0,0,3"/>
                         </StackPanel>
-                        <TextBlock FontSize="11" Foreground="#93C5FD" FontWeight="SemiBold" Margin="0,2,0,0">
+                        <TextBlock FontSize="11" Foreground="{DynamicResource InfoCardForegroundBrush}" FontWeight="SemiBold" Margin="0,2,0,0">
                             <Run Text="{Binding ExcellentPercentage, StringFormat={}{0:F1}% quân số}"/>
                         </TextBlock>
                     </StackPanel>
@@ -165,26 +165,26 @@
                 <!-- KPI 3: HỌC LỰC KHÁ -->
                 <Border Grid.Column="4" Background="{DynamicResource KpiCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,10">
                     <StackPanel>
-                        <TextBlock Text="HỌC LỰC KHÁ (7.0 - 7.9)" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}"/>
+                        <TextBlock Text="HỌC LỰC KHÁ (7.0 - 7.9)" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource SuccessCardForegroundBrush}"/>
                         <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                            <TextBlock Text="{Binding GoodCount}" FontSize="22" FontWeight="ExtraBold" Foreground="#4ADE80"/>
-                            <TextBlock Text=" đ/c" FontSize="14" FontWeight="Bold" Foreground="#4ADE80" VerticalAlignment="Bottom" Margin="2,0,0,3"/>
+                            <TextBlock Text="{Binding GoodCount}" FontSize="22" FontWeight="ExtraBold" Foreground="{DynamicResource SuccessCardForegroundBrush}"/>
+                            <TextBlock Text=" đ/c" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource SuccessCardForegroundBrush}" VerticalAlignment="Bottom" Margin="2,0,0,3"/>
                         </StackPanel>
-                        <TextBlock FontSize="11" Foreground="#86EFAC" FontWeight="SemiBold" Margin="0,2,0,0">
+                        <TextBlock FontSize="11" Foreground="{DynamicResource SuccessCardForegroundBrush}" FontWeight="SemiBold" Margin="0,2,0,0">
                             <Run Text="{Binding GoodPercentage, StringFormat={}{0:F1}% quân số}"/>
                         </TextBlock>
                     </StackPanel>
                 </Border>
 
                 <!-- KPI 4: THIẾU MÔN / CHƯA HOÀN THÀNH -->
-                <Border Grid.Column="6" Background="#2A1515" BorderBrush="{DynamicResource DangerBrush}" BorderThickness="1" CornerRadius="8" Padding="14,10">
+                <Border Grid.Column="6" Background="{DynamicResource DangerCardBackgroundBrush}" BorderBrush="{DynamicResource DangerCardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,10">
                     <StackPanel>
-                        <TextBlock Text="THIẾU MÔN / CHƯA THI (⚠️)" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource DangerBrush}"/>
+                        <TextBlock Text="THIẾU MÔN / CHƯA THI (⚠️)" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource DangerCardForegroundBrush}"/>
                         <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                            <TextBlock Text="{Binding MissingCount}" FontSize="22" FontWeight="ExtraBold" Foreground="#F87171"/>
-                            <TextBlock Text=" đ/c" FontSize="14" FontWeight="Bold" Foreground="#F87171" VerticalAlignment="Bottom" Margin="2,0,0,3"/>
+                            <TextBlock Text="{Binding MissingCount}" FontSize="22" FontWeight="ExtraBold" Foreground="{DynamicResource DangerCardForegroundBrush}"/>
+                            <TextBlock Text=" đ/c" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource DangerCardForegroundBrush}" VerticalAlignment="Bottom" Margin="2,0,0,3"/>
                         </StackPanel>
-                        <TextBlock FontSize="11" Foreground="#FCA5A5" FontWeight="SemiBold" Margin="0,2,0,0">
+                        <TextBlock FontSize="11" Foreground="{DynamicResource DangerCardForegroundBrush}" FontWeight="SemiBold" Margin="0,2,0,0">
                             <Run Text="{Binding MissingPercentage, StringFormat={}{0:F1}% quân số}"/>
                         </TextBlock>
                     </StackPanel>
@@ -230,7 +230,7 @@
                                     <DataGridTextColumn Header="Quân số" Binding="{Binding TotalCadets}" Width="0.8*"/>
                                     <DataGridTextColumn Header="TBM Bình Quân" Binding="{Binding AverageGpa, StringFormat={}{0:F2}}" FontWeight="Bold" Foreground="{DynamicResource AccentLightBrush}" Width="1.2*"/>
                                     <DataGridTextColumn Header="% Khá/Giỏi" Binding="{Binding GoodOrAboveRate, StringFormat={}{0:F1}%}" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" Width="1.1*"/>
-                                    <DataGridTextColumn Header="Số Giỏi" Binding="{Binding ExcellentCount}" FontWeight="Bold" Foreground="#93C5FD" Width="0.8*"/>
+                                    <DataGridTextColumn Header="Số Giỏi" Binding="{Binding ExcellentCount}" FontWeight="Bold" Foreground="{DynamicResource InfoCardForegroundBrush}" Width="0.8*"/>
                                     <DataGridTextColumn Header="Số Khá" Binding="{Binding GoodCount}" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}" Width="0.8*"/>
                                     <DataGridTextColumn Header="Số TB/Yếu" Binding="{Binding AverageWeakCount}" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" Width="0.9*"/>
                                     <DataGridTextColumn Header="Nợ môn" Binding="{Binding MissingCount}" FontWeight="Bold" Foreground="{DynamicResource DangerBrush}" Width="0.9*"/>

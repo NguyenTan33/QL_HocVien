@@ -72,6 +72,49 @@
     <SolidColorBrush x:Key="TabHeaderActiveForegroundBrush" Color="#FFE17A"/>
     <SolidColorBrush x:Key="TabHeaderBorderBrush" Color="#625C34"/>
 
+    <!-- Semantic Status & KPI Brushes -->
+    <SolidColorBrush x:Key="WarningCardBackgroundBrush" Color="#2D240E"/>
+    <SolidColorBrush x:Key="WarningCardBorderBrush" Color="#F59E0B"/>
+    <SolidColorBrush x:Key="WarningCardForegroundBrush" Color="#FDE047"/>
+    <SolidColorBrush x:Key="DangerCardBackgroundBrush" Color="#2A1515"/>
+    <SolidColorBrush x:Key="DangerCardBorderBrush" Color="#DC2626"/>
+    <SolidColorBrush x:Key="DangerCardForegroundBrush" Color="#F87171"/>
+    <SolidColorBrush x:Key="SuccessCardBackgroundBrush" Color="#12281C"/>
+    <SolidColorBrush x:Key="SuccessCardBorderBrush" Color="#356E49"/>
+    <SolidColorBrush x:Key="SuccessCardForegroundBrush" Color="#86EFAC"/>
+    <SolidColorBrush x:Key="InfoCardBackgroundBrush" Color="#11232E"/>
+    <SolidColorBrush x:Key="InfoCardBorderBrush" Color="#3A5E70"/>
+    <SolidColorBrush x:Key="InfoCardForegroundBrush" Color="#7DD3FC"/>
+
+    <!-- DataGrid Missing Row & Hover Brushes -->
+    <SolidColorBrush x:Key="DataGridMissingRowBrush" Color="#382914"/>
+    <SolidColorBrush x:Key="DataGridMissingRowTextBrush" Color="#F7F1D4"/>
+    <SolidColorBrush x:Key="DataGridHoverBrush" Color="#2A3C2B"/>
+
+    <!-- Training Timeline Dynamic Brushes -->
+    <SolidColorBrush x:Key="TimelineBackgroundBrush" Color="#EDE5D0"/>
+    <SolidColorBrush x:Key="TimelineBorderBrush" Color="#8A784A"/>
+    <SolidColorBrush x:Key="TimelineCardBackgroundBrush" Color="#FAF6EC"/>
+    <SolidColorBrush x:Key="TimelineCardBorderBrush" Color="#D5CAAE"/>
+    <SolidColorBrush x:Key="TimelineFilterBackgroundBrush" Color="#162417"/>
+    <SolidColorBrush x:Key="TimelineFilterBorderBrush" Color="#72683A"/>
+    <SolidColorBrush x:Key="TimelineKpi1BackgroundBrush" Color="#15261A"/>
+    <SolidColorBrush x:Key="TimelineKpi1BorderBrush" Color="#7B6F3E"/>
+    <SolidColorBrush x:Key="TimelineKpi2BackgroundBrush" Color="#11232E"/>
+    <SolidColorBrush x:Key="TimelineKpi2BorderBrush" Color="#3A5E70"/>
+    <SolidColorBrush x:Key="TimelineKpi3BackgroundBrush" Color="#2D1215"/>
+    <SolidColorBrush x:Key="TimelineKpi3BorderBrush" Color="#782E32"/>
+    <SolidColorBrush x:Key="TimelineKpi4BackgroundBrush" Color="#12281C"/>
+    <SolidColorBrush x:Key="TimelineKpi4BorderBrush" Color="#356E49"/>
+
+    <!-- Sidebar & Active Menu Brushes -->
+    <SolidColorBrush x:Key="ActiveMenuBackgroundBrush" Color="#8F1515"/>
+    <SolidColorBrush x:Key="ActiveMenuBorderBrush" Color="#ECC867"/>
+    <SolidColorBrush x:Key="ActiveMenuForegroundBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="SidebarNavHoverBackgroundBrush" Color="#1E2E20"/>
+    <SolidColorBrush x:Key="SidebarNavHoverBorderBrush" Color="#35452C"/>
+    <SolidColorBrush x:Key="SidebarIconBrush" Color="#F2C94C"/>
+
     <!-- Style cho Nút Bấm Chính (Primary Button) -->
     <Style x:Key="PrimaryButtonStyle" TargetType="Button">
         <Setter Property="Background" Value="{DynamicResource PrimaryBrush}"/>

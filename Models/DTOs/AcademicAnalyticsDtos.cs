@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using QL_HocVien.Services;
 
 namespace QL_HocVien.Models.DTOs
 {
@@ -117,23 +118,41 @@ namespace QL_HocVien.Models.DTOs
             }
         }
 
-        public string RatingColor => AcademicRating switch
-        {
-            "Giỏi" => "#93C5FD",
-            "Khá" => "#86EFAC",
-            "Trung bình" => "#FDE047",
-            "Yếu" => "#FCA5A5",
-            _ => "#B9B99E"
-        };
+        public string RatingColor => ThemeService.CurrentIsCombatMode
+            ? (AcademicRating switch
+            {
+                "Giỏi" => "#93C5FD",
+                "Khá" => "#86EFAC",
+                "Trung bình" => "#FDE047",
+                "Yếu" => "#FCA5A5",
+                _ => "#B9B99E"
+            })
+            : (AcademicRating switch
+            {
+                "Giỏi" => "#1E40AF",
+                "Khá" => "#166534",
+                "Trung bình" => "#92400E",
+                "Yếu" => "#991B1B",
+                _ => "#475569"
+            });
 
-        public string RatingBackground => AcademicRating switch
-        {
-            "Giỏi" => "#1E3048",
-            "Khá" => "#183622",
-            "Trung bình" => "#3D3014",
-            "Yếu" => "#421818",
-            _ => "#253628"
-        };
+        public string RatingBackground => ThemeService.CurrentIsCombatMode
+            ? (AcademicRating switch
+            {
+                "Giỏi" => "#1E3048",
+                "Khá" => "#183622",
+                "Trung bình" => "#3D3014",
+                "Yếu" => "#421818",
+                _ => "#253628"
+            })
+            : (AcademicRating switch
+            {
+                "Giỏi" => "#DBEAFE",
+                "Khá" => "#DCFCE7",
+                "Trung bình" => "#FEF3C7",
+                "Yếu" => "#FEE2E2",
+                _ => "#F1F5F9"
+            });
 
         // Cảnh báo thiếu môn / đợt kiểm tra
         public bool HasMissingSubjects { get; set; }
@@ -141,7 +160,9 @@ namespace QL_HocVien.Models.DTOs
         public string MissingSubjectsDisplay { get; set; } = string.Empty;
 
         // Dòng màu vàng cho học viên chưa làm bài
-        public string RowBackground => HasMissingSubjects ? "#3D3414" : "Transparent";
+        public string RowBackground => HasMissingSubjects
+            ? (ThemeService.CurrentIsCombatMode ? "#3D3414" : "#FEF3C7")
+            : "Transparent";
 
         public string SummaryText => $"TBM: {Gpa:F2}  |  Xếp loại: {AcademicRating}  |  Đã tích lũy: {TotalCreditsEarned:F2}/{TotalCurriculumCredits:F2} TC  |  {(HasMissingSubjects ? $"⚠️ Thiếu {MissingSubjectsCount} nội dung" : "✅ Hoàn thành đầy đủ")}";
 

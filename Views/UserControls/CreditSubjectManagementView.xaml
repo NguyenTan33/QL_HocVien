@@ -59,7 +59,7 @@
 
                 <!-- 1. HEADER (PAGE HEADER) -->
                 <StackPanel Grid.Row="0" VerticalAlignment="Center" Margin="0,0,0,10">
-                    <TextBlock Text="QUẢN LÝ MÔN HỌC &amp; TÍNH ĐIỂM TBM CHUẨN QUÂN SỰ" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource AccentLightBrush}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                    <TextBlock Text="QUẢN LÝ MÔN HỌC &amp; TÍNH ĐIỂM TBM CHUẨN QUÂN SỰ" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
                     <TextBlock Text="Tính điểm thành phần theo số tín chỉ, tính TBM toàn khóa chuẩn quân đội và nhận diện học viên thiếu môn" 
                                FontSize="12.5" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
                 </StackPanel>
@@ -103,8 +103,8 @@
                     <!-- Thẻ 2: Tổng môn học tín chỉ -->
                     <Border Grid.Column="2" Style="{StaticResource CardBorderStyle}" Background="{DynamicResource KpiCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" Padding="12,10">
                         <StackPanel>
-                            <TextBlock Text="📚 MÔN TÍN CHỈ" FontSize="11" FontWeight="Bold" Foreground="#4ADE80"/>
-                            <TextBlock Text="{Binding TotalSubjectsCount}" FontSize="20" FontWeight="ExtraBold" Foreground="#4ADE80" Margin="0,3,0,0"/>
+                            <TextBlock Text="📚 MÔN TÍN CHỈ" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource SuccessBrush}"/>
+                            <TextBlock Text="{Binding TotalSubjectsCount}" FontSize="20" FontWeight="ExtraBold" Foreground="{DynamicResource SuccessBrush}" Margin="0,3,0,0"/>
                             <TextBlock Text="Môn / thành phần" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,1,0,0"/>
                         </StackPanel>
                     </Border>
@@ -121,24 +121,24 @@
                     <!-- Thẻ 4: Số học viên Giỏi -->
                     <Border Grid.Column="6" Style="{StaticResource CardBorderStyle}" Background="{DynamicResource KpiCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" Padding="12,10">
                         <StackPanel>
-                            <TextBlock Text="⭐ HỌC LỰC GIỎI" FontSize="11" FontWeight="Bold" Foreground="#60A5FA"/>
-                            <TextBlock Text="{Binding ExcellentStudentsCount}" FontSize="20" FontWeight="ExtraBold" Foreground="#60A5FA" Margin="0,3,0,0"/>
+                            <TextBlock Text="⭐ HỌC LỰC GIỎI" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}"/>
+                            <TextBlock Text="{Binding ExcellentStudentsCount}" FontSize="20" FontWeight="ExtraBold" Foreground="{DynamicResource AccentBrush}" Margin="0,3,0,0"/>
                             <TextBlock Text="TBM &gt;= 8.0 điểm" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,1,0,0"/>
                         </StackPanel>
                     </Border>
 
-                    <!-- Thẻ 5: CẢNH BÁO HỌC VIÊN THIẾU MÔN (DÒNG MÀU VÀNG) -->
-                    <Border Grid.Column="8" Style="{StaticResource CardBorderStyle}" Background="#2D240E" BorderBrush="#F59E0B" Padding="12,10"
-                            Cursor="Hand" ToolTip="Nhấp để lọc nhanh danh sách học viên bị thiếu môn (dòng màu vàng)">
+                    <!-- Thẻ 5: CẢNH BÁO HỌC VIÊN THIẾU MÔN -->
+                    <Border Grid.Column="8" Style="{StaticResource CardBorderStyle}" Background="{DynamicResource WarningCardBackgroundBrush}" BorderBrush="{DynamicResource WarningCardBorderBrush}" Padding="12,10"
+                            Cursor="Hand" ToolTip="Nhấp để lọc nhanh danh sách học viên bị thiếu môn">
                         <Border.InputBindings>
                             <MouseBinding MouseAction="LeftClick" Command="{Binding FilterMissingOnlyCommand}"/>
                         </Border.InputBindings>
                         <StackPanel>
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="⚠️ THIẾU MÔN (DÒNG VÀNG)" FontSize="11" FontWeight="Bold" Foreground="#FDE047"/>
+                                <TextBlock Text="⚠️ THIẾU MÔN" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource WarningCardForegroundBrush}"/>
                             </StackPanel>
-                            <TextBlock Text="{Binding MissingSubjectsStudentCount}" FontSize="20" FontWeight="ExtraBold" Foreground="#FACC15" Margin="0,3,0,0"/>
-                            <TextBlock Text="Cần tổ chức kiểm tra bù" FontSize="10.5" Foreground="#FEF08A" Margin="0,1,0,0"/>
+                            <TextBlock Text="{Binding MissingSubjectsStudentCount}" FontSize="20" FontWeight="ExtraBold" Foreground="{DynamicResource WarningCardForegroundBrush}" Margin="0,3,0,0"/>
+                            <TextBlock Text="Cần tổ chức kiểm tra bù" FontSize="10.5" Foreground="{DynamicResource WarningCardForegroundBrush}" Margin="0,1,0,0"/>
                         </StackPanel>
                     </Border>
                 </Grid>
@@ -223,7 +223,7 @@
                                             <Setter Property="Background" Value="{Binding RowBackground, Converter={StaticResource StringToBrush}}"/>
                                             <Style.Triggers>
                                                 <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter Property="Background" Value="#2A3C2B"/>
+                                                    <Setter Property="Background" Value="{DynamicResource DataGridHoverBrush}"/>
                                                 </Trigger>
                                             </Style.Triggers>
                                         </Style>
@@ -405,7 +405,7 @@
                                         <DataGridTemplateColumn Header="Số Tín Chỉ" Width="110">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <Border Background="#1C2E20" BorderBrush="#625C34" BorderThickness="1" CornerRadius="4" Padding="8,3" HorizontalAlignment="Center">
+                                                    <Border Background="{DynamicResource PageBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="8,3" HorizontalAlignment="Center">
                                                         <TextBlock Text="{Binding Credits, StringFormat='{}{0} Tín chỉ'}" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}"/>
                                                     </Border>
                                                 </DataTemplate>
@@ -415,7 +415,7 @@
                                         <DataGridTemplateColumn Header="Số Đợt Thi" Width="100">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <Border Background="#142016" BorderBrush="#625C34" BorderThickness="1" CornerRadius="4" Padding="8,3" HorizontalAlignment="Center">
+                                                    <Border Background="{DynamicResource PageBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="8,3" HorizontalAlignment="Center">
                                                         <TextBlock Text="{Binding ComponentCount, StringFormat='{}{0} đợt'}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
                                                     </Border>
                                                 </DataTemplate>
@@ -425,8 +425,8 @@
                                         <DataGridTemplateColumn Header="Dạng Đánh Giá" Width="170">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <Border Background="#1A2E20" BorderBrush="#22C55E" BorderThickness="1" CornerRadius="4" Padding="8,3" HorizontalAlignment="Center">
-                                                        <TextBlock Text="{Binding AssessmentType}" FontWeight="SemiBold" Foreground="#4ADE80"/>
+                                                    <Border Background="{DynamicResource SuccessCardBackgroundBrush}" BorderBrush="{DynamicResource SuccessCardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="8,3" HorizontalAlignment="Center">
+                                                        <TextBlock Text="{Binding AssessmentType}" FontWeight="SemiBold" Foreground="{DynamicResource SuccessCardForegroundBrush}"/>
                                                     </Border>
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>

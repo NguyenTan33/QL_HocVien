@@ -95,6 +95,7 @@
                 <Image Source="/Assets/Images/flag_soldier_banner.png" 
                        HorizontalAlignment="Right" VerticalAlignment="Top" 
                        Height="78" Stretch="Uniform" Opacity="0.88" 
+                       Visibility="{Binding IsCombatMode, Converter={StaticResource BoolToVis}}" 
                        IsHitTestVisible="False" Margin="0,-4,-10,0"/>
 
                 <Grid>
@@ -107,43 +108,43 @@
                     <StackPanel Grid.Column="0" VerticalAlignment="Center">
                         <!-- 2 Huy hiệu danh hiệu quân đội -->
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                            <Border Background="#162719" BorderBrush="#8C7D46" BorderThickness="1" CornerRadius="4" Padding="11,3" Margin="0,0,8,0">
-                                <TextBlock Text="TRUNG TÂM CHỈ HUY TÁC CHIẾN HUẤN LUYỆN" FontSize="11" FontWeight="Bold" Foreground="#FFE17A"/>
+                            <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="11,3" Margin="0,0,8,0">
+                                <TextBlock Text="TRUNG TÂM CHỈ HUY TÁC CHIẾN HUẤN LUYỆN" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}"/>
                             </Border>
-                            <Border Background="#162719" BorderBrush="#8C7D46" BorderThickness="1" CornerRadius="4" Padding="11,3">
-                                <TextBlock Text="THÔNG TƯ 32/2009/TTLT-BQP-BVHTTDL" FontSize="11" FontWeight="Bold" Foreground="#FFE17A"/>
+                            <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="11,3">
+                                <TextBlock Text="THÔNG TƯ 32/2009/TTLT-BQP-BVHTTDL" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}"/>
                             </Border>
                         </StackPanel>
 
                         <!-- Tiêu đề lớn Vàng Ánh Kim chuẩn DemoUI -->
                         <TextBlock Text="BẢNG TỔNG QUAN RÈN LUYỆN THỂ LỰC QUÂN ĐỘI" 
-                                   FontSize="18.5" FontWeight="ExtraBold" Foreground="#FFE8A3" 
+                                   FontSize="18.5" FontWeight="ExtraBold" Foreground="{DynamicResource TextPrimaryBrush}" 
                                    TextWrapping="NoWrap">
                             <TextBlock.Effect>
                                 <DropShadowEffect Color="#000000" BlurRadius="5" ShadowDepth="1" Opacity="0.8"/>
                             </TextBlock.Effect>
                         </TextBlock>
                         <TextBlock Text="Phân tích số liệu kiểm tra thể lực đa chiều, đánh giá chỉ tiêu thi đua và tự động kích hoạt Trợ lý Trí tuệ Nhân tạo đề xuất giáo án" 
-                                   FontSize="11" Foreground="#D6CFB4" Margin="0,3,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                                   FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,3,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
                     </StackPanel>
 
                     <!-- 3 Nút tác chiến bên phải căn chuẩn theo DemoUI -->
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Bottom" Margin="10,0,0,4">
-                        <Button Style="{StaticResource HeaderPrimaryButtonStyle}" Margin="0,0,6,0" Height="32" Padding="10,0"
+                        <Button Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,6,0" Height="32" Padding="10,0"
                                 Command="{Binding ExportExecutiveReportCommand}" ToolTip="Xuất toàn bộ chỉ số, phân tích và phác đồ AI ra file Excel 4 sheets">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="📄 " Foreground="#FFE17A" FontSize="11" VerticalAlignment="Center"/>
                                 <TextBlock Text="XUẤT BÁO CÁO &amp; ĐỀ XUẤT EXCEL" FontWeight="Bold" FontSize="10.5" Foreground="#FFFFFF" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
-                        <Button Style="{StaticResource HeaderSecondaryButtonStyle}" Margin="0,0,6,0" Height="32" Padding="8,0"
+                        <Button Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,6,0" Height="32" Padding="8,0"
                                 Command="{Binding LoadDashboardDataCommand}">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="🔄 " Foreground="#FFE17A" FontSize="11" VerticalAlignment="Center"/>
                                 <TextBlock Text="LÀM MỚI" FontWeight="Bold" FontSize="10.5" Foreground="#FFFFFF" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
-                        <Button Style="{StaticResource HeaderSecondaryButtonStyle}" Height="32" Padding="8,0"
+                        <Button Style="{StaticResource SecondaryButtonStyle}" Height="32" Padding="8,0"
                                 Command="{Binding ExportAllDataCommand}">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="📋 " Foreground="#FFE17A" FontSize="11" VerticalAlignment="Center"/>
@@ -155,7 +156,7 @@
             </Grid>
 
             <!-- ==================== PHẦN 2: BỘ LỌC NÂNG CAO ĐA CHIỀU ==================== -->
-            <Border Background="#19281C" BorderBrush="#5E5B37" BorderThickness="1" CornerRadius="6" Margin="0,0,0,14" Padding="14,12">
+            <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Margin="0,0,0,14" Padding="14,12">
                 <StackPanel>
                     <Grid Margin="0,0,0,10">
                         <Grid.ColumnDefinitions>
@@ -164,9 +165,9 @@
                         </Grid.ColumnDefinitions>
 
                         <StackPanel Orientation="Horizontal" Grid.Column="0" VerticalAlignment="Center">
-                            <TextBlock Text="🔍 BỘ LỌC NÂNG CAO ĐA TIÊU CHÍ" FontSize="13" FontWeight="Bold" Foreground="#FFE17A"/>
+                            <TextBlock Text="🔍 BỘ LỌC NÂNG CAO ĐA TIÊU CHÍ" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
                             <TextBlock Text="(Lọc tức thời theo đơn vị, lớp, đợt thi, môn rèn luyện, xếp loại và thời gian)" 
-                                       FontSize="11.5" Foreground="#CBD5E1" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                                       FontSize="11.5" Foreground="{DynamicResource TextSecondaryBrush}" Margin="8,0,0,0" VerticalAlignment="Center"/>
                         </StackPanel>
 
                         <Button Grid.Column="1" Content="^ Mở Rộng / Thu Gọn" Style="{StaticResource SecondaryButtonStyle}" 
@@ -190,32 +191,32 @@
 
                             <!-- Đơn vị -->
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="Đơn vị / Đại đội:" FontSize="11.5" FontWeight="SemiBold" Foreground="#EAE0BA" Margin="0,0,0,4"/>
+                                <TextBlock Text="Đơn vị / Đại đội:" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
                                 <ComboBox ItemsSource="{Binding UnitOptions}" SelectedItem="{Binding SelectedUnit}" Height="32"/>
                             </StackPanel>
 
                             <!-- Lớp -->
                             <StackPanel Grid.Column="2">
-                                <TextBlock Text="Cấp Lớp / Phân đội:" FontSize="11.5" FontWeight="SemiBold" Foreground="#EAE0BA" Margin="0,0,0,4"/>
+                                <TextBlock Text="Cấp Lớp / Phân đội:" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
                                 <ComboBox ItemsSource="{Binding ClassOptions}" SelectedItem="{Binding SelectedClass}" Height="32"/>
                             </StackPanel>
 
                             <!-- Đợt kiểm tra -->
                             <StackPanel Grid.Column="4">
-                                <TextBlock Text="Đợt kiểm tra:" FontSize="11.5" FontWeight="SemiBold" Foreground="#EAE0BA" Margin="0,0,0,4"/>
+                                <TextBlock Text="Đợt kiểm tra:" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
                                 <ComboBox ItemsSource="{Binding SessionOptions}" SelectedItem="{Binding SelectedSession}" Height="32"/>
                             </StackPanel>
 
                             <!-- Môn kiểm tra -->
                             <StackPanel Grid.Column="6">
-                                <TextBlock Text="Nội dung môn kiểm tra:" FontSize="11.5" FontWeight="SemiBold" Foreground="#EAE0BA" Margin="0,0,0,4"/>
+                                <TextBlock Text="Nội dung môn kiểm tra:" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
                                 <ComboBox ItemsSource="{Binding SubjectOptions}" SelectedItem="{Binding SelectedSubject}" 
                                           DisplayMemberPath="SubjectName" Height="32"/>
                             </StackPanel>
 
                             <!-- Xếp loại -->
                             <StackPanel Grid.Column="8">
-                                <TextBlock Text="Xếp loại:" FontSize="11.5" FontWeight="SemiBold" Foreground="#EAE0BA" Margin="0,0,0,4"/>
+                                <TextBlock Text="Xếp loại:" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
                                 <ComboBox ItemsSource="{Binding GradeOptions}" SelectedItem="{Binding SelectedGrade}" Height="32"/>
                             </StackPanel>
                         </Grid>
@@ -236,22 +237,22 @@
 
                             <!-- Từ ngày -->
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="Từ ngày kiểm tra:" FontSize="11.5" FontWeight="SemiBold" Foreground="#EAE0BA" Margin="0,0,0,4"/>
+                                <TextBlock Text="Từ ngày kiểm tra:" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
                                 <DatePicker SelectedDate="{Binding FromDate}" Height="32"/>
                             </StackPanel>
 
                             <!-- Đến ngày -->
                             <StackPanel Grid.Column="2">
-                                <TextBlock Text="Đến ngày kiểm tra:" FontSize="11.5" FontWeight="SemiBold" Foreground="#EAE0BA" Margin="0,0,0,4"/>
+                                <TextBlock Text="Đến ngày kiểm tra:" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
                                 <DatePicker SelectedDate="{Binding ToDate}" Height="32"/>
                             </StackPanel>
 
                             <!-- Từ khóa -->
                             <StackPanel Grid.Column="4">
-                                <TextBlock Text="Tìm kiếm học viên:" FontSize="11.5" FontWeight="SemiBold" Foreground="#EAE0BA" Margin="0,0,0,4"/>
+                                <TextBlock Text="Tìm kiếm học viên:" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
                                 <Grid>
                                     <TextBox x:Name="TxtSearch" Text="{Binding SearchKeyword, UpdateSourceTrigger=PropertyChanged}" 
-                                             Background="#18251A" Foreground="#FFE17A" BorderBrush="#8C7D46" BorderThickness="1"
+                                             Style="{StaticResource ModernTextBoxStyle}"
                                              Height="32" Padding="8,0" VerticalContentAlignment="Center"/>
                                     <TextBlock Text="Nhập họ tên, mã học viên..." Foreground="#7C8D76" FontStyle="Italic" FontSize="11.5"
                                                VerticalAlignment="Center" Margin="10,0,0,0" IsHitTestVisible="False">
@@ -270,12 +271,12 @@
                             </StackPanel>
 
                             <!-- Nút Áp dụng Đỏ Rực Chuẩn DemoUI -->
-                            <Button Grid.Column="6" Content="🔍 ÁP DỤNG LỌC" Style="{StaticResource HeaderPrimaryButtonStyle}" 
+                            <Button Grid.Column="6" Content="🔍 ÁP DỤNG LỌC" Style="{StaticResource PrimaryButtonStyle}" 
                                     Height="32" Padding="18,0" VerticalAlignment="Bottom"
                                     Command="{Binding ApplyFilterCommand}"/>
 
                             <!-- Nút Đặt lại -->
-                            <Button Grid.Column="8" Content="🔄 ĐẶT LẠI" Style="{StaticResource HeaderSecondaryButtonStyle}" 
+                            <Button Grid.Column="8" Content="🔄 ĐẶT LẠI" Style="{StaticResource SecondaryButtonStyle}" 
                                     Height="32" Padding="14,0" VerticalAlignment="Bottom"
                                     Command="{Binding ResetFilterCommand}"/>
                         </Grid>
@@ -300,7 +301,7 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- KPI 1: Quân số (Watermark Chiến sĩ) -->
-                <Border Grid.Column="0" Background="#18271B" BorderBrush="#555232" BorderThickness="1" CornerRadius="6" Padding="11,8">
+                <Border Grid.Column="0" Background="{DynamicResource KpiCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="11,8">
                     <Grid>
                         <!-- Hình mờ Chiến sĩ đứng nghiêm -->
                         <Image Source="/Assets/Images/card_watermark_cadets.png" 
@@ -308,10 +309,10 @@
                                Width="65" Height="50" Opacity="0.4" IsHitTestVisible="False" Margin="0,0,2,2"/>
                         <StackPanel>
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="👤 " Foreground="#FFE17A" FontSize="11" FontWeight="Bold"/>
-                                <TextBlock Text="TỔNG QUÂN SỐ" FontSize="10.5" FontWeight="Bold" Foreground="#FFE17A"/>
+                                <TextBlock Text="👤 " Foreground="{DynamicResource AccentBrush}" FontSize="11" FontWeight="Bold"/>
+                                <TextBlock Text="TỔNG QUÂN SỐ" FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}"/>
                             </StackPanel>
-                            <TextBlock Text="{Binding TotalCadets}" FontSize="28" FontWeight="ExtraBold" Foreground="#FFE17A" Margin="0,2,0,0"/>
+                            <TextBlock Text="{Binding TotalCadets}" FontSize="28" FontWeight="ExtraBold" Foreground="{DynamicResource AccentBrush}" Margin="0,2,0,0"/>
                             <TextBlock FontSize="10.5" Foreground="#A3A899" Margin="0,2,0,0">
                                 <Run Text="{Binding TotalUnitsCount}"/> <Run Text="đơn vị • "/>
                                 <Run Text="{Binding TotalClassesCount}"/> <Run Text="lớp"/>
@@ -321,7 +322,7 @@
                 </Border>
 
                 <!-- KPI 2: Tổng số môn đã thi, kiểm tra (Watermark Quả tạ) -->
-                <Border Grid.Column="2" Background="#164E2E" BorderBrush="#27A85B" BorderThickness="1.5" CornerRadius="6" Padding="11,8">
+                <Border Grid.Column="2" Background="{DynamicResource SuccessCardBackgroundBrush}" BorderBrush="{DynamicResource SuccessCardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="11,8">
                     <Grid>
                         <!-- Hình mờ Quả tạ thể lực -->
                         <Image Source="/Assets/Images/card_watermark_weights.png" 
@@ -329,11 +330,11 @@
                                Width="58" Height="45" Opacity="0.38" IsHitTestVisible="False" Margin="0,0,4,0"/>
                         <StackPanel>
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="✔ " Foreground="#A7F3D0" FontSize="11" FontWeight="Bold"/>
-                                <TextBlock Text="TỔNG SỐ MÔN ĐÃ THI, KT" FontSize="9.5" FontWeight="Bold" Foreground="#FFFFFF"/>
+                                <TextBlock Text="✔ " Foreground="{DynamicResource SuccessCardForegroundBrush}" FontSize="11" FontWeight="Bold"/>
+                                <TextBlock Text="TỔNG SỐ MÔN ĐÃ THI, KT" FontSize="9.5" FontWeight="Bold" Foreground="{DynamicResource SuccessCardForegroundBrush}"/>
                             </StackPanel>
-                            <TextBlock Text="{Binding TotalTestedSubjects}" FontSize="28" FontWeight="ExtraBold" Foreground="#FFE8A3" Margin="0,2,0,0"/>
-                            <TextBlock FontSize="10.5" Foreground="#D1FAE5" Margin="0,2,0,0">
+                            <TextBlock Text="{Binding TotalTestedSubjects}" FontSize="28" FontWeight="ExtraBold" Foreground="{DynamicResource SuccessCardForegroundBrush}" Margin="0,2,0,0"/>
+                            <TextBlock FontSize="10.5" Foreground="{DynamicResource SuccessCardForegroundBrush}" Margin="0,2,0,0">
                                 <Run Text="{Binding TotalExamRecords}"/> <Run Text="lượt bài thi / KT"/>
                             </TextBlock>
                         </StackPanel>
@@ -341,7 +342,7 @@
                 </Border>
 
                 <!-- KPI 3: Tỷ lệ đạt chuẩn TT32 (Watermark Sao & Vòng nguyệt quế) -->
-                <Border Grid.Column="4" Background="#164E2E" BorderBrush="#27A85B" BorderThickness="1.5" CornerRadius="6" Padding="11,8">
+                <Border Grid.Column="4" Background="{DynamicResource SuccessCardBackgroundBrush}" BorderBrush="{DynamicResource SuccessCardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="11,8">
                     <Grid>
                         <!-- Hình mờ Sao vàng & Nguyệt quế -->
                         <Image Source="/Assets/Images/card_watermark_wreath.png" 
@@ -349,31 +350,31 @@
                                Width="55" Height="50" Opacity="0.45" IsHitTestVisible="False" Margin="0,0,4,0"/>
                         <StackPanel>
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="🎯 " Foreground="#A7F3D0" FontSize="11" FontWeight="Bold"/>
-                                <TextBlock Text="TỶ LỆ ĐẠT CHUẨN" FontSize="10.5" FontWeight="Bold" Foreground="#FFFFFF"/>
+                                <TextBlock Text="🎯 " Foreground="{DynamicResource SuccessCardForegroundBrush}" FontSize="11" FontWeight="Bold"/>
+                                <TextBlock Text="TỶ LỆ ĐẠT CHUẨN" FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource SuccessCardForegroundBrush}"/>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
-                                <TextBlock Text="{Binding PassRate, StringFormat={}{0:F1}}" FontSize="28" FontWeight="ExtraBold" Foreground="#FFE8A3"/>
-                                <TextBlock Text="%" FontSize="16" FontWeight="Bold" Foreground="#FFE8A3" VerticalAlignment="Bottom" Margin="1,0,0,4"/>
+                                <TextBlock Text="{Binding PassRate, StringFormat={}{0:F1}}" FontSize="28" FontWeight="ExtraBold" Foreground="{DynamicResource SuccessCardForegroundBrush}"/>
+                                <TextBlock Text="%" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource SuccessCardForegroundBrush}" VerticalAlignment="Bottom" Margin="1,0,0,4"/>
                             </StackPanel>
                             <TextBlock Text="{Binding OverallRatingLabel}" FontSize="10.5" FontWeight="Bold" 
-                                       Foreground="#6EE7B7" Margin="0,2,0,0" TextTrimming="CharacterEllipsis"/>
+                                       Foreground="{DynamicResource SuccessCardForegroundBrush}" Margin="0,2,0,0" TextTrimming="CharacterEllipsis"/>
                         </StackPanel>
                     </Grid>
                 </Border>
 
                 <!-- KPI 4: Tỷ lệ Giỏi & Xuất sắc -->
-                <Border Grid.Column="6" Background="#2E2E16" BorderBrush="#8C7D46" BorderThickness="1" CornerRadius="6" Padding="11,8">
+                <Border Grid.Column="6" Background="{DynamicResource WarningCardBackgroundBrush}" BorderBrush="{DynamicResource WarningCardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="11,8">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="★ " Foreground="#F2C94C" FontSize="11" FontWeight="Bold"/>
-                            <TextBlock Text="GIỎI &amp; XUẤT SẮC" FontSize="10.5" FontWeight="Bold" Foreground="#F2C94C"/>
+                            <TextBlock Text="★ " Foreground="{DynamicResource WarningCardForegroundBrush}" FontSize="11" FontWeight="Bold"/>
+                            <TextBlock Text="GIỎI &amp; XUẤT SẮC" FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource WarningCardForegroundBrush}"/>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
-                            <TextBlock Text="{Binding EliteRate, StringFormat={}{0:F1}}" FontSize="28" FontWeight="ExtraBold" Foreground="#F2C94C"/>
-                            <TextBlock Text="%" FontSize="16" FontWeight="Bold" Foreground="#F2C94C" VerticalAlignment="Bottom" Margin="1,0,0,4"/>
+                            <TextBlock Text="{Binding EliteRate, StringFormat={}{0:F1}}" FontSize="28" FontWeight="ExtraBold" Foreground="{DynamicResource WarningCardForegroundBrush}"/>
+                            <TextBlock Text="%" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource WarningCardForegroundBrush}" VerticalAlignment="Bottom" Margin="1,0,0,4"/>
                         </StackPanel>
-                        <TextBlock FontSize="10.5" Foreground="#FFE17A" Margin="0,2,0,0">
+                        <TextBlock FontSize="10.5" Foreground="{DynamicResource WarningCardForegroundBrush}" Margin="0,2,0,0">
                             <Run Text="{Binding ExcellentCount}"/> <Run Text="XS • "/>
                             <Run Text="{Binding GoodCount}"/> <Run Text="Giỏi"/>
                         </TextBlock>
@@ -381,7 +382,7 @@
                 </Border>
 
                 <!-- KPI 5: Chưa đạt chuẩn (Watermark Cành nguyệt quế đỏ) -->
-                <Border Grid.Column="8" Background="#4E1215" BorderBrush="#991B1B" BorderThickness="1" CornerRadius="6" Padding="11,8">
+                <Border Grid.Column="8" Background="{DynamicResource DangerCardBackgroundBrush}" BorderBrush="{DynamicResource DangerCardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="11,8">
                     <Grid>
                         <!-- Hình mờ Cành nguyệt quế đỏ -->
                         <Image Source="/Assets/Images/card_watermark_laurel.png" 
@@ -389,14 +390,14 @@
                                Width="50" Height="50" Opacity="0.32" IsHitTestVisible="False" Margin="0,0,4,0"/>
                         <StackPanel>
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="⚠️ " Foreground="#FCA5A5" FontSize="11" FontWeight="Bold"/>
-                                <TextBlock Text="CHƯA ĐẠT CHUẨN" FontSize="10.5" FontWeight="Bold" Foreground="#FCA5A5"/>
+                                <TextBlock Text="⚠️ " Foreground="{DynamicResource DangerCardForegroundBrush}" FontSize="11" FontWeight="Bold"/>
+                                <TextBlock Text="CHƯA ĐẠT CHUẨN" FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource DangerCardForegroundBrush}"/>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
-                                <TextBlock Text="{Binding FailCount}" FontSize="28" FontWeight="ExtraBold" Foreground="#FFFFFF"/>
-                                <TextBlock Text=" lượt" FontSize="14" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Bottom" Margin="2,0,0,4"/>
+                                <TextBlock Text="{Binding FailCount}" FontSize="28" FontWeight="ExtraBold" Foreground="{DynamicResource DangerCardForegroundBrush}"/>
+                                <TextBlock Text=" lượt" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource DangerCardForegroundBrush}" VerticalAlignment="Bottom" Margin="2,0,0,4"/>
                             </StackPanel>
-                            <TextBlock FontSize="10.5" Foreground="#FCA5A5" Margin="0,2,0,0">
+                            <TextBlock FontSize="10.5" Foreground="{DynamicResource DangerCardForegroundBrush}" Margin="0,2,0,0">
                                 <Run Text="{Binding FailRate, StringFormat={}{0:F1}% tổng số}"/>
                             </TextBlock>
                         </StackPanel>
@@ -404,15 +405,15 @@
                 </Border>
 
                 <!-- KPI 6: Sự kiện huấn luyện gần nhất -->
-                <Border Grid.Column="10" Background="#1D2D3D" BorderBrush="#2F4860" BorderThickness="1" CornerRadius="6" Padding="11,8">
+                <Border Grid.Column="10" Background="{DynamicResource InfoCardBackgroundBrush}" BorderBrush="{DynamicResource InfoCardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="11,8">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="📄 " Foreground="#93C5FD" FontSize="11" FontWeight="Bold"/>
-                            <TextBlock Text="SỰ KIỆN GẦN NHẤT" FontSize="10.5" FontWeight="Bold" Foreground="#93C5FD"/>
+                            <TextBlock Text="📄 " Foreground="{DynamicResource InfoCardForegroundBrush}" FontSize="11" FontWeight="Bold"/>
+                            <TextBlock Text="SỰ KIỆN GẦN NHẤT" FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource InfoCardForegroundBrush}"/>
                         </StackPanel>
-                        <TextBlock Text="{Binding UpcomingEventTitle}" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF" 
+                        <TextBlock Text="{Binding UpcomingEventTitle}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" 
                                    Margin="0,4,0,0" TextTrimming="CharacterEllipsis" ToolTip="{Binding UpcomingEventTitle}"/>
-                        <TextBlock Text="{Binding UpcomingEventTime}" FontSize="10.5" Foreground="#93C5FD" Margin="0,2,0,0" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Text="{Binding UpcomingEventTime}" FontSize="10.5" Foreground="{DynamicResource InfoCardForegroundBrush}" Margin="0,2,0,0" TextTrimming="CharacterEllipsis"/>
                     </StackPanel>
                 </Border>
             </Grid>
@@ -428,12 +429,12 @@
                 <!-- CỘT TRÁI: BIỂU ĐỒ PHÂN BỐ XẾP LOẠI & THI ĐUA ĐƠN VỊ -->
                 <StackPanel Grid.Column="0">
                     <!-- Biểu đồ 1: Thanh Phân Bố Xếp Loại Đa Đoạn TT32 Chuẩn DemoUI -->
-                    <Border Background="#18251A" BorderBrush="#4F573E" BorderThickness="1" CornerRadius="6" Margin="0,0,0,12" Padding="16,14">
+                    <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Margin="0,0,0,12" Padding="16,14">
                         <StackPanel>
                             <Grid Margin="0,0,0,10">
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="📊 " Foreground="#FFE17A" FontSize="13" FontWeight="Bold"/>
-                                    <TextBlock Text="PHÂN BỐ XẾP LOẠI THỂ LỰC CHUẨN TT 32/2009" FontSize="12.5" FontWeight="Bold" Foreground="#FFE17A"/>
+                                    <TextBlock Text="📊 " Foreground="{DynamicResource AccentBrush}" FontSize="13" FontWeight="Bold"/>
+                                    <TextBlock Text="PHÂN BỐ XẾP LOẠI THỂ LỰC CHUẨN TT 32/2009" FontSize="12.5" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
                                 </StackPanel>
                                 <TextBlock Text="{Binding TotalExamRecords, StringFormat='Tổng số: {0} lượt'}" 
                                            HorizontalAlignment="Right" FontSize="11.5" Foreground="#CBD5E1" FontWeight="SemiBold"/>
@@ -512,12 +513,12 @@
                     </Border>
 
                     <!-- Biểu đồ 2: Bảng Xếp Hạng Thi Đua Giữa Các Đơn Vị Chuẩn DemoUI -->
-                    <Border Background="#18251A" BorderBrush="#4F573E" BorderThickness="1" CornerRadius="6" Padding="16,14">
+                    <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="16,14">
                         <StackPanel>
                             <Grid Margin="0,0,0,12">
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="🏆 " Foreground="#FFE17A" FontSize="13" FontWeight="Bold"/>
-                                    <TextBlock Text="XẾP HẠNG THI ĐUA GIỮA CÁC ĐƠN VỊ" FontSize="12.5" FontWeight="Bold" Foreground="#FFE17A"/>
+                                    <TextBlock Text="🏆 " Foreground="{DynamicResource AccentBrush}" FontSize="13" FontWeight="Bold"/>
+                                    <TextBlock Text="XẾP HẠNG THI ĐUA GIỮA CÁC ĐƠN VỊ" FontSize="12.5" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
                                 </StackPanel>
                                 <TextBlock Text="Đo lường theo Tỷ lệ Đạt &amp; Tỷ lệ Giỏi/XS môn tín chỉ" HorizontalAlignment="Right" FontSize="11" Foreground="#94A3B8"/>
                             </Grid>
@@ -539,7 +540,7 @@
 
                                             <!-- Tên đơn vị -->
                                             <TextBlock Grid.Column="1" Text="{Binding UnitName}" FontSize="13" FontWeight="Bold" 
-                                                       Foreground="#F2EAB8" VerticalAlignment="Center"/>
+                                                       Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
 
                                             <!-- Thanh ngang biểu thị tỷ lệ Đạt -->
                                             <Grid Grid.Column="2" VerticalAlignment="Center" Margin="6,0,12,0">
@@ -571,15 +572,15 @@
                 </StackPanel>
 
                 <!-- CỘT PHẢI: TRỌNG TÂM TRONG THÁNG (NỀN GIẤY KAKI KHÍ CHẤT QUÂN SỰ) -->
-                <Border Grid.Column="2" Background="#18251A" BorderBrush="#4F573E" BorderThickness="1" CornerRadius="6" Padding="14,12">
+                <Border Grid.Column="2" Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="14,12">
                     <StackPanel>
                         <Grid Margin="0,0,0,6">
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="🎯 " Foreground="#FFE17A" FontSize="13" FontWeight="Bold"/>
-                                <TextBlock Text="TRỌNG TÂM TRONG THÁNG" FontSize="12.5" FontWeight="Bold" Foreground="#FFE17A"/>
+                                <TextBlock Text="🎯 " Foreground="{DynamicResource AccentBrush}" FontSize="13" FontWeight="Bold"/>
+                                <TextBlock Text="TRỌNG TÂM TRONG THÁNG" FontSize="12.5" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
                             </StackPanel>
                             <TextBlock Text="{Binding MonthlyFocusEvents.Count, StringFormat='{}{0} sự kiện'}" 
-                                       HorizontalAlignment="Right" FontSize="11.5" FontWeight="Bold" Foreground="#FFE17A"/>
+                                       HorizontalAlignment="Right" FontSize="11.5" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}"/>
                         </Grid>
 
                         <TextBlock Text="Các mốc sự kiện kiểm tra, thi cử, rèn luyện trong tháng xếp từ ngày gần nhất đến xa nhất:" 
@@ -590,7 +591,7 @@
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <!-- Thẻ sự kiện nền giấy kaki, chữ mực tối chuẩn DemoUI -->
-                                        <Border Background="#DCD4B4" CornerRadius="5" Padding="7,5" Margin="0,0,0,6" BorderBrush="#B8A87E" BorderThickness="1">
+                                        <Border Background="{DynamicResource TimelineCardBackgroundBrush}" CornerRadius="5" Padding="7,5" Margin="0,0,0,6" BorderBrush="{DynamicResource TimelineCardBorderBrush}" BorderThickness="1">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="54"/>
@@ -599,7 +600,7 @@
                                                 </Grid.ColumnDefinitions>
 
                                                 <!-- Badge Ngày tháng khối tối viền vàng -->
-                                                <Border Grid.Column="0" Background="#18251A" BorderBrush="#8C7D46" BorderThickness="1" CornerRadius="4" Padding="2,3" VerticalAlignment="Center" Margin="0,0,7,0">
+                                                <Border Grid.Column="0" Background="{DynamicResource TimelineFilterBackgroundBrush}" BorderBrush="{DynamicResource TimelineFilterBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="2,3" VerticalAlignment="Center" Margin="0,0,7,0">
                                                     <StackPanel HorizontalAlignment="Center">
                                                         <TextBlock Text="{Binding StartDate, StringFormat='{}{0:dd/MM}'}" FontWeight="ExtraBold" FontSize="11.5" Foreground="#FFFFFF" HorizontalAlignment="Center"/>
                                                         <TextBlock Text="{Binding StartDate, StringFormat='{}{0:yyyy}'}" FontSize="9" Foreground="#A3A899" HorizontalAlignment="Center"/>
@@ -608,7 +609,7 @@
 
                                                 <!-- Thông tin sự kiện chữ mực tối -->
                                                 <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,5,0">
-                                                    <TextBlock Text="{Binding Title}" FontSize="11.5" FontWeight="Bold" Foreground="#182012" TextTrimming="CharacterEllipsis" ToolTip="{Binding Title}"/>
+                                                    <TextBlock Text="{Binding Title}" FontSize="11.5" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Title}"/>
                                                     <TextBlock FontSize="10" Foreground="#4B5842" Margin="0,1,0,0" TextTrimming="CharacterEllipsis">
                                                         <Run Text="{Binding Category}"/> <Run Text=" • "/>
                                                         <Run Text="{Binding TargetUnit}"/> <Run Text=" • "/>
@@ -631,11 +632,11 @@
             </Grid>
 
             <!-- ==================== PHẦN 5: BẢNG PHÂN TÍCH CHUYÊN SÂU 4 TABS ==================== -->
-            <Border Background="#18251A" BorderBrush="#4F573E" BorderThickness="1" CornerRadius="6" Padding="0">
+            <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="0">
                 <TabControl BorderThickness="0" Background="Transparent" SelectedIndex="{Binding SelectedTabIndex}">
 
                     <!-- ==================== TAB 1: HỌC VIÊN CHƯA THI, KIỂM TRA ==================== -->
-                    <TabItem Header="⚠️  Học Viên Chưa Thi, Kiểm Tra" FontSize="12.5" FontWeight="Bold" Padding="16,8">
+                    <TabItem Header="⚠️  Học Viên Chưa Thi, Kiểm Tra" Style="{StaticResource TabHeaderStyle}">
                         <Border Padding="14">
                             <StackPanel>
                                 <Grid Margin="0,0,0,12">
@@ -669,7 +670,7 @@
                     </TabItem>
 
                     <!-- ==================== TAB 2: HỌC VIÊN CHƯA ĐẠT CHUẨN ==================== -->
-                    <TabItem Header="⚠️  Học Viên Chưa Đạt Chuẩn" FontSize="12.5" FontWeight="Bold" Padding="16,8">
+                    <TabItem Header="⚠️  Học Viên Chưa Đạt Chuẩn" Style="{StaticResource TabHeaderStyle}">
                         <Border Padding="14">
                             <StackPanel>
                                 <Grid Margin="0,0,0,12">
@@ -702,7 +703,7 @@
                     </TabItem>
 
                     <!-- ==================== TAB 3: BẢNG VÀNG VINH DANH HỌC VIÊN ==================== -->
-                    <TabItem Header="🏆  Bảng Vàng Biểu Dương" FontSize="12.5" FontWeight="Bold" Padding="16,8">
+                    <TabItem Header="🏆  Bảng Vàng Biểu Dương" Style="{StaticResource TabHeaderStyle}">
                         <Border Padding="14">
                             <StackPanel>
                                 <Grid Margin="0,0,0,12">
@@ -735,13 +736,13 @@
                     </TabItem>
 
                     <!-- ==================== TAB 4: CHỈ TIÊU & THI ĐUA ĐƠN VỊ ==================== -->
-                    <TabItem Header="📊  Chỉ Tiêu &amp; Thi Đua Đơn Vị" FontSize="12.5" FontWeight="Bold" Padding="16,8">
+                    <TabItem Header="📊  Chỉ Tiêu &amp; Thi Đua Đơn Vị" Style="{StaticResource TabHeaderStyle}">
                         <Border Padding="14">
                             <StackPanel>
                                 <Grid Margin="0,0,0,12">
                                     <StackPanel>
                                         <TextBlock Text="Bảng Tổng Hợp Chỉ Tiêu Rèn Luyện Thể Lực Theo Đại Đội" 
-                                                   FontSize="14" FontWeight="Bold" Foreground="#FFE17A"/>
+                                                   FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
                                         <TextBlock Text="Đánh giá kết quả hoàn thành nhiệm vụ huấn luyện thể lực quân sự năm học:" 
                                                    FontSize="11.5" Foreground="#CBD5E1"/>
                                     </StackPanel>

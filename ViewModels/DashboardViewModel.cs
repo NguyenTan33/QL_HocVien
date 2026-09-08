@@ -132,6 +132,9 @@ namespace QL_HocVien.ViewModels
 
         [ObservableProperty]
         private int _selectedTabIndex = 0; // 0: HV Chưa Thi/KT, 1: AI Đề Xuất, 2: Chưa Đạt, 3: Vinh Danh, 4: Thi Đua Đơn Vị
+
+        [ObservableProperty]
+        private bool _isCombatMode = true;
         #endregion
 
         public DashboardViewModel(
@@ -141,7 +144,8 @@ namespace QL_HocVien.ViewModels
             ICadetService cadetService,
             IExcelService excelService,
             IFileDialogService fileDialogService,
-            ISecurityGateService securityGate)
+            ISecurityGateService securityGate,
+            IThemeService? themeService = null)
         {
             _analyticsService = analyticsService;
             _recommendationService = recommendationService;
@@ -150,6 +154,16 @@ namespace QL_HocVien.ViewModels
             _excelService = excelService;
             _fileDialogService = fileDialogService;
             _securityGate = securityGate;
+
+            if (themeService != null)
+            {
+                _isCombatMode = themeService.IsCombatMode;
+                themeService.ThemeChanged += mode => IsCombatMode = mode;
+            }
+            else
+            {
+                _isCombatMode = ThemeService.CurrentIsCombatMode;
+            }
 
             Title = "Trung Tâm Chỉ Huy & Phân Tích Rèn Luyện Thể Lực Quân Đội";
 

@@ -70,11 +70,35 @@ namespace QL_HocVien.ViewModels
             Title = "Hệ Thống Quản Lý Học Viên Quân Đội";
             CurrentUser = _authService.CurrentUser;
 
+            _isCombatMode = _themeService.IsCombatMode;
+            UpdateThemeModeLabels();
+            _themeService.ThemeChanged += OnThemeChanged;
+
             _securityGate.OnSecurityStateChanged += UpdateSecurityStatus;
             UpdateSecurityStatus();
 
             // Mặc định mở màn hình Tổng quan (Dashboard)
             NavigateToDashboard();
+        }
+
+        private void OnThemeChanged(bool isCombat)
+        {
+            IsCombatMode = isCombat;
+            UpdateThemeModeLabels();
+        }
+
+        private void UpdateThemeModeLabels()
+        {
+            if (IsCombatMode)
+            {
+                ThemeModeButtonText = "CHẾ ĐỘ HÀNH CHÍNH";
+                ThemeModeTooltip = "Bấm để chuyển sang Chế độ Giao diện Hành chính công vụ sáng";
+            }
+            else
+            {
+                ThemeModeButtonText = "CHẾ ĐỘ TÁC CHIẾN";
+                ThemeModeTooltip = "Bấm để kích hoạt Trung tâm Chỉ huy Tác chiến Quân đội";
+            }
         }
 
         private void UpdateSecurityStatus()
@@ -113,17 +137,6 @@ namespace QL_HocVien.ViewModels
         public void ToggleThemeMode()
         {
             _themeService.ToggleTheme();
-            IsCombatMode = _themeService.IsCombatMode;
-            if (IsCombatMode)
-            {
-                ThemeModeButtonText = "CHẾ ĐỘ HÀNH CHÍNH";
-                ThemeModeTooltip = "Bấm để chuyển sang Chế độ Giao diện Hành chính công vụ sáng";
-            }
-            else
-            {
-                ThemeModeButtonText = "CHẾ ĐỘ TÁC CHIẾN";
-                ThemeModeTooltip = "Bấm để kích hoạt Trung tâm Chỉ huy Tác chiến Quân đội";
-            }
         }
 
         [RelayCommand]
