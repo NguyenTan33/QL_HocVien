@@ -14,10 +14,6 @@ jobs:
 
     runs-on: windows-latest
 
-    env:
-      Solution_Name: QL_HocVien.sln
-      Test_Project_Path: QL_HocVien.Tests/QL_HocVien.Tests.csproj
-
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -30,14 +26,14 @@ jobs:
       with:
         dotnet-version: 8.0.x
 
-    # Restore NuGet packages
+    # Restore NuGet packages (tự tìm sln/csproj)
     - name: Restore dependencies
-      run: dotnet restore ${{ env.Solution_Name }}
+      run: dotnet restore
 
-    # Build the solution
+    # Build solution
     - name: Build
-      run: dotnet build ${{ env.Solution_Name }} --no-restore --configuration ${{ matrix.configuration }}
+      run: dotnet build --no-restore --configuration ${{ matrix.configuration }}
 
-    # Execute unit tests
+    # Chạy toàn bộ Unit Tests trong solution
     - name: Execute unit tests
-      run: dotnet test ${{ env.Test_Project_Path }} --no-build --configuration ${{ matrix.configuration }} --verbosity normal
+      run: dotnet test --no-build --configuration ${{ matrix.configuration }} --verbosity normal
