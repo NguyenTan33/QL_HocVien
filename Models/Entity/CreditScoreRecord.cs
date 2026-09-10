@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace QL_HocVien.Models.Entity
 {
@@ -12,26 +12,25 @@ namespace QL_HocVien.Models.Entity
         public CreditSubject? CreditSubject { get; set; }
 
         /// <summary>
-        /// LiÃªn káº¿t Ä‘áº¿n Ä‘á»£t kiá»ƒm tra / Ä‘á»£t thi trá»±c thuá»™c (náº¿u cÃ³)
+        /// Liên kết đến đợt kiểm tra / đợt thi trực thuộc (nếu có)
         /// </summary>
         public int? ComponentId { get; set; }
         public SubjectAssessmentComponent? Component { get; set; }
 
-        // Äiá»ƒm thÆ°á»ng xuyÃªn (náº¿u cÃ³)
+        // Điểm thường xuyên (nếu có)
         public double? RegularScore { get; set; }
 
-        // Äiá»ƒm thi (náº¿u cÃ³)
+        // Điểm thi (nếu có)
         public double? ExamScore { get; set; }
 
-        // Äiá»ƒm tá»•ng káº¿t mÃ´n thang Ä‘iá»ƒm 10
+        // Điểm tổng kết môn thang điểm 10
         public double FinalScore { get; set; }
 
-        // Äá»£t kiá»ƒm tra / Há»c ká»³
-        public string ExamSession { get; set; } = "Há»c ká»³ 1";
+        // Đợt kiểm tra / Học kỳ
+        public string ExamSession { get; set; } = "Học kỳ 1";
 
         public DateTime ExamDate { get; set; } = DateTime.Today;
         public string Notes { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; } = DateTime.Now;
     }
 }
-

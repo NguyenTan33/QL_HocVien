@@ -1,4 +1,4 @@
-﻿using QL_HocVien.Models;
+using QL_HocVien.Models;
 
 namespace QL_HocVien.Services.Interfaces
 {
@@ -7,4 +7,3 @@ namespace QL_HocVien.Services.Interfaces
         string EvaluateGrade(Subject subject, double score);
     }
 }
-

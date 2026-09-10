@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -16,4 +16,3 @@ namespace QL_HocVien.Data.Repositories.Interfaces
         Task<int> SaveChangesAsync();
     }
 }
-

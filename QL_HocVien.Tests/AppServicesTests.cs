@@ -27,7 +27,6 @@ namespace QL_HocVien.Tests
         private readonly IPositionRepository _positionRepository;
         private readonly IUnitRepository _unitRepository;
         private readonly IMajorRepository _majorRepository;
-        private readonly IEmailService _emailService;
         private readonly IAuthService _authService;
         private readonly IClassService _classService;
         private readonly ICadetService _cadetService;
@@ -59,9 +58,8 @@ namespace QL_HocVien.Tests
             _positionRepository = new PositionRepository(_context);
             _unitRepository = new UnitRepository(_context);
             _majorRepository = new MajorRepository(_context);
-            _emailService = new EmailService(isTestMode: true);
 
-            _authService = new AuthService(_userRepository, _cadetRepository, _context, _emailService);
+            _authService = new AuthService(_userRepository, _cadetRepository, _context);
             _classService = new ClassService(_classRepository);
             _cadetService = new CadetService(_cadetRepository);
             _subjectService = new SubjectService(_subjectRepository);
@@ -113,15 +111,35 @@ namespace QL_HocVien.Tests
         public async Task Test_Register_And_Validation()
         {
             // Đăng ký mới thành công
-            var reg = await _authService.RegisterAsync("hocvien99", "Nguyễn Văn Chiến", "0933999999", "chien.nv@mod.gov.vn", "Chien@123");
+            var reg = await _authService.RegisterAsync(
+                "hocvien99",
+                "Nguyễn Văn Chiến",
+                "0933999999",
+                "Chien@123",
+                "Trường cấp 3 của bạn?",
+                "THPT Quan Doi",
+                "Gợi ý Chien123",
+                "chien.nv@mod.gov.vn");
             Assert.True(reg.Success, reg.Message);
 
             // Đăng ký trùng username
-            var regDupUser = await _authService.RegisterAsync("hocvien99", "Tên Khác", "0933888888", "other@mod.gov.vn", "Pass@123");
+            var regDupUser = await _authService.RegisterAsync(
+                "hocvien99",
+                "Tên Khác",
+                "0933888888",
+                "Pass@123",
+                "Câu hỏi khác?",
+                "Trả lời khác");
             Assert.False(regDupUser.Success);
 
             // Đăng ký trùng SĐT
-            var regDupPhone = await _authService.RegisterAsync("hocvien100", "Tên Khác 2", "0933999999", "other2@mod.gov.vn", "Pass@123");
+            var regDupPhone = await _authService.RegisterAsync(
+                "hocvien100",
+                "Tên Khác 2",
+                "0933999999",
+                "Pass@123",
+                "Câu hỏi khác?",
+                "Trả lời khác");
             Assert.False(regDupPhone.Success);
 
             // Đăng nhập bằng tài khoản vừa đăng ký bằng SĐT
@@ -131,16 +149,20 @@ namespace QL_HocVien.Tests
         }
 
         [Fact]
-        public async Task Test_ForgotPassword_With_OTP_And_Reset()
+        public async Task Test_ForgotPassword_With_Offline_SecurityQuestion_And_Reset()
         {
-            // Yêu cầu gửi OTP qua email của admin
-            var otpResult = await _authService.RequestPasswordResetOtpAsync("admin@mod.gov.vn");
-            Assert.True(otpResult.Success, otpResult.Message);
-            Assert.NotNull(otpResult.Otp);
-            Assert.Equal(6, otpResult.Otp.Length);
+            // Tra cứu thông tin khôi phục tài khoản admin
+            var recoveryInfo = await _authService.GetAccountRecoveryInfoAsync("admin");
+            Assert.True(recoveryInfo.Success, recoveryInfo.Message);
+            Assert.NotNull(recoveryInfo.SecurityQuestion);
+            Assert.NotNull(recoveryInfo.PasswordHint);
 
-            // Đổi mật khẩu mới bằng mã OTP
-            var resetResult = await _authService.ResetPasswordWithOtpAsync("admin@mod.gov.vn", otpResult.Otp, "NewAdminPass@2026");
+            // Thử đổi mật khẩu với câu trả lời sai -> Thất bại
+            var failReset = await _authService.ResetPasswordWithSecurityAnswerAsync("admin", "cautraloisai", "NewAdminPass@2026");
+            Assert.False(failReset.Success);
+
+            // Đổi mật khẩu mới bằng câu trả lời bảo mật chính xác ("quanlyhocvien")
+            var resetResult = await _authService.ResetPasswordWithSecurityAnswerAsync("admin", "quanlyhocvien", "NewAdminPass@2026");
             Assert.True(resetResult.Success, resetResult.Message);
 
             // Đăng nhập lại với mật khẩu mới

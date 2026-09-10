@@ -11,22 +11,25 @@ namespace QL_HocVien.ViewModels
         private readonly IAuthService _authService;
 
         [ObservableProperty]
-        private string _identifier = string.Empty; // Email hoặc Username hoặc Số điện thoại
+        private string _identifier = string.Empty; // Username hoặc Số điện thoại
 
         [ObservableProperty]
-        private string _targetEmail = string.Empty;
+        private bool _isAccountFound;
 
         [ObservableProperty]
-        private string _otpCode = string.Empty;
+        private string? _passwordHint;
+
+        [ObservableProperty]
+        private string? _securityQuestion;
+
+        [ObservableProperty]
+        private string _securityAnswer = string.Empty;
 
         [ObservableProperty]
         private string _newPassword = string.Empty;
 
         [ObservableProperty]
         private string _confirmNewPassword = string.Empty;
-
-        [ObservableProperty]
-        private bool _isOtpSent;
 
         [ObservableProperty]
         private string _errorMessage = string.Empty;
@@ -43,14 +46,14 @@ namespace QL_HocVien.ViewModels
         }
 
         [RelayCommand]
-        private async Task SendOtpAsync()
+        private async Task LookupAccountAsync()
         {
             ErrorMessage = string.Empty;
             InfoMessage = string.Empty;
 
             if (string.IsNullOrWhiteSpace(Identifier))
             {
-                ErrorMessage = "Vui lòng nhập Email, Tên tài khoản hoặc Số điện thoại.";
+                ErrorMessage = "Vui lòng nhập Tên tài khoản hoặc Số điện thoại.";
                 return;
             }
 
@@ -58,12 +61,15 @@ namespace QL_HocVien.ViewModels
 
             try
             {
-                var result = await _authService.RequestPasswordResetOtpAsync(Identifier);
+                var result = await _authService.GetAccountRecoveryInfoAsync(Identifier);
                 if (result.Success)
                 {
-                    IsOtpSent = true;
-                    InfoMessage = result.Message;
-                    TargetEmail = Identifier.Trim();
+                    IsAccountFound = true;
+                    PasswordHint = result.PasswordHint;
+                    SecurityQuestion = result.SecurityQuestion;
+                    InfoMessage = string.IsNullOrWhiteSpace(result.PasswordHint)
+                        ? "Đã tìm thấy tài khoản. Vui lòng trả lời câu hỏi bảo mật để đổi mật khẩu."
+                        : "Đã tìm thấy tài khoản. Hãy xem gợi ý mật khẩu bên dưới hoặc trả lời câu hỏi bảo mật để đặt lại mật khẩu.";
                 }
                 else
                 {
@@ -86,15 +92,9 @@ namespace QL_HocVien.ViewModels
             ErrorMessage = string.Empty;
             InfoMessage = string.Empty;
 
-            if (string.IsNullOrWhiteSpace(TargetEmail))
+            if (string.IsNullOrWhiteSpace(SecurityAnswer))
             {
-                ErrorMessage = "Vui lòng nhập địa chỉ Email nhận mã xác thực.";
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(OtpCode))
-            {
-                ErrorMessage = "Vui lòng nhập mã xác thực OTP.";
+                ErrorMessage = "Vui lòng nhập câu trả lời cho câu hỏi bảo mật.";
                 return;
             }
 
@@ -114,7 +114,7 @@ namespace QL_HocVien.ViewModels
 
             try
             {
-                var result = await _authService.ResetPasswordWithOtpAsync(TargetEmail, OtpCode, NewPassword);
+                var result = await _authService.ResetPasswordWithSecurityAnswerAsync(Identifier, SecurityAnswer, NewPassword);
                 if (result.Success)
                 {
                     InfoMessage = result.Message;
@@ -132,6 +132,19 @@ namespace QL_HocVien.ViewModels
             {
                 IsBusy = false;
             }
+        }
+
+        [RelayCommand]
+        private void ResetLookup()
+        {
+            IsAccountFound = false;
+            PasswordHint = null;
+            SecurityQuestion = null;
+            SecurityAnswer = string.Empty;
+            NewPassword = string.Empty;
+            ConfirmNewPassword = string.Empty;
+            ErrorMessage = string.Empty;
+            InfoMessage = string.Empty;
         }
 
         [RelayCommand]

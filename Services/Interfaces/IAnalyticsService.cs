@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using QL_HocVien.Models.DTOs;
 
@@ -13,4 +13,3 @@ namespace QL_HocVien.Services.Interfaces
         Task<List<ClassComparisonDto>> CompareClassesAsync(string baselineSession, string compareSession, string? unit = null);
     }
 }
-

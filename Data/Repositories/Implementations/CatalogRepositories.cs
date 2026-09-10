@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -18,7 +18,7 @@ namespace QL_HocVien.Data.Repositories.Implementations
             return await SearchWithCriteriaAsync(new QL_HocVien.Models.Filters.CatalogFilterCriteria
             {
                 Keyword = keyword,
-                Group = group ?? "Táº¥t cáº£"
+                Group = group ?? "Tất cả"
             });
         }
 
@@ -36,7 +36,7 @@ namespace QL_HocVien.Data.Repositories.Implementations
                                              r.Description.ToLower().Contains(kw));
                 }
 
-                if (!string.IsNullOrWhiteSpace(criteria.Group) && criteria.Group != "Táº¥t cáº£")
+                if (!string.IsNullOrWhiteSpace(criteria.Group) && criteria.Group != "Tất cả")
                 {
                     query = query.Where(r => r.RankGroup == criteria.Group);
                 }
@@ -69,7 +69,7 @@ namespace QL_HocVien.Data.Repositories.Implementations
             return await SearchWithCriteriaAsync(new QL_HocVien.Models.Filters.CatalogFilterCriteria
             {
                 Keyword = keyword,
-                Group = group ?? "Táº¥t cáº£"
+                Group = group ?? "Tất cả"
             });
         }
 
@@ -87,7 +87,7 @@ namespace QL_HocVien.Data.Repositories.Implementations
                                              p.Description.ToLower().Contains(kw));
                 }
 
-                if (!string.IsNullOrWhiteSpace(criteria.Group) && criteria.Group != "Táº¥t cáº£")
+                if (!string.IsNullOrWhiteSpace(criteria.Group) && criteria.Group != "Tất cả")
                 {
                     query = query.Where(p => p.PositionGroup == criteria.Group);
                 }
@@ -120,7 +120,7 @@ namespace QL_HocVien.Data.Repositories.Implementations
             return await SearchWithCriteriaAsync(new QL_HocVien.Models.Filters.CatalogFilterCriteria
             {
                 Keyword = keyword,
-                ParentUnit = parentUnit ?? "Táº¥t cáº£"
+                ParentUnit = parentUnit ?? "Tất cả"
             });
         }
 
@@ -139,7 +139,7 @@ namespace QL_HocVien.Data.Repositories.Implementations
                                              u.Description.ToLower().Contains(kw));
                 }
 
-                if (!string.IsNullOrWhiteSpace(criteria.ParentUnit) && criteria.ParentUnit != "Táº¥t cáº£")
+                if (!string.IsNullOrWhiteSpace(criteria.ParentUnit) && criteria.ParentUnit != "Tất cả")
                 {
                     query = query.Where(u => u.ParentUnit == criteria.ParentUnit);
                 }
@@ -172,7 +172,7 @@ namespace QL_HocVien.Data.Repositories.Implementations
             return await SearchWithCriteriaAsync(new QL_HocVien.Models.Filters.CatalogFilterCriteria
             {
                 Keyword = keyword,
-                Department = department ?? "Táº¥t cáº£"
+                Department = department ?? "Tất cả"
             });
         }
 
@@ -190,7 +190,7 @@ namespace QL_HocVien.Data.Repositories.Implementations
                                              m.Description.ToLower().Contains(kw));
                 }
 
-                if (!string.IsNullOrWhiteSpace(criteria.Department) && criteria.Department != "Táº¥t cáº£")
+                if (!string.IsNullOrWhiteSpace(criteria.Department) && criteria.Department != "Tất cả")
                 {
                     query = query.Where(m => m.Department == criteria.Department);
                 }
@@ -212,4 +212,3 @@ namespace QL_HocVien.Data.Repositories.Implementations
         }
     }
 }
-

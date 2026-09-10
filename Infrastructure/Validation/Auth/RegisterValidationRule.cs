@@ -42,14 +42,26 @@ namespace QL_HocVien.Infrastructure.Validation.Auth
             if (string.IsNullOrWhiteSpace(request.PhoneNumber))
                 throw new ValidationException("Số điện thoại không được để trống.", nameof(request.PhoneNumber));
 
-            if (string.IsNullOrWhiteSpace(request.Email))
-                throw new ValidationException("Email không được để trống.", nameof(request.Email));
+            if (string.IsNullOrWhiteSpace(request.SecurityQuestion))
+                throw new ValidationException("Vui lòng chọn hoặc nhập câu hỏi bảo mật.", nameof(request.SecurityQuestion));
+
+            if (string.IsNullOrWhiteSpace(request.SecurityAnswer))
+                throw new ValidationException("Vui lòng nhập câu trả lời bảo mật để khôi phục mật khẩu khi cần.", nameof(request.SecurityAnswer));
 
             // Quét chống Injection
             _sanitizer.EnsureSafeInput(request.Username, "Tên tài khoản");
             _sanitizer.EnsureSafeInput(request.FullName, "Họ và tên");
             _sanitizer.EnsureSafeInput(request.PhoneNumber, "Số điện thoại");
-            _sanitizer.EnsureSafeInput(request.Email, "Email");
+            _sanitizer.EnsureSafeInput(request.SecurityQuestion, "Câu hỏi bảo mật");
+            _sanitizer.EnsureSafeInput(request.SecurityAnswer, "Câu trả lời bảo mật");
+            if (!string.IsNullOrWhiteSpace(request.PasswordHint))
+            {
+                _sanitizer.EnsureSafeInput(request.PasswordHint, "Gợi ý mật khẩu");
+            }
+            if (!string.IsNullOrWhiteSpace(request.Email))
+            {
+                _sanitizer.EnsureSafeInput(request.Email, "Email");
+            }
 
             // Ràng buộc định dạng Username (chữ và số, dấu gạch dưới, không chứa ký tự đặc biệt nguy hiểm)
             if (!Regex.IsMatch(request.Username, @"^[a-zA-Z0-9_\.\-]{3,50}$"))
@@ -63,8 +75,8 @@ namespace QL_HocVien.Infrastructure.Validation.Auth
                 throw new ValidationException("Số điện thoại không đúng định dạng tiêu chuẩn (10-11 số bắt đầu bằng 0 hoặc +84).");
             }
 
-            // Ràng buộc định dạng Email
-            if (!Regex.IsMatch(request.Email.Trim(), @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+            // Ràng buộc định dạng Email (nếu người dùng có nhập)
+            if (!string.IsNullOrWhiteSpace(request.Email) && !Regex.IsMatch(request.Email.Trim(), @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
             {
                 throw new ValidationException("Địa chỉ email không đúng định dạng.");
             }

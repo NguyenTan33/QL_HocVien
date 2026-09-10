@@ -276,7 +276,6 @@ namespace QL_HocVien.ViewModels
                 foreach (var c in cadets.OrderBy(c => c.FullName))
                     AllCadets.Add(c);
 
-                await _creditService.EnsureComponentsMigratedAsync();
                 await LoadDataAsync();
             }
             catch (Exception ex)
@@ -964,30 +963,30 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         public async Task ImportStandardExcelAsync()
         {
-            if (!await _securityGate.EnsureUnlockedAsync("Làm sạch CSDL và nạp lại dữ liệu chuẩn từ file Excel"))
+            if (!await _securityGate.EnsureUnlockedAsync("Nhập điểm môn học từ file Excel"))
                 return;
 
             string? filePath = _fileDialogService.ShowOpenFileDialog("Tập tin Excel (*.xlsx)|*.xlsx|Tất cả tập tin (*.*)|*.*");
             if (string.IsNullOrWhiteSpace(filePath)) return;
 
             var confirm = System.Windows.MessageBox.Show(
-                $"Hệ thống sẽ làm sạch CSDL và nạp lại toàn bộ học viên, môn học và điểm số chuẩn từ file:\n{filePath}\n\nĐồng chí có chắc chắn muốn thực hiện?",
-                "Xác Nhận Làm Sạch & Nạp Lại Dữ Liệu",
+                $"Hệ thống sẽ nạp/cập nhật điểm môn học và BẢO LƯU NGUYÊN VẸN mã số học viên (ID) hiện có từ file:\n{filePath}\n\nĐồng chí có chắc chắn muốn thực hiện?",
+                "Xác Nhận Nhập Điểm Từ Excel",
                 System.Windows.MessageBoxButton.YesNo,
-                System.Windows.MessageBoxImage.Warning);
+                System.Windows.MessageBoxImage.Question);
 
             if (confirm != System.Windows.MessageBoxResult.Yes) return;
 
             IsBusy = true;
-            StatusMessage = "Đang làm sạch và nạp lại dữ liệu chuẩn từ Excel...";
+            StatusMessage = "Đang nạp dữ liệu điểm và bảo lưu mã học viên từ Excel...";
             try
             {
-                var res = await _creditService.ResetAndImportFreshFromExcelAsync(filePath);
+                var res = await _creditService.ImportStandardTbmExcelAsync(filePath);
                 StatusMessage = res.Message;
 
                 if (res.Success)
                 {
-                    System.Windows.MessageBox.Show(res.Message, "Nạp Lại Chuẩn Thành Công", 
+                    System.Windows.MessageBox.Show(res.Message, "Nhập Điểm Thành Công", 
                         System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
                     await InitializeAsync();
                 }

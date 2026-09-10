@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -18,8 +18,8 @@ namespace QL_HocVien.Data.Repositories.Implementations
             return await SearchWithCriteriaAsync(new QL_HocVien.Models.Filters.ClassFilterCriteria
             {
                 Keyword = keyword,
-                Unit = unit ?? "Táº¥t cáº£",
-                Major = major ?? "Táº¥t cáº£"
+                Unit = unit ?? "Tất cả",
+                Major = major ?? "Tất cả"
             });
         }
 
@@ -34,7 +34,7 @@ namespace QL_HocVien.Data.Repositories.Implementations
                 return await query.OrderBy(c => c.ClassCode).ToListAsync();
             }
 
-            // 1. Tá»« khÃ³a: MÃ£ lá»›p, TÃªn lá»›p, CÃ¡n bá»™ chá»§ nhiá»‡m, ChuyÃªn ngÃ nh
+            // 1. Từ khóa: Mã lớp, Tên lớp, Cán bộ chủ nhiệm, Chuyên ngành
             if (!string.IsNullOrWhiteSpace(criteria.Keyword))
             {
                 var kw = criteria.Keyword.Trim().ToLower();
@@ -44,25 +44,25 @@ namespace QL_HocVien.Data.Repositories.Implementations
                                          c.Major.ToLower().Contains(kw));
             }
 
-            // 2. ÄÆ¡n vá»‹
-            if (!string.IsNullOrWhiteSpace(criteria.Unit) && criteria.Unit != "Táº¥t cáº£")
+            // 2. Đơn vị
+            if (!string.IsNullOrWhiteSpace(criteria.Unit) && criteria.Unit != "Tất cả")
             {
                 query = query.Where(c => c.Unit == criteria.Unit);
             }
 
-            // 3. ChuyÃªn ngÃ nh
-            if (!string.IsNullOrWhiteSpace(criteria.Major) && criteria.Major != "Táº¥t cáº£")
+            // 3. Chuyên ngành
+            if (!string.IsNullOrWhiteSpace(criteria.Major) && criteria.Major != "Tất cả")
             {
                 query = query.Where(c => c.Major == criteria.Major);
             }
 
-            // 4. KhÃ³a há»c / NiÃªn khÃ³a
-            if (!string.IsNullOrWhiteSpace(criteria.AcademicYear) && criteria.AcademicYear != "Táº¥t cáº£")
+            // 4. Khóa học / Niên khóa
+            if (!string.IsNullOrWhiteSpace(criteria.AcademicYear) && criteria.AcademicYear != "Tất cả")
             {
                 query = query.Where(c => c.AcademicYear == criteria.AcademicYear);
             }
 
-            // 5. Tráº¡ng thÃ¡i phÃ¢n cÃ´ng cÃ¡n bá»™ chá»§ nhiá»‡m
+            // 5. Trạng thái phân công cán bộ chủ nhiệm
             if (criteria.HasOfficerAssigned.HasValue)
             {
                 if (criteria.HasOfficerAssigned.Value)
@@ -75,13 +75,13 @@ namespace QL_HocVien.Data.Repositories.Implementations
                 }
             }
 
-            // 6. SÄ© sá»‘ há»c viÃªn tá»‘i thiá»ƒu
+            // 6. Sĩ số học viên tối thiểu
             if (criteria.MinCadets.HasValue)
             {
                 query = query.Where(c => c.Cadets.Count >= criteria.MinCadets.Value);
             }
 
-            // 7. SÄ© sá»‘ há»c viÃªn tá»‘i Ä‘a
+            // 7. Sĩ số học viên tối đa
             if (criteria.MaxCadets.HasValue)
             {
                 query = query.Where(c => c.Cadets.Count <= criteria.MaxCadets.Value);
@@ -124,4 +124,3 @@ namespace QL_HocVien.Data.Repositories.Implementations
         }
     }
 }
-

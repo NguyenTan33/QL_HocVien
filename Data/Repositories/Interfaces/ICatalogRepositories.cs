@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using QL_HocVien.Models;
 
@@ -36,4 +36,3 @@ namespace QL_HocVien.Data.Repositories.Interfaces
         Task<bool> ExistsByCodeAsync(string majorCode);
     }
 }
-

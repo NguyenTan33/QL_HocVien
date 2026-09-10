@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using QL_HocVien.Models;
 using QL_HocVien.Models.DTOs;
@@ -36,4 +36,3 @@ namespace QL_HocVien.Services.Interfaces
         Task<(bool Success, string Message)> SaveCadetSubjectGradesAsync(int cadetId, int subjectId, List<(int componentId, double? score)> componentScores);
     }
 }
-

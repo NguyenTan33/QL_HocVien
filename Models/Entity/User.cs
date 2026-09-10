@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace QL_HocVien.Models.Entity
 {
@@ -17,6 +17,10 @@ namespace QL_HocVien.Models.Entity
         public bool HasPasskeyActivated { get; set; } = false;
         public string? ActivatedPasskey { get; set; }
         public DateTime? PasskeyActivatedAt { get; set; }
+
+        // Khôi phục mật khẩu 100% Offline (Không dùng Email OTP / SMS)
+        public string? SecurityQuestion { get; set; }
+        public string? SecurityAnswerHash { get; set; }
+        public string? PasswordHint { get; set; }
     }
 }
-

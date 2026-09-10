@@ -316,23 +316,40 @@ namespace QL_HocVien.Tests
         public void Test_Dpapi_Secret_Encryption_And_Decryption()
         {
             string secret = "SuperSecretAdminPassword@2026";
-            string encrypted = EmailService.EncryptSecret(secret);
+            string encrypted = AuthSecurityHelper.EncryptSecret(secret);
 
             // Xác minh đã được mã hóa không còn dạng plaintext
             Assert.StartsWith("enc:", encrypted);
             Assert.DoesNotContain(secret, encrypted);
 
             // Xác minh giải mã thành công về chuỗi ban đầu
-            string decrypted = EmailService.DecryptSecret(encrypted);
+            string decrypted = AuthSecurityHelper.DecryptSecret(encrypted);
             Assert.Equal(secret, decrypted);
 
             // Xác minh xử lý chuỗi rỗng và chuỗi không mã hóa
-            Assert.Equal(string.Empty, EmailService.EncryptSecret(""));
-            Assert.Equal("plain_text_without_prefix", EmailService.DecryptSecret("plain_text_without_prefix"));
+            Assert.Equal(string.Empty, AuthSecurityHelper.EncryptSecret(""));
+            Assert.Equal("plain_text_without_prefix", AuthSecurityHelper.DecryptSecret("plain_text_without_prefix"));
         }
 
         [Fact]
-        public async Task Test_Otp_RateLimiting_Cooldown()
+        public void Test_AuthSecurityHelper_Hash_And_Verify_SecurityAnswer()
+        {
+            string answer = "Thủ Đô Hà Nội";
+            string hash = AuthSecurityHelper.HashSecurityAnswer(answer);
+
+            Assert.False(string.IsNullOrWhiteSpace(hash));
+            // Không phân biệt HOA/thường và khoảng trắng thừa
+            Assert.True(AuthSecurityHelper.VerifySecurityAnswer("thủ đô hà nội", hash));
+            Assert.True(AuthSecurityHelper.VerifySecurityAnswer("  THỦ ĐÔ HÀ NỘI   ", hash));
+
+            // Trả lời sai
+            Assert.False(AuthSecurityHelper.VerifySecurityAnswer("TP Hồ Chí Minh", hash));
+            Assert.False(AuthSecurityHelper.VerifySecurityAnswer("", hash));
+            Assert.False(AuthSecurityHelper.VerifySecurityAnswer("thủ đô hà nội", null));
+        }
+
+        [Fact]
+        public async Task Test_AccountRecovery_Info_Lookup_And_Hint()
         {
             string dbName = $"TestSecDb_{Guid.NewGuid():N}";
             var options = new DbContextOptionsBuilder<AppDbContext>()
@@ -344,19 +361,25 @@ namespace QL_HocVien.Tests
 
             var userRepo = new UserRepository(context);
             var cadetRepo = new CadetRepository(context);
-            var emailService = new EmailService(isTestMode: true);
-            var authService = new AuthService(userRepo, cadetRepo, context, emailService);
+            var authService = new AuthService(userRepo, cadetRepo, context);
 
             try
             {
-                // Yêu cầu OTP lần 1 -> Thành công
-                var firstReq = await authService.RequestPasswordResetOtpAsync("admin@mod.gov.vn");
-                Assert.True(firstReq.Success);
+                // 1. Tra cứu theo Username ("admin")
+                var adminLookup = await authService.GetAccountRecoveryInfoAsync("admin");
+                Assert.True(adminLookup.Success);
+                Assert.False(string.IsNullOrWhiteSpace(adminLookup.SecurityQuestion));
+                Assert.Contains("bàn giao", adminLookup.PasswordHint!);
 
-                // Yêu cầu OTP lần 2 ngay lập tức -> Phải bị chặn bởi Rate Limiting Cooldown
-                var secondReq = await authService.RequestPasswordResetOtpAsync("admin@mod.gov.vn");
-                Assert.False(secondReq.Success);
-                Assert.Contains("đợi", secondReq.Message, StringComparison.OrdinalIgnoreCase);
+                // 2. Tra cứu theo Số điện thoại ("0988888888")
+                var phoneLookup = await authService.GetAccountRecoveryInfoAsync("0988888888");
+                Assert.True(phoneLookup.Success);
+                Assert.Equal(adminLookup.SecurityQuestion, phoneLookup.SecurityQuestion);
+
+                // 3. Tra cứu tài khoản không tồn tại
+                var nonExist = await authService.GetAccountRecoveryInfoAsync("nguoidung_khong_co_that");
+                Assert.False(nonExist.Success);
+                Assert.Contains("Không tìm thấy", nonExist.Message);
             }
             finally
             {
@@ -365,7 +388,7 @@ namespace QL_HocVien.Tests
         }
 
         [Fact]
-        public async Task Test_Otp_BruteForce_Lockout_After_5_Failed_Attempts()
+        public async Task Test_SecurityAnswer_Wrong_Answer_Fails()
         {
             string dbName = $"TestSecDb_{Guid.NewGuid():N}";
             var options = new DbContextOptionsBuilder<AppDbContext>()
@@ -377,32 +400,18 @@ namespace QL_HocVien.Tests
 
             var userRepo = new UserRepository(context);
             var cadetRepo = new CadetRepository(context);
-            var emailService = new EmailService(isTestMode: true);
-            var authService = new AuthService(userRepo, cadetRepo, context, emailService);
+            var authService = new AuthService(userRepo, cadetRepo, context);
 
             try
             {
-                // Yêu cầu mã OTP hợp lệ
-                var req = await authService.RequestPasswordResetOtpAsync("admin@mod.gov.vn");
-                Assert.True(req.Success);
-                string realOtp = req.Otp!;
+                // Thử đổi mật khẩu với câu trả lời sai
+                var failRes = await authService.ResetPasswordWithSecurityAnswerAsync("admin", "cautraloisai", "NewPass@123");
+                Assert.False(failRes.Success);
+                Assert.Contains("không chính xác", failRes.Message, StringComparison.OrdinalIgnoreCase);
 
-                // Thử sai 4 lần -> Đều thất bại và thông báo số lần còn lại
-                for (int i = 1; i <= 4; i++)
-                {
-                    var failRes = await authService.ResetPasswordWithOtpAsync("admin@mod.gov.vn", "000000", "NewPass@123");
-                    Assert.False(failRes.Success);
-                    Assert.Contains("không chính xác", failRes.Message, StringComparison.OrdinalIgnoreCase);
-                }
-
-                // Lần thử thứ 5 -> Phải bị vô hiệu hóa / hủy bỏ mã OTP vì vượt quá giới hạn
-                var fifthFail = await authService.ResetPasswordWithOtpAsync("admin@mod.gov.vn", "000000", "NewPass@123");
-                Assert.False(fifthFail.Success);
-                Assert.Contains("hủy", fifthFail.Message, StringComparison.OrdinalIgnoreCase);
-
-                // Bây giờ dùng mã OTP đúng thật -> Vẫn phải thất bại vì mã đã bị khóa và hủy
-                var tryRealOtp = await authService.ResetPasswordWithOtpAsync("admin@mod.gov.vn", realOtp, "NewPass@123");
-                Assert.False(tryRealOtp.Success);
+                // Mật khẩu cũ vẫn phải hoạt động bình thường
+                var loginOld = await authService.LoginAsync("admin", "Admin@123");
+                Assert.True(loginOld.Success);
             }
             finally
             {
@@ -411,7 +420,7 @@ namespace QL_HocVien.Tests
         }
 
         [Fact]
-        public async Task Test_Otp_ResetPassword_With_Username_Identifier()
+        public async Task Test_SecurityAnswer_ResetPassword_Success_And_Login()
         {
             string dbName = $"TestSecDb_{Guid.NewGuid():N}";
             var options = new DbContextOptionsBuilder<AppDbContext>()
@@ -423,24 +432,22 @@ namespace QL_HocVien.Tests
 
             var userRepo = new UserRepository(context);
             var cadetRepo = new CadetRepository(context);
-            var emailService = new EmailService(isTestMode: true);
-            var authService = new AuthService(userRepo, cadetRepo, context, emailService);
+            var authService = new AuthService(userRepo, cadetRepo, context);
 
             try
             {
-                // Yêu cầu OTP bằng Username ("admin") thay vì Email
-                var req = await authService.RequestPasswordResetOtpAsync("admin");
-                Assert.True(req.Success);
-                Assert.NotNull(req.Otp);
-
-                // Đổi mật khẩu với Username và OTP nhận được
-                var resetRes = await authService.ResetPasswordWithOtpAsync("admin", req.Otp!, "NewSecureAdminPass@123");
+                // Đổi mật khẩu với câu trả lời bảo mật đúng của admin mặc định ("quanlyhocvien")
+                var resetRes = await authService.ResetPasswordWithSecurityAnswerAsync("admin", "quanlyhocvien", "NewSecureAdminPass@123");
                 Assert.True(resetRes.Success);
 
                 // Xác minh đăng nhập thành công bằng mật khẩu mới
                 var loginRes = await authService.LoginAsync("admin", "NewSecureAdminPass@123");
                 Assert.True(loginRes.Success);
                 Assert.NotNull(loginRes.User);
+
+                // Mật khẩu cũ không còn hợp lệ
+                var loginOld = await authService.LoginAsync("admin", "Admin@123");
+                Assert.False(loginOld.Success);
             }
             finally
             {
@@ -449,7 +456,7 @@ namespace QL_HocVien.Tests
         }
 
         [Fact]
-        public async Task Test_Otp_ResetPassword_With_Phone_Identifier()
+        public async Task Test_ForgotPasswordViewModel_Offline_Recovery_Flow()
         {
             string dbName = $"TestSecDb_{Guid.NewGuid():N}";
             var options = new DbContextOptionsBuilder<AppDbContext>()
@@ -461,72 +468,21 @@ namespace QL_HocVien.Tests
 
             var userRepo = new UserRepository(context);
             var cadetRepo = new CadetRepository(context);
-            var emailService = new EmailService(isTestMode: true);
-            var authService = new AuthService(userRepo, cadetRepo, context, emailService);
-
-            try
-            {
-                // Admin user có số điện thoại "0988888888"
-                var adminUser = await userRepo.GetByUsernameOrPhoneAsync("admin");
-                Assert.NotNull(adminUser);
-                Assert.False(string.IsNullOrWhiteSpace(adminUser.PhoneNumber));
-
-                // Yêu cầu OTP bằng Số điện thoại
-                var req = await authService.RequestPasswordResetOtpAsync(adminUser.PhoneNumber);
-                Assert.True(req.Success);
-                Assert.NotNull(req.Otp);
-
-                // Đổi mật khẩu thành công bằng Số điện thoại
-                var resetRes = await authService.ResetPasswordWithOtpAsync(adminUser.PhoneNumber, req.Otp!, "NewPhoneAdminPass@123");
-                Assert.True(resetRes.Success);
-
-                // Xác minh đăng nhập thành công bằng mật khẩu mới
-                var loginRes = await authService.LoginAsync("admin", "NewPhoneAdminPass@123");
-                Assert.True(loginRes.Success);
-            }
-            finally
-            {
-                context.Database.EnsureDeleted();
-            }
-        }
-
-        [Fact]
-        public async Task Test_ForgotPasswordViewModel_Handles_Username_Reset_Flow()
-        {
-            string dbName = $"TestSecDb_{Guid.NewGuid():N}";
-            var options = new DbContextOptionsBuilder<AppDbContext>()
-                .UseSqlite($"Data Source={dbName}.db")
-                .Options;
-
-            using var context = new AppDbContext(options);
-            DbInitializer.Initialize(context);
-
-            var userRepo = new UserRepository(context);
-            var cadetRepo = new CadetRepository(context);
-            var emailService = new EmailService(isTestMode: true);
-            var authService = new AuthService(userRepo, cadetRepo, context, emailService);
+            var authService = new AuthService(userRepo, cadetRepo, context);
 
             try
             {
                 var vm = new ForgotPasswordViewModel(authService);
                 vm.Identifier = "admin";
 
-                // Bước 1: Gửi yêu cầu OTP
-                await vm.SendOtpCommand.ExecuteAsync(null);
-                Assert.True(vm.IsOtpSent);
-                Assert.Equal("admin", vm.TargetEmail);
+                // Bước 1: Tra cứu tài khoản offline
+                await vm.LookupAccountCommand.ExecuteAsync(null);
+                Assert.True(vm.IsAccountFound);
+                Assert.NotNull(vm.SecurityQuestion);
+                Assert.NotNull(vm.PasswordHint);
 
-                // Lấy OTP token từ database
-                var adminUser = await userRepo.GetByUsernameOrPhoneAsync("admin");
-                var tokenRecord = await context.PasswordResetTokens
-                    .Where(t => t.Email == adminUser!.Email && !t.IsUsed)
-                    .OrderByDescending(t => t.CreatedAt)
-                    .FirstOrDefaultAsync();
-
-                Assert.NotNull(tokenRecord);
-
-                // Bước 2: Nhập OTP và mật khẩu mới
-                vm.OtpCode = tokenRecord.Token;
+                // Bước 2: Nhập câu trả lời bảo mật và mật khẩu mới
+                vm.SecurityAnswer = "quanlyhocvien";
                 vm.NewPassword = "VmResetPass@123";
                 vm.ConfirmNewPassword = "VmResetPass@123";
 

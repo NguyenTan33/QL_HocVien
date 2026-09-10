@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using QL_HocVien.Models;
@@ -14,4 +14,3 @@ namespace QL_HocVien.Services.Interfaces
         Task<List<AccountPasskey>> GetAllPasskeysAsync();
     }
 }
-

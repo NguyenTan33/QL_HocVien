@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using QL_HocVien.Data.Repositories;
@@ -33,42 +33,42 @@ namespace QL_HocVien.Services.Implementations
         public async Task<(bool Success, string Message, TrainingEvent? Event)> CreateEventAsync(TrainingEvent evt)
         {
             if (string.IsNullOrWhiteSpace(evt.Title))
-                return (false, "TiÃªu Ä‘á» má»‘c sá»± kiá»‡n khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng.", null);
+                return (false, "Tiêu đề mốc sự kiện không được để trống.", null);
 
             if (string.IsNullOrWhiteSpace(evt.Category))
-                return (false, "Vui lÃ²ng chá»n loáº¡i sá»± kiá»‡n huáº¥n luyá»‡n.", null);
+                return (false, "Vui lòng chọn loại sự kiện huấn luyện.", null);
 
             if (evt.EndDate.Date < evt.StartDate.Date)
-                return (false, "NgÃ y káº¿t thÃºc khÃ´ng Ä‘Æ°á»£c nhá» hÆ¡n ngÃ y báº¯t Ä‘áº§u.", null);
+                return (false, "Ngày kết thúc không được nhỏ hơn ngày bắt đầu.", null);
 
             if (string.IsNullOrWhiteSpace(evt.Status))
-                evt.Status = "Äang chuáº©n bá»‹";
+                evt.Status = "Đang chuẩn bị";
 
             if (string.IsNullOrWhiteSpace(evt.Priority))
-                evt.Priority = "BÃ¬nh thÆ°á»ng";
+                evt.Priority = "Bình thường";
 
             if (string.IsNullOrWhiteSpace(evt.TargetUnit))
-                evt.TargetUnit = "ToÃ n Ä‘Æ¡n vá»‹";
+                evt.TargetUnit = "Toàn đơn vị";
 
             evt.CreatedAt = DateTime.Now;
 
             await _eventRepository.AddAsync(evt);
             await _eventRepository.SaveChangesAsync();
 
-            return (true, "ThÃªm má»‘c sá»± kiá»‡n huáº¥n luyá»‡n thÃ nh cÃ´ng!", evt);
+            return (true, "Thêm mốc sự kiện huấn luyện thành công!", evt);
         }
 
         public async Task<(bool Success, string Message)> UpdateEventAsync(TrainingEvent evt)
         {
             if (string.IsNullOrWhiteSpace(evt.Title))
-                return (false, "TiÃªu Ä‘á» má»‘c sá»± kiá»‡n khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng.");
+                return (false, "Tiêu đề mốc sự kiện không được để trống.");
 
             if (evt.EndDate.Date < evt.StartDate.Date)
-                return (false, "NgÃ y káº¿t thÃºc khÃ´ng Ä‘Æ°á»£c nhá» hÆ¡n ngÃ y báº¯t Ä‘áº§u.");
+                return (false, "Ngày kết thúc không được nhỏ hơn ngày bắt đầu.");
 
             var existing = await _eventRepository.GetByIdAsync(evt.Id);
             if (existing == null)
-                return (false, "KhÃ´ng tÃ¬m tháº¥y má»‘c sá»± kiá»‡n cáº§n chá»‰nh sá»­a.");
+                return (false, "Không tìm thấy mốc sự kiện cần chỉnh sửa.");
 
             existing.Title = evt.Title.Trim();
             existing.Category = evt.Category;
@@ -83,41 +83,40 @@ namespace QL_HocVien.Services.Implementations
             _eventRepository.Update(existing);
             await _eventRepository.SaveChangesAsync();
 
-            return (true, "Cáº­p nháº­t má»‘c sá»± kiá»‡n huáº¥n luyá»‡n thÃ nh cÃ´ng!");
+            return (true, "Cập nhật mốc sự kiện huấn luyện thành công!");
         }
 
         public async Task<(bool Success, string Message)> DeleteEventAsync(int id)
         {
             var existing = await _eventRepository.GetByIdAsync(id);
             if (existing == null)
-                return (false, "KhÃ´ng tÃ¬m tháº¥y má»‘c sá»± kiá»‡n cáº§n xÃ³a.");
+                return (false, "Không tìm thấy mốc sự kiện cần xóa.");
 
             _eventRepository.Delete(existing);
             await _eventRepository.SaveChangesAsync();
 
-            return (true, "ÄÃ£ xÃ³a má»‘c sá»± kiá»‡n thÃ nh cÃ´ng!");
+            return (true, "Đã xóa mốc sự kiện thành công!");
         }
 
         public async Task<(bool Success, string Message)> ToggleCompleteAsync(int id)
         {
             var existing = await _eventRepository.GetByIdAsync(id);
             if (existing == null)
-                return (false, "KhÃ´ng tÃ¬m tháº¥y sá»± kiá»‡n.");
+                return (false, "Không tìm thấy sự kiện.");
 
-            if (existing.Status == "ÄÃ£ hoÃ n thÃ nh")
+            if (existing.Status == "Đã hoàn thành")
             {
-                existing.Status = "Äang chuáº©n bá»‹";
+                existing.Status = "Đang chuẩn bị";
             }
             else
             {
-                existing.Status = "ÄÃ£ hoÃ n thÃ nh";
+                existing.Status = "Đã hoàn thành";
             }
 
             _eventRepository.Update(existing);
             await _eventRepository.SaveChangesAsync();
 
-            return (true, $"ÄÃ£ cáº­p nháº­t tráº¡ng thÃ¡i sang: {existing.Status}");
+            return (true, $"Đã cập nhật trạng thái sang: {existing.Status}");
         }
     }
 }
-

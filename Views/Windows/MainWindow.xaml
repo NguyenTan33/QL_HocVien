@@ -183,7 +183,7 @@
                 </StackPanel>
 
                 <!-- Giữa: Khẩu hiệu truyền thống -->
-                <TextBlock Grid.Column="1" Text="“TRUNG THÀNH - ĐOÀN KẾT - KỶ LUẬT - QUYẾT THẮNG”" 
+                <TextBlock Grid.Column="1" Text="“VÌ NHÂN DÂN PHỤC VỤ”" 
                            FontSize="11.5" FontWeight="ExtraBold" 
                            HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10,0">
                     <TextBlock.Style>
@@ -591,9 +591,16 @@
         <Border Grid.Row="2" Height="32">
             <Grid>
                 <!-- Chế độ Tác chiến: Dải khẩu hiệu quân đội dã chiến chuẩn DemoUI -->
-                <Border Visibility="{Binding IsCombatMode, Converter={x:Static local_cv:BooleanToVisibilityConverter.Instance}}">
+                <Grid Visibility="{Binding IsCombatMode, Converter={x:Static local_cv:BooleanToVisibilityConverter.Instance}}">
                     <Image Source="/Assets/Images/bottom_slogan_bar.png" Stretch="UniformToFill" VerticalAlignment="Bottom"/>
-                </Border>
+                    <TextBlock Text="“XÂY DỰNG QUÂN ĐỘI NHÂN DÂN CÁCH MẠNG - CHÍNH QUY - TINH NHUỆ - HIỆN ĐẠI”"
+                               FontSize="12" FontWeight="ExtraBold" Foreground="#FFE17A"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" Margin="50,0,140,0">
+                        <TextBlock.Effect>
+                            <DropShadowEffect Color="#000000" BlurRadius="5" ShadowDepth="1.5" Opacity="0.9"/>
+                        </TextBlock.Effect>
+                    </TextBlock>
+                </Grid>
 
                 <!-- Chế độ Hành chính: Thanh công vụ hiện đại, basic -->
                 <Border Visibility="{Binding IsCombatMode, Converter={x:Static local_cv:InvertedBooleanToVisibilityConverter.Instance}}"

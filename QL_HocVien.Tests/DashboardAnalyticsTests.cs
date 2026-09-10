@@ -395,7 +395,6 @@ namespace QL_HocVien.Tests
                     services.AddScoped<ITrainingEventRepository, TrainingEventRepository>();
 
                     // Services
-                    services.AddSingleton<IEmailService, EmailService>();
                     services.AddScoped<IAuthService, AuthService>();
                     services.AddScoped<IClassService, ClassService>();
                     services.AddScoped<ICadetService, CadetService>();

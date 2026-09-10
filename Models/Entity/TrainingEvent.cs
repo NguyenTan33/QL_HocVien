@@ -1,31 +1,31 @@
-﻿using System;
+using System;
 
 namespace QL_HocVien.Models.Entity
 {
     public class TrainingEvent
     {
         public int Id { get; set; }
-        public string Title { get; set; } = string.Empty; // TiÃªu Ä‘á» sá»± kiá»‡n
-        public string Category { get; set; } = "Kiá»ƒm tra thá»ƒ lá»±c"; // "Kiá»ƒm tra thá»ƒ lá»±c", "Thi cá»­ quÃ¢n sá»±", "Táº­p luyá»‡n / RÃ¨n luyá»‡n", "Há»™i thao / Sá»± kiá»‡n"
+        public string Title { get; set; } = string.Empty; // Tiêu đề sự kiện
+        public string Category { get; set; } = "Kiểm tra thể lực"; // "Kiểm tra thể lực", "Thi cử quân sự", "Tập luyện / Rèn luyện", "Hội thao / Sự kiện"
         public DateTime StartDate { get; set; } = DateTime.Today;
         public DateTime EndDate { get; set; } = DateTime.Today;
-        public string TargetUnit { get; set; } = "ToÃ n Ä‘Æ¡n vá»‹"; // ÄÆ¡n vá»‹/Lá»›p Ã¡p dá»¥ng (Äáº¡i Ä‘á»™i 1, ToÃ n Ä‘Æ¡n vá»‹, K26A...)
-        public string Location { get; set; } = string.Empty; // Thao trÆ°á»ng, BÃ£i táº­p xÃ , SÃ¢n váº­n Ä‘á»™ng, Bá»ƒ bÆ¡i...
-        public string Priority { get; set; } = "BÃ¬nh thÆ°á»ng"; // "Kháº©n cáº¥p", "Cao", "BÃ¬nh thÆ°á»ng"
-        public string Status { get; set; } = "Äang chuáº©n bá»‹"; // "Äang chuáº©n bá»‹", "Äang diá»…n ra", "ÄÃ£ hoÃ n thÃ nh", "Táº¡m hoÃ£n"
-        public string Description { get; set; } = string.Empty; // Ná»™i dung chá»‰ thá»‹, ghi chÃº chi tiáº¿t
+        public string TargetUnit { get; set; } = "Toàn đơn vị"; // Đơn vị/Lớp áp dụng (Đại đội 1, Toàn đơn vị, K26A...)
+        public string Location { get; set; } = string.Empty; // Thao trường, Bãi tập xà, Sân vận động, Bể bơi...
+        public string Priority { get; set; } = "Bình thường"; // "Khẩn cấp", "Cao", "Bình thường"
+        public string Status { get; set; } = "Đang chuẩn bị"; // "Đang chuẩn bị", "Đang diễn ra", "Đã hoàn thành", "Tạm hoãn"
+        public string Description { get; set; } = string.Empty; // Nội dung chỉ thị, ghi chú chi tiết
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
-        // Thuá»™c tÃ­nh hiá»ƒn thá»‹ UI theo chuáº©n Celandar.png (KhÃ´ng lÆ°u CSDL)
+        // Thuộc tính hiển thị UI theo chuẩn Celandar.png (Không lưu CSDL)
         public string DayOfWeekVietnamese => StartDate.DayOfWeek switch
         {
-            DayOfWeek.Monday => "Thá»© Hai",
-            DayOfWeek.Tuesday => "Thá»© Ba",
-            DayOfWeek.Wednesday => "Thá»© TÆ°",
-            DayOfWeek.Thursday => "Thá»© NÄƒm",
-            DayOfWeek.Friday => "Thá»© SÃ¡u",
-            DayOfWeek.Saturday => "Thá»© Báº£y",
-            DayOfWeek.Sunday => "Chá»§ Nháº­t",
+            DayOfWeek.Monday => "Thứ Hai",
+            DayOfWeek.Tuesday => "Thứ Ba",
+            DayOfWeek.Wednesday => "Thứ Tư",
+            DayOfWeek.Thursday => "Thứ Năm",
+            DayOfWeek.Friday => "Thứ Sáu",
+            DayOfWeek.Saturday => "Thứ Bảy",
+            DayOfWeek.Sunday => "Chủ Nhật",
             _ => string.Empty
         };
 
@@ -33,11 +33,11 @@ namespace QL_HocVien.Models.Entity
         {
             get
             {
-                if (Category == "Kiá»ƒm tra thá»ƒ lá»±c" || Title.Contains("thá»ƒ lá»±c", StringComparison.OrdinalIgnoreCase))
+                if (Category == "Kiểm tra thể lực" || Title.Contains("thể lực", StringComparison.OrdinalIgnoreCase))
                     return "/Assets/Images/timeline_art_watchtower.png";
-                if (Category == "Thi cá»­ quÃ¢n sá»±" || Title.Contains("báº¯n sÃºng", StringComparison.OrdinalIgnoreCase))
+                if (Category == "Thi cử quân sự" || Title.Contains("bắn súng", StringComparison.OrdinalIgnoreCase))
                     return "/Assets/Images/timeline_art_ak_shooting.png";
-                if (Category == "Táº­p luyá»‡n / RÃ¨n luyá»‡n" || Title.Contains("hÃ nh quÃ¢n", StringComparison.OrdinalIgnoreCase))
+                if (Category == "Tập luyện / Rèn luyện" || Title.Contains("hành quân", StringComparison.OrdinalIgnoreCase))
                     return "/Assets/Images/timeline_art_marching.png";
                 return "/Assets/Images/timeline_art_watchtower.png";
             }
@@ -45,42 +45,41 @@ namespace QL_HocVien.Models.Entity
 
         public string CategoryBg => Category switch
         {
-            "Kiá»ƒm tra thá»ƒ lá»±c" => "#0C683B",
-            "Thi cá»­ quÃ¢n sá»±" => "#0A6A45",
-            "Táº­p luyá»‡n / RÃ¨n luyá»‡n" => "#0C683B",
-            "Há»™i thao / Sá»± kiá»‡n" => "#1D4ED8",
+            "Kiểm tra thể lực" => "#0C683B",
+            "Thi cử quân sự" => "#0A6A45",
+            "Tập luyện / Rèn luyện" => "#0C683B",
+            "Hội thao / Sự kiện" => "#1D4ED8",
             _ => "#334155"
         };
 
         public string PriorityBg => Priority switch
         {
-            "Kháº©n cáº¥p" => "#FEE2E2",
+            "Khẩn cấp" => "#FEE2E2",
             "Cao" => "#FEE2E2",
             _ => "#E2E8F0"
         };
 
         public string PriorityFg => Priority switch
         {
-            "Kháº©n cáº¥p" => "#DC2626",
+            "Khẩn cấp" => "#DC2626",
             "Cao" => "#DC2626",
             _ => "#475569"
         };
 
         public string StatusBg => Status switch
         {
-            "ÄÃ£ hoÃ n thÃ nh" => "#DCFCE7",
-            "Äang diá»…n ra" => "#DBEAFE",
-            "Äang chuáº©n bá»‹" => "#DCFCE7",
+            "Đã hoàn thành" => "#DCFCE7",
+            "Đang diễn ra" => "#DBEAFE",
+            "Đang chuẩn bị" => "#DCFCE7",
             _ => "#F1F5F9"
         };
 
         public string StatusFg => Status switch
         {
-            "ÄÃ£ hoÃ n thÃ nh" => "#15803D",
-            "Äang diá»…n ra" => "#1D4ED8",
-            "Äang chuáº©n bá»‹" => "#15803D",
+            "Đã hoàn thành" => "#15803D",
+            "Đang diễn ra" => "#1D4ED8",
+            "Đang chuẩn bị" => "#15803D",
             _ => "#475569"
         };
     }
 }
-

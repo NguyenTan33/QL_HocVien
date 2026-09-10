@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
@@ -15,7 +15,6 @@ namespace QL_HocVien.Services.Implementations
         private readonly IUserRepository _userRepository;
         private readonly ICadetRepository _cadetRepository;
         private readonly AppDbContext _context;
-        private readonly IEmailService _emailService;
         private readonly ISecuritySanitizer _sanitizer;
 
         public User? CurrentUser { get; private set; }
@@ -24,17 +23,15 @@ namespace QL_HocVien.Services.Implementations
             IUserRepository userRepository,
             ICadetRepository cadetRepository,
             AppDbContext context,
-            IEmailService emailService,
             ISecuritySanitizer? sanitizer = null)
         {
             _userRepository = userRepository;
             _cadetRepository = cadetRepository;
             _context = context;
-            _emailService = emailService;
             _sanitizer = sanitizer ?? new SecuritySanitizer();
         }
 
-        private const string GenericLoginErrorMessage = "TÃ i khoáº£n hoáº·c máº­t kháº©u khÃ´ng chÃ­nh xÃ¡c!";
+        private const string GenericLoginErrorMessage = "Tài khoản hoặc mật khẩu không chính xác!";
         private static readonly string DummyHash = BCrypt.Net.BCrypt.HashPassword("DummySecretAuthSalt2026!#@", 11);
 
         public async Task<(bool Success, string Message, User? User)> LoginAsync(string usernameOrPhone, string password)
@@ -48,7 +45,7 @@ namespace QL_HocVien.Services.Implementations
             var user = await _userRepository.GetByUsernameOrPhoneAsync(usernameOrPhone.Trim());
             if (user == null)
             {
-                // Chá»‘ng táº¥n cÃ´ng dÃ² quÃ©t tÃ i khoáº£n qua thá»i gian pháº£n há»“i (Timing Attack)
+                // Chống tấn công dò quét tài khoản qua thời gian phản hồi (Timing Attack)
                 try
                 {
                     BCrypt.Net.BCrypt.Verify(password, DummyHash);
@@ -83,57 +80,76 @@ namespace QL_HocVien.Services.Implementations
             await _userRepository.SaveChangesAsync();
 
             CurrentUser = user;
-            return (true, $"ÄÄƒng nháº­p thÃ nh cÃ´ng! ChÃ o má»«ng {user.FullName}.", user);
+            return (true, $"Đăng nhập thành công! Chào mừng {user.FullName}.", user);
         }
 
         public async Task<(bool Success, string Message)> RegisterAsync(
-            string username, string fullName, string phoneNumber, string email, string password)
+            string username,
+            string fullName,
+            string phoneNumber,
+            string password,
+            string securityQuestion,
+            string securityAnswer,
+            string? passwordHint = null,
+            string? email = null)
         {
-            // Kiá»ƒm tra dá»¯ liá»‡u Ä‘áº§u vÃ o
+            // Kiểm tra dữ liệu đầu vào
             if (string.IsNullOrWhiteSpace(username) || username.Trim().Length < 3)
-                return (false, "TÃªn tÃ i khoáº£n pháº£i cÃ³ Ã­t nháº¥t 3 kÃ½ tá»±.");
+                return (false, "Tên tài khoản phải có ít nhất 3 ký tự.");
 
             if (_sanitizer.ContainsDangerousPatterns(username, out var t1))
-                return (false, $"[Báº¢O Máº¬T] TÃªn tÃ i khoáº£n khÃ´ng an toÃ n: {t1}");
+                return (false, $"[BẢO MẬT] Tên tài khoản không an toàn: {t1}");
 
             if (string.IsNullOrWhiteSpace(fullName))
-                return (false, "Vui lÃ²ng nháº­p há» vÃ  tÃªn.");
+                return (false, "Vui lòng nhập họ và tên.");
 
             if (_sanitizer.ContainsDangerousPatterns(fullName, out var t2))
-                return (false, $"[Báº¢O Máº¬T] Há» vÃ  tÃªn khÃ´ng an toÃ n: {t2}");
+                return (false, $"[BẢO MẬT] Họ và tên không an toàn: {t2}");
 
             if (string.IsNullOrWhiteSpace(phoneNumber) || phoneNumber.Trim().Length < 9)
-                return (false, "Sá»‘ Ä‘iá»‡n thoáº¡i khÃ´ng há»£p lá»‡.");
+                return (false, "Số điện thoại không hợp lệ.");
 
             if (_sanitizer.ContainsDangerousPatterns(phoneNumber, out var t3))
-                return (false, $"[Báº¢O Máº¬T] Sá»‘ Ä‘iá»‡n thoáº¡i khÃ´ng an toÃ n: {t3}");
-
-            if (string.IsNullOrWhiteSpace(email) || !email.Contains("@") || !email.Contains("."))
-                return (false, "Äá»‹a chá»‰ email khÃ´ng há»£p lá»‡.");
-
-            if (_sanitizer.ContainsDangerousPatterns(email, out var t4))
-                return (false, $"[Báº¢O Máº¬T] Email khÃ´ng an toÃ n: {t4}");
+                return (false, $"[BẢO MẬT] Số điện thoại không an toàn: {t3}");
 
             if (string.IsNullOrWhiteSpace(password) || password.Length < 6)
-                return (false, "Máº­t kháº©u pháº£i cÃ³ Ã­t nháº¥t 6 kÃ½ tá»±.");
+                return (false, "Mật khẩu phải có ít nhất 6 ký tự.");
 
-            // Kiá»ƒm tra trÃ¹ng láº·p
+            if (string.IsNullOrWhiteSpace(securityQuestion))
+                return (false, "Vui lòng chọn hoặc nhập câu hỏi bảo mật.");
+
+            if (string.IsNullOrWhiteSpace(securityAnswer) || securityAnswer.Trim().Length < 2)
+                return (false, "Câu trả lời bảo mật phải có ít nhất 2 ký tự.");
+
+            if (!string.IsNullOrWhiteSpace(email))
+            {
+                if (!email.Contains("@") || !email.Contains("."))
+                    return (false, "Địa chỉ email không hợp lệ.");
+
+                if (_sanitizer.ContainsDangerousPatterns(email, out var t4))
+                    return (false, $"[BẢO MẬT] Email không an toàn: {t4}");
+
+                if (await _userRepository.ExistsByEmailAsync(email))
+                    return (false, "Địa chỉ email này đã được sử dụng.");
+            }
+
+            // Kiểm tra trùng lặp
             if (await _userRepository.ExistsByUsernameAsync(username))
-                return (false, "TÃªn tÃ i khoáº£n Ä‘Ã£ tá»“n táº¡i trÃªn há»‡ thá»‘ng.");
+                return (false, "Tên tài khoản đã tồn tại trên hệ thống.");
 
             if (await _userRepository.ExistsByPhoneAsync(phoneNumber))
-                return (false, "Sá»‘ Ä‘iá»‡n thoáº¡i nÃ y Ä‘Ã£ Ä‘Æ°á»£c Ä‘Äƒng kÃ½ tÃ i khoáº£n khÃ¡c.");
-
-            if (await _userRepository.ExistsByEmailAsync(email))
-                return (false, "Äá»‹a chá»‰ email nÃ y Ä‘Ã£ Ä‘Æ°á»£c sá»­ dá»¥ng.");
+                return (false, "Số điện thoại này đã được đăng ký tài khoản khác.");
 
             var newUser = new User
             {
                 Username = username.Trim(),
                 FullName = fullName.Trim(),
                 PhoneNumber = phoneNumber.Trim(),
-                Email = email.Trim().ToLower(),
+                Email = string.IsNullOrWhiteSpace(email) ? $"{username.Trim().ToLower()}@hocvien.local" : email.Trim().ToLower(),
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
+                SecurityQuestion = securityQuestion.Trim(),
+                SecurityAnswerHash = AuthSecurityHelper.HashSecurityAnswer(securityAnswer),
+                PasswordHint = string.IsNullOrWhiteSpace(passwordHint) ? null : passwordHint.Trim(),
                 Role = "HocVien",
                 CreatedAt = DateTime.Now,
                 IsActive = true
@@ -142,13 +158,13 @@ namespace QL_HocVien.Services.Implementations
             await _userRepository.AddAsync(newUser);
             await _userRepository.SaveChangesAsync();
 
-            return (true, "ÄÄƒng kÃ½ tÃ i khoáº£n thÃ nh cÃ´ng! Báº¡n cÃ³ thá»ƒ Ä‘Äƒng nháº­p ngay bÃ¢y giá».");
+            return (true, "Đăng ký tài khoản thành công! Bạn có thể đăng nhập ngay bây giờ.");
         }
 
-        public async Task<(bool Success, string Message, string? Otp)> RequestPasswordResetOtpAsync(string identifier)
+        public async Task<(bool Success, string Message, string? PasswordHint, string? SecurityQuestion)> GetAccountRecoveryInfoAsync(string identifier)
         {
             if (string.IsNullOrWhiteSpace(identifier))
-                return (false, "Vui lÃ²ng nháº­p Email, TÃªn tÃ i khoáº£n hoáº·c Sá»‘ Ä‘iá»‡n thoáº¡i.", null);
+                return (false, "Vui lòng nhập Tên tài khoản hoặc Số điện thoại.", null, null);
 
             var trimmed = identifier.Trim();
             User? user = null;
@@ -162,149 +178,72 @@ namespace QL_HocVien.Services.Implementations
                 user = await _userRepository.GetByUsernameOrPhoneAsync(trimmed);
             }
 
-            if (user == null || string.IsNullOrWhiteSpace(user.Email))
+            if (user == null)
             {
-                return (false, "KhÃ´ng tÃ¬m tháº¥y tÃ i khoáº£n tÆ°Æ¡ng á»©ng vá»›i thÃ´ng tin Ä‘Ã£ nháº­p.", null);
+                return (false, "Không tìm thấy tài khoản tương ứng với thông tin đã nhập.", null, null);
             }
 
-            // Chá»‘ng Spam / Táº¥n cÃ´ng DoS OTP: Giá»›i háº¡n tá»‘i thiá»ƒu 60 giÃ¢y giá»¯a 2 láº§n yÃªu cáº§u
-            var lastRecentToken = await _context.PasswordResetTokens
-                .Where(t => t.Email.ToLower() == user.Email.ToLower())
-                .OrderByDescending(t => t.CreatedAt)
-                .FirstOrDefaultAsync();
-
-            if (lastRecentToken != null)
+            if (string.IsNullOrWhiteSpace(user.SecurityQuestion))
             {
-                var elapsed = (DateTime.Now - lastRecentToken.CreatedAt).TotalSeconds;
-                if (elapsed < 60)
-                {
-                    int waitSec = 60 - (int)elapsed;
-                    return (false, $"YÃªu cáº§u OTP quÃ¡ nhanh. Vui lÃ²ng Ä‘á»£i {waitSec} giÃ¢y trÆ°á»›c khi gá»­i láº¡i.", null);
-                }
+                return (false, "Tài khoản này chưa thiết lập câu hỏi bảo mật. Vui lòng liên hệ cán bộ quản trị để hỗ trợ cấp lại mật khẩu.", user.PasswordHint, null);
             }
 
-            // Sinh mÃ£ OTP ngáº«u nhiÃªn 6 chá»¯ sá»‘
-            var otp = RandomNumberGenerator.GetInt32(100000, 999999).ToString();
-
-            // VÃ´ hiá»‡u hoÃ¡ cÃ¡c token cÅ© chÆ°a dÃ¹ng cá»§a email nÃ y
-            var oldTokens = await _context.PasswordResetTokens
-                .Where(t => t.Email == user.Email && !t.IsUsed)
-                .ToListAsync();
-            foreach (var token in oldTokens)
-            {
-                token.IsUsed = true;
-            }
-
-            // LÆ°u token má»›i vá»›i háº¡n 10 phÃºt
-            var resetToken = new PasswordResetToken
-            {
-                Email = user.Email,
-                Token = otp,
-                ExpiryTime = DateTime.Now.AddMinutes(10),
-                IsUsed = false,
-                AttemptCount = 0,
-                CreatedAt = DateTime.Now
-            };
-
-            await _context.PasswordResetTokens.AddAsync(resetToken);
-            await _context.SaveChangesAsync();
-
-            // Gá»­i email
-            var emailResult = await _emailService.SendOtpEmailAsync(user.Email, otp, user.FullName);
-            if (!emailResult.Success)
-            {
-                return (false, emailResult.Message, null);
-            }
-
-            return (true, emailResult.Message, otp);
+            return (true, "Đã tìm thấy thông tin tài khoản.", user.PasswordHint, user.SecurityQuestion);
         }
 
-        public async Task<(bool Success, string Message)> ResetPasswordWithOtpAsync(string emailOrIdentifier, string otpCode, string newPassword)
+        public async Task<(bool Success, string Message)> ResetPasswordWithSecurityAnswerAsync(string identifier, string securityAnswer, string newPassword)
         {
-            if (string.IsNullOrWhiteSpace(emailOrIdentifier))
-                return (false, "Vui lÃ²ng nháº­p email hoáº·c tÃ i khoáº£n xÃ¡c nháº­n.");
+            if (string.IsNullOrWhiteSpace(identifier))
+                return (false, "Vui lòng nhập Tên tài khoản hoặc Số điện thoại.");
 
-            if (string.IsNullOrWhiteSpace(otpCode))
-                return (false, "Vui lÃ²ng nháº­p mÃ£ xÃ¡c thá»±c OTP.");
+            if (string.IsNullOrWhiteSpace(securityAnswer))
+                return (false, "Vui lòng nhập câu trả lời bảo mật.");
 
             if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < 6)
-                return (false, "Máº­t kháº©u má»›i pháº£i cÃ³ Ã­t nháº¥t 6 kÃ½ tá»±.");
+                return (false, "Mật khẩu mới phải có ít nhất 6 ký tự.");
 
-            string cleanId = emailOrIdentifier.Trim();
+            var trimmed = identifier.Trim();
             User? user = null;
-            string targetEmail = cleanId;
 
-            if (cleanId.Contains("@"))
+            if (trimmed.Contains("@"))
             {
-                user = await _userRepository.GetByEmailAsync(cleanId);
-                if (user != null) targetEmail = user.Email;
+                user = await _userRepository.GetByEmailAsync(trimmed);
             }
             else
             {
-                user = await _userRepository.GetByUsernameOrPhoneAsync(cleanId);
-                if (user != null) targetEmail = user.Email;
-            }
-
-            var token = await _context.PasswordResetTokens
-                .Where(t => t.Email.ToLower() == targetEmail.ToLower() && !t.IsUsed)
-                .OrderByDescending(t => t.CreatedAt)
-                .FirstOrDefaultAsync();
-
-            if (token == null)
-            {
-                return (false, "KhÃ´ng tÃ¬m tháº¥y yÃªu cáº§u xÃ¡c thá»±c OTP cÃ²n hiá»‡u lá»±c. Vui lÃ²ng yÃªu cáº§u mÃ£ má»›i.");
-            }
-
-            if (token.ExpiryTime < DateTime.Now)
-            {
-                token.IsUsed = true;
-                await _context.SaveChangesAsync();
-                return (false, "MÃ£ xÃ¡c thá»±c Ä‘Ã£ háº¿t háº¡n (chá»‰ cÃ³ hiá»‡u lá»±c trong 10 phÃºt). Vui lÃ²ng yÃªu cáº§u mÃ£ má»›i.");
-            }
-
-            // Chá»‘ng táº¥n cÃ´ng vÃ©t cáº¡n OTP (Brute-force): Giá»›i háº¡n tá»‘i Ä‘a 5 láº§n nháº­p sai
-            if (!string.Equals(token.Token.Trim(), otpCode.Trim(), StringComparison.Ordinal))
-            {
-                token.AttemptCount++;
-                if (token.AttemptCount >= 5)
-                {
-                    token.IsUsed = true;
-                    await _context.SaveChangesAsync();
-                    return (false, "MÃ£ xÃ¡c thá»±c Ä‘Ã£ bá»‹ há»§y do nháº­p sai quÃ¡ 5 láº§n liÃªn tiáº¿p Ä‘á»ƒ báº£o Ä‘áº£m an ninh.");
-                }
-
-                await _context.SaveChangesAsync();
-                return (false, $"MÃ£ xÃ¡c thá»±c khÃ´ng chÃ­nh xÃ¡c! Äá»“ng chÃ­ cÃ²n {5 - token.AttemptCount} láº§n thá»­.");
+                user = await _userRepository.GetByUsernameOrPhoneAsync(trimmed);
             }
 
             if (user == null)
             {
-                user = await _userRepository.GetByEmailAsync(token.Email);
+                return (false, "Không tìm thấy tài khoản tương ứng.");
             }
 
-            if (user == null)
+            if (string.IsNullOrWhiteSpace(user.SecurityAnswerHash))
             {
-                return (false, "KhÃ´ng tÃ¬m tháº¥y ngÆ°á»i dÃ¹ng cÃ³ thÃ´ng tin nÃ y.");
+                return (false, "Tài khoản chưa thiết lập câu trả lời bảo mật. Vui lòng liên hệ quản trị viên.");
             }
 
-            // Cáº­p nháº­t máº­t kháº©u
+            if (!AuthSecurityHelper.VerifySecurityAnswer(securityAnswer, user.SecurityAnswerHash))
+            {
+                return (false, "Câu trả lời bảo mật không chính xác. Vui lòng thử lại.");
+            }
+
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
-            token.IsUsed = true;
-
             _userRepository.Update(user);
-            await _context.SaveChangesAsync();
+            await _userRepository.SaveChangesAsync();
 
-            return (true, "Äáº·t láº¡i máº­t kháº©u thÃ nh cÃ´ng! Äá»“ng chÃ­ cÃ³ thá»ƒ Ä‘Äƒng nháº­p báº±ng máº­t kháº©u má»›i.");
+            return (true, "Đặt lại mật khẩu thành công! Đồng chí có thể đăng nhập bằng mật khẩu mới.");
         }
 
         public async Task<(bool Success, string Message)> ResetCadetPasswordAsync(int cadetId, string newPassword)
         {
             var cadet = await _cadetRepository.GetByIdAsync(cadetId);
             if (cadet == null)
-                return (false, "KhÃ´ng tÃ¬m tháº¥y há»c viÃªn.");
+                return (false, "Không tìm thấy học viên.");
 
             if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < 6)
-                return (false, "Máº­t kháº©u má»›i pháº£i cÃ³ Ã­t nháº¥t 6 kÃ½ tá»±.");
+                return (false, "Mật khẩu mới phải có ít nhất 6 ký tự.");
 
             User? user = null;
             if (cadet.UserId.HasValue)
@@ -314,7 +253,7 @@ namespace QL_HocVien.Services.Implementations
 
             if (user == null)
             {
-                // TÃ¬m theo sá»‘ Ä‘iá»‡n thoáº¡i hoáº·c táº¡o tÃ i khoáº£n má»›i cho há»c viÃªn
+                // Tìm theo số điện thoại hoặc tạo tài khoản mới cho học viên
                 user = await _userRepository.GetByUsernameOrPhoneAsync(cadet.PhoneNumber);
                 if (user == null)
                 {
@@ -343,7 +282,7 @@ namespace QL_HocVien.Services.Implementations
                     _cadetRepository.Update(cadet);
                     await _cadetRepository.SaveChangesAsync();
 
-                    return (true, $"ÄÃ£ táº¡o tÃ i khoáº£n vÃ  Ä‘áº·t máº­t kháº©u má»›i cho há»c viÃªn: TÃ i khoáº£n '{user.Username}'.");
+                    return (true, $"Đã tạo tài khoản và đặt mật khẩu mới cho học viên: Tài khoản '{user.Username}'.");
                 }
             }
 
@@ -351,7 +290,7 @@ namespace QL_HocVien.Services.Implementations
             _userRepository.Update(user);
             await _userRepository.SaveChangesAsync();
 
-            return (true, $"ÄÃ£ Ä‘áº·t láº¡i máº­t kháº©u thÃ nh cÃ´ng cho há»c viÃªn {cadet.FullName} (TÃ i khoáº£n: {user.Username}).");
+            return (true, $"Đã đặt lại mật khẩu thành công cho học viên {cadet.FullName} (Tài khoản: {user.Username}).");
         }
 
         public void Logout()
@@ -360,4 +299,3 @@ namespace QL_HocVien.Services.Implementations
         }
     }
 }
-

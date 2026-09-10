@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -8,24 +8,24 @@ namespace QL_HocVien.Models.Entity
     public partial class Officer : ObservableObject
     {
         public int Id { get; set; }
-        public string OfficerCode { get; set; } = string.Empty; // MÃ£ cÃ¡n bá»™: CB-001, CB-002...
+        public string OfficerCode { get; set; } = string.Empty; // Mã cán bộ: CB-001, CB-002...
         public string FullName { get; set; } = string.Empty;
-        public string Rank { get; set; } = "Äáº¡i Ãºy";           // Cáº¥p báº­c: Thiáº¿u Ãºy, Trung Ãºy, ThÆ°á»£ng Ãºy, Äáº¡i Ãºy, Thiáº¿u tÃ¡...
-        public string Position { get; set; } = "ChÃ­nh trá»‹ viÃªn"; // Chá»©c vá»¥: Äáº¡i Ä‘á»™i trÆ°á»Ÿng, ChÃ­nh trá»‹ viÃªn, CÃ¡n bá»™ chá»§ nhiá»‡m...
-        public string Unit { get; set; } = "Äáº¡i Ä‘á»™i 1";        // ÄÆ¡n vá»‹ cÃ´ng tÃ¡c
+        public string Rank { get; set; } = "Đại úy";           // Cấp bậc: Thiếu úy, Trung úy, Thượng úy, Đại úy, Thiếu tá...
+        public string Position { get; set; } = "Chính trị viên"; // Chức vụ: Đại đội trưởng, Chính trị viên, Cán bộ chủ nhiệm...
+        public string Unit { get; set; } = "Đại đội 1";        // Đơn vị công tác
         public string PhoneNumber { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
-        public string Specialty { get; set; } = "Quáº£n lÃ½ & Huáº¥n luyá»‡n há»c viÃªn"; // Nhiá»‡m vá»¥ / ChuyÃªn mÃ´n
+        public string Specialty { get; set; } = "Quản lý & Huấn luyện học viên"; // Nhiệm vụ / Chuyên môn
         public DateTime? DateOfBirth { get; set; }
-        public DateTime? EnlistmentDate { get; set; }           // NgÃ y nháº­p ngÅ©
+        public DateTime? EnlistmentDate { get; set; }           // Ngày nhập ngũ
         public string Notes { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
-        // TÃ i khoáº£n Ä‘Äƒng nháº­p há»‡ thá»‘ng liÃªn káº¿t (náº¿u cÃ³)
+        // Tài khoản đăng nhập hệ thống liên kết (nếu có)
         public int? UserId { get; set; }
         public User? User { get; set; }
 
-        // Danh sÃ¡ch cÃ¡c lá»›p há»c Ä‘Æ°á»£c phÃ¢n cÃ´ng phá»¥ trÃ¡ch
+        // Danh sách các lớp học được phân công phụ trách
         public ICollection<MilitaryClass> ManagedClasses { get; set; } = new List<MilitaryClass>();
 
         private bool _isSelected;
@@ -38,4 +38,3 @@ namespace QL_HocVien.Models.Entity
         }
     }
 }
-

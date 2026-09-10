@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel.DataAnnotations.Schema;
 using CommunityToolkit.Mvvm.ComponentModel;
 
@@ -13,9 +13,9 @@ namespace QL_HocVien.Models.Entity
         public Subject? Subject { get; set; }
         
         public DateTime ExamDate { get; set; } = DateTime.Today;
-        public string ExamSession { get; set; } = string.Empty; // VÃ­ dá»¥: "Kiá»ƒm tra QuÃ½ 3/2026", "Kiá»ƒm tra Ä‘á»‹nh ká»³"
-        public double ScoreValue { get; set; } // Káº¿t quáº£ thá»±c táº¿ (vÃ­ dá»¥: 15 láº§n, 13.5 giÃ¢y, 85 mÃ©t)
-        public string Grade { get; set; } = "ChÆ°a xáº¿p loáº¡i"; // "Xuáº¥t sáº¯c", "Giá»i", "KhÃ¡", "Äáº¡t", "KhÃ´ng Ä‘áº¡t"
+        public string ExamSession { get; set; } = string.Empty; // Ví dụ: "Kiểm tra Quý 3/2026", "Kiểm tra định kỳ"
+        public double ScoreValue { get; set; } // Kết quả thực tế (ví dụ: 15 lần, 13.5 giây, 85 mét)
+        public string Grade { get; set; } = "Chưa xếp loại"; // "Xuất sắc", "Giỏi", "Khá", "Đạt", "Không đạt"
         public string Notes { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
@@ -29,4 +29,3 @@ namespace QL_HocVien.Models.Entity
         }
     }
 }
-

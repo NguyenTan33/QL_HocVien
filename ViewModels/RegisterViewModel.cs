@@ -29,6 +29,25 @@ namespace QL_HocVien.ViewModels
         private string _confirmPassword = string.Empty;
 
         [ObservableProperty]
+        private string _securityQuestion = "Tên trường tiểu học đầu tiên của đồng chí là gì?";
+
+        [ObservableProperty]
+        private string _securityAnswer = string.Empty;
+
+        [ObservableProperty]
+        private string _passwordHint = string.Empty;
+
+        public System.Collections.Generic.List<string> PredefinedQuestions { get; } = new()
+        {
+            "Tên trường tiểu học đầu tiên của đồng chí là gì?",
+            "Tên người thầy hoặc chỉ huy đầu tiên của đồng chí?",
+            "Tên đơn vị quân đội/cơ quan công tác đầu tiên của đồng chí?",
+            "Địa danh gắn liền với kỷ niệm tuổi thơ của đồng chí?",
+            "Tên con vật nuôi hoặc thú cưng đầu tiên của đồng chí?",
+            "Biệt danh thời niên thiếu của đồng chí là gì?"
+        };
+
+        [ObservableProperty]
         private string _errorMessage = string.Empty;
 
         [ObservableProperty]
@@ -48,6 +67,18 @@ namespace QL_HocVien.ViewModels
             ErrorMessage = string.Empty;
             SuccessMessage = string.Empty;
 
+            if (string.IsNullOrWhiteSpace(SecurityQuestion))
+            {
+                ErrorMessage = "Vui lòng chọn hoặc nhập câu hỏi bảo mật.";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(SecurityAnswer) || SecurityAnswer.Trim().Length < 2)
+            {
+                ErrorMessage = "Câu trả lời bảo mật phải có ít nhất 2 ký tự.";
+                return;
+            }
+
             if (Password != ConfirmPassword)
             {
                 ErrorMessage = "Mật khẩu xác nhận không khớp.";
@@ -58,7 +89,16 @@ namespace QL_HocVien.ViewModels
 
             try
             {
-                var result = await _authService.RegisterAsync(Username, FullName, PhoneNumber, Email, Password);
+                var result = await _authService.RegisterAsync(
+                    Username,
+                    FullName,
+                    PhoneNumber,
+                    Password,
+                    SecurityQuestion,
+                    SecurityAnswer,
+                    PasswordHint,
+                    Email);
+
                 if (result.Success)
                 {
                     SuccessMessage = result.Message;

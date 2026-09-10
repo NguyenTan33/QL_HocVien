@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
+using QL_HocVien.Infrastructure.Security;
 using QL_HocVien.Models;
 
 namespace QL_HocVien.Data
@@ -257,7 +258,17 @@ namespace QL_HocVien.Data
             catch { }
             try
             {
-                context.Database.ExecuteSqlRaw(@"ALTER TABLE ""PasswordResetTokens"" ADD COLUMN ""AttemptCount"" INTEGER NOT NULL DEFAULT 0;");
+                context.Database.ExecuteSqlRaw(@"ALTER TABLE ""Users"" ADD COLUMN ""SecurityQuestion"" TEXT NULL;");
+            }
+            catch { }
+            try
+            {
+                context.Database.ExecuteSqlRaw(@"ALTER TABLE ""Users"" ADD COLUMN ""SecurityAnswerHash"" TEXT NULL;");
+            }
+            catch { }
+            try
+            {
+                context.Database.ExecuteSqlRaw(@"ALTER TABLE ""Users"" ADD COLUMN ""PasswordHint"" TEXT NULL;");
             }
             catch { }
 
@@ -293,7 +304,10 @@ namespace QL_HocVien.Data
                     Email = "admin@mod.gov.vn",
                     Role = "Admin",
                     CreatedAt = DateTime.Now,
-                    IsActive = true
+                    IsActive = true,
+                    SecurityQuestion = "Mã xác minh bí mật của đơn vị chỉ huy là gì?",
+                    SecurityAnswerHash = AuthSecurityHelper.HashSecurityAnswer("quanlyhocvien"),
+                    PasswordHint = "Mật khẩu mặc định do đơn vị chỉ huy bàn giao"
                 };
 
                 var officerUser = new User
@@ -305,10 +319,45 @@ namespace QL_HocVien.Data
                     Email = "quan.tv@mod.gov.vn",
                     Role = "CanBo",
                     CreatedAt = DateTime.Now,
-                    IsActive = true
+                    IsActive = true,
+                    SecurityQuestion = "Tên đơn vị công tác hiện tại của đồng chí?",
+                    SecurityAnswerHash = AuthSecurityHelper.HashSecurityAnswer("hocvien"),
+                    PasswordHint = "Mật khẩu viết hoa chữ cái đầu và có ký tự đặc biệt"
                 };
 
                 context.Users.AddRange(adminUser, officerUser);
+                context.SaveChanges();
+            }
+            else
+            {
+                // Cập nhật câu hỏi bảo mật mặc định cho tài khoản admin/canbo nếu chưa có
+                var existingAdmin = context.Users.FirstOrDefault(u => u.Username == "admin");
+                if (existingAdmin != null)
+                {
+                    if (string.IsNullOrEmpty(existingAdmin.SecurityQuestion))
+                    {
+                        existingAdmin.SecurityQuestion = "Mã xác minh bí mật của đơn vị chỉ huy là gì?";
+                        existingAdmin.SecurityAnswerHash = AuthSecurityHelper.HashSecurityAnswer("quanlyhocvien");
+                    }
+                    if (string.IsNullOrEmpty(existingAdmin.PasswordHint) || existingAdmin.PasswordHint.Contains("Admin@123"))
+                    {
+                        existingAdmin.PasswordHint = "Mật khẩu mặc định do đơn vị chỉ huy bàn giao";
+                    }
+                }
+
+                var existingOfficer = context.Users.FirstOrDefault(u => u.Username == "canbo01");
+                if (existingOfficer != null)
+                {
+                    if (string.IsNullOrEmpty(existingOfficer.SecurityQuestion))
+                    {
+                        existingOfficer.SecurityQuestion = "Tên đơn vị công tác hiện tại của đồng chí?";
+                        existingOfficer.SecurityAnswerHash = AuthSecurityHelper.HashSecurityAnswer("hocvien");
+                    }
+                    if (string.IsNullOrEmpty(existingOfficer.PasswordHint) || existingOfficer.PasswordHint.Contains("Canbo@123"))
+                    {
+                        existingOfficer.PasswordHint = "Mật khẩu viết hoa chữ cái đầu và có ký tự đặc biệt";
+                    }
+                }
                 context.SaveChanges();
             }
 
@@ -471,6 +520,7 @@ namespace QL_HocVien.Data
             {
                 var units = new List<MilitaryUnit>
                 {
+                    new() { UnitCode = "e1", UnitName = "Trung đoàn 1", ParentUnit = "Học viện", CommanderName = "Thượng tá Nguyễn Mạnh Hùng", ContactPhone = "0981111099", Description = "Trung đoàn quản lý & huấn luyện toàn diện" },
                     new() { UnitCode = "c1", UnitName = "Đại đội 1", ParentUnit = "Tiểu đoàn 1", CommanderName = "Đại úy Nguyễn Văn Hùng", ContactPhone = "0981111001", Description = "Đại đội đào tạo Chỉ huy Tham mưu" },
                     new() { UnitCode = "c2", UnitName = "Đại đội 2", ParentUnit = "Tiểu đoàn 1", CommanderName = "Đại úy Trần Văn Quân", ContactPhone = "0981111002", Description = "Đại đội đào tạo Hậu cần Quân sự" },
                     new() { UnitCode = "c3", UnitName = "Đại đội 3", ParentUnit = "Tiểu đoàn 1", CommanderName = "Thiếu tá Lê Hồng Sơn", ContactPhone = "0981111003", Description = "Đại đội đào tạo Kỹ thuật Quân sự" },

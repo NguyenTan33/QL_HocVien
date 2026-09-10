@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using QL_HocVien.Models;
@@ -8,14 +8,13 @@ namespace QL_HocVien.Services.Interfaces
     public interface IUpdateService
     {
         /// <summary>
-        /// Láº¥y phiÃªn báº£n hiá»‡n táº¡i cá»§a á»©ng dá»¥ng Ä‘ang cháº¡y.
+        /// Lấy phiên bản hiện tại của ứng dụng đang chạy.
         /// </summary>
         Version GetCurrentVersion();
 
         /// <summary>
-        /// Kiá»ƒm tra cáº­p nháº­t tá»« mÃ¡y chá»§/GitHub chá»©a tá»‡p version.json.
+        /// Kiểm tra cập nhật từ máy chủ/GitHub chứa tệp version.json.
         /// </summary>
         Task<UpdateCheckResult> CheckForUpdateAsync(CancellationToken cancellationToken = default);
     }
 }
-

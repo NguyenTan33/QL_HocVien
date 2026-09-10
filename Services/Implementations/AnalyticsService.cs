@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -30,11 +30,11 @@ namespace QL_HocVien.Services.Implementations
 
         private static int GetGradeWeight(string grade) => grade switch
         {
-            "Xuáº¥t sáº¯c" => 5,
-            "Giá»i" => 4,
-            "KhÃ¡" => 3,
-            "Äáº¡t" => 2,
-            "KhÃ´ng Ä‘áº¡t" => 1,
+            "Xuất sắc" => 5,
+            "Giỏi" => 4,
+            "Khá" => 3,
+            "Đạt" => 2,
+            "Không đạt" => 1,
             _ => 0
         };
 
@@ -65,7 +65,7 @@ namespace QL_HocVien.Services.Implementations
                 .Where(c => cadetIds.Contains(c.Id))
                 .AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(unit) && unit != "Táº¥t cáº£")
+            if (!string.IsNullOrWhiteSpace(unit) && unit != "Tất cả")
             {
                 cadetsQuery = cadetsQuery.Where(c => c.Unit == unit);
             }
@@ -134,7 +134,7 @@ namespace QL_HocVien.Services.Implementations
                         CompareGrade = compRec.Grade
                     };
 
-                    // TiÃªu chÃ­ tÄƒng trÆ°á»Ÿng dá»±a trÃªn IsHigherBetter vÃ  Grade
+                    // Tiêu chí tăng trưởng dựa trên IsHigherBetter và Grade
                     bool isBetter;
                     bool isWorse;
 
@@ -169,7 +169,7 @@ namespace QL_HocVien.Services.Implementations
                     }
 
                     string sign = item.ScoreDelta > 0 ? "+" : "";
-                    item.DetailDescription = $"{sign}{item.ScoreDelta} {item.Unit} ({item.BaselineGrade} âž” {item.CompareGrade})";
+                    item.DetailDescription = $"{sign}{item.ScoreDelta} {item.Unit} ({item.BaselineGrade} ➔ {item.CompareGrade})";
 
                     trendDto.SubjectTrends.Add(item);
                 }
@@ -194,7 +194,7 @@ namespace QL_HocVien.Services.Implementations
                 trendDto.OverallBaselineGrade = EvaluateCadetOverallGrade(cBaseline);
                 trendDto.OverallCompareGrade = EvaluateCadetOverallGrade(cCompare);
 
-                trendDto.SummaryText = $"{growth} mÃ´n tÄƒng, {unchanged} mÃ´n giá»¯, {regression} mÃ´n giáº£m";
+                trendDto.SummaryText = $"{growth} môn tăng, {unchanged} môn giữ, {regression} môn giảm";
 
                 if (trendFilter.HasValue && trendDto.OverallTrend != trendFilter.Value)
                 {
@@ -209,12 +209,12 @@ namespace QL_HocVien.Services.Implementations
 
         private static string EvaluateCadetOverallGrade(List<PhysicalExamRecord> records)
         {
-            if (!records.Any()) return "ChÆ°a kiá»ƒm tra";
-            if (records.Any(r => r.Grade == "KhÃ´ng Ä‘áº¡t")) return "KhÃ´ng Ä‘áº¡t";
-            if (records.All(r => r.Grade == "Xuáº¥t sáº¯c")) return "Xuáº¥t sáº¯c";
-            if (records.All(r => r.Grade == "Xuáº¥t sáº¯c" || r.Grade == "Giá»i")) return "Giá»i";
-            if (records.All(r => r.Grade == "Xuáº¥t sáº¯c" || r.Grade == "Giá»i" || r.Grade == "KhÃ¡")) return "KhÃ¡";
-            return "Äáº¡t";
+            if (!records.Any()) return "Chưa kiểm tra";
+            if (records.Any(r => r.Grade == "Không đạt")) return "Không đạt";
+            if (records.All(r => r.Grade == "Xuất sắc")) return "Xuất sắc";
+            if (records.All(r => r.Grade == "Xuất sắc" || r.Grade == "Giỏi")) return "Giỏi";
+            if (records.All(r => r.Grade == "Xuất sắc" || r.Grade == "Giỏi" || r.Grade == "Khá")) return "Khá";
+            return "Đạt";
         }
 
         public async Task<List<UnitComparisonDto>> CompareUnitsAsync(string baselineSession, string compareSession)
@@ -226,15 +226,15 @@ namespace QL_HocVien.Services.Implementations
 
             foreach (var group in groupedUnits)
             {
-                var unitName = string.IsNullOrWhiteSpace(group.Key) ? "ChÆ°a phÃ¢n Ä‘Æ¡n vá»‹" : group.Key;
+                var unitName = string.IsNullOrWhiteSpace(group.Key) ? "Chưa phân đơn vị" : group.Key;
                 int total = group.Count();
                 if (total == 0) continue;
 
-                int basePass = group.Count(c => c.OverallBaselineGrade != "KhÃ´ng Ä‘áº¡t" && c.OverallBaselineGrade != "ChÆ°a kiá»ƒm tra");
-                int compPass = group.Count(c => c.OverallCompareGrade != "KhÃ´ng Ä‘áº¡t" && c.OverallCompareGrade != "ChÆ°a kiá»ƒm tra");
+                int basePass = group.Count(c => c.OverallBaselineGrade != "Không đạt" && c.OverallBaselineGrade != "Chưa kiểm tra");
+                int compPass = group.Count(c => c.OverallCompareGrade != "Không đạt" && c.OverallCompareGrade != "Chưa kiểm tra");
 
-                int baseExc = group.Count(c => c.OverallBaselineGrade == "Xuáº¥t sáº¯c" || c.OverallBaselineGrade == "Giá»i");
-                int compExc = group.Count(c => c.OverallCompareGrade == "Xuáº¥t sáº¯c" || c.OverallCompareGrade == "Giá»i");
+                int baseExc = group.Count(c => c.OverallBaselineGrade == "Xuất sắc" || c.OverallBaselineGrade == "Giỏi");
+                int compExc = group.Count(c => c.OverallCompareGrade == "Xuất sắc" || c.OverallCompareGrade == "Giỏi");
 
                 int growthCount = group.Count(c => c.OverallTrend == TrendDirection.Growth);
                 int unchangedCount = group.Count(c => c.OverallTrend == TrendDirection.Unchanged);
@@ -257,15 +257,15 @@ namespace QL_HocVien.Services.Implementations
 
                 if (dto.PassRateDelta > 0)
                 {
-                    dto.EvaluationComment = $"Tá»· lá»‡ Ä‘áº¡t tÄƒng {dto.PassRateDelta:F1}%, cÃ³ {growthCount} Ä‘á»“ng chÃ­ tiáº¿n bá»™ vÆ°á»£t báº­c.";
+                    dto.EvaluationComment = $"Tỷ lệ đạt tăng {dto.PassRateDelta:F1}%, có {growthCount} đồng chí tiến bộ vượt bậc.";
                 }
                 else if (dto.PassRateDelta < 0)
                 {
-                    dto.EvaluationComment = $"Tá»· lá»‡ Ä‘áº¡t giáº£m {Math.Abs(dto.PassRateDelta):F1}%, cáº§n cháº¥n chá»‰nh {regressionCount} Ä‘á»“ng chÃ­ sÃºt giáº£m.";
+                    dto.EvaluationComment = $"Tỷ lệ đạt giảm {Math.Abs(dto.PassRateDelta):F1}%, cần chấn chỉnh {regressionCount} đồng chí sút giảm.";
                 }
                 else
                 {
-                    dto.EvaluationComment = $"Duy trÃ¬ káº¿t quáº£ rÃ¨n luyá»‡n á»•n Ä‘á»‹nh ({dto.ComparePassRate:F1}%).";
+                    dto.EvaluationComment = $"Duy trì kết quả rèn luyện ổn định ({dto.ComparePassRate:F1}%).";
                 }
 
                 result.Add(dto);
@@ -283,15 +283,15 @@ namespace QL_HocVien.Services.Implementations
 
             foreach (var group in groupedClasses)
             {
-                string className = string.IsNullOrWhiteSpace(group.Key.ClassName) ? "ChÆ°a xáº¿p lá»›p" : group.Key.ClassName;
+                string className = string.IsNullOrWhiteSpace(group.Key.ClassName) ? "Chưa xếp lớp" : group.Key.ClassName;
                 int total = group.Count();
                 if (total == 0) continue;
 
-                int basePass = group.Count(c => c.OverallBaselineGrade != "KhÃ´ng Ä‘áº¡t" && c.OverallBaselineGrade != "ChÆ°a kiá»ƒm tra");
-                int compPass = group.Count(c => c.OverallCompareGrade != "KhÃ´ng Ä‘áº¡t" && c.OverallCompareGrade != "ChÆ°a kiá»ƒm tra");
+                int basePass = group.Count(c => c.OverallBaselineGrade != "Không đạt" && c.OverallBaselineGrade != "Chưa kiểm tra");
+                int compPass = group.Count(c => c.OverallCompareGrade != "Không đạt" && c.OverallCompareGrade != "Chưa kiểm tra");
 
-                int baseExc = group.Count(c => c.OverallBaselineGrade == "Xuáº¥t sáº¯c" || c.OverallBaselineGrade == "Giá»i");
-                int compExc = group.Count(c => c.OverallCompareGrade == "Xuáº¥t sáº¯c" || c.OverallCompareGrade == "Giá»i");
+                int baseExc = group.Count(c => c.OverallBaselineGrade == "Xuất sắc" || c.OverallBaselineGrade == "Giỏi");
+                int compExc = group.Count(c => c.OverallCompareGrade == "Xuất sắc" || c.OverallCompareGrade == "Giỏi");
 
                 var dto = new ClassComparisonDto
                 {
@@ -310,7 +310,7 @@ namespace QL_HocVien.Services.Implementations
                 result.Add(dto);
             }
 
-            // Xáº¿p háº¡ng thi Ä‘ua cÃ¡c lá»›p trong tá»«ng Ä‘Æ¡n vá»‹
+            // Xếp hạng thi đua các lớp trong từng đơn vị
             foreach (var uGroup in result.GroupBy(c => c.Unit))
             {
                 int rank = 1;
@@ -339,8 +339,8 @@ namespace QL_HocVien.Services.Implementations
             int unchanged = cadetTrends.Count(c => c.OverallTrend == TrendDirection.Unchanged);
             int regression = cadetTrends.Count(c => c.OverallTrend == TrendDirection.Regression);
 
-            int basePass = cadetTrends.Count(c => c.OverallBaselineGrade != "KhÃ´ng Ä‘áº¡t" && c.OverallBaselineGrade != "ChÆ°a kiá»ƒm tra");
-            int compPass = cadetTrends.Count(c => c.OverallCompareGrade != "KhÃ´ng Ä‘áº¡t" && c.OverallCompareGrade != "ChÆ°a kiá»ƒm tra");
+            int basePass = cadetTrends.Count(c => c.OverallBaselineGrade != "Không đạt" && c.OverallBaselineGrade != "Chưa kiểm tra");
+            int compPass = cadetTrends.Count(c => c.OverallCompareGrade != "Không đạt" && c.OverallCompareGrade != "Chưa kiểm tra");
 
             return new ExamComparisonResultDto
             {
@@ -359,4 +359,3 @@ namespace QL_HocVien.Services.Implementations
         }
     }
 }
-

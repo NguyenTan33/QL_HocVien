@@ -1,4 +1,4 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using QL_HocVien.Models;
 
@@ -45,4 +45,3 @@ namespace QL_HocVien.Data.Repositories.Implementations
         }
     }
 }
-

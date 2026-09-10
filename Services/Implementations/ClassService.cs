@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using QL_HocVien.Data.Repositories;
@@ -43,35 +43,35 @@ namespace QL_HocVien.Services.Implementations
         public async Task<(bool Success, string Message, MilitaryClass? Class)> AddClassAsync(MilitaryClass militaryClass)
         {
             if (string.IsNullOrWhiteSpace(militaryClass.ClassCode))
-                return (false, "MÃ£ lá»›p há»c khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng.", null);
+                return (false, "Mã lớp học không được để trống.", null);
 
             if (string.IsNullOrWhiteSpace(militaryClass.ClassName))
-                return (false, "TÃªn lá»›p há»c khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng.", null);
+                return (false, "Tên lớp học không được để trống.", null);
 
             militaryClass.ClassCode = militaryClass.ClassCode.Trim().ToUpper();
             militaryClass.ClassName = militaryClass.ClassName.Trim();
 
             if (await _classRepository.ExistsByCodeAsync(militaryClass.ClassCode))
-                return (false, $"MÃ£ lá»›p há»c '{militaryClass.ClassCode}' Ä‘Ã£ tá»“n táº¡i trong há»‡ thá»‘ng.", null);
+                return (false, $"Mã lớp học '{militaryClass.ClassCode}' đã tồn tại trong hệ thống.", null);
 
             militaryClass.CreatedAt = DateTime.Now;
             await _classRepository.AddAsync(militaryClass);
             await _classRepository.SaveChangesAsync();
 
-            return (true, "ThÃªm lá»›p há»c thÃ nh cÃ´ng!", militaryClass);
+            return (true, "Thêm lớp học thành công!", militaryClass);
         }
 
         public async Task<(bool Success, string Message)> UpdateClassAsync(MilitaryClass militaryClass)
         {
             if (string.IsNullOrWhiteSpace(militaryClass.ClassCode))
-                return (false, "MÃ£ lá»›p há»c khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng.");
+                return (false, "Mã lớp học không được để trống.");
 
             if (string.IsNullOrWhiteSpace(militaryClass.ClassName))
-                return (false, "TÃªn lá»›p há»c khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng.");
+                return (false, "Tên lớp học không được để trống.");
 
             var existing = await _classRepository.GetByIdAsync(militaryClass.Id);
             if (existing == null)
-                return (false, "KhÃ´ng tÃ¬m tháº¥y lá»›p há»c cáº§n cáº­p nháº­t.");
+                return (false, "Không tìm thấy lớp học cần cập nhật.");
 
             militaryClass.ClassCode = militaryClass.ClassCode.Trim().ToUpper();
             militaryClass.ClassName = militaryClass.ClassName.Trim();
@@ -79,7 +79,7 @@ namespace QL_HocVien.Services.Implementations
             if (!existing.ClassCode.Equals(militaryClass.ClassCode, StringComparison.OrdinalIgnoreCase))
             {
                 if (await _classRepository.ExistsByCodeAsync(militaryClass.ClassCode))
-                    return (false, $"MÃ£ lá»›p há»c '{militaryClass.ClassCode}' Ä‘Ã£ tá»“n táº¡i.");
+                    return (false, $"Mã lớp học '{militaryClass.ClassCode}' đã tồn tại.");
             }
 
             existing.ClassCode = militaryClass.ClassCode;
@@ -93,14 +93,14 @@ namespace QL_HocVien.Services.Implementations
             _classRepository.Update(existing);
             await _classRepository.SaveChangesAsync();
 
-            return (true, "Cáº­p nháº­t thÃ´ng tin lá»›p há»c thÃ nh cÃ´ng!");
+            return (true, "Cập nhật thông tin lớp học thành công!");
         }
 
         public async Task<(bool Success, string Message)> DeleteClassAsync(int id)
         {
             var existing = await _classRepository.GetClassWithCadetsAsync(id);
             if (existing == null)
-                return (false, "KhÃ´ng tÃ¬m tháº¥y lá»›p há»c cáº§n xÃ³a.");
+                return (false, "Không tìm thấy lớp học cần xóa.");
 
             int cadetCount = existing.Cadets.Count;
 
@@ -109,17 +109,17 @@ namespace QL_HocVien.Services.Implementations
 
             if (cadetCount > 0)
             {
-                return (true, $"ÄÃ£ xÃ³a lá»›p há»c thÃ nh cÃ´ng! ({cadetCount} há»c viÃªn thuá»™c lá»›p Ä‘Ã£ Ä‘Æ°á»£c chuyá»ƒn tráº¡ng thÃ¡i tá»± do).");
+                return (true, $"Đã xóa lớp học thành công! ({cadetCount} học viên thuộc lớp đã được chuyển trạng thái tự do).");
             }
 
-            return (true, "XÃ³a lá»›p há»c thÃ nh cÃ´ng!");
+            return (true, "Xóa lớp học thành công!");
         }
 
         public async Task<(bool Success, string Message, int DeletedCount)> DeleteMultipleClassesAsync(IEnumerable<int> classIds)
         {
             var idList = classIds?.Distinct().ToList() ?? new List<int>();
             if (!idList.Any())
-                return (false, "KhÃ´ng cÃ³ lá»›p há»c nÃ o Ä‘Æ°á»£c chá»n Ä‘á»ƒ xÃ³a.", 0);
+                return (false, "Không có lớp học nào được chọn để xóa.", 0);
 
             int deleted = 0;
             try
@@ -137,13 +137,12 @@ namespace QL_HocVien.Services.Implementations
                 {
                     await _classRepository.SaveChangesAsync();
                 }
-                return (true, $"ÄÃ£ xÃ³a thÃ nh cÃ´ng {deleted} lá»›p há»c.", deleted);
+                return (true, $"Đã xóa thành công {deleted} lớp học.", deleted);
             }
             catch (Exception ex)
             {
-                return (false, $"Lá»—i khi xÃ³a lá»›p há»c: {ex.Message}", deleted);
+                return (false, $"Lỗi khi xóa lớp học: {ex.Message}", deleted);
             }
         }
     }
 }
-

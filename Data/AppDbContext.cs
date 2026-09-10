@@ -213,7 +213,7 @@ namespace QL_HocVien.Data
                 entity.HasOne(e => e.Component)
                       .WithMany(c => c.ScoreRecords)
                       .HasForeignKey(e => e.ComponentId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                      .OnDelete(DeleteBehavior.SetNull);
             });
 
             // Cấu hình AccountPasskey

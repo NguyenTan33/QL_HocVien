@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -35,7 +35,7 @@ namespace QL_HocVien.Data.Repositories.Implementations
             return await _context.PhysicalExamRecords
                 .Include(r => r.Cadet)
                 .Include(r => r.Subject)
-                .Where(r => r.Grade == "KhÃ´ng Ä‘áº¡t")
+                .Where(r => r.Grade == "Không đạt")
                 .OrderByDescending(r => r.ExamDate)
                 .ToListAsync();
         }
@@ -46,8 +46,8 @@ namespace QL_HocVien.Data.Repositories.Implementations
             {
                 CadetKeyword = cadetKeyword,
                 SubjectId = subjectId,
-                Grade = grade ?? "Táº¥t cáº£",
-                ExamSession = session ?? "Táº¥t cáº£"
+                Grade = grade ?? "Tất cả",
+                ExamSession = session ?? "Tất cả"
             });
         }
 
@@ -63,7 +63,7 @@ namespace QL_HocVien.Data.Repositories.Implementations
                 return await query.OrderByDescending(r => r.ExamDate).ToListAsync();
             }
 
-            // 1. Tá»« khÃ³a há»c viÃªn (TÃªn, MÃ£ HV)
+            // 1. Từ khóa học viên (Tên, Mã HV)
             if (!string.IsNullOrWhiteSpace(criteria.CadetKeyword))
             {
                 var kw = criteria.CadetKeyword.Trim().ToLower();
@@ -72,44 +72,44 @@ namespace QL_HocVien.Data.Repositories.Implementations
                      r.Cadet.CadetCode.ToLower().Contains(kw)));
             }
 
-            // 2. MÃ´n kiá»ƒm tra
+            // 2. Môn kiểm tra
             if (criteria.SubjectId.HasValue && criteria.SubjectId.Value > 0)
             {
                 query = query.Where(r => r.SubjectId == criteria.SubjectId.Value);
             }
 
-            // 3. Xáº¿p loáº¡i
-            if (!string.IsNullOrWhiteSpace(criteria.Grade) && criteria.Grade != "Táº¥t cáº£")
+            // 3. Xếp loại
+            if (!string.IsNullOrWhiteSpace(criteria.Grade) && criteria.Grade != "Tất cả")
             {
                 query = query.Where(r => r.Grade == criteria.Grade);
             }
 
-            // 4. Ká»³ / Äá»£t kiá»ƒm tra
-            if (!string.IsNullOrWhiteSpace(criteria.ExamSession) && criteria.ExamSession != "Táº¥t cáº£")
+            // 4. Kỳ / Đợt kiểm tra
+            if (!string.IsNullOrWhiteSpace(criteria.ExamSession) && criteria.ExamSession != "Tất cả")
             {
                 query = query.Where(r => r.ExamSession == criteria.ExamSession);
             }
 
-            // 5. ÄÆ¡n vá»‹ há»c viÃªn
-            if (!string.IsNullOrWhiteSpace(criteria.Unit) && criteria.Unit != "Táº¥t cáº£")
+            // 5. Đơn vị học viên
+            if (!string.IsNullOrWhiteSpace(criteria.Unit) && criteria.Unit != "Tất cả")
             {
                 query = query.Where(r => r.Cadet != null && r.Cadet.Unit == criteria.Unit);
             }
 
-            // 6. Lá»›p há»c cá»§a há»c viÃªn
-            if (!string.IsNullOrWhiteSpace(criteria.ClassName) && criteria.ClassName != "Táº¥t cáº£")
+            // 6. Lớp học của học viên
+            if (!string.IsNullOrWhiteSpace(criteria.ClassName) && criteria.ClassName != "Tất cả")
             {
                 query = query.Where(r => r.Cadet != null && r.Cadet.ClassName == criteria.ClassName);
             }
 
-            // 7. Khoáº£ng thá»i gian: Tá»« ngÃ y
+            // 7. Khoảng thời gian: Từ ngày
             if (criteria.FromDate.HasValue)
             {
                 var from = criteria.FromDate.Value.Date;
                 query = query.Where(r => r.ExamDate >= from);
             }
 
-            // 8. Khoáº£ng thá»i gian: Äáº¿n ngÃ y
+            // 8. Khoảng thời gian: Đến ngày
             if (criteria.ToDate.HasValue)
             {
                 var to = criteria.ToDate.Value.Date.AddDays(1).AddTicks(-1);
@@ -120,4 +120,3 @@ namespace QL_HocVien.Data.Repositories.Implementations
         }
     }
 }
-

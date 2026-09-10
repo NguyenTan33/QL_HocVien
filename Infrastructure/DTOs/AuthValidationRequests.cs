@@ -20,12 +20,16 @@ namespace QL_HocVien.Infrastructure.DTOs
         public string FullName { get; set; } = string.Empty;
         public string PhoneNumber { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
+        public string SecurityQuestion { get; set; } = string.Empty;
+        public string SecurityAnswer { get; set; } = string.Empty;
+        public string? PasswordHint { get; set; }
     }
 
     public class ResetPasswordValidationRequest
     {
         public string Identifier { get; set; } = string.Empty;
-        public string OtpCode { get; set; } = string.Empty;
+        public string SecurityAnswer { get; set; } = string.Empty;
         public string NewPassword { get; set; } = string.Empty;
+        public string ConfirmNewPassword { get; set; } = string.Empty;
     }
 }

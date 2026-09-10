@@ -52,21 +52,21 @@ namespace QL_HocVien.Views.Windows
             Close();
         }
 
-        private void ShowLoginForm()
+        public void ShowLoginForm()
         {
             LoginFormGrid.Visibility = Visibility.Visible;
             RegisterFormGrid.Visibility = Visibility.Collapsed;
             ForgotPasswordFormGrid.Visibility = Visibility.Collapsed;
         }
 
-        private void ShowRegisterForm()
+        public void ShowRegisterForm()
         {
             LoginFormGrid.Visibility = Visibility.Collapsed;
             RegisterFormGrid.Visibility = Visibility.Visible;
             ForgotPasswordFormGrid.Visibility = Visibility.Collapsed;
         }
 
-        private void ShowForgotPasswordForm()
+        public void ShowForgotPasswordForm()
         {
             LoginFormGrid.Visibility = Visibility.Collapsed;
             RegisterFormGrid.Visibility = Visibility.Collapsed;

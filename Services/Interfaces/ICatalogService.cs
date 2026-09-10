@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using QL_HocVien.Models;
 
@@ -6,7 +6,7 @@ namespace QL_HocVien.Services.Interfaces
 {
     public interface ICatalogService
     {
-        // 1. Cáº¥p báº­c
+        // 1. Cấp bậc
         Task<IEnumerable<MilitaryRank>> GetAllRanksAsync();
         Task<IEnumerable<MilitaryRank>> SearchRanksAsync(string? keyword, string? group);
         Task<IEnumerable<MilitaryRank>> SearchRanksAsync(QL_HocVien.Models.Filters.CatalogFilterCriteria criteria);
@@ -17,7 +17,7 @@ namespace QL_HocVien.Services.Interfaces
         Task<List<string>> GetRankNamesAsync();
         Task<List<string>> GetRankDropdownAsync();
 
-        // 2. Chá»©c vá»¥
+        // 2. Chức vụ
         Task<IEnumerable<MilitaryPosition>> GetAllPositionsAsync();
         Task<IEnumerable<MilitaryPosition>> SearchPositionsAsync(string? keyword, string? group);
         Task<IEnumerable<MilitaryPosition>> SearchPositionsAsync(QL_HocVien.Models.Filters.CatalogFilterCriteria criteria);
@@ -28,7 +28,7 @@ namespace QL_HocVien.Services.Interfaces
         Task<List<string>> GetPositionNamesAsync();
         Task<List<string>> GetPositionDropdownAsync();
 
-        // 3. ÄÆ¡n vá»‹
+        // 3. Đơn vị
         Task<IEnumerable<MilitaryUnit>> GetAllUnitsAsync();
         Task<IEnumerable<MilitaryUnit>> SearchUnitsAsync(string? keyword, string? parentUnit);
         Task<IEnumerable<MilitaryUnit>> SearchUnitsAsync(QL_HocVien.Models.Filters.CatalogFilterCriteria criteria);
@@ -39,7 +39,7 @@ namespace QL_HocVien.Services.Interfaces
         Task<List<string>> GetUnitNamesAsync();
         Task<List<string>> GetUnitDropdownAsync();
 
-        // 4. ChuyÃªn ngÃ nh
+        // 4. Chuyên ngành
         Task<IEnumerable<MilitaryMajor>> GetAllMajorsAsync();
         Task<IEnumerable<MilitaryMajor>> SearchMajorsAsync(string? keyword, string? department);
         Task<IEnumerable<MilitaryMajor>> SearchMajorsAsync(QL_HocVien.Models.Filters.CatalogFilterCriteria criteria);
@@ -51,4 +51,3 @@ namespace QL_HocVien.Services.Interfaces
         Task<List<string>> GetMajorDropdownAsync();
     }
 }
-

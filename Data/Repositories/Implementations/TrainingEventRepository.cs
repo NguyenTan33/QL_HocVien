@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -16,12 +16,12 @@ namespace QL_HocVien.Data.Repositories.Implementations
         {
             var query = _dbSet.AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(category) && category != "Táº¥t cáº£")
+            if (!string.IsNullOrWhiteSpace(category) && category != "Tất cả")
             {
                 query = query.Where(e => e.Category == category);
             }
 
-            if (!string.IsNullOrWhiteSpace(status) && status != "Táº¥t cáº£")
+            if (!string.IsNullOrWhiteSpace(status) && status != "Tất cả")
             {
                 query = query.Where(e => e.Status == status);
             }
@@ -42,11 +42,10 @@ namespace QL_HocVien.Data.Repositories.Implementations
         public async Task<IEnumerable<TrainingEvent>> GetUpcomingEventsAsync(int count)
         {
             return await _dbSet
-                .Where(e => e.Status != "ÄÃ£ hoÃ n thÃ nh")
+                .Where(e => e.Status != "Đã hoàn thành")
                 .OrderBy(e => e.StartDate)
                 .Take(count)
                 .ToListAsync();
         }
     }
 }
-

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace QL_HocVien.Models.Entity
 {
@@ -32,4 +32,3 @@ namespace QL_HocVien.Models.Entity
         public string Remarks { get; set; } = string.Empty;
     }
 }
-

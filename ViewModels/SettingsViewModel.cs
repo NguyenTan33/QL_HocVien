@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using QL_HocVien.Infrastructure.Security;
 using QL_HocVien.Services;
 
 namespace QL_HocVien.ViewModels
@@ -163,7 +164,7 @@ namespace QL_HocVien.ViewModels
                         SenderEmail = smtpProp.GetProperty("SenderEmail").GetString() ?? SenderEmail;
                         SmtpUsername = smtpProp.GetProperty("Username").GetString() ?? "";
                         var rawSmtpPwd = smtpProp.GetProperty("Password").GetString() ?? "";
-                        SmtpPassword = EmailService.DecryptSecret(rawSmtpPwd);
+                        SmtpPassword = AuthSecurityHelper.DecryptSecret(rawSmtpPwd);
                         EnableSsl = smtpProp.GetProperty("EnableSsl").GetBoolean();
                         if (smtpProp.TryGetProperty("IsTestMode", out var isTest))
                         {
@@ -175,7 +176,7 @@ namespace QL_HocVien.ViewModels
                     {
                         SmsProvider = smsProp.TryGetProperty("Provider", out var p) ? p.GetString() ?? "Twilio" : "Twilio";
                         var rawSmsKey = smsProp.TryGetProperty("ApiKey", out var k) ? k.GetString() ?? "" : "";
-                        SmsApiKey = EmailService.DecryptSecret(rawSmsKey);
+                        SmsApiKey = AuthSecurityHelper.DecryptSecret(rawSmsKey);
                         SmsSenderId = smsProp.TryGetProperty("SenderId", out var s) ? s.GetString() ?? "BQP_QLHV" : "BQP_QLHV";
                         SmsAdminPhone = smsProp.TryGetProperty("AdminPhone", out var ap) ? ap.GetString() ?? "" : "";
                         IsSmsEnabled = smsProp.TryGetProperty("IsEnabled", out var ie) && ie.GetBoolean();
@@ -218,14 +219,14 @@ namespace QL_HocVien.ViewModels
                         SenderName = SenderName,
                         SenderEmail = SenderEmail,
                         Username = SmtpUsername,
-                        Password = EmailService.EncryptSecret(SmtpPassword),
+                        Password = AuthSecurityHelper.EncryptSecret(SmtpPassword),
                         EnableSsl = EnableSsl,
                         IsTestMode = IsTestMode
                     },
                     SmsSettings = new
                     {
                         Provider = SmsProvider,
-                        ApiKey = EmailService.EncryptSecret(SmsApiKey),
+                        ApiKey = AuthSecurityHelper.EncryptSecret(SmsApiKey),
                         SenderId = SmsSenderId,
                         AdminPhone = SmsAdminPhone,
                         IsEnabled = IsSmsEnabled,

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -17,7 +17,7 @@ namespace QL_HocVien.Data.Repositories.Implementations
             return await SearchWithCriteriaAsync(new QL_HocVien.Models.Filters.SubjectFilterCriteria
             {
                 Keyword = keyword,
-                Category = category ?? "Táº¥t cáº£"
+                Category = category ?? "Tất cả"
             });
         }
 
@@ -30,40 +30,40 @@ namespace QL_HocVien.Data.Repositories.Implementations
                 return await query.OrderBy(s => s.SubjectCode).ToListAsync();
             }
 
-            // 0. Tá»« khÃ³a chung (MÃ£ hoáº·c TÃªn)
+            // 0. Từ khóa chung (Mã hoặc Tên)
             if (!string.IsNullOrWhiteSpace(criteria.Keyword))
             {
                 var kw = criteria.Keyword.Trim().ToLower();
                 query = query.Where(s => s.SubjectCode.ToLower().Contains(kw) || s.SubjectName.ToLower().Contains(kw));
             }
 
-            // 1. MÃ£ mÃ´n
+            // 1. Mã môn
             if (!string.IsNullOrWhiteSpace(criteria.SubjectCode))
             {
                 var code = criteria.SubjectCode.Trim().ToLower();
                 query = query.Where(s => s.SubjectCode.ToLower().Contains(code));
             }
 
-            // 2. TÃªn mÃ´n
+            // 2. Tên môn
             if (!string.IsNullOrWhiteSpace(criteria.SubjectName))
             {
                 var name = criteria.SubjectName.Trim().ToLower();
                 query = query.Where(s => s.SubjectName.ToLower().Contains(name));
             }
 
-            // 3. PhÃ¢n loáº¡i nhÃ³m tá»‘ cháº¥t
-            if (!string.IsNullOrWhiteSpace(criteria.Category) && criteria.Category != "Táº¥t cáº£")
+            // 3. Phân loại nhóm tố chất
+            if (!string.IsNullOrWhiteSpace(criteria.Category) && criteria.Category != "Tất cả")
             {
                 query = query.Where(s => s.Category == criteria.Category);
             }
 
-            // 4. ÄÆ¡n vá»‹ tÃ­nh
-            if (!string.IsNullOrWhiteSpace(criteria.Unit) && criteria.Unit != "Táº¥t cáº£")
+            // 4. Đơn vị tính
+            if (!string.IsNullOrWhiteSpace(criteria.Unit) && criteria.Unit != "Tất cả")
             {
                 query = query.Where(s => s.Unit == criteria.Unit);
             }
 
-            // 5. Quy luáº­t thÃ nh tÃ­ch (cÃ ng cao cÃ ng tá»‘t / cÃ ng tháº¥p cÃ ng tá»‘t)
+            // 5. Quy luật thành tích (càng cao càng tốt / càng thấp càng tốt)
             if (criteria.IsHigherBetter.HasValue)
             {
                 query = query.Where(s => s.IsHigherBetter == criteria.IsHigherBetter.Value);
@@ -86,4 +86,3 @@ namespace QL_HocVien.Data.Repositories.Implementations
         }
     }
 }
-

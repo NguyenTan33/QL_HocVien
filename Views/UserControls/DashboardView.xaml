@@ -117,7 +117,7 @@
                         </StackPanel>
 
                         <!-- Tiêu đề lớn Vàng Ánh Kim chuẩn DemoUI -->
-                        <TextBlock Text="BẢNG TỔNG QUAN RÈN LUYỆN THỂ LỰC QUÂN ĐỘI" 
+                        <TextBlock Text="BẢNG TỔNG QUAN ĐƠN VỊ" 
                                    FontSize="18.5" FontWeight="ExtraBold" Foreground="{DynamicResource TextPrimaryBrush}" 
                                    TextWrapping="NoWrap">
                             <TextBlock.Effect>
@@ -703,7 +703,7 @@
                     </TabItem>
 
                     <!-- ==================== TAB 3: BẢNG VÀNG VINH DANH HỌC VIÊN ==================== -->
-                    <TabItem Header="🏆  Bảng Vàng Biểu Dương" Style="{StaticResource TabHeaderStyle}">
+                    <TabItem Header="🏆  Biểu Dương" Style="{StaticResource TabHeaderStyle}">
                         <Border Padding="14">
                             <StackPanel>
                                 <Grid Margin="0,0,0,12">

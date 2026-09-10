@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -35,10 +35,10 @@ namespace QL_HocVien.Services.Implementations
             string? status = null,
             string? keyword = null)
         {
-            // 1. Láº¥y dá»¯ liá»‡u tá»•ng há»£p chuáº©n tá»« CreditSubjectService
+            // 1. Lấy dữ liệu tổng hợp chuẩn từ CreditSubjectService
             var summaries = await _creditSubjectService.GetCadetAcademicSummariesAsync(unit, className, keyword);
 
-            // 2. Láº¥y danh sÃ¡ch toÃ n bá»™ cÃ¡c thÃ nh pháº§n kiá»ƒm tra
+            // 2. Lấy danh sách toàn bộ các thành phần kiểm tra
             var components = await _context.SubjectAssessmentComponents
                 .Include(c => c.CreditSubject)
                 .Where(c => c.CreditSubject != null && !c.CreditSubject.IsComponent)
@@ -49,7 +49,7 @@ namespace QL_HocVien.Services.Implementations
 
             var result = new AcademicAnalyticsResultDto();
 
-            // 3. XÃ¢y dá»±ng danh sÃ¡ch phÃ¢n tÃ­ch chi tiáº¿t tá»«ng há»c viÃªn
+            // 3. Xây dựng danh sách phân tích chi tiết từng học viên
             var cadetAnalyticsList = new List<AcademicCadetAnalyticsDto>();
 
             foreach (var s in summaries)
@@ -70,7 +70,7 @@ namespace QL_HocVien.Services.Implementations
                     MissingSubjectsDisplay = s.MissingSubjectsDisplay
                 };
 
-                // PhÃ¢n tÃ­ch chi tiáº¿t tá»«ng mÃ´n/Ä‘á»£t thi
+                // Phân tích chi tiết từng môn/đợt thi
                 foreach (var comp in components)
                 {
                     s.ComponentScores.TryGetValue(comp.Id, out double? scoreVal);
@@ -83,27 +83,27 @@ namespace QL_HocVien.Services.Implementations
                         Credits = comp.Credits,
                         Score = scoreVal,
                         IsWarning = isWarning,
-                        WarningMessage = isWarning ? "Äá»£t kiá»ƒm tra Ä‘Ã£ diá»…n ra nhÆ°ng chÆ°a lÃ m bÃ i" : string.Empty
+                        WarningMessage = isWarning ? "Đợt kiểm tra đã diễn ra nhưng chưa làm bài" : string.Empty
                     });
                 }
 
                 cadetAnalyticsList.Add(cadetDto);
             }
 
-            // 4. Lá»c theo Xáº¿p loáº¡i náº¿u ngÆ°á»i dÃ¹ng chá»n
-            if (!string.IsNullOrWhiteSpace(rating) && rating != "Táº¥t cáº£ xáº¿p loáº¡i" && rating != "Táº¥t cáº£")
+            // 4. Lọc theo Xếp loại nếu người dùng chọn
+            if (!string.IsNullOrWhiteSpace(rating) && rating != "Tất cả xếp loại" && rating != "Tất cả")
             {
                 cadetAnalyticsList = cadetAnalyticsList.Where(c => c.AcademicRating.Equals(rating, StringComparison.OrdinalIgnoreCase)).ToList();
             }
 
-            // 5. Lá»c theo Tráº¡ng thÃ¡i mÃ´n náº¿u ngÆ°á»i dÃ¹ng chá»n
-            if (!string.IsNullOrWhiteSpace(status) && status != "Táº¥t cáº£ tráº¡ng thÃ¡i" && status != "Táº¥t cáº£")
+            // 5. Lọc theo Trạng thái môn nếu người dùng chọn
+            if (!string.IsNullOrWhiteSpace(status) && status != "Tất cả trạng thái" && status != "Tất cả")
             {
-                if (status.Contains("Äá»§ mÃ´n"))
+                if (status.Contains("Đủ môn"))
                 {
                     cadetAnalyticsList = cadetAnalyticsList.Where(c => !c.HasMissingSubjects).ToList();
                 }
-                else if (status.Contains("Thiáº¿u mÃ´n"))
+                else if (status.Contains("Thiếu môn"))
                 {
                     cadetAnalyticsList = cadetAnalyticsList.Where(c => c.HasMissingSubjects).ToList();
                 }
@@ -115,16 +115,16 @@ namespace QL_HocVien.Services.Implementations
             if (result.TotalCadetsEvaluated > 0)
             {
                 result.AverageGpa = Math.Round(cadetAnalyticsList.Average(c => c.Gpa), 2);
-                result.ExcellentCount = cadetAnalyticsList.Count(c => c.AcademicRating == "Giá»i");
+                result.ExcellentCount = cadetAnalyticsList.Count(c => c.AcademicRating == "Giỏi");
                 result.ExcellentPercentage = Math.Round((double)result.ExcellentCount * 100.0 / result.TotalCadetsEvaluated, 1);
 
-                result.GoodCount = cadetAnalyticsList.Count(c => c.AcademicRating == "KhÃ¡");
+                result.GoodCount = cadetAnalyticsList.Count(c => c.AcademicRating == "Khá");
                 result.GoodPercentage = Math.Round((double)result.GoodCount * 100.0 / result.TotalCadetsEvaluated, 1);
 
-                result.AverageCount = cadetAnalyticsList.Count(c => c.AcademicRating == "Trung bÃ¬nh");
+                result.AverageCount = cadetAnalyticsList.Count(c => c.AcademicRating == "Trung bình");
                 result.AveragePercentage = Math.Round((double)result.AverageCount * 100.0 / result.TotalCadetsEvaluated, 1);
 
-                result.WeakCount = cadetAnalyticsList.Count(c => c.AcademicRating == "Yáº¿u");
+                result.WeakCount = cadetAnalyticsList.Count(c => c.AcademicRating == "Yếu");
                 result.WeakPercentage = Math.Round((double)result.WeakCount * 100.0 / result.TotalCadetsEvaluated, 1);
 
                 result.MissingSubjectsCount = cadetAnalyticsList.Count(c => c.HasMissingSubjects);
@@ -134,7 +134,7 @@ namespace QL_HocVien.Services.Implementations
                 result.CompletedCadetsPercentage = Math.Round((double)result.CompletedCadetsCount * 100.0 / result.TotalCadetsEvaluated, 1);
             }
 
-            // 6. Tá»•ng há»£p Cáº¥p Äáº¡i Äá»™i & ToÃ n ÄÆ¡n Vá»‹
+            // 6. Tổng hợp Cấp Đại Đội & Toàn Đơn Vị
             var unitGroups = cadetAnalyticsList.GroupBy(c => c.Unit).ToList();
             var unitList = new List<AcademicUnitComparisonDto>();
 
@@ -143,22 +143,22 @@ namespace QL_HocVien.Services.Implementations
                 var list = grp.ToList();
                 int total = list.Count;
                 double avgGpa = total > 0 ? Math.Round(list.Average(c => c.Gpa), 2) : 0;
-                int exc = list.Count(c => c.AcademicRating == "Giá»i");
-                int good = list.Count(c => c.AcademicRating == "KhÃ¡");
-                int avg = list.Count(c => c.AcademicRating == "Trung bÃ¬nh");
-                int weak = list.Count(c => c.AcademicRating == "Yáº¿u");
+                int exc = list.Count(c => c.AcademicRating == "Giỏi");
+                int good = list.Count(c => c.AcademicRating == "Khá");
+                int avg = list.Count(c => c.AcademicRating == "Trung bình");
+                int weak = list.Count(c => c.AcademicRating == "Yếu");
                 int missing = list.Count(c => c.HasMissingSubjects);
                 int complete = total - missing;
 
                 string comment;
                 if (avgGpa >= 7.5 && missing == 0)
-                    comment = "ÄÆ¡n vá»‹ há»c táº­p xuáº¥t sáº¯c, quÃ¢n sá»‘ Ä‘á»§ 100% mÃ´n";
+                    comment = "Đơn vị học tập xuất sắc, quân số đủ 100% môn";
                 else if (avgGpa >= 7.0)
-                    comment = missing > 0 ? $"Há»c lá»±c KhÃ¡, cáº§n Ä‘Ã´n Ä‘á»‘c {missing} Ä‘/c thi bÃ¹" : "ÄÆ¡n vá»‹ Ä‘áº¡t danh hiá»‡u Há»c táº­p KhÃ¡ toÃ n diá»‡n";
+                    comment = missing > 0 ? $"Học lực Khá, cần đôn đốc {missing} đ/c thi bù" : "Đơn vị đạt danh hiệu Học tập Khá toàn diện";
                 else if (avgGpa >= 6.0)
-                    comment = $"Há»c lá»±c trung bÃ¬nh, cÃ³ {missing} Ä‘/c chÆ°a hoÃ n thÃ nh ná»™i dung";
+                    comment = $"Học lực trung bình, có {missing} đ/c chưa hoàn thành nội dung";
                 else
-                    comment = "Cáº§n tÄƒng cÆ°á»ng phá»¥ Ä‘áº¡o vÃ  tá»• chá»©c Ã´n táº­p kiá»ƒm tra bÃ¹";
+                    comment = "Cần tăng cường phụ đạo và tổ chức ôn tập kiểm tra bù";
 
                 unitList.Add(new AcademicUnitComparisonDto
                 {
@@ -179,7 +179,7 @@ namespace QL_HocVien.Services.Implementations
                 });
             }
 
-            // Xáº¿p háº¡ng thi Ä‘ua há»c táº­p giá»¯a cÃ¡c Ä‘Æ¡n vá»‹
+            // Xếp hạng thi đua học tập giữa các đơn vị
             var sortedUnits = unitList.OrderByDescending(u => u.AverageGpa).ThenByDescending(u => u.GoodRate).ToList();
             for (int i = 0; i < sortedUnits.Count; i++)
             {
@@ -187,7 +187,7 @@ namespace QL_HocVien.Services.Implementations
             }
             result.UnitComparisons = sortedUnits;
 
-            // 7. Tá»•ng há»£p Cáº¥p Lá»›p & PhÃ¢n Äá»™i
+            // 7. Tổng hợp Cấp Lớp & Phân Đội
             var classGroups = cadetAnalyticsList.GroupBy(c => new { c.ClassName, c.Unit }).ToList();
             var classList = new List<AcademicClassComparisonDto>();
 
@@ -196,20 +196,20 @@ namespace QL_HocVien.Services.Implementations
                 var list = grp.ToList();
                 int total = list.Count;
                 double avgGpa = total > 0 ? Math.Round(list.Average(c => c.Gpa), 2) : 0;
-                int exc = list.Count(c => c.AcademicRating == "Giá»i");
-                int good = list.Count(c => c.AcademicRating == "KhÃ¡");
-                int avgWeak = list.Count(c => c.AcademicRating == "Trung bÃ¬nh" || c.AcademicRating == "Yáº¿u");
+                int exc = list.Count(c => c.AcademicRating == "Giỏi");
+                int good = list.Count(c => c.AcademicRating == "Khá");
+                int avgWeak = list.Count(c => c.AcademicRating == "Trung bình" || c.AcademicRating == "Yếu");
                 int missing = list.Count(c => c.HasMissingSubjects);
                 int complete = total - missing;
                 double goodOrAboveRate = total > 0 ? Math.Round((double)(exc + good) * 100.0 / total, 1) : 0;
 
                 string comment;
                 if (avgGpa >= 7.5)
-                    comment = "Lá»›p dáº«n Ä‘áº§u phong trÃ o thi Ä‘ua há»c táº­p";
+                    comment = "Lớp dẫn đầu phong trào thi đua học tập";
                 else if (avgGpa >= 6.8)
-                    comment = "Lá»›p Ä‘áº¡t yÃªu cáº§u há»c táº­p khÃ¡, cáº§n duy trÃ¬";
+                    comment = "Lớp đạt yêu cầu học tập khá, cần duy trì";
                 else
-                    comment = $"Cáº§n kÃ¨m cáº·p cÃ¡c há»c viÃªn TB, cÃ²n {missing} Ä‘/c ná»£ mÃ´n";
+                    comment = $"Cần kèm cặp các học viên TB, còn {missing} đ/c nợ môn";
 
                 classList.Add(new AcademicClassComparisonDto
                 {
@@ -247,15 +247,15 @@ namespace QL_HocVien.Services.Implementations
                 {
                     using var wb = new XLWorkbook();
 
-                    // SHEET 1: Cáº¤P Äáº I Äá»˜I
-                    var wsUnit = wb.Worksheets.Add("Cáº¥p Äáº¡i Äá»™i");
-                    wsUnit.Cell(1, 1).Value = "BÃO CÃO SO SÃNH Há»ŒC Lá»°C Cáº¤P Äáº I Äá»˜I & TOÃ€N ÄÆ N Vá»Š";
+                    // SHEET 1: CẤP ĐẠI ĐỘI
+                    var wsUnit = wb.Worksheets.Add("Cấp Đại Đội");
+                    wsUnit.Cell(1, 1).Value = "BÁO CÁO SO SÁNH HỌC LỰC CẤP ĐẠI ĐỘI & TOÀN ĐƠN VỊ";
                     wsUnit.Range(1, 1, 1, 11).Merge().Style.Font.SetBold().Font.SetFontSize(14).Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
-                    wsUnit.Cell(2, 1).Value = $"Tá»•ng quÃ¢n sá»‘: {result.TotalCadetsEvaluated} há»c viÃªn | TBM chung: {result.AverageGpa:F2} | NgÃ y xuáº¥t: {DateTime.Now:dd/MM/yyyy HH:mm}";
+                    wsUnit.Cell(2, 1).Value = $"Tổng quân số: {result.TotalCadetsEvaluated} học viên | TBM chung: {result.AverageGpa:F2} | Ngày xuất: {DateTime.Now:dd/MM/yyyy HH:mm}";
                     wsUnit.Range(2, 1, 2, 11).Merge().Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center).Font.SetItalic();
 
                     int uRow = 4;
-                    string[] uHeaders = { "Thá»© háº¡ng", "ÄÆ¡n vá»‹ / Äáº¡i Ä‘á»™i", "QuÃ¢n sá»‘", "TBM BÃ¬nh QuÃ¢n", "% Giá»i", "% KhÃ¡", "% Trung bÃ¬nh", "% Yáº¿u", "Äá»§ mÃ´n", "Ná»£/Thiáº¿u mÃ´n", "Nháº­n xÃ©t thi Ä‘ua" };
+                    string[] uHeaders = { "Thứ hạng", "Đơn vị / Đại đội", "Quân số", "TBM Bình Quân", "% Giỏi", "% Khá", "% Trung bình", "% Yếu", "Đủ môn", "Nợ/Thiếu môn", "Nhận xét thi đua" };
                     for (int i = 0; i < uHeaders.Length; i++)
                     {
                         wsUnit.Cell(uRow, i + 1).Value = uHeaders[i];
@@ -291,13 +291,13 @@ namespace QL_HocVien.Services.Implementations
                     wsUnit.Range(4, 1, uRow - 1, uHeaders.Length).Style.Border.SetOutsideBorder(XLBorderStyleValues.Thin).Border.SetInsideBorder(XLBorderStyleValues.Thin);
                     wsUnit.Columns().AdjustToContents();
 
-                    // SHEET 2: Cáº¤P Lá»šP
-                    var wsClass = wb.Worksheets.Add("Cáº¥p Lá»›p");
-                    wsClass.Cell(1, 1).Value = "BÃO CÃO Xáº¾P Háº NG Há»ŒC Lá»°C Cáº¤P Lá»šP & PHÃ‚N Äá»˜I";
+                    // SHEET 2: CẤP LỚP
+                    var wsClass = wb.Worksheets.Add("Cấp Lớp");
+                    wsClass.Cell(1, 1).Value = "BÁO CÁO XẾP HẠNG HỌC LỰC CẤP LỚP & PHÂN ĐỘI";
                     wsClass.Range(1, 1, 1, 10).Merge().Style.Font.SetBold().Font.SetFontSize(14).Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
 
                     int cRow = 3;
-                    string[] cHeaders = { "Thá»© háº¡ng", "Lá»›p / PhÃ¢n Ä‘á»™i", "Äáº¡i Ä‘á»™i", "QuÃ¢n sá»‘", "TBM BÃ¬nh QuÃ¢n", "% KhÃ¡/Giá»i", "Sá»‘ Giá»i", "Sá»‘ KhÃ¡", "Sá»‘ TB/Yáº¿u", "Ná»£/Thiáº¿u mÃ´n" };
+                    string[] cHeaders = { "Thứ hạng", "Lớp / Phân đội", "Đại đội", "Quân số", "TBM Bình Quân", "% Khá/Giỏi", "Số Giỏi", "Số Khá", "Số TB/Yếu", "Nợ/Thiếu môn" };
                     for (int i = 0; i < cHeaders.Length; i++)
                     {
                         wsClass.Cell(cRow, i + 1).Value = cHeaders[i];
@@ -331,13 +331,13 @@ namespace QL_HocVien.Services.Implementations
                     wsClass.Range(3, 1, cRow - 1, cHeaders.Length).Style.Border.SetOutsideBorder(XLBorderStyleValues.Thin).Border.SetInsideBorder(XLBorderStyleValues.Thin);
                     wsClass.Columns().AdjustToContents();
 
-                    // SHEET 3: CHI TIáº¾T CÃ NHÃ‚N Há»ŒC VIÃŠN
-                    var wsCadet = wb.Worksheets.Add("Chi Tiáº¿t CÃ¡ NhÃ¢n");
-                    wsCadet.Cell(1, 1).Value = "Báº¢NG Káº¾T QUáº¢ VÃ€ PHÃ‚N TÃCH Há»ŒC Lá»°C CÃ NHÃ‚N Há»ŒC VIÃŠN";
+                    // SHEET 3: CHI TIẾT CÁ NHÂN HỌC VIÊN
+                    var wsCadet = wb.Worksheets.Add("Chi Tiết Cá Nhân");
+                    wsCadet.Cell(1, 1).Value = "BẢNG KẾT QUẢ VÀ PHÂN TÍCH HỌC LỰC CÁ NHÂN HỌC VIÊN";
                     wsCadet.Range(1, 1, 1, 9).Merge().Style.Font.SetBold().Font.SetFontSize(14).Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
 
                     int pRow = 3;
-                    string[] pHeaders = { "STT", "MÃ£ HV", "Há» vÃ  tÃªn", "Cáº¥p báº­c", "ÄÆ¡n vá»‹", "Lá»›p", "TBM ToÃ n KhÃ³a", "Xáº¿p loáº¡i", "TÃ¬nh tráº¡ng mÃ´n" };
+                    string[] pHeaders = { "STT", "Mã HV", "Họ và tên", "Cấp bậc", "Đơn vị", "Lớp", "TBM Toàn Khóa", "Xếp loại", "Tình trạng môn" };
                     for (int i = 0; i < pHeaders.Length; i++)
                     {
                         wsCadet.Cell(pRow, i + 1).Value = pHeaders[i];
@@ -361,7 +361,7 @@ namespace QL_HocVien.Services.Implementations
                         wsCadet.Cell(pRow, 6).Value = cadet.ClassName;
                         wsCadet.Cell(pRow, 7).Value = cadet.Gpa;
                         wsCadet.Cell(pRow, 8).Value = cadet.AcademicRating;
-                        wsCadet.Cell(pRow, 9).Value = cadet.HasMissingSubjects ? $"Thiáº¿u {cadet.MissingSubjectsCount} Ä‘á»£t thi" : "Äá»§ táº¥t cáº£ mÃ´n";
+                        wsCadet.Cell(pRow, 9).Value = cadet.HasMissingSubjects ? $"Thiếu {cadet.MissingSubjectsCount} đợt thi" : "Đủ tất cả môn";
 
                         wsCadet.Cell(pRow, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                         wsCadet.Cell(pRow, 2).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
@@ -377,14 +377,13 @@ namespace QL_HocVien.Services.Implementations
                     wsCadet.Columns().AdjustToContents();
 
                     wb.SaveAs(filePath);
-                    return (true, $"ÄÃ£ xuáº¥t bÃ¡o cÃ¡o phÃ¢n tÃ­ch há»c lá»±c thÃ nh cÃ´ng ({result.TotalCadetsEvaluated} há»c viÃªn, 3 cáº¥p phÃ¢n tÃ­ch).");
+                    return (true, $"Đã xuất báo cáo phân tích học lực thành công ({result.TotalCadetsEvaluated} học viên, 3 cấp phân tích).");
                 }
                 catch (Exception ex)
                 {
-                    return (false, $"Lá»—i khi xuáº¥t file Excel: {ex.Message}");
+                    return (false, $"Lỗi khi xuất file Excel: {ex.Message}");
                 }
             });
         }
     }
 }
-

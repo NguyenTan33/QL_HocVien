@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -18,190 +18,190 @@ namespace QL_HocVien.Services.Implementations
             var result = new TrainingRecommendationSummaryDto();
 
             int totalTests = recordsList.Count;
-            int failedTests = recordsList.Count(r => r.Grade == "KhÃ´ng Ä‘áº¡t");
+            int failedTests = recordsList.Count(r => r.Grade == "Không đạt");
             double overallFailRate = totalTests > 0 ? (double)failedTests / totalTests * 100 : 0;
 
-            // 1. CHá»ˆ Äáº O CHIáº¾N LÆ¯á»¢C Tá»”NG THá»‚ (Strategic Directive)
+            // 1. CHỈ ĐẠO CHIẾN LƯỢC TỔNG THỂ (Strategic Directive)
             var directive = new StrategicDirectiveDto();
-            string scopeText = string.IsNullOrWhiteSpace(unit) || unit == "Táº¥t cáº£" ? "ToÃ n viá»‡n / ToÃ n Ä‘Æ¡n vá»‹" : $"ÄÆ¡n vá»‹ {unit}";
+            string scopeText = string.IsNullOrWhiteSpace(unit) || unit == "Tất cả" ? "Toàn viện / Toàn đơn vị" : $"Đơn vị {unit}";
 
             if (totalTests == 0)
             {
-                directive.Title = $"Káº¾ HOáº CH RÃˆN LUYá»†N THá»‚ Lá»°C - {scopeText.ToUpper()}";
-                directive.ExecutiveSummary = "ChÆ°a ghi nháº­n Ä‘á»§ dá»¯ liá»‡u kiá»ƒm tra trong pháº¡m vi lá»c Ä‘Ã£ chá»n. Cáº§n Ä‘áº©y nhanh tiáº¿n Ä‘á»™ tá»• chá»©c kiá»ƒm tra rÃ¨n luyá»‡n thá»ƒ lá»±c ban Ä‘áº§u Ä‘á»ƒ AI cÃ³ cÆ¡ sá»Ÿ phÃ¢n tÃ­ch.";
-                directive.TimeAllocationDirective = "Duy trÃ¬ lá»‹ch thá»ƒ dá»¥c buá»•i sÃ¡ng (05:15 - 05:45) vÃ  rÃ¨n luyá»‡n thá»ƒ thao buá»•i chiá»u (16:30 - 17:30) cÃ¡c ngÃ y trong tuáº§n.";
-                directive.RecoveryAndNutritionAdvice = "Äáº£m báº£o Ä‘á»‹nh lÆ°á»£ng kháº©u pháº§n Äƒn quÃ¢n trang quÃ¢n dá»¥ng, bá»• sung nÆ°á»›c Ä‘iá»‡n giáº£i vÃ  vitamin nhÃ³m B trong giai Ä‘oáº¡n chuyá»ƒn mÃ¹a.";
+                directive.Title = $"KẾ HOẠCH RÈN LUYỆN THỂ LỰC - {scopeText.ToUpper()}";
+                directive.ExecutiveSummary = "Chưa ghi nhận đủ dữ liệu kiểm tra trong phạm vi lọc đã chọn. Cần đẩy nhanh tiến độ tổ chức kiểm tra rèn luyện thể lực ban đầu để AI có cơ sở phân tích.";
+                directive.TimeAllocationDirective = "Duy trì lịch thể dục buổi sáng (05:15 - 05:45) và rèn luyện thể thao buổi chiều (16:30 - 17:30) các ngày trong tuần.";
+                directive.RecoveryAndNutritionAdvice = "Đảm bảo định lượng khẩu phần ăn quân trang quân dụng, bổ sung nước điện giải và vitamin nhóm B trong giai đoạn chuyển mùa.";
             }
             else
             {
-                directive.Title = $"CHá»ˆ THá»Š RÃˆN LUYá»†N & NÃ‚NG CAO THá»‚ Lá»°C QUÃ‚N Sá»° - {scopeText.ToUpper()}";
+                directive.Title = $"CHỈ THỊ RÈN LUYỆN & NÂNG CAO THỂ LỰC QUÂN SỰ - {scopeText.ToUpper()}";
 
                 if (overallFailRate > 15)
                 {
-                    directive.ExecutiveSummary = $"ÄÃ¡nh giÃ¡ tÃ¬nh hÃ¬nh thá»ƒ lá»±c táº¡i {scopeText}: Tá»· lá»‡ chÆ°a Ä‘áº¡t chuáº©n ThÃ´ng tÆ° 32 chiáº¿m {overallFailRate:F1}% (á»Ÿ má»©c Cáº¢NH BÃO). Cáº§n má»Ÿ Ä‘á»£t cao Ä‘iá»ƒm huáº¥n luyá»‡n thá»ƒ lá»±c phá»¥ Ä‘áº¡o trong 4 tuáº§n tá»›i, táº­p trung phÃ¢n loáº¡i vÃ  kÃ¨m cáº·p sÃ¡t sao nhÃ³m há»c viÃªn cÃ³ nguy cÆ¡ trÆ°á»£t chuáº©n.";
+                    directive.ExecutiveSummary = $"Đánh giá tình hình thể lực tại {scopeText}: Tỷ lệ chưa đạt chuẩn Thông tư 32 chiếm {overallFailRate:F1}% (ở mức CẢNH BÁO). Cần mở đợt cao điểm huấn luyện thể lực phụ đạo trong 4 tuần tới, tập trung phân loại và kèm cặp sát sao nhóm học viên có nguy cơ trượt chuẩn.";
                 }
                 else if (overallFailRate > 5)
                 {
-                    directive.ExecutiveSummary = $"ÄÃ¡nh giÃ¡ tÃ¬nh hÃ¬nh thá»ƒ lá»±c táº¡i {scopeText}: ToÃ n Ä‘Æ¡n vá»‹ duy trÃ¬ ná»n náº¿p rÃ¨n luyá»‡n khÃ¡ tá»‘t (Tá»· lá»‡ Ä‘áº¡t chuáº©n {100 - overallFailRate:F1}%). Tuy nhiÃªn váº«n cÃ²n má»™t bá»™ pháº­n nhá» ({failedTests} lÆ°á»£t) chÆ°a Ä‘á»“ng Ä‘á»u giá»¯a cÃ¡c ná»™i dung sá»©c bá»n vÃ  sá»©c máº¡nh.";
+                    directive.ExecutiveSummary = $"Đánh giá tình hình thể lực tại {scopeText}: Toàn đơn vị duy trì nền nếp rèn luyện khá tốt (Tỷ lệ đạt chuẩn {100 - overallFailRate:F1}%). Tuy nhiên vẫn còn một bộ phận nhỏ ({failedTests} lượt) chưa đồng đều giữa các nội dung sức bền và sức mạnh.";
                 }
                 else
                 {
-                    directive.ExecutiveSummary = $"ÄÃ¡nh giÃ¡ tÃ¬nh hÃ¬nh thá»ƒ lá»±c táº¡i {scopeText}: Phong trÃ o rÃ¨n luyá»‡n thá»ƒ lá»±c Ä‘áº¡t káº¿t quáº£ XUáº¤T Sáº®C (Tá»· lá»‡ Ä‘áº¡t chuáº©n {100 - overallFailRate:F1}%). Tiáº¿p tá»¥c bá»“i dÆ°á»¡ng cÃ¡c nhÃ¢n tá»‘ nÃ²ng cá»‘t tham gia há»™i thao quÃ¢n sá»± cáº¥p Há»c viá»‡n vÃ  toÃ n quÃ¢n.";
+                    directive.ExecutiveSummary = $"Đánh giá tình hình thể lực tại {scopeText}: Phong trào rèn luyện thể lực đạt kết quả XUẤT SẮC (Tỷ lệ đạt chuẩn {100 - overallFailRate:F1}%). Tiếp tục bồi dưỡng các nhân tố nòng cốt tham gia hội thao quân sự cấp Học viện và toàn quân.";
                 }
 
-                directive.KeyActionItems.Add("PhÃ¢n nhÃ³m há»c viÃªn theo thá»ƒ lá»±c: ThÃ nh láº­p 'Tá»• rÃ¨n luyá»‡n nÃ¢ng cao' cho cÃ¡c Ä‘á»“ng chÃ­ chÆ°a Ä‘áº¡t chuáº©n dÆ°á»›i sá»± kÃ¨m cáº·p cá»§a cÃ¡n bá»™ Trung Ä‘á»™i.");
-                directive.KeyActionItems.Add("Tá»‘i Æ°u hÃ³a giá» thá»ƒ thao buá»•i chiá»u: 45 phÃºt Ä‘áº§u táº­p trung ná»™i dung yáº¿u (XÃ  Ä‘Æ¡n / Cháº¡y bá»n), 15 phÃºt sau tháº£ lá»ng há»“i tÄ©nh.");
-                directive.KeyActionItems.Add("Thá»±c hiá»‡n kiá»ƒm tra Ä‘á»‹nh ká»³ 2 tuáº§n/láº§n vÃ o sÃ¡ng Thá»© Báº£y Ä‘á»ƒ Ä‘Ã¡nh giÃ¡ tiáº¿n bá»™ cá»§a tá»«ng cÃ¡ nhÃ¢n.");
+                directive.KeyActionItems.Add("Phân nhóm học viên theo thể lực: Thành lập 'Tổ rèn luyện nâng cao' cho các đồng chí chưa đạt chuẩn dưới sự kèm cặp của cán bộ Trung đội.");
+                directive.KeyActionItems.Add("Tối ưu hóa giờ thể thao buổi chiều: 45 phút đầu tập trung nội dung yếu (Xà đơn / Chạy bền), 15 phút sau thả lỏng hồi tĩnh.");
+                directive.KeyActionItems.Add("Thực hiện kiểm tra định kỳ 2 tuần/lần vào sáng Thứ Bảy để đánh giá tiến bộ của từng cá nhân.");
 
                 directive.TimeAllocationDirective = overallFailRate > 15
-                    ? "TÄƒng cÆ°á»ng thÃªm 3 buá»•i phá»¥ Ä‘áº¡o/tuáº§n (Thá»© 2, 4, 6 tá»« 16:15 - 17:15). Thá»© 7 tá»• chá»©c cháº¡y viá»‡t dÃ£ cá»± ly trung bÃ¬nh."
-                    : "Duy trÃ¬ Ä‘á»u Ä‘áº·n 4 buá»•i/tuáº§n theo tiáº¿n trÃ¬nh biá»ƒu; chÃº trá»ng cháº¥t lÆ°á»£ng tá»«ng Ä‘á»™ng tÃ¡c ká»¹ thuáº­t.";
+                    ? "Tăng cường thêm 3 buổi phụ đạo/tuần (Thứ 2, 4, 6 từ 16:15 - 17:15). Thứ 7 tổ chức chạy việt dã cự ly trung bình."
+                    : "Duy trì đều đặn 4 buổi/tuần theo tiến trình biểu; chú trọng chất lượng từng động tác kỹ thuật.";
 
-                directive.RecoveryAndNutritionAdvice = "Cháº¥n chá»‰nh cÃ´ng tÃ¡c báº£o Ä‘áº£m nÆ°á»›c uá»‘ng cÃ³ muá»‘i khoÃ¡ng táº¡i bÃ£i táº­p; sau cÃ¡c buá»•i cháº¡y 3000m pháº£i dÃ nh tá»‘i thiá»ƒu 10 phÃºt tháº£ lá»ng cÆ¡ báº¯p trÃ¡nh cÄƒng cÆ¡ chuá»™t rÃºt.";
+                directive.RecoveryAndNutritionAdvice = "Chấn chỉnh công tác bảo đảm nước uống có muối khoáng tại bãi tập; sau các buổi chạy 3000m phải dành tối thiểu 10 phút thả lỏng cơ bắp tránh căng cơ chuột rút.";
             }
 
             result.StrategicDirective = directive;
 
-            // 2. PHÃC Äá»’ CHUYÃŠN SÃ‚U THEO Tá»ªNG NHÃ“M Tá» CHáº¤T THá»‚ Lá»°C (Component Prescriptions)
-            // NhÃ³m A: Sá»©c máº¡nh (XÃ  Ä‘Æ¡n, xÃ  kÃ©p)
+            // 2. PHÁC ĐỒ CHUYÊN SÂU THEO TỪNG NHÓM TỐ CHẤT THỂ LỰC (Component Prescriptions)
+            // Nhóm A: Sức mạnh (Xà đơn, xà kép)
             var strengthRecords = recordsList.Where(r => 
-                (r.Subject?.SubjectName?.Contains("xÃ ", StringComparison.OrdinalIgnoreCase) ?? false) ||
-                (r.Subject?.SubjectName?.Contains("chá»‘ng Ä‘áº©y", StringComparison.OrdinalIgnoreCase) ?? false)).ToList();
+                (r.Subject?.SubjectName?.Contains("xà", StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (r.Subject?.SubjectName?.Contains("chống đẩy", StringComparison.OrdinalIgnoreCase) ?? false)).ToList();
             int strengthTotal = strengthRecords.Count;
-            int strengthFail = strengthRecords.Count(r => r.Grade == "KhÃ´ng Ä‘áº¡t");
+            int strengthFail = strengthRecords.Count(r => r.Grade == "Không đạt");
             double strengthFailRate = strengthTotal > 0 ? (double)strengthFail / strengthTotal * 100 : 0;
 
             result.ComponentPrescriptions.Add(new FitnessComponentPrescriptionDto
             {
-                ComponentName = "Tá»‘ Cháº¥t Sá»©c Máº¡nh CÆ¡ Báº¯p & Chi TrÃªn",
-                TargetSubjects = "Co tay xÃ  Ä‘Æ¡n, XÃ  kÃ©p, Chá»‘ng Ä‘áº©y",
+                ComponentName = "Tố Chất Sức Mạnh Cơ Bắp & Chi Trên",
+                TargetSubjects = "Co tay xà đơn, Xà kép, Chống đẩy",
                 FailRate = Math.Round(strengthFailRate, 1),
                 AffectedCadetsCount = strengthFail,
-                UrgencyLevel = strengthFailRate >= 18 ? "ðŸ”´ KHáº¨N Cáº¤P" : (strengthFailRate >= 8 ? "ðŸŸ¡ Cáº¦N CHÃš Ã" : "ðŸŸ¢ DUY TRÃŒ"),
+                UrgencyLevel = strengthFailRate >= 18 ? "🔴 KHẨN CẤP" : (strengthFailRate >= 8 ? "🟡 CẦN CHÚ Ý" : "🟢 DUY TRÌ"),
                 UrgencyColor = strengthFailRate >= 18 ? "#DC2626" : (strengthFailRate >= 8 ? "#D97706" : "#16A34A"),
                 UrgencyBackground = strengthFailRate >= 18 ? "#FEE2E2" : (strengthFailRate >= 8 ? "#FEF3C7" : "#DCFCE7"),
                 CoreWeaknessAnalysis = strengthFailRate >= 15 
-                    ? "Lá»±c bÃ¡m cáº³ng tay vÃ  cÆ¡ lÆ°ng rá»™ng (Latissimus dorsi) cÃ²n yáº¿u; nhiá»u Ä‘á»“ng chÃ­ bá»‹ quÃ¡n tÃ­nh láº¯c ngÆ°á»i khÃ´ng Ä‘Ãºng ká»¹ thuáº­t chuáº©n quÃ¢n sá»±."
-                    : "Há»c viÃªn cÆ¡ báº£n náº¯m Ä‘Æ°á»£c ká»¹ thuáº­t; cáº§n gia tÄƒng sá»©c bá»n cÆ¡ báº¯p khi Ä‘áº¡t má»‘c 10 - 12 cÃ¡i.",
-                ScientificTrainingProtocol = "â€¢ Tuáº§n 1-2: Táº­p treo xÃ  tÄ©nh tÃ­nh thá»i gian (Dead hang) 3 hiá»‡p x 45 giÃ¢y; kÃ©o xÃ  cÃ³ dÃ¢y khÃ¡ng lá»±c (Rubber band) há»— trá»£ 4 hiá»‡p x 8 láº§n.\nâ€¢ Tuáº§n 3-4: Co tay xÃ  Ä‘Æ¡n cÃ³ ngáº¯t nhá»‹p (2 giÃ¢y giá»¯ Ä‘á»‰nh xÃ  - 3 giÃ¢y háº¡ xuá»‘ng); bá»• trá»£ hÃ­t Ä‘áº¥t kim cÆ°Æ¡ng (Diamond push-ups) 3 hiá»‡p x 15 láº§n.",
-                WeeklyScheduleRecommendation = "3 buá»•i/tuáº§n (Thá»© 2, 4, 6 lÃºc 16:30 - 17:15). Láº¯p Ä‘áº·t xÃ  phá»¥ táº¡i há»“i nhÃ  ná»™i vá»¥ Ä‘á»ƒ tranh thá»§ rÃ¨n luyá»‡n.",
-                MeasurableTarget = "100% há»c viÃªn kÃ©o Ä‘áº¡t tá»‘i thiá»ƒu 10 cÃ¡i (Äáº¡t chuáº©n TT32); trÃªn 40% Ä‘áº¡t má»‘c 14 cÃ¡i trá»Ÿ lÃªn (KhÃ¡ - Giá»i)."
+                    ? "Lực bám cẳng tay và cơ lưng rộng (Latissimus dorsi) còn yếu; nhiều đồng chí bị quán tính lắc người không đúng kỹ thuật chuẩn quân sự."
+                    : "Học viên cơ bản nắm được kỹ thuật; cần gia tăng sức bền cơ bắp khi đạt mốc 10 - 12 cái.",
+                ScientificTrainingProtocol = "• Tuần 1-2: Tập treo xà tĩnh tính thời gian (Dead hang) 3 hiệp x 45 giây; kéo xà có dây kháng lực (Rubber band) hỗ trợ 4 hiệp x 8 lần.\n• Tuần 3-4: Co tay xà đơn có ngắt nhịp (2 giây giữ đỉnh xà - 3 giây hạ xuống); bổ trợ hít đất kim cương (Diamond push-ups) 3 hiệp x 15 lần.",
+                WeeklyScheduleRecommendation = "3 buổi/tuần (Thứ 2, 4, 6 lúc 16:30 - 17:15). Lắp đặt xà phụ tại hồi nhà nội vụ để tranh thủ rèn luyện.",
+                MeasurableTarget = "100% học viên kéo đạt tối thiểu 10 cái (Đạt chuẩn TT32); trên 40% đạt mốc 14 cái trở lên (Khá - Giỏi)."
             });
 
-            // NhÃ³m B: Sá»©c bá»n (Cháº¡y 3000m vÅ© trang)
+            // Nhóm B: Sức bền (Chạy 3000m vũ trang)
             var enduranceRecords = recordsList.Where(r => 
                 (r.Subject?.SubjectName?.Contains("3000", StringComparison.OrdinalIgnoreCase) ?? false) ||
-                (r.Subject?.SubjectName?.Contains("viá»‡t dÃ£", StringComparison.OrdinalIgnoreCase) ?? false) ||
-                (r.Subject?.SubjectName?.Contains("bá»n", StringComparison.OrdinalIgnoreCase) ?? false)).ToList();
+                (r.Subject?.SubjectName?.Contains("việt dã", StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (r.Subject?.SubjectName?.Contains("bền", StringComparison.OrdinalIgnoreCase) ?? false)).ToList();
             int enduranceTotal = enduranceRecords.Count;
-            int enduranceFail = enduranceRecords.Count(r => r.Grade == "KhÃ´ng Ä‘áº¡t");
+            int enduranceFail = enduranceRecords.Count(r => r.Grade == "Không đạt");
             double enduranceFailRate = enduranceTotal > 0 ? (double)enduranceFail / enduranceTotal * 100 : 0;
 
             result.ComponentPrescriptions.Add(new FitnessComponentPrescriptionDto
             {
-                ComponentName = "Tá»‘ Cháº¥t Sá»©c Bá»n Tim Máº¡ch & HÃ´ Háº¥p",
-                TargetSubjects = "Cháº¡y vÅ© trang 3000m, HÃ nh quÃ¢n rÃ¨n luyá»‡n",
+                ComponentName = "Tố Chất Sức Bền Tim Mạch & Hô Hấp",
+                TargetSubjects = "Chạy vũ trang 3000m, Hành quân rèn luyện",
                 FailRate = Math.Round(enduranceFailRate, 1),
                 AffectedCadetsCount = enduranceFail,
-                UrgencyLevel = enduranceFailRate >= 18 ? "ðŸ”´ KHáº¨N Cáº¤P" : (enduranceFailRate >= 8 ? "ðŸŸ¡ Cáº¦N CHÃš Ã" : "ðŸŸ¢ DUY TRÃŒ"),
+                UrgencyLevel = enduranceFailRate >= 18 ? "🔴 KHẨN CẤP" : (enduranceFailRate >= 8 ? "🟡 CẦN CHÚ Ý" : "🟢 DUY TRÌ"),
                 UrgencyColor = enduranceFailRate >= 18 ? "#DC2626" : (enduranceFailRate >= 8 ? "#D97706" : "#16A34A"),
                 UrgencyBackground = enduranceFailRate >= 18 ? "#FEE2E2" : (enduranceFailRate >= 8 ? "#FEF3C7" : "#DCFCE7"),
                 CoreWeaknessAnalysis = enduranceFailRate >= 15
-                    ? "Há»c viÃªn chÆ°a lÃ m chá»§ ká»¹ thuáº­t phÃ¢n phá»‘i sá»©c; thÆ°á»ng xuáº¥t phÃ¡t quÃ¡ nhanh á»Ÿ 800m Ä‘áº§u dáº«n Ä‘áº¿n tá»¥t dá»‘c á»Ÿ ná»­a cuá»‘i Ä‘Æ°á»ng cháº¡y. Ká»¹ thuáº­t nhá»‹p thá»Ÿ chÆ°a Ä‘á»“ng bá»™ bÆ°á»›c cháº¡y."
-                    : "Há»c viÃªn duy trÃ¬ ngÆ°á»¡ng hÃ´ háº¥p á»•n Ä‘á»‹nh; cáº§n tá»‘i Æ°u hÃ³a guá»“ng chÃ¢n rÃºt Ä‘Ã­ch á»Ÿ 400m cuá»‘i cÃ¹ng.",
-                ScientificTrainingProtocol = "â€¢ PhÆ°Æ¡ng phÃ¡p Fartlek (Biáº¿n tá»‘c): 400m cháº¡y nhanh vá»«a - 200m cháº¡y cháº­m tháº£ lá»ng liÃªn tá»¥c 5 vÃ²ng sÃ¢n.\nâ€¢ Luyá»‡n táº­p nhá»‹p thá»Ÿ 2-2 (2 bÆ°á»›c hÃ­t vÃ o, 2 bÆ°á»›c thá»Ÿ ra dá»©t khoÃ¡t báº±ng mÅ©i vÃ  miá»‡ng).\nâ€¢ TÄƒng cá»± ly lÅ©y tiáº¿n: Tuáº§n 1 cháº¡y 1.8km, Tuáº§n 2 cháº¡y 2.4km, Tuáº§n 3-4 hoÃ n thiá»‡n chuáº©n 3.0km cÃ³ trang bá»‹ sÃºng tiá»ƒu liÃªn AK.",
-                WeeklyScheduleRecommendation = "2 buá»•i rÃ¨n cá»± ly dÃ i (Thá»© 3, Thá»© 6) + 1 buá»•i hÃ nh quÃ¢n mang vÃ¡c 15kg vÃ o sÃ¡ng Thá»© 7.",
-                MeasurableTarget = "Thá»i gian cháº¡y 3000m toÃ n Ä‘Æ¡n vá»‹ dÆ°á»›i 13 phÃºt 30 giÃ¢y; khÃ´ng cÃ³ há»c viÃªn bá» cuá»™c giá»¯a cháº·ng."
+                    ? "Học viên chưa làm chủ kỹ thuật phân phối sức; thường xuất phát quá nhanh ở 800m đầu dẫn đến tụt dốc ở nửa cuối đường chạy. Kỹ thuật nhịp thở chưa đồng bộ bước chạy."
+                    : "Học viên duy trì ngưỡng hô hấp ổn định; cần tối ưu hóa guồng chân rút đích ở 400m cuối cùng.",
+                ScientificTrainingProtocol = "• Phương pháp Fartlek (Biến tốc): 400m chạy nhanh vừa - 200m chạy chậm thả lỏng liên tục 5 vòng sân.\n• Luyện tập nhịp thở 2-2 (2 bước hít vào, 2 bước thở ra dứt khoát bằng mũi và miệng).\n• Tăng cự ly lũy tiến: Tuần 1 chạy 1.8km, Tuần 2 chạy 2.4km, Tuần 3-4 hoàn thiện chuẩn 3.0km có trang bị súng tiểu liên AK.",
+                WeeklyScheduleRecommendation = "2 buổi rèn cự ly dài (Thứ 3, Thứ 6) + 1 buổi hành quân mang vác 15kg vào sáng Thứ 7.",
+                MeasurableTarget = "Thời gian chạy 3000m toàn đơn vị dưới 13 phút 30 giây; không có học viên bỏ cuộc giữa chặng."
             });
 
-            // NhÃ³m C: Sá»©c nhanh & Bá»™c phÃ¡t (Cháº¡y 100m, Nháº£y xa)
+            // Nhóm C: Sức nhanh & Bộc phát (Chạy 100m, Nhảy xa)
             var speedRecords = recordsList.Where(r => 
                 (r.Subject?.SubjectName?.Contains("100", StringComparison.OrdinalIgnoreCase) ?? false) ||
-                (r.Subject?.SubjectName?.Contains("nháº£y", StringComparison.OrdinalIgnoreCase) ?? false)).ToList();
+                (r.Subject?.SubjectName?.Contains("nhảy", StringComparison.OrdinalIgnoreCase) ?? false)).ToList();
             int speedTotal = speedRecords.Count;
-            int speedFail = speedRecords.Count(r => r.Grade == "KhÃ´ng Ä‘áº¡t");
+            int speedFail = speedRecords.Count(r => r.Grade == "Không đạt");
             double speedFailRate = speedTotal > 0 ? (double)speedFail / speedTotal * 100 : 0;
 
             result.ComponentPrescriptions.Add(new FitnessComponentPrescriptionDto
             {
-                ComponentName = "Tá»‘ Cháº¥t Tá»‘c Äá»™ & Bá»™c PhÃ¡t Tháº§n Kinh CÆ¡",
-                TargetSubjects = "Cháº¡y 100m, Nháº£y xa cÃ³ Ä‘Ã ",
+                ComponentName = "Tố Chất Tốc Độ & Bộc Phát Thần Kinh Cơ",
+                TargetSubjects = "Chạy 100m, Nhảy xa có đà",
                 FailRate = Math.Round(speedFailRate, 1),
                 AffectedCadetsCount = speedFail,
-                UrgencyLevel = speedFailRate >= 15 ? "ðŸ”´ KHáº¨N Cáº¤P" : (speedFailRate >= 6 ? "ðŸŸ¡ Cáº¦N CHÃš Ã" : "ðŸŸ¢ DUY TRÃŒ"),
+                UrgencyLevel = speedFailRate >= 15 ? "🔴 KHẨN CẤP" : (speedFailRate >= 6 ? "🟡 CẦN CHÚ Ý" : "🟢 DUY TRÌ"),
                 UrgencyColor = speedFailRate >= 15 ? "#DC2626" : (speedFailRate >= 6 ? "#D97706" : "#16A34A"),
                 UrgencyBackground = speedFailRate >= 15 ? "#FEE2E2" : (speedFailRate >= 6 ? "#FEF3C7" : "#DCFCE7"),
-                CoreWeaknessAnalysis = "GÃ³c Ä‘á»™ xuáº¥t phÃ¡t tháº¥p chÆ°a tá»‘i Æ°u, sá»©c bá»™c phÃ¡t cá»§a cÆ¡ báº¯p chÃ¢n vÃ  khá»›p cá»• chÃ¢n cÃ²n háº¡n cháº¿ á»Ÿ 30m gia tá»‘c Ä‘áº§u.",
-                ScientificTrainingProtocol = "â€¢ BÃ i táº­p Plyometrics: Báº­t cÃ³c (Frog jumps) 3 hiá»‡p x 20m; nháº£y lÃ² cÃ² Ä‘á»•i chÃ¢n tÄƒng Ä‘á»™ Ä‘Ã n há»“i gÃ¢n gÃ³t Achilles.\nâ€¢ Luyá»‡n ká»¹ thuáº­t xuáº¥t phÃ¡t tháº¥p vá»›i bÃ n Ä‘áº¡p: Cháº¡y tÄƒng tá»‘c 30m - 50m láº·p láº¡i 6 láº§n.",
-                WeeklyScheduleRecommendation = "2 buá»•i/tuáº§n lá»“ng ghÃ©p vÃ o Ä‘áº§u giá» thá»ƒ dá»¥c chiá»u (Thá»© 3, Thá»© 5).",
-                MeasurableTarget = "Thá»i gian cháº¡y 100m dÆ°á»›i 14.5 giÃ¢y (Chuáº©n Ä‘áº¡t); trÃªn 50% Ä‘áº¡t má»‘c dÆ°á»›i 13.8 giÃ¢y (Chuáº©n KhÃ¡ - Giá»i)."
+                CoreWeaknessAnalysis = "Góc độ xuất phát thấp chưa tối ưu, sức bộc phát của cơ bắp chân và khớp cổ chân còn hạn chế ở 30m gia tốc đầu.",
+                ScientificTrainingProtocol = "• Bài tập Plyometrics: Bật cóc (Frog jumps) 3 hiệp x 20m; nhảy lò cò đổi chân tăng độ đàn hồi gân gót Achilles.\n• Luyện kỹ thuật xuất phát thấp với bàn đạp: Chạy tăng tốc 30m - 50m lặp lại 6 lần.",
+                WeeklyScheduleRecommendation = "2 buổi/tuần lồng ghép vào đầu giờ thể dục chiều (Thứ 3, Thứ 5).",
+                MeasurableTarget = "Thời gian chạy 100m dưới 14.5 giây (Chuẩn đạt); trên 50% đạt mốc dưới 13.8 giây (Chuẩn Khá - Giỏi)."
             });
 
-            // NhÃ³m D: BÆ¡i vÅ© trang & VÆ°á»£t váº­t cáº£n
+            // Nhóm D: Bơi vũ trang & Vượt vật cản
             var waterRecords = recordsList.Where(r => 
-                (r.Subject?.SubjectName?.Contains("bÆ¡i", StringComparison.OrdinalIgnoreCase) ?? false) ||
-                (r.Subject?.SubjectName?.Contains("váº­t cáº£n", StringComparison.OrdinalIgnoreCase) ?? false)).ToList();
+                (r.Subject?.SubjectName?.Contains("bơi", StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (r.Subject?.SubjectName?.Contains("vật cản", StringComparison.OrdinalIgnoreCase) ?? false)).ToList();
             int waterTotal = waterRecords.Count;
-            int waterFail = waterRecords.Count(r => r.Grade == "KhÃ´ng Ä‘áº¡t");
+            int waterFail = waterRecords.Count(r => r.Grade == "Không đạt");
             double waterFailRate = waterTotal > 0 ? (double)waterFail / waterTotal * 100 : 0;
 
             result.ComponentPrescriptions.Add(new FitnessComponentPrescriptionDto
             {
-                ComponentName = "Ká»¹ NÄƒng QuÃ¢n Sá»±: BÆ¡i VÅ© Trang & VÆ°á»£t Váº­t Cáº£n",
-                TargetSubjects = "BÆ¡i 100m mang sÃºng, VÆ°á»£t váº­t cáº£n K91",
+                ComponentName = "Kỹ Năng Quân Sự: Bơi Vũ Trang & Vượt Vật Cản",
+                TargetSubjects = "Bơi 100m mang súng, Vượt vật cản K91",
                 FailRate = Math.Round(waterFailRate, 1),
                 AffectedCadetsCount = waterFail,
-                UrgencyLevel = waterFailRate >= 15 ? "ðŸ”´ KHáº¨N Cáº¤P" : (waterFailRate >= 6 ? "ðŸŸ¡ Cáº¦N CHÃš Ã" : "ðŸŸ¢ DUY TRÃŒ"),
+                UrgencyLevel = waterFailRate >= 15 ? "🔴 KHẨN CẤP" : (waterFailRate >= 6 ? "🟡 CẦN CHÚ Ý" : "🟢 DUY TRÌ"),
                 UrgencyColor = waterFailRate >= 15 ? "#DC2626" : (waterFailRate >= 6 ? "#D97706" : "#16A34A"),
                 UrgencyBackground = waterFailRate >= 15 ? "#FEE2E2" : (waterFailRate >= 6 ? "#FEF3C7" : "#DCFCE7"),
-                CoreWeaknessAnalysis = "TÃ¢m lÃ½ sá»£ nÆ°á»›c á»Ÿ má»™t sá»‘ Ä‘á»“ng chÃ­ má»›i; ká»¹ thuáº­t Ä‘áº¡p chÃ¢n áº¿ch mang giÃ y vÃ  ba lÃ´ chÆ°a thuáº§n thá»¥c lÃ m tiÃªu hao thá»ƒ lá»±c nhanh.",
-                ScientificTrainingProtocol = "â€¢ RÃ¨n luyá»‡n ká»¹ nÄƒng ná»•i ngá»­a giá»¯ sÃºng khÃ´ trÃªn máº·t nÆ°á»›c 5 phÃºt liÃªn tá»¥c.\nâ€¢ Äáº¡p chÃ¢n áº¿ch Ã´m phao bÆ¡i 4 x 50m; chuyá»ƒn tiáº¿p sang bÆ¡i vÅ© trang mang sÃºng tiá»ƒu liÃªn AK vÃ  phao lÆ°ng trang bá»‹.",
-                WeeklyScheduleRecommendation = "2 buá»•i/tuáº§n táº¡i há»“ bÆ¡i quÃ¢n sá»± (Thá»© 4, Thá»© 7).",
-                MeasurableTarget = "100% bÆ¡i Ä‘Æ°á»£c cá»± ly 100m vÅ© trang an toÃ n tuyá»‡t Ä‘á»‘i; bÆ¡i Ä‘áº¡t chuáº©n dÆ°á»›i 2 phÃºt 30 giÃ¢y."
+                CoreWeaknessAnalysis = "Tâm lý sợ nước ở một số đồng chí mới; kỹ thuật đạp chân ếch mang giày và ba lô chưa thuần thục làm tiêu hao thể lực nhanh.",
+                ScientificTrainingProtocol = "• Rèn luyện kỹ năng nổi ngửa giữ súng khô trên mặt nước 5 phút liên tục.\n• Đạp chân ếch ôm phao bơi 4 x 50m; chuyển tiếp sang bơi vũ trang mang súng tiểu liên AK và phao lưng trang bị.",
+                WeeklyScheduleRecommendation = "2 buổi/tuần tại hồ bơi quân sự (Thứ 4, Thứ 7).",
+                MeasurableTarget = "100% bơi được cự ly 100m vũ trang an toàn tuyệt đối; bơi đạt chuẩn dưới 2 phút 30 giây."
             });
 
-            // 3. PHÃC Äá»’ Bá»’I DÆ¯á» NG CÃ NHÃ‚N HÃ“A (Personalized Cadet Prescriptions)
-            var failedCadetRecords = recordsList.Where(r => r.Grade == "KhÃ´ng Ä‘áº¡t").Take(20).ToList();
+            // 3. PHÁC ĐỒ BỒI DƯỠNG CÁ NHÂN HÓA (Personalized Cadet Prescriptions)
+            var failedCadetRecords = recordsList.Where(r => r.Grade == "Không đạt").Take(20).ToList();
             foreach (var fr in failedCadetRecords)
             {
-                string subjName = fr.Subject?.SubjectName ?? "RÃ¨n luyá»‡n thá»ƒ lá»±c";
+                string subjName = fr.Subject?.SubjectName ?? "Rèn luyện thể lực";
                 string tailoredPlan;
                 string standard;
 
-                if (subjName.Contains("xÃ ", StringComparison.OrdinalIgnoreCase))
+                if (subjName.Contains("xà", StringComparison.OrdinalIgnoreCase))
                 {
-                    tailoredPlan = "Treo xÃ  tÄ©nh 45s x 3 hiá»‡p + KÃ©o xÃ  cÃ³ dÃ¢y há»— trá»£ 8 láº§n/hiá»‡p. Táº­p má»—i chiá»u trÆ°á»›c giá» Äƒn cÆ¡m.";
-                    standard = "Tá»‘i thiá»ƒu 10 cÃ¡i (Äáº¡t chuáº©n TT32)";
+                    tailoredPlan = "Treo xà tĩnh 45s x 3 hiệp + Kéo xà có dây hỗ trợ 8 lần/hiệp. Tập mỗi chiều trước giờ ăn cơm.";
+                    standard = "Tối thiểu 10 cái (Đạt chuẩn TT32)";
                 }
                 else if (subjName.Contains("3000", StringComparison.OrdinalIgnoreCase))
                 {
-                    tailoredPlan = "Cháº¡y cá»± ly tÄƒng dáº§n (1.5km -> 2km -> 3km), luyá»‡n nhá»‹p thá»Ÿ 2-2 káº¿t há»£p Ä‘i bá»™ tháº£ lá»ng.";
-                    standard = "Thá»i gian dÆ°á»›i 13 phÃºt 30 giÃ¢y";
+                    tailoredPlan = "Chạy cự ly tăng dần (1.5km -> 2km -> 3km), luyện nhịp thở 2-2 kết hợp đi bộ thả lỏng.";
+                    standard = "Thời gian dưới 13 phút 30 giây";
                 }
                 else if (subjName.Contains("100", StringComparison.OrdinalIgnoreCase))
                 {
-                    tailoredPlan = "Luyá»‡n báº­t cÃ³c 3 hiá»‡p 20m + Cháº¡y biáº¿n tá»‘c 30m - 50m nÃ¢ng cao Ä‘Ã¹i bá»™c phÃ¡t tá»‘c Ä‘á»™.";
-                    standard = "Thá»i gian dÆ°á»›i 14.5 giÃ¢y";
+                    tailoredPlan = "Luyện bật cóc 3 hiệp 20m + Chạy biến tốc 30m - 50m nâng cao đùi bộc phát tốc độ.";
+                    standard = "Thời gian dưới 14.5 giây";
                 }
                 else
                 {
-                    tailoredPlan = "Táº­p bá»• trá»£ thá»ƒ lá»±c chuyÃªn biá»‡t theo hÆ°á»›ng dáº«n cá»§a CÃ¡n bá»™ huáº¥n luyá»‡n; kiá»ƒm tra láº¡i sau 3 tuáº§n.";
-                    standard = "Äáº¡t tiÃªu chuáº©n mÃ´n theo TT 32";
+                    tailoredPlan = "Tập bổ trợ thể lực chuyên biệt theo hướng dẫn của Cán bộ huấn luyện; kiểm tra lại sau 3 tuần.";
+                    standard = "Đạt tiêu chuẩn môn theo TT 32";
                 }
 
                 result.PersonalizedCadetPrescriptions.Add(new PersonalizedCadetPrescriptionDto
                 {
                     CadetId = fr.CadetId,
                     CadetCode = fr.Cadet?.CadetCode ?? $"HV-{fr.CadetId}",
-                    FullName = fr.Cadet?.FullName ?? "Há»c viÃªn",
-                    Unit = fr.Cadet?.Unit ?? "ÄÆ¡n vá»‹",
-                    ClassName = fr.Cadet?.ClassName ?? (fr.Cadet?.MilitaryClass?.ClassName ?? "Lá»›p"),
+                    FullName = fr.Cadet?.FullName ?? "Học viên",
+                    Unit = fr.Cadet?.Unit ?? "Đơn vị",
+                    ClassName = fr.Cadet?.ClassName ?? (fr.Cadet?.MilitaryClass?.ClassName ?? "Lớp"),
                     WeakSubject = subjName,
                     CurrentPerformance = fr.ScoreValue.ToString("0.##"),
                     StandardThreshold = standard,
                     TailoredExercisePlan = tailoredPlan,
-                    RemedialTimeline = "30 ngÃ y (Kiá»ƒm tra sÃ¡t háº¡ch láº¡i)",
-                    AssignedCoach = $"CÃ¡n bá»™ {fr.Cadet?.Unit ?? "Äáº¡i Ä‘á»™i"} trá»±c tiáº¿p Ä‘Ã´n Ä‘á»‘c"
+                    RemedialTimeline = "30 ngày (Kiểm tra sát hạch lại)",
+                    AssignedCoach = $"Cán bộ {fr.Cadet?.Unit ?? "Đại đội"} trực tiếp đôn đốc"
                 });
             }
 
@@ -209,4 +209,3 @@ namespace QL_HocVien.Services.Implementations
         }
     }
 }
-

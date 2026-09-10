@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
@@ -9,12 +9,12 @@ using System.Windows.Threading;
 namespace QL_HocVien.Services.Implementations
 {
     /// <summary>
-    /// Triá»ƒn khai dá»‹ch vá»¥ KhÃ³a báº£o máº­t cáº¥p 2 (KhÃ³a rÆ°Æ¡ng Ngá»c Rá»“ng).
-    /// ÄÃ¡p á»©ng tiÃªu chuáº©n OOP vÃ  SOLID (SRP, OCP, DIP).
+    /// Triển khai dịch vụ Khóa bảo mật cấp 2 (Khóa rương Ngọc Rồng).
+    /// Đáp ứng tiêu chuẩn OOP và SOLID (SRP, OCP, DIP).
     /// </summary>
     public class SecurityGateService : ISecurityGateService
     {
-        private const int GracePeriodTotalSeconds = 300; // 5 phÃºt = 300 giÃ¢y
+        private const int GracePeriodTotalSeconds = 300; // 5 phút = 300 giây
         private const string SaltPepper = "MOD_SECURITY_GATE_VN_2026";
         private static readonly byte[] ConfigEntropy = Encoding.UTF8.GetBytes("MOD_SecGate_Config_Salt_2026#");
         private readonly string _configFilePath;
@@ -87,7 +87,7 @@ namespace QL_HocVien.Services.Implementations
                     byte[] fileBytes = File.ReadAllBytes(_configFilePath);
                     string json;
 
-                    // Thá»­ giáº£i mÃ£ khá»‘i DPAPI Ä‘Æ°á»£c báº£o vá»‡ chá»‘ng can thiá»‡p
+                    // Thử giải mã khối DPAPI được bảo vệ chống can thiệp
                     try
                     {
                         byte[] plainBytes = ProtectedData.Unprotect(fileBytes, ConfigEntropy, DataProtectionScope.CurrentUser);
@@ -95,7 +95,7 @@ namespace QL_HocVien.Services.Implementations
                     }
                     catch
                     {
-                        // Fallback há»— trá»£ Ä‘á»c tá»‡p cáº¥u hÃ¬nh cÅ© (náº¿u chÆ°a nÃ¢ng cáº¥p DPAPI)
+                        // Fallback hỗ trợ đọc tệp cấu hình cũ (nếu chưa nâng cấp DPAPI)
                         json = Encoding.UTF8.GetString(fileBytes);
                     }
 
@@ -117,7 +117,7 @@ namespace QL_HocVien.Services.Implementations
             }
             catch
             {
-                // NguyÃªn táº¯c phÃ²ng thá»§ Fail-Closed: Náº¿u tá»‡p bá»‹ can thiá»‡p trÃ¡i phÃ©p, khÃ³a cháº·t há»‡ thá»‘ng
+                // Nguyên tắc phòng thủ Fail-Closed: Nếu tệp bị can thiệp trái phép, khóa chặt hệ thống
                 _isProtectionEnabled = true;
             }
         }
@@ -137,13 +137,13 @@ namespace QL_HocVien.Services.Implementations
                 var json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
                 byte[] plainBytes = Encoding.UTF8.GetBytes(json);
 
-                // Báº£o vá»‡ toÃ n váº¹n vÃ  bÃ­ máº­t tá»‡p báº±ng Windows DPAPI (ngÄƒn cháº·n sá»­a file JSON báº±ng Notepad)
+                // Bảo vệ toàn vẹn và bí mật tệp bằng Windows DPAPI (ngăn chặn sửa file JSON bằng Notepad)
                 byte[] cipherBytes = ProtectedData.Protect(plainBytes, ConfigEntropy, DataProtectionScope.CurrentUser);
                 File.WriteAllBytes(_configFilePath, cipherBytes);
             }
             catch
             {
-                // Xá»­ lÃ½ an toÃ n náº¿u cÃ³ ngoáº¡i lá»‡ ghi file
+                // Xử lý an toàn nếu có ngoại lệ ghi file
             }
         }
 
@@ -222,7 +222,7 @@ namespace QL_HocVien.Services.Implementations
             }
             else
             {
-                // Há»— trá»£ kiá»ƒm tra hash cÅ© vÃ  tá»± Ä‘á»™ng nÃ¢ng cáº¥p lÃªn chuáº©n PBKDF2 100.000 vÃ²ng
+                // Hỗ trợ kiểm tra hash cũ và tự động nâng cấp lên chuẩn PBKDF2 100.000 vòng
                 var legacyHash = LegacySha256Hash(password.Trim(), _salt);
                 if (string.Equals(legacyHash, _passwordHash, StringComparison.Ordinal))
                 {
@@ -237,7 +237,7 @@ namespace QL_HocVien.Services.Implementations
         public void UnlockForGracePeriod()
         {
             _isUnlocked = true;
-            _remainingSeconds = GracePeriodTotalSeconds; // 300s = 5 phÃºt
+            _remainingSeconds = GracePeriodTotalSeconds; // 300s = 5 phút
             _countdownTimer.Stop();
             _countdownTimer.Start();
             OnSecurityStateChanged?.Invoke();
@@ -251,21 +251,21 @@ namespace QL_HocVien.Services.Implementations
             OnSecurityStateChanged?.Invoke();
         }
 
-        public async Task<bool> EnsureUnlockedAsync(string actionDescription = "thá»±c hiá»‡n thao tÃ¡c nÃ y")
+        public async Task<bool> EnsureUnlockedAsync(string actionDescription = "thực hiện thao tác này")
         {
-            // Náº¿u báº£o máº­t chÆ°a Ä‘Æ°á»£c báº­t -> Cho phÃ©p thao tÃ¡c trá»±c tiáº¿p
+            // Nếu bảo mật chưa được bật -> Cho phép thao tác trực tiếp
             if (!_isProtectionEnabled)
             {
                 return true;
             }
 
-            // Náº¿u Ä‘ang má»Ÿ khÃ³a vÃ  váº«n cÃ²n trong thá»i gian 5 phÃºt -> Tá»± do thao tÃ¡c
+            // Nếu đang mở khóa và vẫn còn trong thời gian 5 phút -> Tự do thao tác
             if (IsUnlocked)
             {
                 return true;
             }
 
-            // Äang bá»‹ khÃ³a -> Hiá»ƒn thá»‹ Dialog yÃªu cáº§u nháº­p máº­t kháº©u cáº¥p 2
+            // Đang bị khóa -> Hiển thị Dialog yêu cầu nhập mật khẩu cấp 2
             var verified = await _dialogService.ShowPasswordVerificationDialogAsync(actionDescription, VerifyPassword);
             if (verified)
             {
@@ -277,4 +277,3 @@ namespace QL_HocVien.Services.Implementations
         }
     }
 }
-

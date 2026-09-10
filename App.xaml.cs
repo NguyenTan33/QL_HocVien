@@ -105,19 +105,50 @@ namespace QL_HocVien
                     if (Array.Exists(e.Args, a => a == "--page"))
                     {
                         int pIdx = Array.IndexOf(e.Args, "--page");
-                        if (pIdx >= 0 && pIdx < e.Args.Length - 1 && mainWindow.DataContext is MainViewModel mainVm)
+                        if (pIdx >= 0 && pIdx < e.Args.Length - 1)
                         {
                             string target = e.Args[pIdx + 1].ToLowerInvariant();
-                            if (target.Contains("officer")) mainVm.NavigateToOfficerManagement();
-                            else if (target.Contains("credit") || target.Contains("subject")) mainVm.NavigateToCreditSubjectManagement();
-                            else if (target.Contains("timeline") || target.Contains("calendar")) mainVm.NavigateToTrainingTimeline();
-                            else if (target.Contains("academic")) mainVm.NavigateToAcademicAnalytics();
-                            else if (target.Contains("exam")) mainVm.NavigateToExamAnalytics();
-                            else if (target.Contains("setting")) mainVm.NavigateToSettings();
-                            else if (target.Contains("cadet")) mainVm.NavigateToCadetManagement();
-                            else if (target.Contains("class")) mainVm.NavigateToClassManagement();
-                            else if (target.Contains("catalog")) mainVm.NavigateToCatalogManagement();
-                            else if (target.Contains("dashboard")) mainVm.NavigateToDashboard();
+                            if (target.Contains("login") || target.Contains("register") || target.Contains("forgot"))
+                            {
+                                var testLoginWindow = ServiceProvider.GetRequiredService<LoginWindow>();
+                                if (target.Contains("register"))
+                                {
+                                    testLoginWindow.ShowRegisterForm();
+                                }
+                                else if (target.Contains("forgot"))
+                                {
+                                    testLoginWindow.ShowForgotPasswordForm();
+                                }
+                                testLoginWindow.Show();
+                                testLoginWindow.UpdateLayout();
+                                testLoginWindow.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+                                System.Threading.Thread.Sleep(500);
+                                testLoginWindow.UpdateLayout();
+                                int lw = (int)Math.Max(1000, testLoginWindow.ActualWidth > 0 ? testLoginWindow.ActualWidth : 1000);
+                                int lh = (int)Math.Max(650, testLoginWindow.ActualHeight > 0 ? testLoginWindow.ActualHeight : 650);
+                                var lrtb = new RenderTargetBitmap(lw, lh, 96, 96, PixelFormats.Pbgra32);
+                                lrtb.Render(testLoginWindow);
+                                var ldir = Path.GetDirectoryName(outPath);
+                                if (!string.IsNullOrEmpty(ldir) && !Directory.Exists(ldir)) Directory.CreateDirectory(ldir);
+                                var lencoder = new PngBitmapEncoder();
+                                lencoder.Frames.Add(BitmapFrame.Create(lrtb));
+                                using (var fs = File.Create(outPath)) { lencoder.Save(fs); }
+                                Shutdown(0);
+                                return;
+                            }
+                            else if (mainWindow.DataContext is MainViewModel mainVm)
+                            {
+                                if (target.Contains("officer")) mainVm.NavigateToOfficerManagement();
+                                else if (target.Contains("credit") || target.Contains("subject")) mainVm.NavigateToCreditSubjectManagement();
+                                else if (target.Contains("timeline") || target.Contains("calendar")) mainVm.NavigateToTrainingTimeline();
+                                else if (target.Contains("academic")) mainVm.NavigateToAcademicAnalytics();
+                                else if (target.Contains("exam")) mainVm.NavigateToExamAnalytics();
+                                else if (target.Contains("setting")) mainVm.NavigateToSettings();
+                                else if (target.Contains("cadet")) mainVm.NavigateToCadetManagement();
+                                else if (target.Contains("class")) mainVm.NavigateToClassManagement();
+                                else if (target.Contains("catalog")) mainVm.NavigateToCatalogManagement();
+                                else if (target.Contains("dashboard")) mainVm.NavigateToDashboard();
+                            }
                         }
                     }
 
@@ -252,7 +283,6 @@ namespace QL_HocVien
             services.AddScoped<ITrainingEventRepository, TrainingEventRepository>();
 
             // Đăng ký Services (SOLID - SRP, OCP)
-            services.AddSingleton<IEmailService, EmailService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IPasskeyService, PasskeyService>();
             services.AddScoped<IClassService, ClassService>();

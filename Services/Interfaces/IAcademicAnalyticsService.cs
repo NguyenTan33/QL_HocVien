@@ -1,4 +1,4 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using QL_HocVien.Models.DTOs;
 
 namespace QL_HocVien.Services.Interfaces
@@ -17,4 +17,3 @@ namespace QL_HocVien.Services.Interfaces
             string filePath);
     }
 }
-

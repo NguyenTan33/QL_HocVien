@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
@@ -10,8 +10,8 @@ namespace QL_HocVien.Services.Implementations
     public class LoginLockoutService : ILoginLockoutService
     {
         private const int ThresholdAttempts = 5;
-        private const int BaseLockoutSeconds = 60; // 1 phÃºt = 60 giÃ¢y
-        private const int MaxLockoutSeconds = 3600; // KhÃ³a tá»‘i Ä‘a 60 phÃºt
+        private const int BaseLockoutSeconds = 60; // 1 phút = 60 giây
+        private const int MaxLockoutSeconds = 3600; // Khóa tối đa 60 phút
         private const string StateFileName = "lockout_state.json";
         private static readonly byte[] LockoutEntropy = Encoding.UTF8.GetBytes("MOD_Lockout_State_Entropy_2026!#");
 
@@ -76,7 +76,7 @@ namespace QL_HocVien.Services.Implementations
             get
             {
                 if (!IsLockedOut) return string.Empty;
-                return $"Báº¡n Ä‘Ã£ nháº­p sai {FailedAttempts} láº§n. Há»‡ thá»‘ng táº¡m thá»i bá»‹ khÃ³a trong {FormattedRemainingTime}.";
+                return $"Bạn đã nhập sai {FailedAttempts} lần. Hệ thống tạm thời bị khóa trong {FormattedRemainingTime}.";
             }
         }
 
@@ -136,11 +136,11 @@ namespace QL_HocVien.Services.Implementations
 
                 if (_failedAttempts >= ThresholdAttempts)
                 {
-                    // TÃ­nh thá»i gian khÃ³a theo cáº¥p sá»‘ nhÃ¢n:
-                    // Láº§n 5: 60s (1 phÃºt)
-                    // Láº§n 6: 120s (2 phÃºt)
-                    // Láº§n 7: 240s (4 phÃºt)
-                    // Láº§n 8: 480s (8 phÃºt)...
+                    // Tính thời gian khóa theo cấp số nhân:
+                    // Lần 5: 60s (1 phút)
+                    // Lần 6: 120s (2 phút)
+                    // Lần 7: 240s (4 phút)
+                    // Lần 8: 480s (8 phút)...
                     int exponent = _failedAttempts - ThresholdAttempts;
                     int lockoutSeconds = BaseLockoutSeconds * (int)Math.Pow(2, Math.Min(exponent, 10));
                     if (lockoutSeconds > MaxLockoutSeconds) lockoutSeconds = MaxLockoutSeconds;
@@ -159,7 +159,7 @@ namespace QL_HocVien.Services.Implementations
                 else
                 {
                     SaveState();
-                    return (false, 0, "TÃ i khoáº£n hoáº·c máº­t kháº©u khÃ´ng chÃ­nh xÃ¡c!");
+                    return (false, 0, "Tài khoản hoặc mật khẩu không chính xác!");
                 }
             }
         }
@@ -196,7 +196,7 @@ namespace QL_HocVien.Services.Implementations
                         }
                         catch
                         {
-                            // Há»— trá»£ Ä‘á»c file cáº¥u trÃºc cÅ© (náº¿u chÆ°a mÃ£ hÃ³a)
+                            // Hỗ trợ đọc file cấu trúc cũ (nếu chưa mã hóa)
                             json = Encoding.UTF8.GetString(fileBytes);
                         }
 
@@ -220,7 +220,7 @@ namespace QL_HocVien.Services.Implementations
                 }
                 catch
                 {
-                    // Náº¿u phÃ¡t hiá»‡n file bá»‹ can thiá»‡p lá»—i cáº¥u trÃºc, khÃ´ng reset náº¿u Ä‘ang trong bá»™ nhá»›
+                    // Nếu phát hiện file bị can thiệp lỗi cấu trúc, không reset nếu đang trong bộ nhớ
                     if (!_lockoutUntilUtc.HasValue)
                     {
                         _failedAttempts = 0;
@@ -243,13 +243,13 @@ namespace QL_HocVien.Services.Implementations
                 string json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
                 byte[] plainBytes = Encoding.UTF8.GetBytes(json);
 
-                // MÃ£ hÃ³a báº£o vá»‡ toÃ n váº¹n báº±ng Windows DPAPI
+                // Mã hóa bảo vệ toàn vẹn bằng Windows DPAPI
                 byte[] cipherBytes = ProtectedData.Protect(plainBytes, LockoutEntropy, DataProtectionScope.CurrentUser);
                 File.WriteAllBytes(_stateFilePath, cipherBytes);
             }
             catch
             {
-                // Bá» qua lá»—i ghi file
+                // Bỏ qua lỗi ghi file
             }
         }
 
@@ -260,4 +260,3 @@ namespace QL_HocVien.Services.Implementations
         }
     }
 }
-
