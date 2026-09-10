@@ -41,6 +41,9 @@ namespace QL_HocVien.ViewModels
             "Tất cả", "Đã phân công cán bộ", "Chưa phân công cán bộ"
         };
 
+        public ObservableCollection<string> AvailableUnits { get; } = new();
+        public ObservableCollection<string> AvailableMajors { get; } = new();
+        public ObservableCollection<string> AvailableAcademicYears { get; } = new();
         public ObservableCollection<string> AvailableOfficers { get; } = new();
 
         // Tìm kiếm và bộ lọc
@@ -209,19 +212,51 @@ namespace QL_HocVien.ViewModels
             try
             {
                 var units = await _catalogService.GetUnitDropdownAsync();
+                Units.Clear();
+                Units.Add("Tất cả");
+                AvailableUnits.Clear();
                 if (units.Any())
                 {
-                    Units.Clear();
-                    Units.Add("Tất cả");
-                    foreach (var u in units) Units.Add(u);
+                    foreach (var u in units)
+                    {
+                        Units.Add(u);
+                        AvailableUnits.Add(u);
+                    }
+                }
+                else
+                {
+                    foreach (var u in new[] { "Đại đội 1", "Đại đội 2", "Đại đội 3", "Đại đội 4", "Tiểu đoàn 1" })
+                    {
+                        Units.Add(u);
+                        AvailableUnits.Add(u);
+                    }
                 }
 
                 var majors = await _catalogService.GetMajorDropdownAsync();
+                Majors.Clear();
+                Majors.Add("Tất cả");
+                AvailableMajors.Clear();
                 if (majors.Any())
                 {
-                    Majors.Clear();
-                    Majors.Add("Tất cả");
-                    foreach (var m in majors) Majors.Add(m);
+                    foreach (var m in majors)
+                    {
+                        Majors.Add(m);
+                        AvailableMajors.Add(m);
+                    }
+                }
+                else
+                {
+                    foreach (var m in new[] { "Chỉ huy Tham mưu", "Hậu cần Quân sự", "Kỹ thuật Quân sự", "Trinh sát đặc nhiệm", "Thông tin liên lạc" })
+                    {
+                        Majors.Add(m);
+                        AvailableMajors.Add(m);
+                    }
+                }
+
+                AvailableAcademicYears.Clear();
+                foreach (var y in new[] { "2021 - 2025", "2022 - 2026", "2023 - 2027", "2024 - 2028", "2025 - 2029", "2026 - 2030" })
+                {
+                    AvailableAcademicYears.Add(y);
                 }
 
                 var officers = await _officerService.GetAllOfficersAsync();
@@ -313,10 +348,10 @@ namespace QL_HocVien.ViewModels
             IsEditing = false;
             FormClassCode = string.Empty;
             FormClassName = string.Empty;
-            FormUnit = "Đại đội 1";
-            FormMajor = "Chỉ huy Tham mưu";
-            FormOfficerInCharge = string.Empty;
-            FormAcademicYear = "2023 - 2027";
+            FormUnit = AvailableUnits.FirstOrDefault() ?? "Đại đội 1";
+            FormMajor = AvailableMajors.FirstOrDefault() ?? "Chỉ huy Tham mưu";
+            FormOfficerInCharge = AvailableOfficers.FirstOrDefault() ?? string.Empty;
+            FormAcademicYear = AvailableAcademicYears.FirstOrDefault() ?? "2023 - 2027";
             FormDescription = string.Empty;
             FormErrorMessage = string.Empty;
             IsFormVisible = true;

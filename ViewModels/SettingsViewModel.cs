@@ -12,56 +12,83 @@ namespace QL_HocVien.ViewModels
     public partial class SettingsViewModel : ViewModelBase
     {
         private readonly ISecurityGateService _securityGate;
-        private readonly IUpdateService _updateService;
+        private readonly IUpdateService? _updateService;
         private readonly IServiceProvider _serviceProvider;
-
-        [ObservableProperty]
-        private string _smtpServer = "smtp.gmail.com";
-
-        [ObservableProperty]
-        private int _smtpPort = 587;
-
-        [ObservableProperty]
-        private string _senderName = "Hệ thống Quản lý Học viên Quân đội";
-
-        [ObservableProperty]
-        private string _senderEmail = "no-reply@mod.gov.vn";
-
-        [ObservableProperty]
-        private string _smtpUsername = "";
-
-        [ObservableProperty]
-        private string _smtpPassword = "";
-
-        [ObservableProperty]
-        private bool _enableSsl = true;
-
-        [ObservableProperty]
-        private bool _isTestMode = true;
+        private readonly IAuthService? _authService;
 
         [ObservableProperty]
         private string _databasePath = "ql_hocvien.db";
 
-        // ==================== CẤU HÌNH DỊCH VỤ SMS GATEWAY ====================
-        [ObservableProperty]
-        private string _smsProvider = "Twilio";
-
-        public string[] AvailableSmsProviders { get; } = new[] { "Twilio", "SpeedSMS", "eSMS.vn", "Sim Gateway Nội Bộ" };
-
-        [ObservableProperty]
-        private string _smsApiKey = "";
+        // ==================== ĐỔI MẬT KHẨU TÀI KHOẢN ĐĂNG NHẬP (OFFLINE) ====================
+        public string CurrentUsername => _authService?.CurrentUser?.Username ?? "admin";
+        public string CurrentFullName => _authService?.CurrentUser?.FullName ?? "Quản trị viên";
+        public string CurrentRole => _authService?.CurrentUser?.Role ?? "Admin";
 
         [ObservableProperty]
-        private string _smsSenderId = "BQP_QLHV";
+        private string _accountOldPassword = string.Empty;
 
         [ObservableProperty]
-        private string _smsAdminPhone = "";
+        private string _accountNewPassword = string.Empty;
 
         [ObservableProperty]
-        private bool _isSmsEnabled = false;
+        private string _accountConfirmPassword = string.Empty;
 
         [ObservableProperty]
-        private bool _isSmsTestMode = true;
+        private string _accountPasswordMessage = string.Empty;
+
+        [ObservableProperty]
+        private bool _isAccountPasswordSuccess;
+
+        [RelayCommand]
+        public async Task ChangeAccountPasswordAsync()
+        {
+            AccountPasswordMessage = string.Empty;
+            if (_authService == null)
+            {
+                IsAccountPasswordSuccess = false;
+                AccountPasswordMessage = "Dịch vụ xác thực tài khoản không khả dụng.";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(AccountOldPassword))
+            {
+                IsAccountPasswordSuccess = false;
+                AccountPasswordMessage = "Vui lòng nhập mật khẩu hiện tại của tài khoản!";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(AccountNewPassword))
+            {
+                IsAccountPasswordSuccess = false;
+                AccountPasswordMessage = "Vui lòng nhập mật khẩu mới!";
+                return;
+            }
+
+            if (AccountNewPassword.Length < 6)
+            {
+                IsAccountPasswordSuccess = false;
+                AccountPasswordMessage = "Mật khẩu mới phải có ít nhất 6 ký tự!";
+                return;
+            }
+
+            if (AccountNewPassword != AccountConfirmPassword)
+            {
+                IsAccountPasswordSuccess = false;
+                AccountPasswordMessage = "Xác nhận mật khẩu mới không khớp!";
+                return;
+            }
+
+            var result = await _authService.ChangePasswordAsync(AccountOldPassword, AccountNewPassword);
+            IsAccountPasswordSuccess = result.Success;
+            AccountPasswordMessage = result.Message;
+
+            if (result.Success)
+            {
+                AccountOldPassword = string.Empty;
+                AccountNewPassword = string.Empty;
+                AccountConfirmPassword = string.Empty;
+            }
+        }
 
         // ==================== CẤU HÌNH TỰ ĐỘNG CẬP NHẬT (AUTO-UPDATE) ====================
         [ObservableProperty]
@@ -112,15 +139,17 @@ namespace QL_HocVien.ViewModels
 
         public SettingsViewModel(
             ISecurityGateService securityGate,
-            IUpdateService updateService,
-            IServiceProvider serviceProvider)
+            IUpdateService? updateService,
+            IServiceProvider serviceProvider,
+            IAuthService? authService = null)
         {
             _securityGate = securityGate;
             _updateService = updateService;
             _serviceProvider = serviceProvider;
+            _authService = authService;
             Title = "Cài Đặt Hệ Thống";
 
-            AppVersionDisplay = $"v{_updateService.GetCurrentVersion()}";
+            AppVersionDisplay = _updateService != null ? $"v{_updateService.GetCurrentVersion()}" : "v1.0.0";
 
             LoadSettings();
 
@@ -156,33 +185,6 @@ namespace QL_HocVien.ViewModels
                 {
                     var json = File.ReadAllText(settingsPath);
                     using var doc = JsonDocument.Parse(json);
-                    if (doc.RootElement.TryGetProperty("SmtpSettings", out var smtpProp))
-                    {
-                        SmtpServer = smtpProp.GetProperty("Server").GetString() ?? SmtpServer;
-                        SmtpPort = smtpProp.GetProperty("Port").GetInt32();
-                        SenderName = smtpProp.GetProperty("SenderName").GetString() ?? SenderName;
-                        SenderEmail = smtpProp.GetProperty("SenderEmail").GetString() ?? SenderEmail;
-                        SmtpUsername = smtpProp.GetProperty("Username").GetString() ?? "";
-                        var rawSmtpPwd = smtpProp.GetProperty("Password").GetString() ?? "";
-                        SmtpPassword = AuthSecurityHelper.DecryptSecret(rawSmtpPwd);
-                        EnableSsl = smtpProp.GetProperty("EnableSsl").GetBoolean();
-                        if (smtpProp.TryGetProperty("IsTestMode", out var isTest))
-                        {
-                            IsTestMode = isTest.GetBoolean();
-                        }
-                    }
-
-                    if (doc.RootElement.TryGetProperty("SmsSettings", out var smsProp))
-                    {
-                        SmsProvider = smsProp.TryGetProperty("Provider", out var p) ? p.GetString() ?? "Twilio" : "Twilio";
-                        var rawSmsKey = smsProp.TryGetProperty("ApiKey", out var k) ? k.GetString() ?? "" : "";
-                        SmsApiKey = AuthSecurityHelper.DecryptSecret(rawSmsKey);
-                        SmsSenderId = smsProp.TryGetProperty("SenderId", out var s) ? s.GetString() ?? "BQP_QLHV" : "BQP_QLHV";
-                        SmsAdminPhone = smsProp.TryGetProperty("AdminPhone", out var ap) ? ap.GetString() ?? "" : "";
-                        IsSmsEnabled = smsProp.TryGetProperty("IsEnabled", out var ie) && ie.GetBoolean();
-                        IsSmsTestMode = smsProp.TryGetProperty("IsTestMode", out var itm) && itm.GetBoolean();
-                    }
-
                     if (doc.RootElement.TryGetProperty("UpdateSettings", out var updateProp))
                     {
                         if (updateProp.TryGetProperty("VersionCheckUrl", out var urlProp) && !string.IsNullOrWhiteSpace(urlProp.GetString()))
@@ -201,7 +203,7 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         public async Task SaveSettingsAsync()
         {
-            if (!await _securityGate.EnsureUnlockedAsync("Lưu cấu hình hệ thống & máy chủ thư")) return;
+            if (!await _securityGate.EnsureUnlockedAsync("Lưu cấu hình hệ thống")) return;
 
             try
             {
@@ -212,26 +214,6 @@ namespace QL_HocVien.ViewModels
                     {
                         DefaultConnection = "Data Source=ql_hocvien.db"
                     },
-                    SmtpSettings = new
-                    {
-                        Server = SmtpServer,
-                        Port = SmtpPort,
-                        SenderName = SenderName,
-                        SenderEmail = SenderEmail,
-                        Username = SmtpUsername,
-                        Password = AuthSecurityHelper.EncryptSecret(SmtpPassword),
-                        EnableSsl = EnableSsl,
-                        IsTestMode = IsTestMode
-                    },
-                    SmsSettings = new
-                    {
-                        Provider = SmsProvider,
-                        ApiKey = AuthSecurityHelper.EncryptSecret(SmsApiKey),
-                        SenderId = SmsSenderId,
-                        AdminPhone = SmsAdminPhone,
-                        IsEnabled = IsSmsEnabled,
-                        IsTestMode = IsSmsTestMode
-                    },
                     UpdateSettings = new
                     {
                         VersionCheckUrl = VersionCheckUrl.Trim(),
@@ -241,7 +223,7 @@ namespace QL_HocVien.ViewModels
 
                 var json = JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true });
                 File.WriteAllText(settingsPath, json);
-                StatusMessage = "Đã lưu cấu hình Hệ thống, SMTP, Cổng SMS và Cập nhật Auto-Update an toàn!";
+                StatusMessage = "Đã lưu cấu hình Hệ thống và Cập nhật Auto-Update an toàn!";
             }
             catch (Exception ex)
             {
@@ -252,6 +234,12 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         public async Task CheckForUpdateManualAsync()
         {
+            if (_updateService == null)
+            {
+                UpdateStatusText = "Dịch vụ cập nhật không khả dụng.";
+                return;
+            }
+
             IsCheckingUpdate = true;
             UpdateStatusText = "Đang kết nối máy chủ để kiểm tra bản cập nhật mới...";
 
@@ -284,42 +272,6 @@ namespace QL_HocVien.ViewModels
             finally
             {
                 IsCheckingUpdate = false;
-            }
-        }
-
-        [RelayCommand]
-        public void TestSmtp()
-        {
-            if (string.IsNullOrWhiteSpace(SenderEmail))
-            {
-                StatusMessage = "Vui lòng nhập Email người gửi trước khi kiểm tra!";
-                return;
-            }
-            if (IsTestMode)
-            {
-                StatusMessage = $"[CHẾ ĐỘ THỬ NGHIỆM SMTP] Máy chủ {SmtpServer}:{SmtpPort} hoạt động bình thường! Mã xác thực sẽ hiển thị trực tiếp trong hộp thoại.";
-            }
-            else
-            {
-                StatusMessage = $"Đang kết nối kiểm tra máy chủ {SmtpServer}:{SmtpPort} với tài khoản {SmtpUsername}...";
-            }
-        }
-
-        [RelayCommand]
-        public void TestSms()
-        {
-            if (string.IsNullOrWhiteSpace(SmsAdminPhone))
-            {
-                StatusMessage = "Vui lòng nhập số điện thoại nhận SMS trước khi kiểm tra!";
-                return;
-            }
-            if (IsSmsTestMode)
-            {
-                StatusMessage = $"[CHẾ ĐỘ THỬ NGHIỆM SMS] Đã mô phỏng gửi mã OTP / Cảnh báo bảo mật đến số {SmsAdminPhone} thành công!";
-            }
-            else
-            {
-                StatusMessage = $"Đã gửi lệnh SMS qua cổng {SmsProvider} tới số {SmsAdminPhone} (Định danh Brandname: {SmsSenderId}).";
             }
         }
 

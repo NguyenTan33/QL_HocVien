@@ -175,6 +175,31 @@ namespace QL_HocVien.Tests
         }
 
         [Fact]
+        public async Task Test_ChangePassword_For_CurrentUser()
+        {
+            // Login as admin
+            var loginResult = await _authService.LoginAsync("admin", "Admin@123");
+            Assert.True(loginResult.Success);
+            Assert.NotNull(_authService.CurrentUser);
+
+            // Change password with wrong current password -> fail
+            var wrongOld = await _authService.ChangePasswordAsync("WrongCurrentPassword@123", "NewChangedAdminPass@2026");
+            Assert.False(wrongOld.Success);
+
+            // Change password with correct current password -> success
+            var changeSuccess = await _authService.ChangePasswordAsync("Admin@123", "NewChangedAdminPass@2026");
+            Assert.True(changeSuccess.Success);
+
+            // Verify login with newly changed password
+            var loginWithNew = await _authService.LoginAsync("admin", "NewChangedAdminPass@2026");
+            Assert.True(loginWithNew.Success);
+
+            // Verify login with old password fails
+            var loginWithOldFail = await _authService.LoginAsync("admin", "Admin@123");
+            Assert.False(loginWithOldFail.Success);
+        }
+
+        [Fact]
         public async Task Test_Cadet_CRUD_And_Search_And_CodeSuggestion()
         {
             // Gợi ý mã
@@ -1083,6 +1108,32 @@ namespace QL_HocVien.Tests
             var delRes = await _examService.DeleteMultipleExamRecordsAsync(new[] { id1, id2 });
             Assert.True(delRes.Success);
             Assert.Equal(2, delRes.DeletedCount);
+        }
+
+        [Fact]
+        public void Inspect_Tbm_Excel_File()
+        {
+            var path = @"C:\Users\minht\Downloads\Điểm TBM chuẩn .xlsx";
+            if (!System.IO.File.Exists(path)) return;
+
+            using var wb = new ClosedXML.Excel.XLWorkbook(path);
+            var sb = new System.Text.StringBuilder();
+            var ws = wb.Worksheets.FirstOrDefault();
+            if (ws != null)
+            {
+                sb.AppendLine($"=== Sheet: {ws.Name} ===");
+                for (int c = 63; c <= 66; c++)
+                {
+                    var cell5 = ws.Cell(5, c);
+                    var cell70 = ws.Cell(70, c);
+                    sb.AppendLine($"Row 5 Col {c}: Val='{cell5.GetString()}', Formula='{cell5.FormulaA1}'");
+                    sb.AppendLine($"Row 70 Col {c}: Val='{cell70.GetString()}', Formula='{cell70.FormulaA1}'");
+                }
+            }
+
+            var outDir = @"C:\Users\minht\.gemini\antigravity\brain\ac0fb0d0-7340-4832-b869-e526578128d4\scratch";
+            System.IO.Directory.CreateDirectory(outDir);
+            System.IO.File.WriteAllText(System.IO.Path.Combine(outDir, "excel_dump.txt"), sb.ToString());
         }
     }
 

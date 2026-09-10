@@ -577,25 +577,29 @@
                     </Style>
                 </Border.Style>
                 <Grid>
-                    <ContentControl Content="{Binding CurrentView}"/>
-                    <!-- Xe tăng & Đoàn quân tiến công ở đáy màn hình chuẩn DemoUI -->
+                    <!-- Xe tăng & Đoàn quân tiến công ở đáy màn hình (Panel.ZIndex="0" để nằm phía dưới bảng dữ liệu) -->
                     <Image Source="/Assets/Images/tank_silhouette_peek.png" 
+                           Panel.ZIndex="0"
                            Height="46" HorizontalAlignment="Left" VerticalAlignment="Bottom" Stretch="Uniform" 
                            Margin="15,0,0,0" IsHitTestVisible="False" Opacity="0.95"
                            Visibility="{Binding IsCombatMode, Converter={x:Static local_cv:BooleanToVisibilityConverter.Instance}}"/>
+
+                    <!-- Vùng hiển thị nội dung bảng dữ liệu (Panel.ZIndex="1" để đè lên ảnh bộ đội) -->
+                    <ContentControl Content="{Binding CurrentView}" Panel.ZIndex="1"/>
                 </Grid>
             </Border>
         </Grid>
 
         <!-- ==================== 2. KHẨU HIỆU CHÂN TRANG / THANH CÔNG VỤ ==================== -->
-        <Border Grid.Row="2" Height="32">
+        <Border Grid.Row="2" Height="34">
             <Grid>
                 <!-- Chế độ Tác chiến: Dải khẩu hiệu quân đội dã chiến chuẩn DemoUI -->
                 <Grid Visibility="{Binding IsCombatMode, Converter={x:Static local_cv:BooleanToVisibilityConverter.Instance}}">
-                    <Image Source="/Assets/Images/bottom_slogan_bar.png" Stretch="UniformToFill" VerticalAlignment="Bottom"/>
+                    <Image Source="/Assets/Images/bottom_slogan_bar.png" Stretch="Fill" VerticalAlignment="Center"/>
                     <TextBlock Text="“XÂY DỰNG QUÂN ĐỘI NHÂN DÂN CÁCH MẠNG - CHÍNH QUY - TINH NHUỆ - HIỆN ĐẠI”"
                                FontSize="12" FontWeight="ExtraBold" Foreground="#FFE17A"
-                               HorizontalAlignment="Center" VerticalAlignment="Center" Margin="50,0,140,0">
+                               HorizontalAlignment="Center" VerticalAlignment="Center" Margin="320,0,320,0"
+                               TextTrimming="CharacterEllipsis">
                         <TextBlock.Effect>
                             <DropShadowEffect Color="#000000" BlurRadius="5" ShadowDepth="1.5" Opacity="0.9"/>
                         </TextBlock.Effect>

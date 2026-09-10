@@ -23,6 +23,7 @@ namespace QL_HocVien.Services.Interfaces
         Task<(bool Success, string Message)> ResetPasswordWithSecurityAnswerAsync(string identifier, string securityAnswer, string newPassword);
 
         Task<(bool Success, string Message)> ResetCadetPasswordAsync(int cadetId, string newPassword);
+        Task<(bool Success, string Message)> ChangePasswordAsync(string currentPassword, string newPassword);
         void Logout();
     }
 }

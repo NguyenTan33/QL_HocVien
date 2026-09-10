@@ -236,12 +236,12 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="Đơn vị trực thuộc:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
-                                <TextBox Text="{Binding FormUnit, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                                <TextBlock Text="Đơn vị trực thuộc (*):" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                                <ComboBox ItemsSource="{Binding AvailableUnits}" SelectedItem="{Binding FormUnit}" Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
                             </StackPanel>
                             <StackPanel Grid.Column="2">
-                                <TextBlock Text="Chuyên ngành:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
-                                <TextBox Text="{Binding FormMajor, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                                <TextBlock Text="Chuyên ngành (*):" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                                <ComboBox ItemsSource="{Binding AvailableMajors}" SelectedItem="{Binding FormMajor}" Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
                             </StackPanel>
                         </Grid>
 
@@ -254,12 +254,12 @@
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0">
                                 <TextBlock Text="Cán bộ chủ nhiệm / Phụ trách:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
-                                <ComboBox ItemsSource="{Binding AvailableOfficers}" Text="{Binding FormOfficerInCharge, UpdateSourceTrigger=PropertyChanged}" 
-                                          IsEditable="True" Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
+                                <ComboBox ItemsSource="{Binding AvailableOfficers}" SelectedItem="{Binding FormOfficerInCharge}" 
+                                          IsEditable="False" Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
                             </StackPanel>
                             <StackPanel Grid.Column="2">
-                                <TextBlock Text="Khóa / Niên khóa:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
-                                <TextBox Text="{Binding FormAcademicYear, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                                <TextBlock Text="Khóa / Niên khóa (*):" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                                <ComboBox ItemsSource="{Binding AvailableAcademicYears}" SelectedItem="{Binding FormAcademicYear}" Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
                             </StackPanel>
                         </Grid>
 

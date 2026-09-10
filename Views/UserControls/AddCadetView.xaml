@@ -67,7 +67,7 @@
                         <StackPanel Grid.Column="0">
                             <TextBlock Text="Lớp học (*):" FontSize="13" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,6"/>
                             <ComboBox ItemsSource="{Binding AvailableClasses}" SelectedItem="{Binding SelectedMilitaryClass}"
-                                      DisplayMemberPath="ClassName" IsEditable="True" Text="{Binding ClassName}"
+                                      DisplayMemberPath="ClassName" IsEditable="False"
                                       Style="{StaticResource ModernComboBoxStyle}" Height="40"/>
                         </StackPanel>
                         <StackPanel Grid.Column="2">

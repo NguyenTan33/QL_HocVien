@@ -293,6 +293,44 @@ namespace QL_HocVien.Services.Implementations
             return (true, $"Đã đặt lại mật khẩu thành công cho học viên {cadet.FullName} (Tài khoản: {user.Username}).");
         }
 
+        public async Task<(bool Success, string Message)> ChangePasswordAsync(string currentPassword, string newPassword)
+        {
+            if (CurrentUser == null)
+                return (false, "Chưa có tài khoản nào đăng nhập trong phiên làm việc.");
+
+            if (string.IsNullOrWhiteSpace(currentPassword))
+                return (false, "Vui lòng nhập mật khẩu hiện tại.");
+
+            if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < 6)
+                return (false, "Mật khẩu mới phải có ít nhất 6 ký tự.");
+
+            bool isOldPasswordValid = false;
+            try
+            {
+                isOldPasswordValid = BCrypt.Net.BCrypt.Verify(currentPassword, CurrentUser.PasswordHash);
+            }
+            catch
+            {
+                isOldPasswordValid = false;
+            }
+
+            if (!isOldPasswordValid)
+                return (false, "Mật khẩu hiện tại không chính xác!");
+
+            var userInDb = await _userRepository.GetByIdAsync(CurrentUser.Id);
+            if (userInDb == null)
+                return (false, "Không tìm thấy thông tin tài khoản trong cơ sở dữ liệu.");
+
+            var newHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+            userInDb.PasswordHash = newHash;
+            CurrentUser.PasswordHash = newHash;
+
+            _userRepository.Update(userInDb);
+            await _userRepository.SaveChangesAsync();
+
+            return (true, "Đổi mật khẩu tài khoản thành công! Vui lòng ghi nhớ mật khẩu mới.");
+        }
+
         public void Logout()
         {
             CurrentUser = null;

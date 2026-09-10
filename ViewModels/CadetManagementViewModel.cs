@@ -41,6 +41,11 @@ namespace QL_HocVien.ViewModels
             "Tất cả", "Đạt chuẩn", "Không đạt", "Xuất sắc", "Giỏi", "Khá", "Đạt", "Chưa kiểm tra"
         };
 
+        public ObservableCollection<string> AvailableRanks { get; } = new();
+        public ObservableCollection<string> AvailablePositions { get; } = new();
+        public ObservableCollection<string> AvailableUnits { get; } = new();
+        public ObservableCollection<string> AvailableClasses { get; } = new();
+
         [ObservableProperty]
         private string _searchKeyword = string.Empty;
 
@@ -190,42 +195,42 @@ namespace QL_HocVien.ViewModels
             try
             {
                 var distinctUnits = await _cadetService.GetDistinctUnitsAsync();
+                var units = await _catalogService.GetUnitDropdownAsync();
                 UnitList.Clear();
                 UnitList.Add("Tất cả");
-                if (distinctUnits.Any())
+                AvailableUnits.Clear();
+                var allUnits = units.Union(distinctUnits).Distinct().ToList();
+                if (!allUnits.Any()) allUnits = new System.Collections.Generic.List<string> { "Đại đội 1", "Đại đội 2", "Đại đội 3", "Đại đội 4", "Trung đội 1", "Trung đội 2", "Trung đội 3" };
+                foreach (var u in allUnits)
                 {
-                    foreach (var u in distinctUnits) UnitList.Add(u);
-                }
-                else
-                {
-                    var units = await _catalogService.GetUnitDropdownAsync();
-                    foreach (var u in units) UnitList.Add(u);
+                    UnitList.Add(u);
+                    AvailableUnits.Add(u);
                 }
 
                 var distinctRanks = await _cadetService.GetDistinctRanksAsync();
+                var ranks = await _catalogService.GetRankDropdownAsync();
                 RankList.Clear();
                 RankList.Add("Tất cả");
-                if (distinctRanks.Any())
+                AvailableRanks.Clear();
+                var allRanks = ranks.Union(distinctRanks).Distinct().ToList();
+                if (!allRanks.Any()) allRanks = new System.Collections.Generic.List<string> { "Binh nhì", "Binh nhất", "Hạ sĩ", "Trung sĩ", "Thượng sĩ", "Chuẩn úy", "Thiếu úy", "Trung úy", "Thượng úy", "Đại úy" };
+                foreach (var r in allRanks)
                 {
-                    foreach (var r in distinctRanks) RankList.Add(r);
-                }
-                else
-                {
-                    var ranks = await _catalogService.GetRankDropdownAsync();
-                    foreach (var r in ranks) RankList.Add(r);
+                    RankList.Add(r);
+                    AvailableRanks.Add(r);
                 }
 
                 var distinctPositions = await _cadetService.GetDistinctPositionsAsync();
+                var positions = await _catalogService.GetPositionDropdownAsync();
                 PositionList.Clear();
                 PositionList.Add("Tất cả");
-                if (distinctPositions.Any())
+                AvailablePositions.Clear();
+                var allPositions = positions.Union(distinctPositions).Distinct().ToList();
+                if (!allPositions.Any()) allPositions = new System.Collections.Generic.List<string> { "Học viên", "Chiến sĩ", "Tiểu đội trưởng", "Lớp phó", "Lớp trưởng" };
+                foreach (var p in allPositions)
                 {
-                    foreach (var p in distinctPositions) PositionList.Add(p);
-                }
-                else
-                {
-                    var positions = await _catalogService.GetPositionDropdownAsync();
-                    foreach (var p in positions) PositionList.Add(p);
+                    PositionList.Add(p);
+                    AvailablePositions.Add(p);
                 }
             }
             catch
@@ -253,16 +258,15 @@ namespace QL_HocVien.ViewModels
             try
             {
                 var distinctClasses = await _cadetService.GetDistinctClassesAsync();
+                var classes = await _classService.GetAllClassesAsync();
                 ClassList.Clear();
                 ClassList.Add("Tất cả");
-                if (distinctClasses.Any())
+                AvailableClasses.Clear();
+                var allClasses = classes.Select(c => c.ClassName).Union(distinctClasses).Distinct().ToList();
+                foreach (var c in allClasses)
                 {
-                    foreach (var c in distinctClasses) ClassList.Add(c);
-                }
-                else
-                {
-                    var classes = await _classService.GetAllClassesAsync();
-                    foreach (var c in classes) ClassList.Add(c.ClassName);
+                    ClassList.Add(c);
+                    AvailableClasses.Add(c);
                 }
             }
             catch

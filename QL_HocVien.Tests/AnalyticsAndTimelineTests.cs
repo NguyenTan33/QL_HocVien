@@ -9,6 +9,7 @@ using QL_HocVien.Models;
 using QL_HocVien.Models.DTOs;
 using QL_HocVien.Services;
 using Xunit;
+[assembly: CollectionBehavior(DisableTestParallelization = true)]
 
 namespace QL_HocVien.Tests
 {
