@@ -1,8 +1,8 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using QL_HocVien.Models;
 
-namespace QL_HocVien.Services
+namespace QL_HocVien.Services.Interfaces
 {
     public interface ISubjectService
     {
@@ -16,3 +16,4 @@ namespace QL_HocVien.Services
         Task<(bool Success, string Message, int DeletedCount)> DeleteMultipleSubjectsAsync(IEnumerable<int> subjectIds);
     }
 }
+

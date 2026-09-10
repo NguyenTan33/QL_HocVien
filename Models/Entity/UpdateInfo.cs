@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Text.Json.Serialization;
 
-namespace QL_HocVien.Models
+namespace QL_HocVien.Models.Entity
 {
     /// <summary>
-    /// Cấu trúc tệp version.json máy chủ cung cấp để kiểm tra phiên bản mới.
+    /// Cáº¥u trÃºc tá»‡p version.json mÃ¡y chá»§ cung cáº¥p Ä‘á»ƒ kiá»ƒm tra phiÃªn báº£n má»›i.
     /// </summary>
     public class UpdateInfo
     {
@@ -25,33 +25,33 @@ namespace QL_HocVien.Models
     }
 
     /// <summary>
-    /// Trạng thái kết quả sau khi kiểm tra phiên bản.
+    /// Tráº¡ng thÃ¡i káº¿t quáº£ sau khi kiá»ƒm tra phiÃªn báº£n.
     /// </summary>
     public enum UpdateStatus
     {
         /// <summary>
-        /// Ứng dụng đã là phiên bản mới nhất, không cần cập nhật.
+        /// á»¨ng dá»¥ng Ä‘Ã£ lÃ  phiÃªn báº£n má»›i nháº¥t, khÃ´ng cáº§n cáº­p nháº­t.
         /// </summary>
         UpToDate,
 
         /// <summary>
-        /// Có phiên bản mới nhưng là tùy chọn, người dùng có thể cập nhật hoặc để sau.
+        /// CÃ³ phiÃªn báº£n má»›i nhÆ°ng lÃ  tÃ¹y chá»n, ngÆ°á»i dÃ¹ng cÃ³ thá»ƒ cáº­p nháº­t hoáº·c Ä‘á»ƒ sau.
         /// </summary>
         OptionalUpdateAvailable,
 
         /// <summary>
-        /// Phiên bản hiện tại dưới mức tối thiểu hoặc bản mới bắt buộc cập nhật.
+        /// PhiÃªn báº£n hiá»‡n táº¡i dÆ°á»›i má»©c tá»‘i thiá»ƒu hoáº·c báº£n má»›i báº¯t buá»™c cáº­p nháº­t.
         /// </summary>
         MandatoryUpdateRequired,
 
         /// <summary>
-        /// Quá trình kiểm tra phiên bản thất bại (mất mạng, timeout, json lỗi).
+        /// QuÃ¡ trÃ¬nh kiá»ƒm tra phiÃªn báº£n tháº¥t báº¡i (máº¥t máº¡ng, timeout, json lá»—i).
         /// </summary>
         CheckFailed
     }
 
     /// <summary>
-    /// Đóng gói kết quả kiểm tra phiên bản kèm thông tin chi tiết.
+    /// ÄÃ³ng gÃ³i káº¿t quáº£ kiá»ƒm tra phiÃªn báº£n kÃ¨m thÃ´ng tin chi tiáº¿t.
     /// </summary>
     public class UpdateCheckResult
     {
@@ -67,7 +67,7 @@ namespace QL_HocVien.Models
     }
 
     /// <summary>
-    /// Thông tin tiến độ tải tệp installer trong thời gian thực.
+    /// ThÃ´ng tin tiáº¿n Ä‘á»™ táº£i tá»‡p installer trong thá»i gian thá»±c.
     /// </summary>
     public class DownloadProgressReport
     {
@@ -78,7 +78,7 @@ namespace QL_HocVien.Models
 
         public string FormattedProgress => TotalBytes > 0 
             ? $"{BytesDownloaded / (1024.0 * 1024.0):F1} MB / {TotalBytes / (1024.0 * 1024.0):F1} MB ({Percentage}%)"
-            : $"{BytesDownloaded / (1024.0 * 1024.0):F1} MB đã tải ({Percentage}%)";
+            : $"{BytesDownloaded / (1024.0 * 1024.0):F1} MB Ä‘Ã£ táº£i ({Percentage}%)";
 
         public string FormattedSpeed
         {
@@ -93,3 +93,4 @@ namespace QL_HocVien.Models
         }
     }
 }
+

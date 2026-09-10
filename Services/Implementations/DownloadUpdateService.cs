@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using QL_HocVien.Models;
 
-namespace QL_HocVien.Services
+namespace QL_HocVien.Services.Implementations
 {
     public class DownloadUpdateService : IDownloadUpdateService
     {
@@ -16,12 +16,12 @@ namespace QL_HocVien.Services
             AllowAutoRedirect = true
         })
         {
-            Timeout = TimeSpan.FromMinutes(15) // Cho phép tải file dung lượng lớn
+            Timeout = TimeSpan.FromMinutes(15) // Cho phÃ©p táº£i file dung lÆ°á»£ng lá»›n
         };
 
         static DownloadUpdateService()
         {
-            // GitHub yêu cầu bắt buộc User-Agent hợp lệ để không bị chặn mã lỗi 403 Forbidden
+            // GitHub yÃªu cáº§u báº¯t buá»™c User-Agent há»£p lá»‡ Ä‘á»ƒ khÃ´ng bá»‹ cháº·n mÃ£ lá»—i 403 Forbidden
             if (!HttpClient.DefaultRequestHeaders.Contains("User-Agent"))
             {
                 HttpClient.DefaultRequestHeaders.Add("User-Agent", "QL_HocVien-AutoUpdater/1.0");
@@ -35,10 +35,10 @@ namespace QL_HocVien.Services
         {
             if (string.IsNullOrWhiteSpace(downloadUrl))
             {
-                throw new ArgumentException("Đường dẫn tải bản cập nhật không hợp lệ.", nameof(downloadUrl));
+                throw new ArgumentException("ÄÆ°á»ng dáº«n táº£i báº£n cáº­p nháº­t khÃ´ng há»£p lá»‡.", nameof(downloadUrl));
             }
 
-            // Lấy tên tệp gốc từ URL tải về
+            // Láº¥y tÃªn tá»‡p gá»‘c tá»« URL táº£i vá»
             string originalFileName = "update.exe";
             string extension = ".exe";
             try
@@ -94,7 +94,7 @@ namespace QL_HocVien.Services
                 totalReadBytes += readBytes;
 
                 long elapsedMs = stopwatch.ElapsedMilliseconds;
-                // Cập nhật giao diện mỗi ~150ms để tối ưu hiệu năng UI
+                // Cáº­p nháº­t giao diá»‡n má»—i ~150ms Ä‘á»ƒ tá»‘i Æ°u hiá»‡u nÄƒng UI
                 if (elapsedMs - lastReportTimeMs >= 150 || (totalBytesVal > 0 && totalReadBytes == totalBytesVal))
                 {
                     double timeDiffSec = (elapsedMs - lastReportTimeMs) / 1000.0;
@@ -116,7 +116,7 @@ namespace QL_HocVien.Services
                 }
             }
 
-            // Đảm bảo báo cáo 100% khi kết thúc
+            // Äáº£m báº£o bÃ¡o cÃ¡o 100% khi káº¿t thÃºc
             progressReport.BytesDownloaded = totalReadBytes;
             progressReport.Percentage = 100;
             progressReport.BytesPerSecond = 0;
@@ -129,7 +129,7 @@ namespace QL_HocVien.Services
         {
             if (string.IsNullOrWhiteSpace(installerPath) || !File.Exists(installerPath))
             {
-                throw new FileNotFoundException("Không tìm thấy tệp cài đặt để khởi chạy.", installerPath);
+                throw new FileNotFoundException("KhÃ´ng tÃ¬m tháº¥y tá»‡p cÃ i Ä‘áº·t Ä‘á»ƒ khá»Ÿi cháº¡y.", installerPath);
             }
 
             string currentExePath = Environment.ProcessPath 
@@ -146,15 +146,15 @@ namespace QL_HocVien.Services
             {
                 if (isDirectExeReplacement && File.Exists(currentExePath))
                 {
-                    // Trường hợp cập nhật file .exe chạy trực tiếp (Portable / Single-File)
-                    // Windows khóa tệp .exe đang chạy, do đó dùng script batch ngầm để copy đè sau khi ứng dụng đóng
+                    // TrÆ°á»ng há»£p cáº­p nháº­t file .exe cháº¡y trá»±c tiáº¿p (Portable / Single-File)
+                    // Windows khÃ³a tá»‡p .exe Ä‘ang cháº¡y, do Ä‘Ã³ dÃ¹ng script batch ngáº§m Ä‘á»ƒ copy Ä‘Ã¨ sau khi á»©ng dá»¥ng Ä‘Ã³ng
                     string currentProcessName = Path.GetFileNameWithoutExtension(currentExePath);
                     string batchScriptPath = Path.Combine(Path.GetTempPath(), $"update_qlhv_{DateTime.Now:yyyyMMddHHmmss}.bat");
                     string batchContent = $@"@echo off
 setlocal
 chcp 65001 > NUL
 
-:: Đợi tiến trình cũ đóng hẳn
+:: Äá»£i tiáº¿n trÃ¬nh cÅ© Ä‘Ã³ng háº³n
 timeout /t 1 /nobreak > NUL
 
 set count=0
@@ -166,14 +166,14 @@ if %errorlevel% equ 0 (
     if %count% leq 10 goto wait_loop
 )
 
-:: Copy đè file mới
+:: Copy Ä‘Ã¨ file má»›i
 copy /y ""{installerPath}"" ""{currentExePath}"" > NUL
 if exist ""{installerPath}"" del /f /q ""{installerPath}"" > NUL
 
-:: Khởi động ứng dụng mới
+:: Khá»Ÿi Ä‘á»™ng á»©ng dá»¥ng má»›i
 start """" ""{currentExePath}""
 
-:: Tự xóa file batch
+:: Tá»± xÃ³a file batch
 del /f /q ""%~f0"" > NUL
 ";
                     File.WriteAllText(batchScriptPath, batchContent);
@@ -190,7 +190,7 @@ del /f /q ""%~f0"" > NUL
                 }
                 else
                 {
-                    // Trường hợp tệp là bộ cài đặt (Installer/Setup/MSI)
+                    // TrÆ°á»ng há»£p tá»‡p lÃ  bá»™ cÃ i Ä‘áº·t (Installer/Setup/MSI)
                     var psi = new ProcessStartInfo
                     {
                         FileName = installerPath,
@@ -202,12 +202,12 @@ del /f /q ""%~f0"" > NUL
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Không thể khởi chạy bản cập nhật:\n{ex.Message}",
-                                "Lỗi Cập Nhật", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"KhÃ´ng thá»ƒ khá»Ÿi cháº¡y báº£n cáº­p nháº­t:\n{ex.Message}",
+                                "Lá»—i Cáº­p Nháº­t", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
-            // Đóng ứng dụng hiện tại an toàn
+            // ÄÃ³ng á»©ng dá»¥ng hiá»‡n táº¡i an toÃ n
             if (Application.Current != null)
             {
                 Application.Current.Dispatcher.Invoke(() =>
@@ -222,3 +222,4 @@ del /f /q ""%~f0"" > NUL
         }
     }
 }
+

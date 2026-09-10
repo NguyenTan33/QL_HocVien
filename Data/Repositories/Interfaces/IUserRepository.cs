@@ -1,7 +1,7 @@
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using QL_HocVien.Models;
 
-namespace QL_HocVien.Data.Repositories
+namespace QL_HocVien.Data.Repositories.Interfaces
 {
     public interface IUserRepository : IRepository<User>
     {
@@ -12,3 +12,4 @@ namespace QL_HocVien.Data.Repositories
         Task<bool> ExistsByEmailAsync(string email);
     }
 }
+

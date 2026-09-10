@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Net.Http;
 using System.Reflection;
@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using QL_HocVien.Models;
 
-namespace QL_HocVien.Services
+namespace QL_HocVien.Services.Implementations
 {
     public class UpdateService : IUpdateService
     {
@@ -20,7 +20,7 @@ namespace QL_HocVien.Services
         private readonly int _timeoutSeconds;
 
         /// <summary>
-        /// Cho phép giả lập phiên bản hiện tại nhằm phục vụ kiểm thử bản cập nhật bắt buộc/tùy chọn.
+        /// Cho phÃ©p giáº£ láº­p phiÃªn báº£n hiá»‡n táº¡i nháº±m phá»¥c vá»¥ kiá»ƒm thá»­ báº£n cáº­p nháº­t báº¯t buá»™c/tÃ¹y chá»n.
         /// </summary>
         public Version? SimulatedCurrentVersion { get; set; }
 
@@ -78,7 +78,7 @@ namespace QL_HocVien.Services
             if (string.IsNullOrWhiteSpace(_versionCheckUrl))
             {
                 result.Status = UpdateStatus.CheckFailed;
-                result.ErrorMessage = "Chưa cấu hình đường dẫn URL kiểm tra phiên bản.";
+                result.ErrorMessage = "ChÆ°a cáº¥u hÃ¬nh Ä‘Æ°á»ng dáº«n URL kiá»ƒm tra phiÃªn báº£n.";
                 return result;
             }
 
@@ -87,7 +87,7 @@ namespace QL_HocVien.Services
                 using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
                 cts.CancelAfter(TimeSpan.FromSeconds(_timeoutSeconds));
 
-                // Bổ sung tham số tránh caching khi gọi GitHub raw / CDN
+                // Bá»• sung tham sá»‘ trÃ¡nh caching khi gá»i GitHub raw / CDN
                 string requestUrl = _versionCheckUrl;
                 string queryChar = requestUrl.Contains('?') ? "&" : "?";
                 requestUrl += $"{queryChar}_t={DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
@@ -96,7 +96,7 @@ namespace QL_HocVien.Services
                 if (!response.IsSuccessStatusCode)
                 {
                     result.Status = UpdateStatus.CheckFailed;
-                    result.ErrorMessage = $"Máy chủ kiểm tra phiên bản phản hồi mã lỗi: {(int)response.StatusCode} {response.ReasonPhrase}";
+                    result.ErrorMessage = $"MÃ¡y chá»§ kiá»ƒm tra phiÃªn báº£n pháº£n há»“i mÃ£ lá»—i: {(int)response.StatusCode} {response.ReasonPhrase}";
                     return result;
                 }
 
@@ -109,7 +109,7 @@ namespace QL_HocVien.Services
                 if (updateInfo == null || string.IsNullOrWhiteSpace(updateInfo.LatestVersion))
                 {
                     result.Status = UpdateStatus.CheckFailed;
-                    result.ErrorMessage = "Dữ liệu cấu hình version.json từ máy chủ không hợp lệ hoặc thiếu thông tin phiên bản.";
+                    result.ErrorMessage = "Dá»¯ liá»‡u cáº¥u hÃ¬nh version.json tá»« mÃ¡y chá»§ khÃ´ng há»£p lá»‡ hoáº·c thiáº¿u thÃ´ng tin phiÃªn báº£n.";
                     return result;
                 }
 
@@ -117,18 +117,18 @@ namespace QL_HocVien.Services
                 result.LatestVersion = NormalizeVersion(updateInfo.LatestVersion);
                 result.MinimumVersion = NormalizeVersion(updateInfo.MinimumVersion);
 
-                // So sánh logic theo yêu cầu
-                // 1. Nếu version hiện tại >= latestVersion: Mới nhất
+                // So sÃ¡nh logic theo yÃªu cáº§u
+                // 1. Náº¿u version hiá»‡n táº¡i >= latestVersion: Má»›i nháº¥t
                 if (currentVersion >= result.LatestVersion)
                 {
                     result.Status = UpdateStatus.UpToDate;
                 }
-                // 2. Nếu version hiện tại < minimumVersion HOẶC mandatory = true: Bắt buộc cập nhật
+                // 2. Náº¿u version hiá»‡n táº¡i < minimumVersion HOáº¶C mandatory = true: Báº¯t buá»™c cáº­p nháº­t
                 else if (currentVersion < result.MinimumVersion || updateInfo.Mandatory)
                 {
                     result.Status = UpdateStatus.MandatoryUpdateRequired;
                 }
-                // 3. Nếu version hiện tại < latestVersion nhưng >= minimumVersion và mandatory = false: Tùy chọn
+                // 3. Náº¿u version hiá»‡n táº¡i < latestVersion nhÆ°ng >= minimumVersion vÃ  mandatory = false: TÃ¹y chá»n
                 else
                 {
                     result.Status = UpdateStatus.OptionalUpdateAvailable;
@@ -139,25 +139,25 @@ namespace QL_HocVien.Services
             catch (TaskCanceledException)
             {
                 result.Status = UpdateStatus.CheckFailed;
-                result.ErrorMessage = $"Quá thời gian chờ kết nối máy chủ ({_timeoutSeconds} giây). Vui lòng kiểm tra lại đường truyền Internet.";
+                result.ErrorMessage = $"QuÃ¡ thá»i gian chá» káº¿t ná»‘i mÃ¡y chá»§ ({_timeoutSeconds} giÃ¢y). Vui lÃ²ng kiá»ƒm tra láº¡i Ä‘Æ°á»ng truyá»n Internet.";
                 return result;
             }
             catch (HttpRequestException ex)
             {
                 result.Status = UpdateStatus.CheckFailed;
-                result.ErrorMessage = $"Không thể kết nối đến máy chủ kiểm tra phiên bản: {ex.Message}";
+                result.ErrorMessage = $"KhÃ´ng thá»ƒ káº¿t ná»‘i Ä‘áº¿n mÃ¡y chá»§ kiá»ƒm tra phiÃªn báº£n: {ex.Message}";
                 return result;
             }
             catch (JsonException ex)
             {
                 result.Status = UpdateStatus.CheckFailed;
-                result.ErrorMessage = $"Lỗi cấu trúc tệp version.json: {ex.Message}";
+                result.ErrorMessage = $"Lá»—i cáº¥u trÃºc tá»‡p version.json: {ex.Message}";
                 return result;
             }
             catch (Exception ex)
             {
                 result.Status = UpdateStatus.CheckFailed;
-                result.ErrorMessage = $"Lỗi kiểm tra phiên bản không xác định: {ex.Message}";
+                result.ErrorMessage = $"Lá»—i kiá»ƒm tra phiÃªn báº£n khÃ´ng xÃ¡c Ä‘á»‹nh: {ex.Message}";
                 return result;
             }
         }
@@ -211,3 +211,4 @@ namespace QL_HocVien.Services
         }
     }
 }
+

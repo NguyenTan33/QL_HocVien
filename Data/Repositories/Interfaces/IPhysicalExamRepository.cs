@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using QL_HocVien.Models;
 
-namespace QL_HocVien.Data.Repositories
+namespace QL_HocVien.Data.Repositories.Interfaces
 {
     public interface IPhysicalExamRepository : IRepository<PhysicalExamRecord>
     {
@@ -14,3 +14,4 @@ namespace QL_HocVien.Data.Repositories
         Task<IEnumerable<PhysicalExamRecord>> SearchWithCriteriaAsync(QL_HocVien.Models.Filters.PhysicalExamFilterCriteria criteria);
     }
 }
+

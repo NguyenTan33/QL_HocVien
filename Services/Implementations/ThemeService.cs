@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.Windows;
 using System.Windows.Media;
 
-namespace QL_HocVien.Services
+namespace QL_HocVien.Services.Implementations
 {
     public class ThemeService : IThemeService
     {
@@ -27,7 +27,7 @@ namespace QL_HocVien.Services
                 if (isCombatMode)
                 {
                     // ==========================================
-                    // 1. CHẾ ĐỘ TÁC CHIẾN (COMBAT COMMAND CENTER)
+                    // 1. CHáº¾ Äá»˜ TÃC CHIáº¾N (COMBAT COMMAND CENTER)
                     // ==========================================
                     SetBrush(res, "PageBackgroundBrush", "#101B14");
                     SetBrush(res, "CardBackgroundBrush", "#1B2A1E");
@@ -58,7 +58,7 @@ namespace QL_HocVien.Services
                     SetBrush(res, "DangerBrush", "#DC2626");
                     SetBrush(res, "SuccessBrush", "#16A34A");
 
-                    // Semantic Status & KPI Brushes (Dã chiến)
+                    // Semantic Status & KPI Brushes (DÃ£ chiáº¿n)
                     SetBrush(res, "WarningCardBackgroundBrush", "#2D240E");
                     SetBrush(res, "WarningCardBorderBrush", "#F59E0B");
                     SetBrush(res, "WarningCardForegroundBrush", "#FDE047");
@@ -96,7 +96,7 @@ namespace QL_HocVien.Services
                     SetBrush(res, "TabHeaderActiveForegroundBrush", "#FFE17A");
                     SetBrush(res, "TabHeaderBorderBrush", "#625C34");
 
-                    // Training Timeline Tác Chiến
+                    // Training Timeline TÃ¡c Chiáº¿n
                     SetBrush(res, "TimelineBackgroundBrush", "#EDE5D0");
                     SetBrush(res, "TimelineBorderBrush", "#8A784A");
                     SetBrush(res, "TimelineCardBackgroundBrush", "#FAF6EC");
@@ -112,7 +112,7 @@ namespace QL_HocVien.Services
                     SetBrush(res, "TimelineKpi4BackgroundBrush", "#12281C");
                     SetBrush(res, "TimelineKpi4BorderBrush", "#356E49");
 
-                    // Sidebar & Active Menu (Tác chiến)
+                    // Sidebar & Active Menu (TÃ¡c chiáº¿n)
                     if (res.Contains("MilActiveMenuGradient"))
                         res["ActiveMenuBackgroundBrush"] = res["MilActiveMenuGradient"];
                     else
@@ -123,7 +123,7 @@ namespace QL_HocVien.Services
                     SetBrush(res, "SidebarNavHoverBorderBrush", "#35452C");
                     SetBrush(res, "SidebarIconBrush", "#F2C94C");
 
-                    // Đồng bộ lại các khóa kế thừa
+                    // Äá»“ng bá»™ láº¡i cÃ¡c khÃ³a káº¿ thá»«a
                     SetBrush(res, "BgDarkBrush", "#101B14");
                     SetBrush(res, "BgLightBrush", "#18251A");
                     SetBrush(res, "BgCardBrush", "#1B2A1E");
@@ -132,7 +132,7 @@ namespace QL_HocVien.Services
                 else
                 {
                     // ==========================================
-                    // 2. CHẾ ĐỘ HÀNH CHÍNH (ADMINISTRATIVE BASIC LIGHT)
+                    // 2. CHáº¾ Äá»˜ HÃ€NH CHÃNH (ADMINISTRATIVE BASIC LIGHT)
                     // ==========================================
                     SetBrush(res, "PageBackgroundBrush", "#F8FAFC");
                     SetBrush(res, "CardBackgroundBrush", "#FFFFFF");
@@ -163,7 +163,7 @@ namespace QL_HocVien.Services
                     SetBrush(res, "DangerBrush", "#DC2626");
                     SetBrush(res, "SuccessBrush", "#16A34A");
 
-                    // Semantic Status & KPI Brushes (Công vụ / Hành chính mềm mại)
+                    // Semantic Status & KPI Brushes (CÃ´ng vá»¥ / HÃ nh chÃ­nh má»m máº¡i)
                     SetBrush(res, "WarningCardBackgroundBrush", "#FEF3C7");
                     SetBrush(res, "WarningCardBorderBrush", "#F59E0B");
                     SetBrush(res, "WarningCardForegroundBrush", "#92400E");
@@ -201,7 +201,7 @@ namespace QL_HocVien.Services
                     SetBrush(res, "TabHeaderActiveForegroundBrush", "#1E3A8A");
                     SetBrush(res, "TabHeaderBorderBrush", "#CBD5E1");
 
-                    // Training Timeline Hành Chính (Trắng sạch, viền xám, thanh lịch)
+                    // Training Timeline HÃ nh ChÃ­nh (Tráº¯ng sáº¡ch, viá»n xÃ¡m, thanh lá»‹ch)
                     SetBrush(res, "TimelineBackgroundBrush", "#FFFFFF");
                     SetBrush(res, "TimelineBorderBrush", "#CBD5E1");
                     SetBrush(res, "TimelineCardBackgroundBrush", "#FFFFFF");
@@ -217,7 +217,7 @@ namespace QL_HocVien.Services
                     SetBrush(res, "TimelineKpi4BackgroundBrush", "#FFFFFF");
                     SetBrush(res, "TimelineKpi4BorderBrush", "#E2E8F0");
 
-                    // Sidebar & Active Menu (Hành chính công vụ basic)
+                    // Sidebar & Active Menu (HÃ nh chÃ­nh cÃ´ng vá»¥ basic)
                     SetBrush(res, "ActiveMenuBackgroundBrush", "#2563EB");
                     SetBrush(res, "ActiveMenuBorderBrush", "#60A5FA");
                     SetBrush(res, "ActiveMenuForegroundBrush", "#FFFFFF");
@@ -225,7 +225,7 @@ namespace QL_HocVien.Services
                     SetBrush(res, "SidebarNavHoverBorderBrush", "#334155");
                     SetBrush(res, "SidebarIconBrush", "#94A3B8");
 
-                    // Đồng bộ lại các khóa kế thừa
+                    // Äá»“ng bá»™ láº¡i cÃ¡c khÃ³a káº¿ thá»«a
                     SetBrush(res, "BgDarkBrush", "#0F172A");
                     SetBrush(res, "BgLightBrush", "#F8FAFC");
                     SetBrush(res, "BgCardBrush", "#FFFFFF");
@@ -244,3 +244,4 @@ namespace QL_HocVien.Services
         }
     }
 }
+

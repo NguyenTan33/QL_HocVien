@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,7 +10,7 @@ using QL_HocVien.Models;
 using QL_HocVien.Models.DTOs;
 using QL_HocVien.Services.Calculators;
 
-namespace QL_HocVien.Services
+namespace QL_HocVien.Services.Implementations
 {
     public class CreditSubjectService : ICreditSubjectService
     {
@@ -51,26 +51,26 @@ namespace QL_HocVien.Services
             try
             {
                 if (string.IsNullOrWhiteSpace(subject.SubjectCode))
-                    return (false, "Mã môn học không được để trống.");
+                    return (false, "MÃ£ mÃ´n há»c khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng.");
                 if (string.IsNullOrWhiteSpace(subject.SubjectName))
-                    return (false, "Tên môn học không được để trống.");
+                    return (false, "TÃªn mÃ´n há»c khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng.");
                 if (subject.Credits <= 0)
-                    return (false, "Số tín chỉ phải lớn hơn 0.");
+                    return (false, "Sá»‘ tÃ­n chá»‰ pháº£i lá»›n hÆ¡n 0.");
 
                 subject.SubjectCode = subject.SubjectCode.Trim().ToUpper();
                 subject.SubjectName = subject.SubjectName.Trim();
 
                 bool exists = await _context.CreditSubjects.AnyAsync(s => s.SubjectCode == subject.SubjectCode);
                 if (exists)
-                    return (false, $"Mã môn học '{subject.SubjectCode}' đã tồn tại trong hệ thống.");
+                    return (false, $"MÃ£ mÃ´n há»c '{subject.SubjectCode}' Ä‘Ã£ tá»“n táº¡i trong há»‡ thá»‘ng.");
 
                 _context.CreditSubjects.Add(subject);
                 await _context.SaveChangesAsync();
-                return (true, "Thêm môn học tín chỉ thành công.");
+                return (true, "ThÃªm mÃ´n há»c tÃ­n chá»‰ thÃ nh cÃ´ng.");
             }
             catch (Exception ex)
             {
-                return (false, $"Lỗi khi thêm môn học: {ex.Message}");
+                return (false, $"Lá»—i khi thÃªm mÃ´n há»c: {ex.Message}");
             }
         }
 
@@ -80,7 +80,7 @@ namespace QL_HocVien.Services
             {
                 var existing = await _context.CreditSubjects.FindAsync(subject.Id);
                 if (existing == null)
-                    return (false, "Không tìm thấy môn học cần sửa.");
+                    return (false, "KhÃ´ng tÃ¬m tháº¥y mÃ´n há»c cáº§n sá»­a.");
 
                 subject.SubjectCode = subject.SubjectCode.Trim().ToUpper();
                 subject.SubjectName = subject.SubjectName.Trim();
@@ -88,7 +88,7 @@ namespace QL_HocVien.Services
                 bool codeConflict = await _context.CreditSubjects
                     .AnyAsync(s => s.SubjectCode == subject.SubjectCode && s.Id != subject.Id);
                 if (codeConflict)
-                    return (false, $"Mã môn học '{subject.SubjectCode}' đã được sử dụng bởi môn khác.");
+                    return (false, $"MÃ£ mÃ´n há»c '{subject.SubjectCode}' Ä‘Ã£ Ä‘Æ°á»£c sá»­ dá»¥ng bá»Ÿi mÃ´n khÃ¡c.");
 
                 existing.SubjectCode = subject.SubjectCode;
                 existing.SubjectName = subject.SubjectName;
@@ -97,11 +97,11 @@ namespace QL_HocVien.Services
                 existing.Description = subject.Description;
 
                 await _context.SaveChangesAsync();
-                return (true, "Cập nhật môn học tín chỉ thành công.");
+                return (true, "Cáº­p nháº­t mÃ´n há»c tÃ­n chá»‰ thÃ nh cÃ´ng.");
             }
             catch (Exception ex)
             {
-                return (false, $"Lỗi khi cập nhật môn học: {ex.Message}");
+                return (false, $"Lá»—i khi cáº­p nháº­t mÃ´n há»c: {ex.Message}");
             }
         }
 
@@ -111,15 +111,15 @@ namespace QL_HocVien.Services
             {
                 var subject = await _context.CreditSubjects.FindAsync(id);
                 if (subject == null)
-                    return (false, "Không tìm thấy môn học.");
+                    return (false, "KhÃ´ng tÃ¬m tháº¥y mÃ´n há»c.");
 
                 _context.CreditSubjects.Remove(subject);
                 await _context.SaveChangesAsync();
-                return (true, "Xóa môn học tín chỉ thành công.");
+                return (true, "XÃ³a mÃ´n há»c tÃ­n chá»‰ thÃ nh cÃ´ng.");
             }
             catch (Exception ex)
             {
-                return (false, $"Lỗi khi xóa môn học: {ex.Message}");
+                return (false, $"Lá»—i khi xÃ³a mÃ´n há»c: {ex.Message}");
             }
         }
 
@@ -146,7 +146,7 @@ namespace QL_HocVien.Services
             try
             {
                 if (score.FinalScore < 0 || score.FinalScore > 10)
-                    return (false, "Điểm môn học phải nằm trong khoảng từ 0.0 đến 10.0.");
+                    return (false, "Äiá»ƒm mÃ´n há»c pháº£i náº±m trong khoáº£ng tá»« 0.0 Ä‘áº¿n 10.0.");
 
                 var existing = await _context.CreditScoreRecords
                     .FirstOrDefaultAsync(s => s.CadetId == score.CadetId && s.CreditSubjectId == score.CreditSubjectId && s.ExamSession == score.ExamSession);
@@ -165,11 +165,11 @@ namespace QL_HocVien.Services
                 }
 
                 await _context.SaveChangesAsync();
-                return (true, "Lưu điểm môn học tín chỉ thành công.");
+                return (true, "LÆ°u Ä‘iá»ƒm mÃ´n há»c tÃ­n chá»‰ thÃ nh cÃ´ng.");
             }
             catch (Exception ex)
             {
-                return (false, $"Lỗi khi lưu điểm: {ex.Message}");
+                return (false, $"Lá»—i khi lÆ°u Ä‘iá»ƒm: {ex.Message}");
             }
         }
 
@@ -179,15 +179,15 @@ namespace QL_HocVien.Services
             {
                 var record = await _context.CreditScoreRecords.FindAsync(scoreId);
                 if (record == null)
-                    return (false, "Không tìm thấy bản ghi điểm.");
+                    return (false, "KhÃ´ng tÃ¬m tháº¥y báº£n ghi Ä‘iá»ƒm.");
 
                 _context.CreditScoreRecords.Remove(record);
                 await _context.SaveChangesAsync();
-                return (true, "Xóa điểm thành công.");
+                return (true, "XÃ³a Ä‘iá»ƒm thÃ nh cÃ´ng.");
             }
             catch (Exception ex)
             {
-                return (false, $"Lỗi khi xóa điểm: {ex.Message}");
+                return (false, $"Lá»—i khi xÃ³a Ä‘iá»ƒm: {ex.Message}");
             }
         }
 
@@ -199,10 +199,10 @@ namespace QL_HocVien.Services
                 .AsNoTracking()
                 .AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(unit) && unit != "Tất cả")
+            if (!string.IsNullOrWhiteSpace(unit) && unit != "Táº¥t cáº£")
                 query = query.Where(c => c.Unit == unit);
 
-            if (!string.IsNullOrWhiteSpace(className) && className != "Tất cả")
+            if (!string.IsNullOrWhiteSpace(className) && className != "Táº¥t cáº£")
                 query = query.Where(c => c.MilitaryClass != null && c.MilitaryClass.ClassName == className);
 
             if (!string.IsNullOrWhiteSpace(keyword))
@@ -216,7 +216,7 @@ namespace QL_HocVien.Services
                 .AsNoTracking()
                 .ToListAsync();
 
-            // Lấy danh sách các môn lớn và các đợt thi thành phần trực thuộc
+            // Láº¥y danh sÃ¡ch cÃ¡c mÃ´n lá»›n vÃ  cÃ¡c Ä‘á»£t thi thÃ nh pháº§n trá»±c thuá»™c
             var majorSubjects = await _context.CreditSubjects
                 .Include(s => s.Components)
                 .Where(s => !s.IsComponent)
@@ -229,8 +229,8 @@ namespace QL_HocVien.Services
                 .ThenBy(c => c.OrderIndex)
                 .ToList();
 
-            // Đếm số lượng học viên có điểm cho từng đợt kiểm tra / thành phần con
-            // Quy tắc: Nếu có >= 20 học viên có điểm thì đợt kiểm tra đó coi như đã diễn ra
+            // Äáº¿m sá»‘ lÆ°á»£ng há»c viÃªn cÃ³ Ä‘iá»ƒm cho tá»«ng Ä‘á»£t kiá»ƒm tra / thÃ nh pháº§n con
+            // Quy táº¯c: Náº¿u cÃ³ >= 20 há»c viÃªn cÃ³ Ä‘iá»ƒm thÃ¬ Ä‘á»£t kiá»ƒm tra Ä‘Ã³ coi nhÆ° Ä‘Ã£ diá»…n ra
             var componentScoreCounts = allScores
                 .Where(s => s.ComponentId.HasValue && s.FinalScore >= 0)
                 .GroupBy(s => s.ComponentId!.Value)
@@ -241,7 +241,7 @@ namespace QL_HocVien.Services
                 .Select(kvp => kvp.Key)
                 .ToHashSet();
 
-            // Tổng tín chỉ toàn khóa chuẩn (tính từ các đợt thi hoặc 62.90 theo file Excel chuẩn)
+            // Tá»•ng tÃ­n chá»‰ toÃ n khÃ³a chuáº©n (tÃ­nh tá»« cÃ¡c Ä‘á»£t thi hoáº·c 62.90 theo file Excel chuáº©n)
             double curriculumCredits = allComponents.Sum(c => c.Credits);
             if (curriculumCredits <= 0) curriculumCredits = 62.90;
 
@@ -261,7 +261,7 @@ namespace QL_HocVien.Services
                     TotalCurriculumCredits = Math.Round(curriculumCredits, 2)
                 };
 
-                // Điểm theo từng đợt kiểm tra của học viên này
+                // Äiá»ƒm theo tá»«ng Ä‘á»£t kiá»ƒm tra cá»§a há»c viÃªn nÃ y
                 var cadetCompScores = new Dictionary<int, double?>();
                 foreach (var comp in allComponents)
                 {
@@ -278,7 +278,7 @@ namespace QL_HocVien.Services
                     }
                 }
 
-                // Tính điểm môn lớn: Điểm trung bình môn CHỈ CÓ KHI 100% CÁC CỘT CỦA MÔN CHÍNH ĐƯỢC NHẬP
+                // TÃ­nh Ä‘iá»ƒm mÃ´n lá»›n: Äiá»ƒm trung bÃ¬nh mÃ´n CHá»ˆ CÃ“ KHI 100% CÃC Cá»˜T Cá»¦A MÃ”N CHÃNH ÄÆ¯á»¢C NHáº¬P
                 foreach (var subj in majorSubjects)
                 {
                     var subjComps = subj.Components.OrderBy(c => c.OrderIndex).ToList();
@@ -300,8 +300,8 @@ namespace QL_HocVien.Services
                     }
                 }
 
-                // Kiểm tra thiếu đợt thi trong các đợt ĐÃ DIỄN RA (>= 20 học viên có điểm)
-                // Nếu đợt kiểm tra chưa có ai thi (< 20 học sinh) thì coi như chưa diễn ra và KHÔNG bị đánh vàng
+                // Kiá»ƒm tra thiáº¿u Ä‘á»£t thi trong cÃ¡c Ä‘á»£t ÄÃƒ DIá»„N RA (>= 20 há»c viÃªn cÃ³ Ä‘iá»ƒm)
+                // Náº¿u Ä‘á»£t kiá»ƒm tra chÆ°a cÃ³ ai thi (< 20 há»c sinh) thÃ¬ coi nhÆ° chÆ°a diá»…n ra vÃ  KHÃ”NG bá»‹ Ä‘Ã¡nh vÃ ng
                 var missingActiveComponentNames = new List<string>();
                 foreach (var comp in allComponents)
                 {
@@ -317,7 +317,7 @@ namespace QL_HocVien.Services
                 dto.MissingSubjectsList = missingActiveComponentNames;
                 dto.MissingSubjectsCount = missingActiveComponentNames.Count;
 
-                // Tính GPA tích lũy toàn khóa trên các đợt thi đã hoàn thành
+                // TÃ­nh GPA tÃ­ch lÅ©y toÃ n khÃ³a trÃªn cÃ¡c Ä‘á»£t thi Ä‘Ã£ hoÃ n thÃ nh
                 var scoredComponents = allComponents
                     .Where(c => cadetCompScores.TryGetValue(c.Id, out var sc) && sc.HasValue && sc.Value >= 0)
                     .Select(c => (score: cadetCompScores[c.Id]!.Value, credits: c.Credits));
@@ -326,7 +326,7 @@ namespace QL_HocVien.Services
                 dto.TotalCreditsEarned = Math.Round(scoredComponents.Sum(sc => sc.credits), 2);
                 dto.TotalSubjectsCompleted = majorSubjects.Count(s => dto.SubjectScores.TryGetValue(s.Id, out var sc) && sc.HasValue);
 
-                // Xây dựng bảng phân rã điểm thành phần
+                // XÃ¢y dá»±ng báº£ng phÃ¢n rÃ£ Ä‘iá»ƒm thÃ nh pháº§n
                 dto.MajorSubjectBreakdowns = new List<MajorSubjectBreakdownDto>();
                 foreach (var subj in majorSubjects)
                 {
@@ -377,10 +377,10 @@ namespace QL_HocVien.Services
                 .AsNoTracking()
                 .AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(unit) && unit != "Tất cả")
+            if (!string.IsNullOrWhiteSpace(unit) && unit != "Táº¥t cáº£")
                 query = query.Where(c => c.Unit == unit);
 
-            if (!string.IsNullOrWhiteSpace(className) && className != "Tất cả")
+            if (!string.IsNullOrWhiteSpace(className) && className != "Táº¥t cáº£")
                 query = query.Where(c => c.MilitaryClass != null && c.MilitaryClass.ClassName == className);
 
             if (!string.IsNullOrWhiteSpace(keyword))
@@ -415,7 +415,7 @@ namespace QL_HocVien.Services
                 {
                     var missingList = new List<string>(missingSubjects);
                     if (!hasPhysicalExam)
-                        missingList.Add("Rèn luyện thể lực (chưa có điểm)");
+                        missingList.Add("RÃ¨n luyá»‡n thá»ƒ lá»±c (chÆ°a cÃ³ Ä‘iá»ƒm)");
 
                     result.Add(new UntestedCadetDto
                     {
@@ -428,10 +428,10 @@ namespace QL_HocVien.Services
                         MissingSubjects = string.Join(", ", missingList),
                         MissingCount = missingList.Count,
                         ExamType = missingSubjects.Count > 0 && !hasPhysicalExam 
-                            ? "Môn Tín chỉ & Thể lực" 
-                            : (missingSubjects.Count > 0 ? "Môn Tín chỉ" : "Rèn luyện Thể lực"),
-                        Status = "Chưa hoàn thành",
-                        Note = $"Còn thiếu {missingList.Count} nội dung cần tổ chức kiểm tra bù"
+                            ? "MÃ´n TÃ­n chá»‰ & Thá»ƒ lá»±c" 
+                            : (missingSubjects.Count > 0 ? "MÃ´n TÃ­n chá»‰" : "RÃ¨n luyá»‡n Thá»ƒ lá»±c"),
+                        Status = "ChÆ°a hoÃ n thÃ nh",
+                        Note = $"CÃ²n thiáº¿u {missingList.Count} ná»™i dung cáº§n tá»• chá»©c kiá»ƒm tra bÃ¹"
                     });
                 }
             }
@@ -462,9 +462,9 @@ namespace QL_HocVien.Services
                 try
                 {
                     using var wb = new XLWorkbook();
-                    var ws = wb.Worksheets.Add("Bảng Điểm TBM Chuẩn");
+                    var ws = wb.Worksheets.Add("Báº£ng Äiá»ƒm TBM Chuáº©n");
 
-                    // Lấy danh sách toàn bộ các đợt thi / kiểm tra thành phần sắp xếp theo môn chính
+                    // Láº¥y danh sÃ¡ch toÃ n bá»™ cÃ¡c Ä‘á»£t thi / kiá»ƒm tra thÃ nh pháº§n sáº¯p xáº¿p theo mÃ´n chÃ­nh
                     var components = _context.SubjectAssessmentComponents
                         .Include(c => c.CreditSubject)
                         .Where(c => c.CreditSubject != null && !c.CreditSubject.IsComponent)
@@ -483,7 +483,7 @@ namespace QL_HocVien.Services
                         }).ToList();
                     }
 
-                    // Dòng 1: Số tín chỉ của từng đợt kiểm tra / thi (Khớp file Điểm TBM chuẩn .xlsx)
+                    // DÃ²ng 1: Sá»‘ tÃ­n chá»‰ cá»§a tá»«ng Ä‘á»£t kiá»ƒm tra / thi (Khá»›p file Äiá»ƒm TBM chuáº©n .xlsx)
                     int startCol = 6;
                     int col = startCol;
                     double totalCurriculumCredits = components.Sum(c => c.Credits);
@@ -497,43 +497,43 @@ namespace QL_HocVien.Services
                         col++;
                     }
 
-                    // Ô tổng tín chỉ toàn khóa tại dòng 1 của cột TBM (ví dụ ô BK1 = 62.90)
+                    // Ã” tá»•ng tÃ­n chá»‰ toÃ n khÃ³a táº¡i dÃ²ng 1 cá»§a cá»™t TBM (vÃ­ dá»¥ Ã´ BK1 = 62.90)
                     int tbmCol = col;
                     ws.Cell(1, tbmCol).Value = totalCurriculumCredits;
                     ws.Cell(1, tbmCol).Style.NumberFormat.Format = "0.00";
                     ws.Cell(1, tbmCol).Style.Font.Bold = true;
                     ws.Cell(1, tbmCol).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
-                    // Tiêu đề báo cáo
-                    ws.Cell(3, 1).Value = "KẾT QUẢ HỌC TẬP TOÀN KHÓA VÀ ĐIỂM TRUNG BÌNH MÔN (TBM)";
+                    // TiÃªu Ä‘á» bÃ¡o cÃ¡o
+                    ws.Cell(3, 1).Value = "Káº¾T QUáº¢ Há»ŒC Táº¬P TOÃ€N KHÃ“A VÃ€ ÄIá»‚M TRUNG BÃŒNH MÃ”N (TBM)";
                     ws.Range(3, 1, 3, tbmCol + 3).Merge();
                     ws.Cell(3, 1).Style.Font.Bold = true;
                     ws.Cell(3, 1).Style.Font.FontSize = 14;
                     ws.Cell(3, 1).Style.Font.FontColor = XLColor.FromHtml("#1E3A8A");
                     ws.Cell(3, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
-                    // Dòng 4 & 5: Tiêu đề cột
+                    // DÃ²ng 4 & 5: TiÃªu Ä‘á» cá»™t
                     int hRow1 = 4;
                     int hRow2 = 5;
 
                     ws.Cell(hRow1, 1).Value = "TT";
-                    ws.Cell(hRow1, 2).Value = "Đơn vị";
-                    ws.Cell(hRow1, 3).Value = "Họ và tên đệm";
-                    ws.Cell(hRow1, 4).Value = "Tên";
-                    ws.Cell(hRow1, 5).Value = "Họ và tên ghép";
+                    ws.Cell(hRow1, 2).Value = "ÄÆ¡n vá»‹";
+                    ws.Cell(hRow1, 3).Value = "Há» vÃ  tÃªn Ä‘á»‡m";
+                    ws.Cell(hRow1, 4).Value = "TÃªn";
+                    ws.Cell(hRow1, 5).Value = "Há» vÃ  tÃªn ghÃ©p";
 
                     col = startCol;
                     foreach (var comp in components)
                     {
-                        // Xuất tên từng đợt kiểm tra / thi (vd: CNTT1, CNTT2, CNTT, Thi CNTT...)
+                        // Xuáº¥t tÃªn tá»«ng Ä‘á»£t kiá»ƒm tra / thi (vd: CNTT1, CNTT2, CNTT, Thi CNTT...)
                         ws.Cell(hRow2, col).Value = comp.ComponentName;
                         col++;
                     }
 
                     ws.Cell(hRow2, tbmCol).Value = "TBM";
-                    ws.Cell(hRow1, tbmCol + 1).Value = "Xếp loại học tập";
-                    ws.Cell(hRow1, tbmCol + 2).Value = "Số môn <7";
-                    ws.Cell(hRow1, tbmCol + 3).Value = "Số môn đã học";
+                    ws.Cell(hRow1, tbmCol + 1).Value = "Xáº¿p loáº¡i há»c táº­p";
+                    ws.Cell(hRow1, tbmCol + 2).Value = "Sá»‘ mÃ´n <7";
+                    ws.Cell(hRow1, tbmCol + 3).Value = "Sá»‘ mÃ´n Ä‘Ã£ há»c";
 
                     int lastCol = tbmCol + 3;
 
@@ -544,22 +544,22 @@ namespace QL_HocVien.Services
                     headerRange.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
                     headerRange.Style.Alignment.WrapText = true;
 
-                    // Dòng dữ liệu học viên (bắt đầu từ dòng 6)
+                    // DÃ²ng dá»¯ liá»‡u há»c viÃªn (báº¯t Ä‘áº§u tá»« dÃ²ng 6)
                     int row = 6;
                     int stt = 1;
 
                     foreach (var item in summaries)
                     {
-                        // Kiểm tra học viên thiếu môn: TÔ TOÀN BỘ DÒNG MÀU VÀNG (#FFFF00) NHƯ FILE EXCEL GỐC
+                        // Kiá»ƒm tra há»c viÃªn thiáº¿u mÃ´n: TÃ” TOÃ€N Bá»˜ DÃ’NG MÃ€U VÃ€NG (#FFFF00) NHÆ¯ FILE EXCEL Gá»C
                         if (item.HasMissingSubjects)
                         {
                             ws.Range(row, 1, row, lastCol).Style.Fill.BackgroundColor = XLColor.FromHtml("#FFFF00");
                         }
 
                         ws.Cell(row, 1).Value = stt++;
-                        ws.Cell(row, 2).Value = item.Unit; // Phân đội (b1, b2, b3...)
+                        ws.Cell(row, 2).Value = item.Unit; // PhÃ¢n Ä‘á»™i (b1, b2, b3...)
 
-                        // Tách họ đệm và tên
+                        // TÃ¡ch há» Ä‘á»‡m vÃ  tÃªn
                         string name = item.FullName.Trim();
                         int lastSpace = name.LastIndexOf(' ');
                         string lastName = lastSpace > 0 ? name.Substring(0, lastSpace).Trim() : string.Empty;
@@ -575,7 +575,7 @@ namespace QL_HocVien.Services
 
                         foreach (var comp in components)
                         {
-                            // Lấy điểm theo từng đợt kiểm tra / thành phần con
+                            // Láº¥y Ä‘iá»ƒm theo tá»«ng Ä‘á»£t kiá»ƒm tra / thÃ nh pháº§n con
                             if (item.ComponentScores.TryGetValue(comp.Id, out var score) && score.HasValue && score.Value >= 0)
                             {
                                 ws.Cell(row, col).Value = score.Value;
@@ -585,37 +585,37 @@ namespace QL_HocVien.Services
                             }
                             else
                             {
-                                // Nếu các đợt kiểm tra chưa có điểm khi xuất excel CỨ ĐỂ TRỐNG Ô HOÀN TOÀN
+                                // Náº¿u cÃ¡c Ä‘á»£t kiá»ƒm tra chÆ°a cÃ³ Ä‘iá»ƒm khi xuáº¥t excel Cá»¨ Äá»‚ TRá»NG Ã” HOÃ€N TOÃ€N
                                 ws.Cell(row, col).Value = string.Empty;
                             }
                             col++;
                         }
 
-                        // Cột TBM (ROUNDDOWN 2 số thập phân)
+                        // Cá»™t TBM (ROUNDDOWN 2 sá»‘ tháº­p phÃ¢n)
                         ws.Cell(row, tbmCol).Value = item.Gpa;
                         ws.Cell(row, tbmCol).Style.NumberFormat.Format = "0.00";
                         ws.Cell(row, tbmCol).Style.Font.Bold = true;
                         ws.Cell(row, tbmCol).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
-                        // Cột Xếp loại
+                        // Cá»™t Xáº¿p loáº¡i
                         ws.Cell(row, tbmCol + 1).Value = item.AcademicRating;
                         ws.Cell(row, tbmCol + 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                         ws.Cell(row, tbmCol + 1).Style.Font.Bold = true;
 
-                        // Cột Số môn < 7
+                        // Cá»™t Sá»‘ mÃ´n < 7
                         ws.Cell(row, tbmCol + 2).Value = belowSevenCount;
                         ws.Cell(row, tbmCol + 2).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
-                        // Cột Số môn đã học
+                        // Cá»™t Sá»‘ mÃ´n Ä‘Ã£ há»c
                         ws.Cell(row, tbmCol + 3).Value = completedCount;
                         ws.Cell(row, tbmCol + 3).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
                         row++;
                     }
 
-                    // HÀNG CUỐI CÙNG CỦA EXCEL: DÒNG TÍN CHỈ CỦA TỪNG ĐỢT KIỂM TRA HOẶC THI
+                    // HÃ€NG CUá»I CÃ™NG Cá»¦A EXCEL: DÃ’NG TÃN CHá»ˆ Cá»¦A Tá»ªNG Äá»¢T KIá»‚M TRA HOáº¶C THI
                     int footerRow = row;
-                    ws.Cell(footerRow, 1).Value = "TÍN CHỈ ĐỢT THI / KIỂM TRA";
+                    ws.Cell(footerRow, 1).Value = "TÃN CHá»ˆ Äá»¢T THI / KIá»‚M TRA";
                     ws.Range(footerRow, 1, footerRow, 5).Merge();
                     ws.Cell(footerRow, 1).Style.Font.Bold = true;
                     ws.Cell(footerRow, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
@@ -643,11 +643,11 @@ namespace QL_HocVien.Services
                     ws.Columns().AdjustToContents();
 
                     wb.SaveAs(filePath);
-                    return (true, $"Đã xuất báo cáo bảng điểm chuẩn TBM thành công ({summaries.Count} học viên, các đợt thi chưa có điểm để trống, các dòng thiếu môn đã tô màu vàng).");
+                    return (true, $"ÄÃ£ xuáº¥t bÃ¡o cÃ¡o báº£ng Ä‘iá»ƒm chuáº©n TBM thÃ nh cÃ´ng ({summaries.Count} há»c viÃªn, cÃ¡c Ä‘á»£t thi chÆ°a cÃ³ Ä‘iá»ƒm Ä‘á»ƒ trá»‘ng, cÃ¡c dÃ²ng thiáº¿u mÃ´n Ä‘Ã£ tÃ´ mÃ u vÃ ng).");
                 }
                 catch (Exception ex)
                 {
-                    return (false, $"Lỗi khi xuất file Excel: {ex.Message}");
+                    return (false, $"Lá»—i khi xuáº¥t file Excel: {ex.Message}");
                 }
             });
         }
@@ -659,12 +659,12 @@ namespace QL_HocVien.Services
                 try
                 {
                     if (!File.Exists(filePath))
-                        return (false, "File không tồn tại trên hệ thống.", 0, 0);
+                        return (false, "File khÃ´ng tá»“n táº¡i trÃªn há»‡ thá»‘ng.", 0, 0);
 
                     using var wb = new XLWorkbook(filePath);
                     var ws = wb.Worksheets.FirstOrDefault();
                     if (ws == null)
-                        return (false, "File Excel không chứa bất kỳ sheet nào.", 0, 0);
+                        return (false, "File Excel khÃ´ng chá»©a báº¥t ká»³ sheet nÃ o.", 0, 0);
 
                     var subjectsInDb = await _context.CreditSubjects.ToListAsync();
                     var cadetsInDb = await _context.Cadets.ToListAsync();
@@ -672,7 +672,7 @@ namespace QL_HocVien.Services
                     int importedCadetsCount = 0;
                     int importedScoresCount = 0;
 
-                    // 0. Dọn dẹp các môn học mẫu ban đầu nếu có (để dữ liệu đồng bộ chuẩn 100% với 57 môn của Excel)
+                    // 0. Dá»n dáº¹p cÃ¡c mÃ´n há»c máº«u ban Ä‘áº§u náº¿u cÃ³ (Ä‘á»ƒ dá»¯ liá»‡u Ä‘á»“ng bá»™ chuáº©n 100% vá»›i 57 mÃ´n cá»§a Excel)
                     var dummySubjs = subjectsInDb.Where(s => s.SubjectCode.StartsWith("TOAN01") || 
                                                              s.SubjectCode.StartsWith("TRIET01") || 
                                                              s.SubjectCode.StartsWith("ANH01") || 
@@ -688,7 +688,7 @@ namespace QL_HocVien.Services
                         subjectsInDb = await _context.CreditSubjects.ToListAsync();
                     }
 
-                    // 1. Đọc danh mục môn học và số tín chỉ (Cột 6 đến khi gặp TBM, thường là cột 62)
+                    // 1. Äá»c danh má»¥c mÃ´n há»c vÃ  sá»‘ tÃ­n chá»‰ (Cá»™t 6 Ä‘áº¿n khi gáº·p TBM, thÆ°á»ng lÃ  cá»™t 62)
                     var colSubjectMap = new Dictionary<int, CreditSubject>();
 
                     for (int c = 6; c <= 100; c++)
@@ -698,12 +698,12 @@ namespace QL_HocVien.Services
 
                         if (string.IsNullOrWhiteSpace(subjName))
                         {
-                            // Nếu ô TBM thì dừng lại
+                            // Náº¿u Ã´ TBM thÃ¬ dá»«ng láº¡i
                             if (ws.Cell(4, c).GetString().Trim().Contains("TBM") || 
                                 ws.Cell(5, c).GetString().Trim().Contains("TBM"))
                                 break;
                             
-                            // Kiểm tra nếu 2 cột liên tiếp trống thì dừng
+                            // Kiá»ƒm tra náº¿u 2 cá»™t liÃªn tiáº¿p trá»‘ng thÃ¬ dá»«ng
                             if (string.IsNullOrWhiteSpace(ws.Cell(5, c + 1).GetString().Trim()))
                                 break;
 
@@ -713,15 +713,15 @@ namespace QL_HocVien.Services
                         if (subjName.Equals("TBM", StringComparison.OrdinalIgnoreCase))
                             break;
 
-                        // Xử lý các cột bị trùng tên trong file Excel thực tế
-                        if (c == 20) subjName = "ĐHQS 1";
-                        else if (c == 60) subjName = "ĐHQS 2";
+                        // Xá»­ lÃ½ cÃ¡c cá»™t bá»‹ trÃ¹ng tÃªn trong file Excel thá»±c táº¿
+                        if (c == 20) subjName = "ÄHQS 1";
+                        else if (c == 60) subjName = "ÄHQS 2";
                         else if (c == 27) subjName = "KT Xe 1";
                         else if (c == 42) subjName = "KT Xe 2";
-                        else if (c == 44) subjName = "Võ 1";
-                        else if (c == 57) subjName = "Võ 2";
+                        else if (c == 44) subjName = "VÃµ 1";
+                        else if (c == 57) subjName = "VÃµ 2";
 
-                        // Đọc số tín chỉ ở dòng 1
+                        // Äá»c sá»‘ tÃ­n chá»‰ á»Ÿ dÃ²ng 1
                         double credits = 1.0;
                         string creditStr = ws.Cell(1, c).GetString().Trim().Replace(',', '.');
                         if (double.TryParse(creditStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double parsedCredits) && parsedCredits > 0)
@@ -731,7 +731,7 @@ namespace QL_HocVien.Services
 
                         string subjCode = $"TC{c - 5:D2}";
 
-                        // Tự động suy luận nhóm môn (SubjectGroup) cho các môn thành phần
+                        // Tá»± Ä‘á»™ng suy luáº­n nhÃ³m mÃ´n (SubjectGroup) cho cÃ¡c mÃ´n thÃ nh pháº§n
                         string group = string.Empty;
                         bool isComponent = false;
 
@@ -740,9 +740,9 @@ namespace QL_HocVien.Services
                             group = "CNTT";
                             isComponent = true;
                         }
-                        else if (subjName.Contains("ĐLQLBĐ", StringComparison.OrdinalIgnoreCase))
+                        else if (subjName.Contains("ÄLQLBÄ", StringComparison.OrdinalIgnoreCase))
                         {
-                            group = "ĐLQLBĐ";
+                            group = "ÄLQLBÄ";
                             isComponent = true;
                         }
                         else if (subjName.Contains("TH M-L", StringComparison.OrdinalIgnoreCase))
@@ -760,9 +760,9 @@ namespace QL_HocVien.Services
                             group = "CNXH";
                             isComponent = true;
                         }
-                        else if (subjName.Contains("LSĐ", StringComparison.OrdinalIgnoreCase))
+                        else if (subjName.Contains("LSÄ", StringComparison.OrdinalIgnoreCase))
                         {
-                            group = "LSĐ";
+                            group = "LSÄ";
                             isComponent = true;
                         }
                         else if (subjName.StartsWith("bBB", StringComparison.OrdinalIgnoreCase))
@@ -780,14 +780,14 @@ namespace QL_HocVien.Services
                             group = "KT Xe";
                             isComponent = true;
                         }
-                        else if (subjName.StartsWith("ĐHQS", StringComparison.OrdinalIgnoreCase))
+                        else if (subjName.StartsWith("ÄHQS", StringComparison.OrdinalIgnoreCase))
                         {
-                            group = "ĐHQS";
+                            group = "ÄHQS";
                             isComponent = true;
                         }
-                        else if (subjName.StartsWith("Võ", StringComparison.OrdinalIgnoreCase))
+                        else if (subjName.StartsWith("VÃµ", StringComparison.OrdinalIgnoreCase))
                         {
-                            group = "Võ";
+                            group = "VÃµ";
                             isComponent = true;
                         }
                         else if (subjName.StartsWith("HC", StringComparison.OrdinalIgnoreCase) && subjName.Contains("QS", StringComparison.OrdinalIgnoreCase))
@@ -800,9 +800,9 @@ namespace QL_HocVien.Services
                             group = "TT HCM";
                             isComponent = true;
                         }
-                        else if (subjName.StartsWith("LĐ", StringComparison.OrdinalIgnoreCase))
+                        else if (subjName.StartsWith("LÄ", StringComparison.OrdinalIgnoreCase))
                         {
-                            group = "Lựu đạn";
+                            group = "Lá»±u Ä‘áº¡n";
                             isComponent = true;
                         }
                         else if (subjName.StartsWith("Thi ", StringComparison.OrdinalIgnoreCase))
@@ -811,7 +811,7 @@ namespace QL_HocVien.Services
                             isComponent = true;
                         }
 
-                        // Tìm hoặc tạo môn trong CSDL theo mã TCxx hoặc tên
+                        // TÃ¬m hoáº·c táº¡o mÃ´n trong CSDL theo mÃ£ TCxx hoáº·c tÃªn
                         var existingSubj = subjectsInDb.FirstOrDefault(s => s.SubjectCode == subjCode || s.SubjectName.Equals(subjName, StringComparison.OrdinalIgnoreCase));
                         if (existingSubj == null)
                         {
@@ -820,10 +820,10 @@ namespace QL_HocVien.Services
                                 SubjectCode = subjCode,
                                 SubjectName = subjName,
                                 Credits = credits,
-                                AssessmentType = subjName.StartsWith("Thi ", StringComparison.OrdinalIgnoreCase) ? "Kiểm tra và thi" : "Kiểm tra thường xuyên",
+                                AssessmentType = subjName.StartsWith("Thi ", StringComparison.OrdinalIgnoreCase) ? "Kiá»ƒm tra vÃ  thi" : "Kiá»ƒm tra thÆ°á»ng xuyÃªn",
                                 SubjectGroup = group,
                                 IsComponent = isComponent,
-                                Description = $"Nhập tự động từ file Excel ({credits} tín chỉ)",
+                                Description = $"Nháº­p tá»± Ä‘á»™ng tá»« file Excel ({credits} tÃ­n chá»‰)",
                                 CreatedAt = DateTime.Now
                             };
 
@@ -844,7 +844,7 @@ namespace QL_HocVien.Services
 
                     await _context.SaveChangesAsync();
 
-                    // 2. Đọc danh sách học viên và điểm từng môn (từ dòng 6 trở đi)
+                    // 2. Äá»c danh sÃ¡ch há»c viÃªn vÃ  Ä‘iá»ƒm tá»«ng mÃ´n (tá»« dÃ²ng 6 trá»Ÿ Ä‘i)
                     int lastRow = ws.LastRowUsed()?.RowNumber() ?? 70;
                     for (int r = 6; r <= lastRow; r++)
                     {
@@ -862,7 +862,7 @@ namespace QL_HocVien.Services
                         string unit = ws.Cell(r, 2).GetString().Trim();
                         if (string.IsNullOrWhiteSpace(unit)) unit = "b1";
 
-                        // Tìm hoặc tạo học viên
+                        // TÃ¬m hoáº·c táº¡o há»c viÃªn
                         var cadet = cadetsInDb.FirstOrDefault(cd => System.Text.RegularExpressions.Regex.Replace(cd.FullName, @"\s+", " ").Equals(fullName, StringComparison.OrdinalIgnoreCase));
                         if (cadet == null)
                         {
@@ -871,8 +871,8 @@ namespace QL_HocVien.Services
                                 CadetCode = $"HV{DateTime.Now:yy}{cadetsInDb.Count + 1:D3}",
                                 FullName = fullName,
                                 Unit = unit,
-                                Rank = "Binh nhì",
-                                Position = "Học viên",
+                                Rank = "Binh nhÃ¬",
+                                Position = "Há»c viÃªn",
                                 DateOfBirth = new DateTime(2002, 1, 1),
                                 CreatedAt = DateTime.Now
                             };
@@ -890,7 +890,7 @@ namespace QL_HocVien.Services
                             }
                         }
 
-                        // Đọc điểm cho từng môn
+                        // Äá»c Ä‘iá»ƒm cho tá»«ng mÃ´n
                         foreach (var (c, subj) in colSubjectMap)
                         {
                             string scoreStr = ws.Cell(r, c).GetString().Trim().Replace(',', '.');
@@ -914,9 +914,9 @@ namespace QL_HocVien.Services
                                             CreditSubjectId = subj.Id,
                                             FinalScore = scoreVal,
                                             RegularScore = scoreVal,
-                                            ExamSession = "Toàn khóa",
+                                            ExamSession = "ToÃ n khÃ³a",
                                             ExamDate = DateTime.Today,
-                                            Notes = "Nhập tự động từ file chuẩn TBM",
+                                            Notes = "Nháº­p tá»± Ä‘á»™ng tá»« file chuáº©n TBM",
                                             CreatedAt = DateTime.Now
                                         });
                                     }
@@ -929,11 +929,11 @@ namespace QL_HocVien.Services
 
                     await _context.SaveChangesAsync();
 
-                    return (true, $"Đã nhập thành công từ file Excel: {colSubjectMap.Count} môn/thành phần, {importedCadetsCount} học viên mới, cập nhật {importedScoresCount} đầu điểm!", importedCadetsCount, importedScoresCount);
+                    return (true, $"ÄÃ£ nháº­p thÃ nh cÃ´ng tá»« file Excel: {colSubjectMap.Count} mÃ´n/thÃ nh pháº§n, {importedCadetsCount} há»c viÃªn má»›i, cáº­p nháº­t {importedScoresCount} Ä‘áº§u Ä‘iá»ƒm!", importedCadetsCount, importedScoresCount);
                 }
                 catch (Exception ex)
                 {
-                    return (false, $"Lỗi khi nhập file Excel: {ex.Message}", 0, 0);
+                    return (false, $"Lá»—i khi nháº­p file Excel: {ex.Message}", 0, 0);
                 }
             });
         }
@@ -945,9 +945,9 @@ namespace QL_HocVien.Services
                 try
                 {
                     if (!File.Exists(filePath))
-                        return (false, "File Excel không tồn tại trên hệ thống.", 0, 0, 0);
+                        return (false, "File Excel khÃ´ng tá»“n táº¡i trÃªn há»‡ thá»‘ng.", 0, 0, 0);
 
-                    // 1. Xóa sạch toàn bộ dữ liệu học viên, môn học, thành phần và điểm số
+                    // 1. XÃ³a sáº¡ch toÃ n bá»™ dá»¯ liá»‡u há»c viÃªn, mÃ´n há»c, thÃ nh pháº§n vÃ  Ä‘iá»ƒm sá»‘
                     var allScores = await _context.CreditScoreRecords.ToListAsync();
                     _context.CreditScoreRecords.RemoveRange(allScores);
 
@@ -965,11 +965,11 @@ namespace QL_HocVien.Services
 
                     await _context.SaveChangesAsync();
 
-                    // 2. Nạp mới toàn bộ từ file Excel
+                    // 2. Náº¡p má»›i toÃ n bá»™ tá»« file Excel
                     using var wb = new XLWorkbook(filePath);
                     var ws = wb.Worksheets.FirstOrDefault();
                     if (ws == null)
-                        return (false, "File Excel không chứa bất kỳ sheet nào.", 0, 0, 0);
+                        return (false, "File Excel khÃ´ng chá»©a báº¥t ká»³ sheet nÃ o.", 0, 0, 0);
 
                     var colSubjectMap = new Dictionary<int, CreditSubject>();
 
@@ -993,12 +993,12 @@ namespace QL_HocVien.Services
                         if (subjName.Equals("TBM", StringComparison.OrdinalIgnoreCase))
                             break;
 
-                        if (c == 20) subjName = "ĐHQS 1";
-                        else if (c == 60) subjName = "ĐHQS 2";
+                        if (c == 20) subjName = "ÄHQS 1";
+                        else if (c == 60) subjName = "ÄHQS 2";
                         else if (c == 27) subjName = "KT Xe 1";
                         else if (c == 42) subjName = "KT Xe 2";
-                        else if (c == 44) subjName = "Võ 1";
-                        else if (c == 57) subjName = "Võ 2";
+                        else if (c == 44) subjName = "VÃµ 1";
+                        else if (c == 57) subjName = "VÃµ 2";
 
                         double credits = 1.0;
                         string creditStr = ws.Cell(1, c).GetString().Trim().Replace(',', '.');
@@ -1012,19 +1012,19 @@ namespace QL_HocVien.Services
                         bool isComponent = false;
 
                         if (subjName.StartsWith("CNTT", StringComparison.OrdinalIgnoreCase)) { group = "CNTT"; isComponent = true; }
-                        else if (subjName.Contains("ĐLQLBĐ", StringComparison.OrdinalIgnoreCase)) { group = "ĐLQLBĐ"; isComponent = true; }
+                        else if (subjName.Contains("ÄLQLBÄ", StringComparison.OrdinalIgnoreCase)) { group = "ÄLQLBÄ"; isComponent = true; }
                         else if (subjName.Contains("TH M-L", StringComparison.OrdinalIgnoreCase)) { group = "TH M-L"; isComponent = true; }
                         else if (subjName.Contains("KTCT", StringComparison.OrdinalIgnoreCase)) { group = "KTCT"; isComponent = true; }
                         else if (subjName.Contains("CNXH", StringComparison.OrdinalIgnoreCase)) { group = "CNXH"; isComponent = true; }
-                        else if (subjName.Contains("LSĐ", StringComparison.OrdinalIgnoreCase)) { group = "LSĐ"; isComponent = true; }
+                        else if (subjName.Contains("LSÄ", StringComparison.OrdinalIgnoreCase)) { group = "LSÄ"; isComponent = true; }
                         else if (subjName.StartsWith("bBB", StringComparison.OrdinalIgnoreCase)) { group = "bBB"; isComponent = true; }
                         else if (subjName.Contains("VKHD", StringComparison.OrdinalIgnoreCase)) { group = "VKHD"; isComponent = true; }
                         else if (subjName.StartsWith("KT Xe", StringComparison.OrdinalIgnoreCase)) { group = "KT Xe"; isComponent = true; }
-                        else if (subjName.StartsWith("ĐHQS", StringComparison.OrdinalIgnoreCase)) { group = "ĐHQS"; isComponent = true; }
-                        else if (subjName.StartsWith("Võ", StringComparison.OrdinalIgnoreCase)) { group = "Võ"; isComponent = true; }
+                        else if (subjName.StartsWith("ÄHQS", StringComparison.OrdinalIgnoreCase)) { group = "ÄHQS"; isComponent = true; }
+                        else if (subjName.StartsWith("VÃµ", StringComparison.OrdinalIgnoreCase)) { group = "VÃµ"; isComponent = true; }
                         else if (subjName.StartsWith("HC", StringComparison.OrdinalIgnoreCase) && subjName.Contains("QS", StringComparison.OrdinalIgnoreCase)) { group = "HCQS"; isComponent = true; }
                         else if (subjName.StartsWith("TT HCM", StringComparison.OrdinalIgnoreCase)) { group = "TT HCM"; isComponent = true; }
-                        else if (subjName.StartsWith("LĐ", StringComparison.OrdinalIgnoreCase)) { group = "Lựu đạn"; isComponent = true; }
+                        else if (subjName.StartsWith("LÄ", StringComparison.OrdinalIgnoreCase)) { group = "Lá»±u Ä‘áº¡n"; isComponent = true; }
                         else if (subjName.StartsWith("Thi ", StringComparison.OrdinalIgnoreCase)) { group = subjName.Substring(4).Trim(); isComponent = true; }
 
                         var newSubj = new CreditSubject
@@ -1032,10 +1032,10 @@ namespace QL_HocVien.Services
                             SubjectCode = subjCode,
                             SubjectName = subjName,
                             Credits = credits,
-                            AssessmentType = subjName.StartsWith("Thi ", StringComparison.OrdinalIgnoreCase) ? "Kiểm tra và thi" : "Kiểm tra thường xuyên",
+                            AssessmentType = subjName.StartsWith("Thi ", StringComparison.OrdinalIgnoreCase) ? "Kiá»ƒm tra vÃ  thi" : "Kiá»ƒm tra thÆ°á»ng xuyÃªn",
                             SubjectGroup = group,
                             IsComponent = isComponent,
-                            Description = $"Nhập tự động từ file Excel ({credits} tín chỉ)",
+                            Description = $"Nháº­p tá»± Ä‘á»™ng tá»« file Excel ({credits} tÃ­n chá»‰)",
                             CreatedAt = DateTime.Now
                         };
 
@@ -1045,7 +1045,7 @@ namespace QL_HocVien.Services
 
                     await _context.SaveChangesAsync();
 
-                    // Đọc danh sách học viên
+                    // Äá»c danh sÃ¡ch há»c viÃªn
                     int lastRow = ws.LastRowUsed()?.RowNumber() ?? 70;
                     var addedCadets = new List<Cadet>();
                     int importedCadetsCount = 0;
@@ -1072,8 +1072,8 @@ namespace QL_HocVien.Services
                             CadetCode = $"HV{DateTime.Now:yy}{addedCadets.Count + 1:D3}",
                             FullName = fullName,
                             Unit = unit,
-                            Rank = "Binh nhì",
-                            Position = "Học viên",
+                            Rank = "Binh nhÃ¬",
+                            Position = "Há»c viÃªn",
                             DateOfBirth = new DateTime(2002, 1, 1),
                             CreatedAt = DateTime.Now
                         };
@@ -1085,7 +1085,7 @@ namespace QL_HocVien.Services
 
                     await _context.SaveChangesAsync();
 
-                    // Đọc điểm
+                    // Äá»c Ä‘iá»ƒm
                     int cadetIdx = 0;
                     for (int r = 6; r <= lastRow; r++)
                     {
@@ -1114,9 +1114,9 @@ namespace QL_HocVien.Services
                                         CreditSubjectId = subj.Id,
                                         FinalScore = scoreVal,
                                         RegularScore = scoreVal,
-                                        ExamSession = "Toàn khóa",
+                                        ExamSession = "ToÃ n khÃ³a",
                                         ExamDate = DateTime.Today,
-                                        Notes = "Nhập tự động từ file chuẩn TBM",
+                                        Notes = "Nháº­p tá»± Ä‘á»™ng tá»« file chuáº©n TBM",
                                         CreatedAt = DateTime.Now
                                     });
                                     importedScoresCount++;
@@ -1127,10 +1127,10 @@ namespace QL_HocVien.Services
 
                     await _context.SaveChangesAsync();
 
-                    // 3. Tái cấu trúc chuẩn thành 41 môn lớn và các đợt kiểm tra / thi trực thuộc
+                    // 3. TÃ¡i cáº¥u trÃºc chuáº©n thÃ nh 41 mÃ´n lá»›n vÃ  cÃ¡c Ä‘á»£t kiá»ƒm tra / thi trá»±c thuá»™c
                     await ConsolidateMajorSubjectsAsync();
 
-                    // 4. Đảm bảo toàn bộ CreditScoreRecords đều có ComponentId
+                    // 4. Äáº£m báº£o toÃ n bá»™ CreditScoreRecords Ä‘á»u cÃ³ ComponentId
                     var orphanScores = await _context.CreditScoreRecords
                         .Where(s => s.ComponentId == null)
                         .ToListAsync();
@@ -1150,11 +1150,11 @@ namespace QL_HocVien.Services
                     }
 
                     int totalMajorSubjects = await _context.CreditSubjects.CountAsync(s => !s.IsComponent);
-                    return (true, $"Làm sạch và nạp lại CSDL thành công: {importedCadetsCount} học viên, {totalMajorSubjects} môn lớn, {importedScoresCount} điểm số!", importedCadetsCount, totalMajorSubjects, importedScoresCount);
+                    return (true, $"LÃ m sáº¡ch vÃ  náº¡p láº¡i CSDL thÃ nh cÃ´ng: {importedCadetsCount} há»c viÃªn, {totalMajorSubjects} mÃ´n lá»›n, {importedScoresCount} Ä‘iá»ƒm sá»‘!", importedCadetsCount, totalMajorSubjects, importedScoresCount);
                 }
                 catch (Exception ex)
                 {
-                    return (false, $"Lỗi khi làm sạch và nạp lại: {ex.Message}", 0, 0, 0);
+                    return (false, $"Lá»—i khi lÃ m sáº¡ch vÃ  náº¡p láº¡i: {ex.Message}", 0, 0, 0);
                 }
             });
         }
@@ -1165,9 +1165,9 @@ namespace QL_HocVien.Services
             try
             {
                 if (string.IsNullOrWhiteSpace(subject.SubjectCode))
-                    return (false, "Mã môn học không được để trống.");
+                    return (false, "MÃ£ mÃ´n há»c khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng.");
                 if (string.IsNullOrWhiteSpace(subject.SubjectName))
-                    return (false, "Tên môn học không được để trống.");
+                    return (false, "TÃªn mÃ´n há»c khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng.");
 
                 var compList = components.ToList();
                 if (!compList.Any())
@@ -1189,7 +1189,7 @@ namespace QL_HocVien.Services
                 {
                     bool exists = await _context.CreditSubjects.AnyAsync(s => s.SubjectCode == subject.SubjectCode);
                     if (exists)
-                        return (false, $"Mã môn học '{subject.SubjectCode}' đã tồn tại trong hệ thống.");
+                        return (false, $"MÃ£ mÃ´n há»c '{subject.SubjectCode}' Ä‘Ã£ tá»“n táº¡i trong há»‡ thá»‘ng.");
 
                     subject.CreatedAt = DateTime.Now;
                     _context.CreditSubjects.Add(subject);
@@ -1204,7 +1204,7 @@ namespace QL_HocVien.Services
                         _context.SubjectAssessmentComponents.Add(c);
                     }
                     await _context.SaveChangesAsync();
-                    return (true, $"Thêm mới môn học '{subject.SubjectName}' cùng {compList.Count} đợt kiểm tra thành công.");
+                    return (true, $"ThÃªm má»›i mÃ´n há»c '{subject.SubjectName}' cÃ¹ng {compList.Count} Ä‘á»£t kiá»ƒm tra thÃ nh cÃ´ng.");
                 }
                 else
                 {
@@ -1213,12 +1213,12 @@ namespace QL_HocVien.Services
                         .FirstOrDefaultAsync(s => s.Id == subject.Id);
 
                     if (existing == null)
-                        return (false, "Không tìm thấy môn học cần sửa.");
+                        return (false, "KhÃ´ng tÃ¬m tháº¥y mÃ´n há»c cáº§n sá»­a.");
 
                     bool codeConflict = await _context.CreditSubjects
                         .AnyAsync(s => s.SubjectCode == subject.SubjectCode && s.Id != subject.Id);
                     if (codeConflict)
-                        return (false, $"Mã môn học '{subject.SubjectCode}' đã được sử dụng.");
+                        return (false, $"MÃ£ mÃ´n há»c '{subject.SubjectCode}' Ä‘Ã£ Ä‘Æ°á»£c sá»­ dá»¥ng.");
 
                     existing.SubjectCode = subject.SubjectCode;
                     existing.SubjectName = subject.SubjectName;
@@ -1226,7 +1226,7 @@ namespace QL_HocVien.Services
                     existing.Description = subject.Description;
                     existing.Credits = Math.Round(compList.Sum(c => c.Credits), 2);
 
-                    // Đồng bộ các đợt kiểm tra
+                    // Äá»“ng bá»™ cÃ¡c Ä‘á»£t kiá»ƒm tra
                     var newCompNames = compList.Select(c => c.ComponentName.Trim().ToLower()).ToHashSet();
                     var toRemove = existing.Components.Where(c => !newCompNames.Contains(c.ComponentName.Trim().ToLower())).ToList();
                     _context.SubjectAssessmentComponents.RemoveRange(toRemove);
@@ -1254,12 +1254,12 @@ namespace QL_HocVien.Services
                     }
 
                     await _context.SaveChangesAsync();
-                    return (true, $"Cập nhật môn học '{existing.SubjectName}' và các đợt kiểm tra thành công.");
+                    return (true, $"Cáº­p nháº­t mÃ´n há»c '{existing.SubjectName}' vÃ  cÃ¡c Ä‘á»£t kiá»ƒm tra thÃ nh cÃ´ng.");
                 }
             }
             catch (Exception ex)
             {
-                return (false, $"Lỗi lưu môn học: {ex.Message}");
+                return (false, $"Lá»—i lÆ°u mÃ´n há»c: {ex.Message}");
             }
         }
 
@@ -1302,10 +1302,10 @@ namespace QL_HocVien.Services
                 .AsNoTracking()
                 .AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(unit) && unit != "Tất cả")
+            if (!string.IsNullOrWhiteSpace(unit) && unit != "Táº¥t cáº£")
                 cadetQuery = cadetQuery.Where(c => c.Unit == unit);
 
-            if (!string.IsNullOrWhiteSpace(className) && className != "Tất cả")
+            if (!string.IsNullOrWhiteSpace(className) && className != "Táº¥t cáº£")
                 cadetQuery = cadetQuery.Where(c => c.MilitaryClass != null && c.MilitaryClass.ClassName == className);
 
             var cadets = await cadetQuery.OrderBy(c => c.Unit).ThenBy(c => c.FullName).ToListAsync();
@@ -1329,7 +1329,7 @@ namespace QL_HocVien.Services
                 }
             }
 
-            // Đếm số lượng học viên có điểm cho từng đợt kiểm tra
+            // Äáº¿m sá»‘ lÆ°á»£ng há»c viÃªn cÃ³ Ä‘iá»ƒm cho tá»«ng Ä‘á»£t kiá»ƒm tra
             var activeComponentIds = new HashSet<int>();
             foreach (var comp in components)
             {
@@ -1379,7 +1379,7 @@ namespace QL_HocVien.Services
                 row.HasMissingInActiveComponent = hasMissingInActive;
                 if (hasMissingInActive)
                 {
-                    row.MissingComponentsDisplay = $"Chưa thi: {string.Join(", ", missingNames)}";
+                    row.MissingComponentsDisplay = $"ChÆ°a thi: {string.Join(", ", missingNames)}";
                 }
 
                 row.OnScoreUpdatedCallback = (r, colIdx, newScore) =>
@@ -1397,7 +1397,7 @@ namespace QL_HocVien.Services
                         var (missing, mNames) = _calculator.CheckMissingInActiveComponents(
                             components, r.ComponentScores, activeComponentIds);
                         r.HasMissingInActiveComponent = missing;
-                        r.MissingComponentsDisplay = missing ? $"Chưa thi: {string.Join(", ", mNames)}" : string.Empty;
+                        r.MissingComponentsDisplay = missing ? $"ChÆ°a thi: {string.Join(", ", mNames)}" : string.Empty;
                     }
                 };
 
@@ -1417,7 +1417,7 @@ namespace QL_HocVien.Services
                     .FirstOrDefaultAsync(s => s.Id == subjectId);
 
                 if (subject == null)
-                    return (false, "Không tìm thấy môn học.");
+                    return (false, "KhÃ´ng tÃ¬m tháº¥y mÃ´n há»c.");
 
                 var components = subject.Components.OrderBy(c => c.OrderIndex).ToList();
                 int savedScoresCount = 0;
@@ -1466,7 +1466,7 @@ namespace QL_HocVien.Services
                                     RegularScore = scoreVal.Value,
                                     ExamDate = DateTime.Today,
                                     CreatedAt = DateTime.Now,
-                                    Notes = "Nhập từ bảng điểm môn học"
+                                    Notes = "Nháº­p tá»« báº£ng Ä‘iá»ƒm mÃ´n há»c"
                                 });
                             }
                             savedScoresCount++;
@@ -1482,11 +1482,11 @@ namespace QL_HocVien.Services
                 }
 
                 await _context.SaveChangesAsync();
-                return (true, $"Đã lưu thành công {savedScoresCount} đầu điểm cho môn '{subject.SubjectName}'!");
+                return (true, $"ÄÃ£ lÆ°u thÃ nh cÃ´ng {savedScoresCount} Ä‘áº§u Ä‘iá»ƒm cho mÃ´n '{subject.SubjectName}'!");
             }
             catch (Exception ex)
             {
-                return (false, $"Lỗi lưu bảng điểm: {ex.Message}");
+                return (false, $"Lá»—i lÆ°u báº£ng Ä‘iá»ƒm: {ex.Message}");
             }
         }
 
@@ -1575,7 +1575,7 @@ namespace QL_HocVien.Services
                     primary.IsComponent = false;
                     primary.Credits = Math.Round(subjs.Sum(s => s.Credits), 2);
 
-                    // Xóa các components cũ của môn chính nếu cần tái cấu trúc
+                    // XÃ³a cÃ¡c components cÅ© cá»§a mÃ´n chÃ­nh náº¿u cáº§n tÃ¡i cáº¥u trÃºc
                     var existingComps = await _context.SubjectAssessmentComponents
                         .Where(c => c.CreditSubjectId == primary.Id)
                         .ToListAsync();
@@ -1600,7 +1600,7 @@ namespace QL_HocVien.Services
                         compMap[s.Id] = newComp.Id;
                     }
 
-                    // Liên kết lại điểm số sang môn chính và ComponentId tương ứng
+                    // LiÃªn káº¿t láº¡i Ä‘iá»ƒm sá»‘ sang mÃ´n chÃ­nh vÃ  ComponentId tÆ°Æ¡ng á»©ng
                     foreach (var s in subjs)
                     {
                         if (compMap.TryGetValue(s.Id, out int newCompId))
@@ -1625,7 +1625,7 @@ namespace QL_HocVien.Services
                     changed = true;
                 }
 
-                // Đối với các môn độc lập (IsComponent == false), đảm bảo có ít nhất 1 component
+                // Äá»‘i vá»›i cÃ¡c mÃ´n Ä‘á»™c láº­p (IsComponent == false), Ä‘áº£m báº£o cÃ³ Ã­t nháº¥t 1 component
                 var majorSubjs = await _context.CreditSubjects
                     .Include(s => s.Components)
                     .Where(s => !s.IsComponent)
@@ -1668,7 +1668,7 @@ namespace QL_HocVien.Services
             var components = subject.Components.OrderBy(c => c.OrderIndex).ToList();
             var componentIds = components.Select(c => c.Id).ToList();
 
-            // Lấy toàn bộ điểm của học viên này ở môn học
+            // Láº¥y toÃ n bá»™ Ä‘iá»ƒm cá»§a há»c viÃªn nÃ y á»Ÿ mÃ´n há»c
             var scores = await _context.CreditScoreRecords
                 .Where(s => s.CadetId == cadetId && (s.CreditSubjectId == subjectId || (s.ComponentId.HasValue && componentIds.Contains(s.ComponentId.Value))))
                 .ToListAsync();
@@ -1682,7 +1682,7 @@ namespace QL_HocVien.Services
                 }
             }
 
-            // Tìm các component active (>10 học viên khác đã có điểm)
+            // TÃ¬m cÃ¡c component active (>10 há»c viÃªn khÃ¡c Ä‘Ã£ cÃ³ Ä‘iá»ƒm)
             var activeComponentIds = new HashSet<int>();
             if (componentIds.Any())
             {
@@ -1735,11 +1735,11 @@ namespace QL_HocVien.Services
                     .FirstOrDefaultAsync(s => s.Id == subjectId);
 
                 if (subject == null)
-                    return (false, "Không tìm thấy môn học.");
+                    return (false, "KhÃ´ng tÃ¬m tháº¥y mÃ´n há»c.");
 
                 var cadet = await _context.Cadets.FindAsync(cadetId);
                 if (cadet == null)
-                    return (false, "Không tìm thấy học viên.");
+                    return (false, "KhÃ´ng tÃ¬m tháº¥y há»c viÃªn.");
 
                 int savedCount = 0;
                 foreach (var (compId, scoreVal) in componentScores)
@@ -1770,7 +1770,7 @@ namespace QL_HocVien.Services
                                 RegularScore = scoreVal.Value,
                                 ExamDate = DateTime.Today,
                                 CreatedAt = DateTime.Now,
-                                Notes = "Nhập điểm từ hồ sơ học viên"
+                                Notes = "Nháº­p Ä‘iá»ƒm tá»« há»“ sÆ¡ há»c viÃªn"
                             });
                         }
                         savedCount++;
@@ -1785,12 +1785,13 @@ namespace QL_HocVien.Services
                 }
 
                 await _context.SaveChangesAsync();
-                return (true, $"Lưu điểm học viên {cadet.FullName} thành công ({savedCount} cột điểm).");
+                return (true, $"LÆ°u Ä‘iá»ƒm há»c viÃªn {cadet.FullName} thÃ nh cÃ´ng ({savedCount} cá»™t Ä‘iá»ƒm).");
             }
             catch (Exception ex)
             {
-                return (false, $"Lỗi lưu điểm học viên: {ex.Message}");
+                return (false, $"Lá»—i lÆ°u Ä‘iá»ƒm há»c viÃªn: {ex.Message}");
             }
         }
     }
 }
+

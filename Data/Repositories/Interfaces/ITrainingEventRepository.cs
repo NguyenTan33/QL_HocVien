@@ -1,8 +1,8 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using QL_HocVien.Models;
 
-namespace QL_HocVien.Data.Repositories
+namespace QL_HocVien.Data.Repositories.Interfaces
 {
     public interface ITrainingEventRepository : IRepository<TrainingEvent>
     {
@@ -10,3 +10,4 @@ namespace QL_HocVien.Data.Repositories
         Task<IEnumerable<TrainingEvent>> GetUpcomingEventsAsync(int count);
     }
 }
+

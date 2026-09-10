@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Management;
 using System.Security;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace QL_HocVien.Services
+namespace QL_HocVien.Services.Implementations
 {
     public class SecureKeyVault : ISecureKeyVault
     {
@@ -23,8 +23,8 @@ namespace QL_HocVien.Services
         }
 
         /// <summary>
-        /// Lấy hoặc sinh mới chuỗi Passphrase mã hóa CSDL an toàn.
-        /// Hỗ trợ bảo vệ đa lớp: Windows DPAPI + Hardware Fingerprint + Recovery Auto-Rebind khi chuyển máy.
+        /// Láº¥y hoáº·c sinh má»›i chuá»—i Passphrase mÃ£ hÃ³a CSDL an toÃ n.
+        /// Há»— trá»£ báº£o vá»‡ Ä‘a lá»›p: Windows DPAPI + Hardware Fingerprint + Recovery Auto-Rebind khi chuyá»ƒn mÃ¡y.
         /// </summary>
         public static string GetPassphrase()
         {
@@ -44,7 +44,7 @@ namespace QL_HocVien.Services
 
                 if (!File.Exists(vaultPath))
                 {
-                    // Lần đầu tiên khởi tạo: Tạo khóa ngẫu nhiên 256-bit và ghi tệp cấu trúc QLV2
+                    // Láº§n Ä‘áº§u tiÃªn khá»Ÿi táº¡o: Táº¡o khÃ³a ngáº«u nhiÃªn 256-bit vÃ  ghi tá»‡p cáº¥u trÃºc QLV2
                     string newRawKey = GenerateRandom256BitKey();
                     SaveVaultFile(vaultPath, newRawKey);
                     _cachedPassphrase = newRawKey;
@@ -55,11 +55,11 @@ namespace QL_HocVien.Services
                 {
                     byte[] fileBytes = File.ReadAllBytes(vaultPath);
 
-                    // 1. Kiểm tra cấu trúc định dạng QLV2
+                    // 1. Kiá»ƒm tra cáº¥u trÃºc Ä‘á»‹nh dáº¡ng QLV2
                     if (IsMagicHeader(fileBytes))
                     {
                         using var ms = new MemoryStream(fileBytes);
-                        ms.Seek(4, SeekOrigin.Begin); // Bỏ qua 4 byte Magic
+                        ms.Seek(4, SeekOrigin.Begin); // Bá» qua 4 byte Magic
 
                         using var reader = new BinaryReader(ms);
                         int dpapiLen = reader.ReadInt32();
@@ -67,7 +67,7 @@ namespace QL_HocVien.Services
                         int recoveryLen = reader.ReadInt32();
                         byte[] recoveryBytes = reader.ReadBytes(recoveryLen);
 
-                        // Thử giải mã khối DPAPI (ưu tiên cao nhất trên máy hiện tại)
+                        // Thá»­ giáº£i mÃ£ khá»‘i DPAPI (Æ°u tiÃªn cao nháº¥t trÃªn mÃ¡y hiá»‡n táº¡i)
                         try
                         {
                             string key = DecryptKeyWithDpapi(dpapiBytes);
@@ -76,11 +76,11 @@ namespace QL_HocVien.Services
                         }
                         catch
                         {
-                            // Nếu DPAPI thất bại (ứng dụng được copy sang máy mới hoặc user khác):
-                            // Thử giải mã qua khối Recovery để tự động liên kết lại (Auto-Rebind) sang máy mới
+                            // Náº¿u DPAPI tháº¥t báº¡i (á»©ng dá»¥ng Ä‘Æ°á»£c copy sang mÃ¡y má»›i hoáº·c user khÃ¡c):
+                            // Thá»­ giáº£i mÃ£ qua khá»‘i Recovery Ä‘á»ƒ tá»± Ä‘á»™ng liÃªn káº¿t láº¡i (Auto-Rebind) sang mÃ¡y má»›i
                             string recoveredKey = DecryptRecoveryBlock(recoveryBytes);
 
-                            // Tự động mã hóa lại DPAPI cho thiết bị mới và lưu lại tệp
+                            // Tá»± Ä‘á»™ng mÃ£ hÃ³a láº¡i DPAPI cho thiáº¿t bá»‹ má»›i vÃ  lÆ°u láº¡i tá»‡p
                             try
                             {
                                 SaveVaultFile(vaultPath, recoveredKey);
@@ -93,18 +93,18 @@ namespace QL_HocVien.Services
                     }
                     else
                     {
-                        // Định dạng cũ (single DPAPI block)
+                        // Äá»‹nh dáº¡ng cÅ© (single DPAPI block)
                         try
                         {
                             string oldKey = DecryptKeyWithDpapi(fileBytes);
-                            // Nâng cấp lên cấu trúc QLV2
+                            // NÃ¢ng cáº¥p lÃªn cáº¥u trÃºc QLV2
                             try { SaveVaultFile(vaultPath, oldKey); } catch { }
                             _cachedPassphrase = oldKey;
                             return _cachedPassphrase;
                         }
                         catch
                         {
-                            // Thử giải mã bằng Recovery
+                            // Thá»­ giáº£i mÃ£ báº±ng Recovery
                             try
                             {
                                 string recKey = DecryptRecoveryBlock(fileBytes);
@@ -115,7 +115,7 @@ namespace QL_HocVien.Services
                             catch
                             {
                                 throw new SecurityException(
-                                    "Tệp khóa cơ sở dữ liệu (vault.dat) không tương thích hoặc đã bị can thiệp trái phép!");
+                                    "Tá»‡p khÃ³a cÆ¡ sá»Ÿ dá»¯ liá»‡u (vault.dat) khÃ´ng tÆ°Æ¡ng thÃ­ch hoáº·c Ä‘Ã£ bá»‹ can thiá»‡p trÃ¡i phÃ©p!");
                             }
                         }
                     }
@@ -123,7 +123,7 @@ namespace QL_HocVien.Services
                 catch (Exception ex) when (ex is not SecurityException)
                 {
                     throw new SecurityException(
-                        "Không thể nạp khóa bảo mật CSDL SQLCipher:\n" + ex.Message, ex);
+                        "KhÃ´ng thá»ƒ náº¡p khÃ³a báº£o máº­t CSDL SQLCipher:\n" + ex.Message, ex);
                 }
             }
         }
@@ -182,7 +182,7 @@ namespace QL_HocVien.Services
 
             if (!payload.EndsWith(expectedSuffix))
             {
-                throw new SecurityException("Chữ ký phần cứng máy tính không khớp!");
+                throw new SecurityException("Chá»¯ kÃ½ pháº§n cá»©ng mÃ¡y tÃ­nh khÃ´ng khá»›p!");
             }
 
             return payload.Substring(0, payload.Length - expectedSuffix.Length);
@@ -223,7 +223,7 @@ namespace QL_HocVien.Services
         }
 
         /// <summary>
-        /// Tạo chữ ký phần cứng duy nhất cho thiết bị chạy ứng dụng
+        /// Táº¡o chá»¯ kÃ½ pháº§n cá»©ng duy nháº¥t cho thiáº¿t bá»‹ cháº¡y á»©ng dá»¥ng
         /// </summary>
         private static string GetMachineFingerprint()
         {
@@ -257,3 +257,4 @@ namespace QL_HocVien.Services
         }
     }
 }
+

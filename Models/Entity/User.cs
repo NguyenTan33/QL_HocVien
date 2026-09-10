@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 
-namespace QL_HocVien.Models
+namespace QL_HocVien.Models.Entity
 {
     public class User
     {
@@ -19,3 +19,4 @@ namespace QL_HocVien.Models
         public DateTime? PasskeyActivatedAt { get; set; }
     }
 }
+

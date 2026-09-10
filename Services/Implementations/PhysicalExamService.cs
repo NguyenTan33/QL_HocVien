@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using QL_HocVien.Data.Repositories;
 using QL_HocVien.Models;
 
-namespace QL_HocVien.Services
+namespace QL_HocVien.Services.Implementations
 {
     public class PhysicalExamService : IPhysicalExamService
     {
@@ -50,10 +50,10 @@ namespace QL_HocVien.Services
         public async Task<(bool Success, string Message, PhysicalExamRecord? Record)> AddExamRecordAsync(PhysicalExamRecord record)
         {
             if (record.CadetId <= 0)
-                return (false, "Vui lòng chọn học viên kiểm tra.", null);
+                return (false, "Vui lÃ²ng chá»n há»c viÃªn kiá»ƒm tra.", null);
 
             if (record.SubjectId <= 0)
-                return (false, "Vui lòng chọn nội dung môn kiểm tra.", null);
+                return (false, "Vui lÃ²ng chá»n ná»™i dung mÃ´n kiá»ƒm tra.", null);
 
             var subject = await _subjectRepository.GetByIdAsync(record.SubjectId);
             if (subject != null)
@@ -65,14 +65,14 @@ namespace QL_HocVien.Services
             await _examRepository.AddAsync(record);
             await _examRepository.SaveChangesAsync();
 
-            return (true, $"Lưu kết quả thành công! Xếp loại: {record.Grade}", record);
+            return (true, $"LÆ°u káº¿t quáº£ thÃ nh cÃ´ng! Xáº¿p loáº¡i: {record.Grade}", record);
         }
 
         public async Task<(bool Success, string Message)> UpdateExamRecordAsync(PhysicalExamRecord record)
         {
             var existing = await _examRepository.GetByIdAsync(record.Id);
             if (existing == null)
-                return (false, "Không tìm thấy kết quả kiểm tra cần cập nhật.");
+                return (false, "KhÃ´ng tÃ¬m tháº¥y káº¿t quáº£ kiá»ƒm tra cáº§n cáº­p nháº­t.");
 
             var subject = await _subjectRepository.GetByIdAsync(record.SubjectId);
             if (subject != null)
@@ -91,26 +91,26 @@ namespace QL_HocVien.Services
             _examRepository.Update(existing);
             await _examRepository.SaveChangesAsync();
 
-            return (true, $"Cập nhật kết quả thành công! Xếp loại mới: {existing.Grade}");
+            return (true, $"Cáº­p nháº­t káº¿t quáº£ thÃ nh cÃ´ng! Xáº¿p loáº¡i má»›i: {existing.Grade}");
         }
 
         public async Task<(bool Success, string Message)> DeleteExamRecordAsync(int id)
         {
             var existing = await _examRepository.GetByIdAsync(id);
             if (existing == null)
-                return (false, "Không tìm thấy kết quả kiểm tra cần xóa.");
+                return (false, "KhÃ´ng tÃ¬m tháº¥y káº¿t quáº£ kiá»ƒm tra cáº§n xÃ³a.");
 
             _examRepository.Delete(existing);
             await _examRepository.SaveChangesAsync();
 
-            return (true, "Xóa kết quả kiểm tra thành công!");
+            return (true, "XÃ³a káº¿t quáº£ kiá»ƒm tra thÃ nh cÃ´ng!");
         }
 
         public async Task<(bool Success, string Message, int DeletedCount)> DeleteMultipleExamRecordsAsync(IEnumerable<int> recordIds)
         {
             var idList = recordIds?.Distinct().ToList() ?? new List<int>();
             if (!idList.Any())
-                return (false, "Không có kết quả kiểm tra nào được chọn để xóa.", 0);
+                return (false, "KhÃ´ng cÃ³ káº¿t quáº£ kiá»ƒm tra nÃ o Ä‘Æ°á»£c chá»n Ä‘á»ƒ xÃ³a.", 0);
 
             int deleted = 0;
             try
@@ -128,12 +128,13 @@ namespace QL_HocVien.Services
                 {
                     await _examRepository.SaveChangesAsync();
                 }
-                return (true, $"Đã xóa thành công {deleted} kết quả kiểm tra thể lực.", deleted);
+                return (true, $"ÄÃ£ xÃ³a thÃ nh cÃ´ng {deleted} káº¿t quáº£ kiá»ƒm tra thá»ƒ lá»±c.", deleted);
             }
             catch (Exception ex)
             {
-                return (false, $"Lỗi khi xóa kết quả kiểm tra: {ex.Message}", deleted);
+                return (false, $"Lá»—i khi xÃ³a káº¿t quáº£ kiá»ƒm tra: {ex.Message}", deleted);
             }
         }
     }
 }
+

@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 
-namespace QL_HocVien.Services
+namespace QL_HocVien.Services.Interfaces
 {
     public interface ILoginLockoutService
     {
@@ -12,14 +12,15 @@ namespace QL_HocVien.Services
         event Action? OnLockoutStateChanged;
 
         /// <summary>
-        /// Ghi nhận 1 lần đăng nhập thất bại.
-        /// Trả về true nếu tài khoản/ứng dụng bị khóa.
+        /// Ghi nháº­n 1 láº§n Ä‘Äƒng nháº­p tháº¥t báº¡i.
+        /// Tráº£ vá» true náº¿u tÃ i khoáº£n/á»©ng dá»¥ng bá»‹ khÃ³a.
         /// </summary>
         (bool IsLocked, int LockoutSeconds, string Message) RecordFailedAttempt();
 
         /// <summary>
-        /// Ghi nhận đăng nhập thành công, reset toàn bộ bộ đếm về 0.
+        /// Ghi nháº­n Ä‘Äƒng nháº­p thÃ nh cÃ´ng, reset toÃ n bá»™ bá»™ Ä‘áº¿m vá» 0.
         /// </summary>
         void RecordSuccessfulLogin();
     }
 }
+

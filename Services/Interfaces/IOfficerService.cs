@@ -1,8 +1,8 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using QL_HocVien.Models;
 
-namespace QL_HocVien.Services
+namespace QL_HocVien.Services.Interfaces
 {
     public interface IOfficerService
     {
@@ -21,3 +21,4 @@ namespace QL_HocVien.Services
         Task<string> GenerateNextOfficerCodeAsync();
     }
 }
+

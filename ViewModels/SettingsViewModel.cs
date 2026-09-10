@@ -267,7 +267,7 @@ namespace QL_HocVien.ViewModels
                         updateWindow.ShowDialog();
                     }
                 }
-                else if (result.Status == Models.UpdateStatus.UpToDate)
+                else if (result.Status == UpdateStatus.UpToDate)
                 {
                     UpdateStatusText = $"Hệ thống đang hoạt động ở phiên bản mới nhất ({AppVersionDisplay}). Không có bản cập nhật nào.";
                 }

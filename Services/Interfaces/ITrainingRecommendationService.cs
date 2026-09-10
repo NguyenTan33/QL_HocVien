@@ -1,9 +1,9 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using QL_HocVien.Models;
 using QL_HocVien.Models.DTOs;
 
-namespace QL_HocVien.Services
+namespace QL_HocVien.Services.Interfaces
 {
     public interface ITrainingRecommendationService
     {
@@ -13,3 +13,4 @@ namespace QL_HocVien.Services
             string? unit = null);
     }
 }
+

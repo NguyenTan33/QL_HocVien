@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
-namespace QL_HocVien.Data.Repositories
+namespace QL_HocVien.Data.Repositories.Interfaces
 {
     public interface IRepository<T> where T : class
     {
@@ -16,3 +16,4 @@ namespace QL_HocVien.Data.Repositories
         Task<int> SaveChangesAsync();
     }
 }
+

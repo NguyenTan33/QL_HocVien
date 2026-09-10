@@ -1,11 +1,12 @@
-namespace QL_HocVien.Services
+﻿namespace QL_HocVien.Services.Interfaces
 {
     public interface ISecureKeyVault
     {
         /// <summary>
-        /// Lấy chuỗi Passphrase bí mật dùng để mã hóa và giải mã CSDL SQLCipher AES-256.
-        /// Chuỗi được giải mã động bằng Windows DPAPI và ràng buộc phần cứng máy tính.
+        /// Láº¥y chuá»—i Passphrase bÃ­ máº­t dÃ¹ng Ä‘á»ƒ mÃ£ hÃ³a vÃ  giáº£i mÃ£ CSDL SQLCipher AES-256.
+        /// Chuá»—i Ä‘Æ°á»£c giáº£i mÃ£ Ä‘á»™ng báº±ng Windows DPAPI vÃ  rÃ ng buá»™c pháº§n cá»©ng mÃ¡y tÃ­nh.
         /// </summary>
         string GetDatabasePassphrase();
     }
 }
+

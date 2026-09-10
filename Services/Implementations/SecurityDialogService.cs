@@ -1,12 +1,12 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using System.Windows;
 using QL_HocVien.Views.Windows;
 
-namespace QL_HocVien.Services
+namespace QL_HocVien.Services.Implementations
 {
     /// <summary>
-    /// Triển khai ISecurityDialogService hiển thị modal dialog trên UI Dispatcher
+    /// Triá»ƒn khai ISecurityDialogService hiá»ƒn thá»‹ modal dialog trÃªn UI Dispatcher
     /// </summary>
     public class SecurityDialogService : ISecurityDialogService
     {
@@ -42,3 +42,4 @@ namespace QL_HocVien.Services
         }
     }
 }
+

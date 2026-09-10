@@ -1,10 +1,10 @@
-using Microsoft.Win32;
+﻿using Microsoft.Win32;
 
-namespace QL_HocVien.Services
+namespace QL_HocVien.Services.Implementations
 {
     public class FileDialogService : IFileDialogService
     {
-        public string? ShowOpenFileDialog(string filter = "Excel Files (*.xlsx)|*.xlsx|All Files (*.*)|*.*", string title = "Chọn tệp Excel")
+        public string? ShowOpenFileDialog(string filter = "Excel Files (*.xlsx)|*.xlsx|All Files (*.*)|*.*", string title = "Chá»n tá»‡p Excel")
         {
             var dialog = new OpenFileDialog
             {
@@ -16,7 +16,7 @@ namespace QL_HocVien.Services
             return dialog.ShowDialog() == true ? dialog.FileName : null;
         }
 
-        public string? ShowSaveFileDialog(string defaultFileName, string filter = "Excel Files (*.xlsx)|*.xlsx", string title = "Lưu tệp Excel")
+        public string? ShowSaveFileDialog(string defaultFileName, string filter = "Excel Files (*.xlsx)|*.xlsx", string title = "LÆ°u tá»‡p Excel")
         {
             var dialog = new SaveFileDialog
             {
@@ -31,3 +31,4 @@ namespace QL_HocVien.Services
         }
     }
 }
+

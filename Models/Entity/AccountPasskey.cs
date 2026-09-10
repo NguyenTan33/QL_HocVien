@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace QL_HocVien.Models
+namespace QL_HocVien.Models.Entity
 {
     public class AccountPasskey
     {
@@ -32,3 +32,4 @@ namespace QL_HocVien.Models
         public string Remarks { get; set; } = string.Empty;
     }
 }
+

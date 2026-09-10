@@ -1,4 +1,4 @@
-namespace QL_HocVien.Services
+﻿namespace QL_HocVien.Services.Interfaces
 {
     public interface IThemeService
     {
@@ -8,3 +8,4 @@ namespace QL_HocVien.Services
         void ToggleTheme();
     }
 }
+
