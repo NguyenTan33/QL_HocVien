@@ -9,6 +9,8 @@ namespace QL_HocVien.Models.Filters
         public string? ExamSession { get; set; } = "Tất cả";
         public int? SubjectId { get; set; }
         public string? Grade { get; set; } = "Tất cả";
+        public string? AcademicRating { get; set; } = "Tất cả";
+        public string? Status { get; set; } = "Tất cả";
         public DateTime? FromDate { get; set; }
         public DateTime? ToDate { get; set; }
         public string? SearchKeyword { get; set; }
@@ -20,6 +22,8 @@ namespace QL_HocVien.Models.Filters
                    (!string.IsNullOrWhiteSpace(ExamSession) && ExamSession != "Tất cả") ||
                    (SubjectId.HasValue && SubjectId.Value > 0) ||
                    (!string.IsNullOrWhiteSpace(Grade) && Grade != "Tất cả") ||
+                   (!string.IsNullOrWhiteSpace(AcademicRating) && AcademicRating != "Tất cả") ||
+                   (!string.IsNullOrWhiteSpace(Status) && Status != "Tất cả") ||
                    FromDate.HasValue ||
                    ToDate.HasValue ||
                    !string.IsNullOrWhiteSpace(SearchKeyword);
@@ -32,6 +36,8 @@ namespace QL_HocVien.Models.Filters
             ExamSession = "Tất cả";
             SubjectId = null;
             Grade = "Tất cả";
+            AcademicRating = "Tất cả";
+            Status = "Tất cả";
             FromDate = null;
             ToDate = null;
             SearchKeyword = string.Empty;

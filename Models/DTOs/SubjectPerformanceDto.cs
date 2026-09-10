@@ -7,6 +7,9 @@ namespace QL_HocVien.Models.DTOs
         public int SubjectId { get; set; }
         public string SubjectCode { get; set; } = string.Empty;
         public string SubjectName { get; set; } = string.Empty;
+        public double Credits { get; set; } = 2.0;
+        public string AssessmentType { get; set; } = "Kiểm tra và thi";
+        public double AverageScore { get; set; }
         public int TotalTested { get; set; }
         public int PassedCount { get; set; }
         public int EliteCount { get; set; }

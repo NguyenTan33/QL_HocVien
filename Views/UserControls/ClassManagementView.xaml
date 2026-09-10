@@ -177,7 +177,7 @@
                             <DataGridTextColumn Header="Chuyên Ngành" Binding="{Binding Major}" Width="180"/>
                             <DataGridTextColumn Header="Cán Bộ Quản Lý" Binding="{Binding OfficerInCharge}" Width="180"/>
                             <DataGridTextColumn Header="Khóa Học" Binding="{Binding AcademicYear}" Width="120"/>
-                            <DataGridTemplateColumn Header="Quân Số" Width="100">
+                            <DataGridTemplateColumn Header="Quân Số" Width="100" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Border Background="{DynamicResource PageBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="8,3" HorizontalAlignment="Center">

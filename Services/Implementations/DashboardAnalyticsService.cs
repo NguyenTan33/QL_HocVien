@@ -7,6 +7,8 @@ using QL_HocVien.Data;
 using QL_HocVien.Models;
 using QL_HocVien.Models.DTOs;
 using QL_HocVien.Models.Filters;
+using QL_HocVien.Services.Calculators;
+using QL_HocVien.Services.Interfaces;
 
 namespace QL_HocVien.Services.Implementations
 {
@@ -14,18 +16,22 @@ namespace QL_HocVien.Services.Implementations
     {
         private readonly AppDbContext _context;
         private readonly ICadetService _cadetService;
-        private readonly IPhysicalExamService _examService;
-        private readonly ISubjectService _subjectService;
-        private readonly IClassService _classService;
-        private readonly ICatalogService _catalogService;
+        private readonly IPhysicalExamService? _examService;
+        private readonly ISubjectService? _subjectService;
+        private readonly IClassService? _classService;
+        private readonly ICatalogService? _catalogService;
+        private readonly ICreditSubjectService _creditSubjectService;
+        private readonly IAcademicAnalyticsService _academicAnalyticsService;
 
         public DashboardAnalyticsService(
             AppDbContext context,
             ICadetService cadetService,
-            IPhysicalExamService examService,
-            ISubjectService subjectService,
-            IClassService classService,
-            ICatalogService catalogService)
+            IPhysicalExamService? examService = null,
+            ISubjectService? subjectService = null,
+            IClassService? classService = null,
+            ICatalogService? catalogService = null,
+            ICreditSubjectService? creditSubjectService = null,
+            IAcademicAnalyticsService? academicAnalyticsService = null)
         {
             _context = context;
             _cadetService = cadetService;
@@ -33,103 +39,77 @@ namespace QL_HocVien.Services.Implementations
             _subjectService = subjectService;
             _classService = classService;
             _catalogService = catalogService;
+            _creditSubjectService = creditSubjectService ?? new CreditSubjectService(context);
+            _academicAnalyticsService = academicAnalyticsService ?? new AcademicAnalyticsService(context, _creditSubjectService, new CreditGradeCalculator());
         }
 
-        public async Task<List<PhysicalExamRecord>> GetFilteredRecordsAsync(DashboardFilterCriteria criteria)
+        public async Task<AcademicAnalyticsResultDto> GetRawAcademicAnalyticsAsync(DashboardFilterCriteria criteria)
         {
-            var allRecords = await _examService.GetAllRecordsAsync();
-            var query = allRecords.AsQueryable();
+            string? unit = (!string.IsNullOrWhiteSpace(criteria.Unit) && !criteria.Unit.Contains("Tất cả")) ? criteria.Unit : null;
+            string? className = (!string.IsNullOrWhiteSpace(criteria.ClassName) && !criteria.ClassName.Contains("Tất cả")) ? criteria.ClassName : null;
+            string? rating = (!string.IsNullOrWhiteSpace(criteria.AcademicRating) && !criteria.AcademicRating.Contains("Tất cả")) ? criteria.AcademicRating : null;
+            string? status = (!string.IsNullOrWhiteSpace(criteria.Status) && !criteria.Status.Contains("Tất cả")) ? criteria.Status : null;
 
-            if (!string.IsNullOrWhiteSpace(criteria.Unit) && criteria.Unit != "Tất cả")
-            {
-                query = query.Where(r => r.Cadet != null && r.Cadet.Unit == criteria.Unit);
-            }
-
-            if (!string.IsNullOrWhiteSpace(criteria.ClassName) && criteria.ClassName != "Tất cả")
-            {
-                query = query.Where(r => r.Cadet != null && 
-                    ((r.Cadet.ClassName != null && r.Cadet.ClassName.Equals(criteria.ClassName, StringComparison.OrdinalIgnoreCase)) ||
-                     (r.Cadet.MilitaryClass != null && r.Cadet.MilitaryClass.ClassName.Equals(criteria.ClassName, StringComparison.OrdinalIgnoreCase))));
-            }
-
-            if (!string.IsNullOrWhiteSpace(criteria.ExamSession) && criteria.ExamSession != "Tất cả")
-            {
-                query = query.Where(r => r.ExamSession != null && r.ExamSession.Equals(criteria.ExamSession, StringComparison.OrdinalIgnoreCase));
-            }
-
-            if (criteria.SubjectId.HasValue && criteria.SubjectId.Value > 0)
-            {
-                query = query.Where(r => r.SubjectId == criteria.SubjectId.Value);
-            }
-
-            if (!string.IsNullOrWhiteSpace(criteria.Grade) && criteria.Grade != "Tất cả")
-            {
-                query = query.Where(r => r.Grade != null && r.Grade.Equals(criteria.Grade, StringComparison.OrdinalIgnoreCase));
-            }
-
-            if (criteria.FromDate.HasValue)
-            {
-                query = query.Where(r => r.ExamDate.Date >= criteria.FromDate.Value.Date);
-            }
-
-            if (criteria.ToDate.HasValue)
-            {
-                query = query.Where(r => r.ExamDate.Date <= criteria.ToDate.Value.Date);
-            }
-
-            if (!string.IsNullOrWhiteSpace(criteria.SearchKeyword))
-            {
-                var kw = criteria.SearchKeyword.Trim().ToLower();
-                query = query.Where(r => r.Cadet != null && (
-                    (!string.IsNullOrEmpty(r.Cadet.FullName) && r.Cadet.FullName.ToLower().Contains(kw)) ||
-                    (!string.IsNullOrEmpty(r.Cadet.CadetCode) && r.Cadet.CadetCode.ToLower().Contains(kw))
-                ));
-            }
-
-            return query.OrderByDescending(r => r.ExamDate).ToList();
+            return await _academicAnalyticsService.GetAcademicAnalyticsAsync(
+                unit: unit,
+                className: className,
+                rating: rating,
+                status: status,
+                keyword: criteria.SearchKeyword);
         }
 
         public async Task<DashboardSummaryDto> GetSummaryAsync(DashboardFilterCriteria criteria)
         {
-            var allCadets = (await _cadetService.GetAllCadetsAsync()).ToList();
-            var filteredRecords = await GetFilteredRecordsAsync(criteria);
+            var academicData = await GetRawAcademicAnalyticsAsync(criteria);
+            var cadets = academicData.CadetAnalytics;
 
-            // Lọc quân số học viên theo phạm vi Unit/Class nếu có chọn
-            var cadetsQuery = allCadets.AsQueryable();
-            if (!string.IsNullOrWhiteSpace(criteria.Unit) && criteria.Unit != "Tất cả")
-            {
-                cadetsQuery = cadetsQuery.Where(c => c.Unit == criteria.Unit);
-            }
-            if (!string.IsNullOrWhiteSpace(criteria.ClassName) && criteria.ClassName != "Tất cả")
-            {
-                cadetsQuery = cadetsQuery.Where(c => 
-                    (c.ClassName != null && c.ClassName.Equals(criteria.ClassName, StringComparison.OrdinalIgnoreCase)) ||
-                    (c.MilitaryClass != null && c.MilitaryClass.ClassName.Equals(criteria.ClassName, StringComparison.OrdinalIgnoreCase)));
-            }
-            if (!string.IsNullOrWhiteSpace(criteria.SearchKeyword))
-            {
-                var kw = criteria.SearchKeyword.Trim().ToLower();
-                cadetsQuery = cadetsQuery.Where(c => 
-                    (!string.IsNullOrEmpty(c.FullName) && c.FullName.ToLower().Contains(kw)) ||
-                    (!string.IsNullOrEmpty(c.CadetCode) && c.CadetCode.ToLower().Contains(kw)));
-            }
+            int totalCadets = cadets.Count;
+            int totalUnits = cadets.Select(c => c.Unit).Where(u => !string.IsNullOrEmpty(u)).Distinct().Count();
+            int totalClasses = cadets.Select(c => c.ClassName).Where(cl => !string.IsNullOrEmpty(cl)).Distinct().Count();
 
-            var targetedCadets = cadetsQuery.ToList();
-            int totalTestedSubjects = await GetTotalTestedSubjectsCountAsync(criteria);
+            var allSubjects = await _context.CreditSubjects.AsNoTracking().Where(s => !s.IsComponent).ToListAsync();
+            int totalCreditSubjects = allSubjects.Count;
+
+            var scoresQuery = _context.CreditScoreRecords.AsNoTracking().AsQueryable();
+            if (!string.IsNullOrWhiteSpace(criteria.ExamSession) && criteria.ExamSession != "Tất cả")
+            {
+                scoresQuery = scoresQuery.Where(s => s.ExamSession == criteria.ExamSession);
+            }
+            if (criteria.SubjectId.HasValue && criteria.SubjectId.Value > 0)
+            {
+                scoresQuery = scoresQuery.Where(s => s.CreditSubjectId == criteria.SubjectId.Value);
+            }
+            int totalScoresCount = await scoresQuery.CountAsync();
+
+            int excellentCount = cadets.Count(c => c.AcademicRating == "Giỏi");
+            int goodCount = cadets.Count(c => c.AcademicRating == "Khá");
+            int fairCount = cadets.Count(c => c.AcademicRating == "Trung bình");
+            int weakCount = cadets.Count(c => c.AcademicRating == "Yếu");
+            int completedCount = cadets.Count(c => !c.HasMissingSubjects);
+            int warningCount = cadets.Count(c => c.HasMissingSubjects || c.Gpa < 5.0);
+
+            double avgGpa = totalCadets > 0 ? Math.Round(cadets.Average(c => c.Gpa), 2) : 0.0;
+
+            int totalRecordsBasis = totalCadets > 0 ? totalCadets : totalScoresCount;
 
             var summary = new DashboardSummaryDto
             {
-                TotalCadets = targetedCadets.Count,
-                TotalUnitsCount = targetedCadets.Select(c => c.Unit).Where(u => !string.IsNullOrEmpty(u)).Distinct().Count(),
-                TotalClassesCount = targetedCadets.Select(c => c.ClassName ?? c.MilitaryClass?.ClassName).Where(cl => !string.IsNullOrEmpty(cl)).Distinct().Count(),
-                TotalExamRecords = filteredRecords.Count,
-                UniqueTestedCadets = filteredRecords.Select(r => r.CadetId).Distinct().Count(),
-                TotalTestedSubjects = totalTestedSubjects,
-                ExcellentCount = filteredRecords.Count(r => r.Grade == "Xuất sắc"),
-                GoodCount = filteredRecords.Count(r => r.Grade == "Giỏi"),
-                FairCount = filteredRecords.Count(r => r.Grade == "Khá"),
-                PassCount = filteredRecords.Count(r => r.Grade == "Khá" || r.Grade == "Đạt"),
-                FailCount = filteredRecords.Count(r => r.Grade == "Không đạt")
+                TotalCadets = totalCadets,
+                TotalUnitsCount = totalUnits,
+                TotalClassesCount = totalClasses,
+                TotalCreditSubjects = totalCreditSubjects,
+                TotalCreditScores = totalScoresCount,
+                TotalTestedSubjects = totalCreditSubjects,
+                TotalExamRecords = totalRecordsBasis,
+                UniqueTestedCadets = cadets.Count(c => c.Gpa > 0),
+                AverageGpa = avgGpa,
+                ExcellentCount = excellentCount,
+                GoodCount = goodCount,
+                FairCount = fairCount,
+                PassCount = excellentCount + goodCount + fairCount,
+                FailCount = weakCount,
+                WarningCount = warningCount,
+                CompletedCadetsCount = completedCount
             };
 
             return summary;
@@ -137,49 +117,33 @@ namespace QL_HocVien.Services.Implementations
 
         public async Task<List<UnitLeaderboardDto>> GetUnitLeaderboardAsync(DashboardFilterCriteria criteria)
         {
-            var filteredRecords = await GetFilteredRecordsAsync(criteria);
-            var allCadets = (await _cadetService.GetAllCadetsAsync()).ToList();
-
-            var unitsGroup = filteredRecords
-                .Where(r => r.Cadet != null && !string.IsNullOrWhiteSpace(r.Cadet.Unit))
-                .GroupBy(r => r.Cadet!.Unit)
-                .ToList();
-
+            var academicData = await GetRawAcademicAnalyticsAsync(criteria);
             var list = new List<UnitLeaderboardDto>();
-            foreach (var g in unitsGroup)
-            {
-                var unitName = g.Key;
-                int totalExams = g.Count();
-                int fail = g.Count(r => r.Grade == "Không đạt");
-                int passed = totalExams - fail;
-                int elite = g.Count(r => r.Grade == "Xuất sắc" || r.Grade == "Giỏi");
-                int cadetsInUnit = allCadets.Count(c => c.Unit == unitName);
 
-                int excellent = g.Count(r => r.Grade == "Xuất sắc");
-                int good = g.Count(r => r.Grade == "Giỏi");
-                int fair = g.Count(r => r.Grade == "Khá" || r.Grade == "Đạt");
+            foreach (var u in academicData.UnitComparisons)
+            {
+                int totalCadets = u.TotalCadets;
+                int passed = u.ExcellentCount + u.GoodCount + u.AverageCount;
+                int elite = u.ExcellentCount + u.GoodCount;
 
                 list.Add(new UnitLeaderboardDto
                 {
-                    UnitName = unitName,
-                    TotalCadets = cadetsInUnit > 0 ? cadetsInUnit : g.Select(r => r.CadetId).Distinct().Count(),
-                    TotalExamRecords = totalExams,
+                    UnitName = u.UnitName,
+                    TotalCadets = totalCadets,
+                    TotalExamRecords = totalCadets,
                     PassedCount = passed,
                     EliteCount = elite,
-                    FailedCount = fail,
-                    ExcellentCount = excellent,
-                    GoodCount = good,
-                    FairCount = fair
+                    FailedCount = u.WeakCount,
+                    ExcellentCount = u.ExcellentCount,
+                    GoodCount = u.GoodCount,
+                    FairCount = u.AverageCount,
+                    AverageGpa = u.AverageGpa
                 });
             }
 
-            // Sắp xếp thứ tự theo chuẩn: Xuất sắc -> Giỏi -> Khá -> Trung bình, sau đó theo PassRate, EliteRate
-            var sorted = list.OrderByDescending(u => u.EvaluationStatus == "Đơn vị Xuất sắc" ? 4 :
-                                                     (u.EvaluationStatus == "Đơn vị Giỏi" ? 3 :
-                                                     (u.EvaluationStatus == "Đơn vị Khá" ? 2 : 1)))
-                             .ThenByDescending(u => u.PassRate)
+            var sorted = list.OrderByDescending(u => u.PassRate)
                              .ThenByDescending(u => u.EliteRate)
-                             .ThenByDescending(u => u.TotalExamRecords)
+                             .ThenByDescending(u => u.AverageGpa)
                              .ToList();
 
             for (int i = 0; i < sorted.Count; i++)
@@ -190,87 +154,230 @@ namespace QL_HocVien.Services.Implementations
             return sorted;
         }
 
+        public async Task<List<AcademicClassComparisonDto>> GetClassLeaderboardAsync(DashboardFilterCriteria criteria)
+        {
+            var academicData = await GetRawAcademicAnalyticsAsync(criteria);
+            return academicData.ClassComparisons;
+        }
+
         public async Task<List<SubjectPerformanceDto>> GetSubjectPerformancesAsync(DashboardFilterCriteria criteria)
         {
-            var filteredRecords = await GetFilteredRecordsAsync(criteria);
-            var subjects = (await _subjectService.GetAllSubjectsAsync()).ToList();
+            var subjects = await _context.CreditSubjects
+                .Include(s => s.Components)
+                .Where(s => !s.IsComponent)
+                .AsNoTracking()
+                .ToListAsync();
 
-            var groups = filteredRecords
-                .Where(r => r.Subject != null)
-                .GroupBy(r => r.SubjectId)
-                .ToList();
+            if (criteria.SubjectId.HasValue && criteria.SubjectId.Value > 0)
+            {
+                subjects = subjects.Where(s => s.Id == criteria.SubjectId.Value).ToList();
+            }
+
+            var scoresQuery = _context.CreditScoreRecords
+                .Include(s => s.Cadet)
+                .AsNoTracking()
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(criteria.Unit) && criteria.Unit != "Tất cả")
+            {
+                scoresQuery = scoresQuery.Where(s => s.Cadet != null && s.Cadet.Unit == criteria.Unit);
+            }
+            if (!string.IsNullOrWhiteSpace(criteria.ClassName) && criteria.ClassName != "Tất cả")
+            {
+                scoresQuery = scoresQuery.Where(s => s.Cadet != null && (s.Cadet.ClassName == criteria.ClassName || (s.Cadet.MilitaryClass != null && s.Cadet.MilitaryClass.ClassName == criteria.ClassName)));
+            }
+            if (!string.IsNullOrWhiteSpace(criteria.ExamSession) && criteria.ExamSession != "Tất cả")
+            {
+                scoresQuery = scoresQuery.Where(s => s.ExamSession == criteria.ExamSession);
+            }
+
+            var scores = await scoresQuery.ToListAsync();
+            var scoresBySub = scores.GroupBy(s => s.CreditSubjectId).ToDictionary(g => g.Key, g => g.ToList());
 
             var list = new List<SubjectPerformanceDto>();
-            foreach (var g in groups)
+            foreach (var sub in subjects)
             {
-                var first = g.First();
-                int total = g.Count();
-                int fail = g.Count(r => r.Grade == "Không đạt");
-                int passed = total - fail;
-                int elite = g.Count(r => r.Grade == "Xuất sắc" || r.Grade == "Giỏi");
+                scoresBySub.TryGetValue(sub.Id, out var subScores);
+                subScores ??= new List<CreditScoreRecord>();
+
+                int total = subScores.Count;
+                int passed = subScores.Count(s => s.FinalScore >= 5.0);
+                int elite = subScores.Count(s => s.FinalScore >= 8.0);
+                int failed = subScores.Count(s => s.FinalScore < 5.0);
+                double avgScore = total > 0 ? Math.Round(subScores.Average(s => s.FinalScore), 2) : 0.0;
 
                 list.Add(new SubjectPerformanceDto
                 {
-                    SubjectId = g.Key,
-                    SubjectCode = first.Subject?.SubjectCode ?? $"M{g.Key}",
-                    SubjectName = first.Subject?.SubjectName ?? $"Môn {g.Key}",
+                    SubjectId = sub.Id,
+                    SubjectCode = sub.SubjectCode,
+                    SubjectName = sub.SubjectName,
+                    Credits = sub.CalculatedTotalCredits,
+                    AssessmentType = sub.AssessmentType,
+                    AverageScore = avgScore,
                     TotalTested = total,
                     PassedCount = passed,
                     EliteCount = elite,
-                    FailedCount = fail
+                    FailedCount = failed
                 });
             }
 
-            // Sắp xếp theo môn có tỷ lệ trượt cao nhất lên đầu để cảnh báo chỉ huy
             return list.OrderByDescending(s => s.FailRate)
                        .ThenBy(s => s.PassRate)
+                       .ThenByDescending(s => s.TotalTested)
                        .ToList();
         }
 
-        public async Task<List<CadetHonorDto>> GetHonoredCadetsAsync(DashboardFilterCriteria criteria, int topCount = 10)
+        public async Task<List<CadetHonorDto>> GetHonoredCadetsAsync(DashboardFilterCriteria criteria, int topCount = 15)
         {
-            var filteredRecords = await GetFilteredRecordsAsync(criteria);
-
-            var eliteGroups = filteredRecords
-                .Where(r => r.Cadet != null && (r.Grade == "Xuất sắc" || r.Grade == "Giỏi"))
-                .GroupBy(r => r.CadetId)
+            var academicData = await GetRawAcademicAnalyticsAsync(criteria);
+            var cadets = academicData.CadetAnalytics
+                .Where(c => c.Gpa >= 7.5)
+                .OrderByDescending(c => c.Gpa)
+                .ThenByDescending(c => c.TotalCreditsEarned)
+                .Take(topCount)
                 .ToList();
 
             var list = new List<CadetHonorDto>();
-            foreach (var g in eliteGroups)
+            int rank = 1;
+            foreach (var c in cadets)
             {
-                var cadet = g.First().Cadet!;
-                int totalExams = g.Count();
-                int excellentCount = g.Count(r => r.Grade == "Xuất sắc");
-                int goodCount = g.Count(r => r.Grade == "Giỏi");
+                string title;
+                if (rank == 1 || c.Gpa >= 9.0) title = "🥇 Thủ Khoa - Học Viên Xuất Sắc";
+                else if (c.Gpa >= 8.5) title = "🥈 Học Viên Giỏi Toàn Diện";
+                else if (c.Gpa >= 8.0) title = "🥉 Học Viên Tiêu Biểu";
+                else title = "⭐ Học Viên Khá Xuất Sắc";
 
-                var bestRecord = g.OrderByDescending(r => r.Grade == "Xuất sắc").First();
-
-                string title = excellentCount >= 2 ? "🥇 Kiện Tướng Thể Lực" :
-                               (excellentCount >= 1 ? "🥈 Chiến Sĩ Rèn Luyện Xuất Sắc" : "🥉 Chiến Sĩ Khỏe");
+                var bestDetail = c.SubjectDetails.Where(d => d.Score.HasValue).OrderByDescending(d => d.Score!.Value).FirstOrDefault();
 
                 list.Add(new CadetHonorDto
                 {
-                    CadetId = cadet.Id,
-                    CadetCode = cadet.CadetCode,
-                    FullName = cadet.FullName,
-                    Rank = cadet.Rank,
-                    Unit = cadet.Unit,
-                    ClassName = cadet.ClassName ?? cadet.MilitaryClass?.ClassName ?? "",
-                    TotalExams = totalExams,
-                    ExcellentExams = excellentCount,
-                    GoodExams = goodCount,
+                    CadetId = c.CadetId,
+                    CadetCode = c.CadetCode,
+                    FullName = c.FullName,
+                    Rank = c.Rank,
+                    Unit = c.Unit,
+                    ClassName = c.ClassName,
+                    TotalExams = c.SubjectDetails.Count(d => d.Score.HasValue),
+                    ExcellentExams = c.SubjectDetails.Count(d => d.Score.HasValue && d.Score.Value >= 8.5),
+                    GoodExams = c.SubjectDetails.Count(d => d.Score.HasValue && d.Score.Value >= 7.0 && d.Score.Value < 8.5),
+                    Gpa = c.Gpa,
+                    TotalCreditsEarned = c.TotalCreditsEarned,
                     HonorTitle = title,
-                    BestSubject = bestRecord.Subject?.SubjectName ?? "Toàn diện",
-                    BestScore = bestRecord.ScoreValue.ToString("0.##")
+                    BestSubject = bestDetail?.SubjectName ?? (string.IsNullOrEmpty(bestDetail?.ComponentName) ? "Toàn diện" : bestDetail.ComponentName),
+                    BestScore = bestDetail?.ScoreDisplay ?? $"{c.Gpa:F2}"
                 });
+                rank++;
             }
 
-            return list.OrderByDescending(c => c.ExcellentExams)
-                       .ThenByDescending(c => c.GoodExams)
-                       .ThenByDescending(c => c.TotalExams)
-                       .Take(topCount)
-                       .ToList();
+            return list;
+        }
+
+        public async Task<List<AcademicWarningCadetDto>> GetAcademicWarningCadetsAsync(DashboardFilterCriteria criteria)
+        {
+            var academicData = await GetRawAcademicAnalyticsAsync(criteria);
+            var cadets = academicData.CadetAnalytics;
+
+            var list = new List<AcademicWarningCadetDto>();
+            foreach (var c in cadets)
+            {
+                var failedSubjects = c.SubjectDetails.Where(d => d.Score.HasValue && d.Score.Value < 5.0).ToList();
+                int failedCount = failedSubjects.Count;
+                string failedDisplay = failedCount > 0 ? string.Join(", ", failedSubjects.Select(f => f.ComponentName)) : string.Empty;
+
+                bool isWarning = c.Gpa < 5.0 || c.HasMissingSubjects || failedCount > 0;
+                if (isWarning)
+                {
+                    string reason;
+                    if (c.Gpa > 0 && c.Gpa < 5.0 && (c.HasMissingSubjects || failedCount > 0))
+                    {
+                        reason = $"GPA yếu ({c.Gpa:F2}) & nợ {(c.MissingSubjectsCount + failedCount)} nội dung";
+                    }
+                    else if (c.Gpa > 0 && c.Gpa < 5.0)
+                    {
+                        reason = $"Điểm TBM yếu ({c.Gpa:F2} < 5.0)";
+                    }
+                    else if (failedCount > 0)
+                    {
+                        reason = $"Chưa đạt {failedCount} học phần: {failedDisplay}";
+                    }
+                    else
+                    {
+                        reason = $"Chưa hoàn thành {c.MissingSubjectsCount} đợt kiểm tra / thi";
+                    }
+
+                    list.Add(new AcademicWarningCadetDto
+                    {
+                        CadetId = c.CadetId,
+                        CadetCode = c.CadetCode,
+                        FullName = c.FullName,
+                        Rank = c.Rank,
+                        Unit = c.Unit,
+                        ClassName = c.ClassName,
+                        Gpa = c.Gpa,
+                        TotalCreditsEarned = c.TotalCreditsEarned,
+                        MissingSubjectsCount = c.MissingSubjectsCount,
+                        MissingSubjectsDisplay = c.MissingSubjectsDisplay,
+                        FailedSubjectsCount = failedCount,
+                        FailedSubjectsDisplay = failedDisplay,
+                        WarningReason = reason,
+                        ActionPlan = failedCount > 0 ? "Đăng ký thi lại học phần; tham gia phụ đạo chuyên đề" : "Tổ chức kiểm tra bù; hoàn thành chuẩn tín chỉ"
+                    });
+                }
+            }
+
+            return list.OrderBy(w => w.Gpa).ThenByDescending(w => w.MissingSubjectsCount + w.FailedSubjectsCount).ToList();
+        }
+
+        public async Task<List<AcademicCadetAnalyticsDto>> GetCadetCumulativeAnalyticsAsync(DashboardFilterCriteria criteria)
+        {
+            var academicData = await GetRawAcademicAnalyticsAsync(criteria);
+            return academicData.CadetAnalytics;
+        }
+
+        public async Task<List<UntestedCadetDto>> GetUntestedCadetsAsync(DashboardFilterCriteria criteria)
+        {
+            var academicData = await GetRawAcademicAnalyticsAsync(criteria);
+            var untested = academicData.CadetAnalytics
+                .Where(c => c.HasMissingSubjects)
+                .Select(c => new UntestedCadetDto
+                {
+                    CadetId = c.CadetId,
+                    CadetCode = c.CadetCode,
+                    FullName = c.FullName,
+                    Rank = c.Rank,
+                    Unit = c.Unit,
+                    ClassName = c.ClassName,
+                    MissingSubjects = c.MissingSubjectsDisplay,
+                    MissingCount = c.MissingSubjectsCount,
+                    ExamType = "Học phần Tín chỉ",
+                    Status = "Chưa hoàn thành",
+                    Note = $"Còn thiếu {c.MissingSubjectsCount} nội dung cần tổ chức kiểm tra bù"
+                })
+                .OrderByDescending(u => u.MissingCount)
+                .ThenBy(u => u.Unit)
+                .ToList();
+
+            return untested;
+        }
+
+        public async Task<List<PhysicalExamRecord>> GetFilteredRecordsAsync(DashboardFilterCriteria criteria)
+        {
+            if (_examService != null)
+            {
+                var allRecords = await _examService.GetAllRecordsAsync();
+                var query = allRecords.AsQueryable();
+
+                if (!string.IsNullOrWhiteSpace(criteria.Unit) && criteria.Unit != "Tất cả")
+                    query = query.Where(r => r.Cadet != null && r.Cadet.Unit == criteria.Unit);
+
+                if (!string.IsNullOrWhiteSpace(criteria.ClassName) && criteria.ClassName != "Tất cả")
+                    query = query.Where(r => r.Cadet != null && 
+                        ((r.Cadet.ClassName != null && r.Cadet.ClassName.Equals(criteria.ClassName, StringComparison.OrdinalIgnoreCase)) ||
+                         (r.Cadet.MilitaryClass != null && r.Cadet.MilitaryClass.ClassName.Equals(criteria.ClassName, StringComparison.OrdinalIgnoreCase))));
+
+                return query.ToList();
+            }
+            return new List<PhysicalExamRecord>();
         }
 
         public async Task<List<PhysicalExamRecord>> GetFailedRecordsAsync(DashboardFilterCriteria criteria)
@@ -309,13 +416,17 @@ namespace QL_HocVien.Services.Implementations
 
         public async Task<List<string>> GetAvailableSessionsAsync()
         {
-            var records = await _examService.GetAllRecordsAsync();
-            var sessions = records
+            var sessions = await _context.CreditScoreRecords
                 .Select(r => r.ExamSession)
                 .Where(s => !string.IsNullOrWhiteSpace(s))
                 .Distinct()
                 .OrderBy(s => s)
-                .ToList();
+                .ToListAsync();
+
+            if (sessions.Count == 0)
+            {
+                sessions = new List<string> { "Học kỳ 1", "Học kỳ 2", "Học kỳ Hè" };
+            }
 
             sessions.Insert(0, "Tất cả");
             return sessions;
@@ -323,9 +434,19 @@ namespace QL_HocVien.Services.Implementations
 
         public async Task<List<Subject>> GetAvailableSubjectsAsync()
         {
-            var subjects = (await _subjectService.GetAllSubjectsAsync()).ToList();
-            var allSubject = new Subject { Id = 0, SubjectCode = "ALL", SubjectName = "Tất cả các môn" };
-            subjects.Insert(0, allSubject);
+            if (_subjectService != null)
+            {
+                var subjects = (await _subjectService.GetAllSubjectsAsync()).ToList();
+                subjects.Insert(0, new Subject { Id = 0, SubjectCode = "ALL", SubjectName = "Tất cả các môn" });
+                return subjects;
+            }
+            return new List<Subject> { new Subject { Id = 0, SubjectCode = "ALL", SubjectName = "Tất cả các môn" } };
+        }
+
+        public async Task<List<CreditSubject>> GetAvailableCreditSubjectsAsync()
+        {
+            var subjects = await _creditSubjectService.GetAllSubjectsAsync();
+            subjects.Insert(0, new CreditSubject { Id = 0, SubjectCode = "ALL", SubjectName = "Tất cả học phần tín chỉ" });
             return subjects;
         }
 
@@ -340,7 +461,6 @@ namespace QL_HocVien.Services.Implementations
                 .OrderBy(e => e.StartDate)
                 .ToListAsync();
 
-            // Nếu trong tháng chưa có sự kiện nào, lấy các sự kiện từ hôm nay trở đi
             if (events.Count == 0)
             {
                 events = await _context.TrainingEvents
@@ -353,89 +473,9 @@ namespace QL_HocVien.Services.Implementations
             return events;
         }
 
-        public async Task<List<UntestedCadetDto>> GetUntestedCadetsAsync(DashboardFilterCriteria criteria)
-        {
-            var query = _context.Cadets
-                .Include(c => c.MilitaryClass)
-                .AsNoTracking()
-                .AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(criteria.Unit) && criteria.Unit != "Tất cả")
-                query = query.Where(c => c.Unit == criteria.Unit);
-
-            if (!string.IsNullOrWhiteSpace(criteria.ClassName) && criteria.ClassName != "Tất cả")
-                query = query.Where(c => (c.ClassName != null && c.ClassName == criteria.ClassName) || (c.MilitaryClass != null && c.MilitaryClass.ClassName == criteria.ClassName));
-
-            if (!string.IsNullOrWhiteSpace(criteria.SearchKeyword))
-            {
-                var kw = criteria.SearchKeyword.Trim().ToLower();
-                query = query.Where(c => c.FullName.ToLower().Contains(kw) || c.CadetCode.ToLower().Contains(kw));
-            }
-
-            var cadets = await query.ToListAsync();
-            var allCreditSubjs = await _context.CreditSubjects.AsNoTracking().ToListAsync();
-            var allScores = await _context.CreditScoreRecords.AsNoTracking().ToListAsync();
-            var physicalRecords = await _context.PhysicalExamRecords.AsNoTracking().ToListAsync();
-
-            var result = new List<UntestedCadetDto>();
-
-            foreach (var cadet in cadets)
-            {
-                var takenSubjectIds = allScores
-                    .Where(s => s.CadetId == cadet.Id)
-                    .Select(s => s.CreditSubjectId)
-                    .Distinct()
-                    .ToHashSet();
-
-                var missingSubjects = allCreditSubjs
-                    .Where(s => !takenSubjectIds.Contains(s.Id))
-                    .Select(s => s.SubjectName)
-                    .ToList();
-
-                bool hasPhysicalExam = physicalRecords.Any(p => p.CadetId == cadet.Id);
-
-                if (missingSubjects.Count > 0 || !hasPhysicalExam)
-                {
-                    var missingList = new List<string>(missingSubjects);
-                    if (!hasPhysicalExam)
-                        missingList.Add("Rèn luyện thể lực (chưa có điểm)");
-
-                    result.Add(new UntestedCadetDto
-                    {
-                        CadetId = cadet.Id,
-                        CadetCode = cadet.CadetCode,
-                        FullName = cadet.FullName,
-                        Rank = cadet.Rank,
-                        Unit = cadet.Unit,
-                        ClassName = cadet.ClassName ?? cadet.MilitaryClass?.ClassName ?? cadet.Unit,
-                        MissingSubjects = string.Join(", ", missingList),
-                        MissingCount = missingList.Count,
-                        ExamType = missingSubjects.Count > 0 && !hasPhysicalExam 
-                            ? "Môn Tín chỉ & Thể lực" 
-                            : (missingSubjects.Count > 0 ? "Môn Tín chỉ" : "Rèn luyện Thể lực"),
-                        Status = "Chưa hoàn thành",
-                        Note = $"Còn thiếu {missingList.Count} nội dung cần tổ chức kiểm tra bù"
-                    });
-                }
-            }
-
-            return result.OrderByDescending(u => u.MissingCount).ThenBy(u => u.Unit).ToList();
-        }
-
         public async Task<int> GetTotalTestedSubjectsCountAsync(DashboardFilterCriteria criteria)
         {
-            var physTested = await _context.PhysicalExamRecords
-                .Select(r => r.SubjectId)
-                .Distinct()
-                .CountAsync();
-
-            var creditTested = await _context.CreditScoreRecords
-                .Select(r => r.CreditSubjectId)
-                .Distinct()
-                .CountAsync();
-
-            int total = physTested + creditTested;
-            return total > 0 ? total : physTested;
+            return await _context.CreditSubjects.Where(s => !s.IsComponent).CountAsync();
         }
     }
 }

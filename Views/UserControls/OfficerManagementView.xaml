@@ -178,7 +178,7 @@
                             </DataGridTemplateColumn>
                             <DataGridTextColumn Header="Mã Cán Bộ" Binding="{Binding OfficerCode}" Width="110" FontWeight="SemiBold"/>
                             <DataGridTextColumn Header="Họ và Tên" Binding="{Binding FullName}" Width="190" FontWeight="Bold"/>
-                            <DataGridTemplateColumn Header="Cấp Bậc" Width="130">
+                            <DataGridTemplateColumn Header="Cấp Bậc" Width="130" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Border Background="{DynamicResource PageBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="8,3" HorizontalAlignment="Center">
@@ -187,7 +187,7 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Header="Chức Vụ" Width="150">
+                            <DataGridTemplateColumn Header="Chức Vụ" Width="150" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Border Background="{DynamicResource PageBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="8,3" HorizontalAlignment="Center">
@@ -202,7 +202,7 @@
                             <DataGridTextColumn Header="Chuyên Môn" Binding="{Binding Specialty}" Width="140"/>
                             <DataGridTextColumn Header="Ngày Sinh" Binding="{Binding DateOfBirth, StringFormat='{}{0:dd/MM/yyyy}'}" Width="110"/>
                             <DataGridTextColumn Header="Ngày Nhập Ngũ" Binding="{Binding EnlistmentDate, StringFormat='{}{0:dd/MM/yyyy}'}" Width="120"/>
-                            <DataGridTemplateColumn Header="Lớp Quản Lý" Width="110">
+                            <DataGridTemplateColumn Header="Lớp Quản Lý" Width="110" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Border Background="{DynamicResource PageBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="8,3" HorizontalAlignment="Center">

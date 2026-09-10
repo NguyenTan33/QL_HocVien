@@ -364,7 +364,7 @@
                                     <DataGridTextColumn Header="Mã Cấp Bậc" Binding="{Binding RankCode}" Width="120" FontWeight="SemiBold"/>
                                     <DataGridTextColumn Header="Tên Cấp Bậc Quân Hàm" Binding="{Binding RankName}" Width="220"/>
                                     <DataGridTextColumn Header="Nhóm Cấp Bậc" Binding="{Binding RankGroup}" Width="200"/>
-                                    <DataGridTemplateColumn Header="Thứ Tự Hiển Thị" Width="130">
+                                    <DataGridTemplateColumn Header="Thứ Tự Hiển Thị" Width="130" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <Border Background="{DynamicResource PageBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="8,3" HorizontalAlignment="Center">
@@ -396,7 +396,7 @@
                                     <DataGridTextColumn Header="Mã Chức Vụ" Binding="{Binding PositionCode}" Width="120" FontWeight="SemiBold"/>
                                     <DataGridTextColumn Header="Tên Chức Vụ Quân Sự" Binding="{Binding PositionName}" Width="240"/>
                                     <DataGridTextColumn Header="Nhóm Chức Vụ" Binding="{Binding PositionGroup}" Width="200"/>
-                                    <DataGridTemplateColumn Header="Thứ Tự Quản Lý" Width="130">
+                                    <DataGridTemplateColumn Header="Thứ Tự Quản Lý" Width="130" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <Border Background="{DynamicResource PageBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="8,3" HorizontalAlignment="Center">
@@ -537,7 +537,7 @@
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Mã Ngành" Binding="{Binding MajorCode}" Width="120" FontWeight="SemiBold"/>
                                     <DataGridTextColumn Header="Tên Chuyên Ngành" Binding="{Binding MajorName}" Width="240"/>
-                                    <DataGridTemplateColumn Header="Thời Gian Đào Tạo" Width="150">
+                                    <DataGridTemplateColumn Header="Thời Gian Đào Tạo" Width="150" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <Border Background="{DynamicResource PageBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="8,3" HorizontalAlignment="Center">

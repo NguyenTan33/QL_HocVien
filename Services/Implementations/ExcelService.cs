@@ -2492,6 +2492,407 @@ namespace QL_HocVien.Services.Implementations
                 }
             });
         }
+
+        public async Task<(bool Success, string Message)> ExportAcademicDashboardMultiSheetReportAsync(
+            string filePath,
+            QL_HocVien.Models.DTOs.DashboardSummaryDto summary,
+            IEnumerable<QL_HocVien.Models.DTOs.UnitLeaderboardDto> units,
+            IEnumerable<QL_HocVien.Models.DTOs.AcademicClassComparisonDto> classes,
+            IEnumerable<QL_HocVien.Models.DTOs.SubjectPerformanceDto> subjects,
+            IEnumerable<QL_HocVien.Models.DTOs.AcademicWarningCadetDto> warningCadets,
+            IEnumerable<QL_HocVien.Models.DTOs.CadetHonorDto> honoredCadets,
+            IEnumerable<QL_HocVien.Models.DTOs.AcademicCadetAnalyticsDto> cumulativeCadets)
+        {
+            return await Task.Run(() =>
+            {
+                try
+                {
+                    using var workbook = new XLWorkbook();
+
+                    // =========================================================================
+                    // SHEET 1: TỔNG QUAN HỌC VỤ & KPI
+                    // =========================================================================
+                    var ws1 = workbook.Worksheets.Add("Tổng Quan Học Vụ & KPI");
+                    ws1.Cell("A1").Value = "HỌC VIỆN QUÂN SỰ - PHÒNG ĐÀO TẠO & QUẢN LÝ HỌC VIÊN";
+                    ws1.Range("A1:G1").Merge().Style.Font.SetBold().Font.SetFontSize(11).Font.SetFontColor(XLColor.FromHtml("#475569"))
+                        .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+
+                    ws1.Cell("A2").Value = "BÁO CÁO TỔNG HỢP CÔNG TÁC HỌC VỤ & ĐÀO TẠO THEO HỆ THỐNG TÍN CHỈ";
+                    ws1.Range("A2:G2").Merge().Style.Font.SetBold().Font.SetFontSize(16).Font.SetFontColor(XLColor.FromHtml("#8F1515"))
+                        .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+
+                    ws1.Cell("A3").Value = $"Thời điểm xuất dữ liệu: {DateTime.Now:dd/MM/yyyy HH:mm} | Hệ thống Quản Lý Đào Tạo Học Viên";
+                    ws1.Range("A3:G3").Merge().Style.Font.SetItalic().Font.SetFontSize(10.5).Font.SetFontColor(XLColor.FromHtml("#64748B"))
+                        .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+
+                    // Khối I: Chỉ số KPI Chiến lược
+                    ws1.Cell("A5").Value = "I. CHỈ SỐ HỌC VỤ CHIẾN LƯỢC TOÀN VIỆN";
+                    ws1.Range("A5:G5").Merge().Style.Font.SetBold().Font.SetFontSize(12).Font.SetFontColor(XLColor.FromHtml("#1E3A8A"));
+
+                    string[] kpiHeaders = { "Tổng Quân Số", "Học Phần Tín Chỉ", "Điểm TB GPA Toàn Viện", "Tỷ Lệ Đạt Chuẩn", "Tỷ Lệ Giỏi / Khá", "Cảnh Báo Nợ Môn", "Đánh Giá Học Vụ" };
+                    for (int i = 0; i < kpiHeaders.Length; i++)
+                    {
+                        var cell = ws1.Cell(6, i + 1);
+                        cell.Value = kpiHeaders[i];
+                        cell.Style.Font.SetBold().Font.SetFontColor(XLColor.White)
+                            .Fill.SetBackgroundColor(XLColor.FromHtml("#1E3A8A"))
+                            .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                    }
+
+                    ws1.Cell(7, 1).Value = $"{summary.TotalCadets} học viên";
+                    ws1.Cell(7, 2).Value = $"{summary.TotalCreditSubjects} môn ({summary.TotalCreditScores} lượt điểm)";
+                    ws1.Cell(7, 3).Value = $"{summary.AverageGpa:F2} / 10";
+                    ws1.Cell(7, 4).Value = $"{summary.GraduationReadinessRate:F1}% ({summary.CompletedCadetsCount}/{summary.TotalCadets})";
+                    ws1.Cell(7, 5).Value = $"{summary.EliteRate:F1}%";
+                    ws1.Cell(7, 6).Value = $"{summary.WarningCount} đ/c nợ/yếu";
+                    ws1.Cell(7, 7).Value = summary.OverallRatingLabel;
+
+                    ws1.Range("A7:G7").Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center)
+                                            .Font.SetBold().Font.SetFontSize(11)
+                                            .Border.SetOutsideBorder(XLBorderStyleValues.Thin)
+                                            .Border.SetInsideBorder(XLBorderStyleValues.Thin);
+
+                    // Khối II: Phân bố phổ điểm & xếp loại học lực
+                    ws1.Cell("A9").Value = "II. PHÂN BỐ HỌC LỰC TOÀN KHÓA / ĐƠN VỊ";
+                    ws1.Range("A9:E9").Merge().Style.Font.SetBold().Font.SetFontSize(12).Font.SetFontColor(XLColor.FromHtml("#15803D"));
+
+                    string[] distHeaders = { "Xếp Loại Học Lực", "Tiêu Chuẩn Điểm (GPA)", "Số Lượng Học Viên", "Tỷ Lệ Phần Trăm (%)", "Đánh Giá & Hướng Xử Lý" };
+                    for (int i = 0; i < distHeaders.Length; i++)
+                    {
+                        var cell = ws1.Cell(10, i + 1);
+                        cell.Value = distHeaders[i];
+                        cell.Style.Font.SetBold().Font.SetFontColor(XLColor.White)
+                            .Fill.SetBackgroundColor(XLColor.FromHtml("#166534"))
+                            .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                    }
+
+                    int totalEvaluated = summary.TotalCadets > 0 ? summary.TotalCadets : 1;
+                    (string Tier, string Criteria, int Count, string Note, string ColorHex)[] distData = {
+                        ("Xuất sắc / Giỏi", "GPA >= 8.0", summary.ExcellentCount, $"{summary.ExcellentCount * 100.0 / totalEvaluated:F1}%", "Khen thưởng, đưa vào danh sách nguồn cán bộ"),
+                        ("Khá", "7.0 <= GPA < 8.0", summary.GoodCount, $"{summary.GoodCount * 100.0 / totalEvaluated:F1}%", "Đạt yêu cầu đào tạo chính quy, duy trì phong độ"),
+                        ("Trung bình", "5.0 <= GPA < 7.0", summary.FairCount, $"{summary.FairCount * 100.0 / totalEvaluated:F1}%", "Cần kèm cặp nâng cao các học phần cơ sở ngành"),
+                        ("Yếu / Cảnh báo nợ môn", "GPA < 5.0 hoặc nợ môn", summary.FailCount, $"{summary.FailCount * 100.0 / totalEvaluated:F1}%", "Đưa vào diện phụ đạo học kỳ hè, bố trí thi lại")
+                    };
+
+                    int distRow = 11;
+                    foreach (var d in distData)
+                    {
+                        ws1.Cell(distRow, 1).Value = d.Tier;
+                        ws1.Cell(distRow, 2).Value = d.Criteria;
+                        ws1.Cell(distRow, 3).Value = d.Count;
+                        ws1.Cell(distRow, 4).Value = d.Note;
+                        ws1.Cell(distRow, 5).Value = d.ColorHex;
+
+                        ws1.Range(distRow, 1, distRow, 5).Style.Border.SetOutsideBorder(XLBorderStyleValues.Thin)
+                                                               .Border.SetInsideBorder(XLBorderStyleValues.Thin);
+                        ws1.Cell(distRow, 2).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        ws1.Cell(distRow, 3).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center).Font.SetBold();
+                        ws1.Cell(distRow, 4).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        distRow++;
+                    }
+
+                    ws1.Columns().AdjustToContents();
+
+                    // =========================================================================
+                    // SHEET 2: XẾP HẠNG THI ĐUA ĐƠN VỊ
+                    // =========================================================================
+                    var ws2 = workbook.Worksheets.Add("Xếp Hạng Thi Đua Đơn Vị");
+                    ws2.Cell("A1").Value = "BẢNG TỔNG HỢP XẾP HẠNG THI ĐUA HỌC TẬP CẤP ĐẠI ĐỘI & CẤP LỚP";
+                    ws2.Range("A1:I1").Merge().Style.Font.SetBold().Font.SetFontSize(15).Font.SetFontColor(XLColor.FromHtml("#15803D"))
+                        .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+
+                    ws2.Cell("A3").Value = "1. BẢNG THI ĐUA CẤP ĐẠI ĐỘI / TIỂU ĐOÀN:";
+                    ws2.Range("A3:I3").Merge().Style.Font.SetBold().Font.SetFontSize(12).Font.SetFontColor(XLColor.FromHtml("#166534"));
+
+                    string[] unitHeaders = { "Thứ Hạng", "Đơn Vị / Đại Đội", "Quân Số", "Điểm TB GPA", "% Giỏi/XS", "% Khá", "% TB", "% Yếu/Nợ Môn", "Xếp Loại Đơn Vị" };
+                    for (int i = 0; i < unitHeaders.Length; i++)
+                    {
+                        var cell = ws2.Cell(4, i + 1);
+                        cell.Value = unitHeaders[i];
+                        cell.Style.Font.SetBold().Font.SetFontColor(XLColor.White)
+                            .Fill.SetBackgroundColor(XLColor.FromHtml("#15803D"))
+                            .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                    }
+
+                    int uRow = 5;
+                    foreach (var u in units)
+                    {
+                        ws2.Cell(uRow, 1).Value = u.RankMedal;
+                        ws2.Cell(uRow, 2).Value = u.UnitName;
+                        ws2.Cell(uRow, 3).Value = u.TotalCadets;
+                        ws2.Cell(uRow, 4).Value = $"{u.AverageGpa:F2}";
+                        ws2.Cell(uRow, 5).Value = $"{u.ExcellentRate:F1}%";
+                        ws2.Cell(uRow, 6).Value = $"{u.GoodRate:F1}%";
+                        ws2.Cell(uRow, 7).Value = $"{u.FairRate:F1}%";
+                        ws2.Cell(uRow, 8).Value = $"{100.0 - u.PassRate:F1}%";
+                        ws2.Cell(uRow, 9).Value = u.EvaluationStatus;
+
+                        ws2.Range(uRow, 1, uRow, 9).Style.Border.SetOutsideBorder(XLBorderStyleValues.Thin)
+                                                        .Border.SetInsideBorder(XLBorderStyleValues.Thin);
+                        if (uRow % 2 == 1) ws2.Range(uRow, 1, uRow, 9).Style.Fill.SetBackgroundColor(XLColor.FromHtml("#F0FDF4"));
+
+                        ws2.Cell(uRow, 1).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        ws2.Cell(uRow, 3).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        ws2.Cell(uRow, 4).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center).Font.SetBold();
+                        ws2.Cell(uRow, 5).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        ws2.Cell(uRow, 6).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        ws2.Cell(uRow, 7).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        ws2.Cell(uRow, 8).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        uRow++;
+                    }
+
+                    // Phần 2: Cấp Lớp
+                    int clHeaderRow = uRow + 2;
+                    ws2.Cell(clHeaderRow, 1).Value = "2. BẢNG XẾP HẠNG HỌC LỰC CẤP LỚP / PHÂN ĐỘI:";
+                    ws2.Range(clHeaderRow, 1, clHeaderRow, 8).Merge().Style.Font.SetBold().Font.SetFontSize(12).Font.SetFontColor(XLColor.FromHtml("#1E3A8A"));
+
+                    string[] classHeaders = { "Thứ Hạng", "Lớp / Phân Đội", "Đại Đội", "Quân Số", "Điểm TB GPA", "% Khá/Giỏi", "Số HV Nợ Môn", "Đánh Giá Thi Đua" };
+                    for (int i = 0; i < classHeaders.Length; i++)
+                    {
+                        var cell = ws2.Cell(clHeaderRow + 1, i + 1);
+                        cell.Value = classHeaders[i];
+                        cell.Style.Font.SetBold().Font.SetFontColor(XLColor.White)
+                            .Fill.SetBackgroundColor(XLColor.FromHtml("#1E3A8A"))
+                            .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                    }
+
+                    int clRow = clHeaderRow + 2;
+                    foreach (var cl in classes)
+                    {
+                        ws2.Cell(clRow, 1).Value = cl.RankInUnit;
+                        ws2.Cell(clRow, 2).Value = cl.ClassName;
+                        ws2.Cell(clRow, 3).Value = cl.Unit;
+                        ws2.Cell(clRow, 4).Value = cl.TotalCadets;
+                        ws2.Cell(clRow, 5).Value = $"{cl.AverageGpa:F2}";
+                        ws2.Cell(clRow, 6).Value = $"{cl.GoodOrAboveRate:F1}%";
+                        ws2.Cell(clRow, 7).Value = cl.MissingCount;
+                        ws2.Cell(clRow, 8).Value = cl.EvaluationComment;
+
+                        ws2.Range(clRow, 1, clRow, 8).Style.Border.SetOutsideBorder(XLBorderStyleValues.Thin)
+                                                           .Border.SetInsideBorder(XLBorderStyleValues.Thin);
+                        if (clRow % 2 == 1) ws2.Range(clRow, 1, clRow, 8).Style.Fill.SetBackgroundColor(XLColor.FromHtml("#F8FAFC"));
+
+                        ws2.Cell(clRow, 1).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        ws2.Cell(clRow, 4).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        ws2.Cell(clRow, 5).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center).Font.SetBold();
+                        ws2.Cell(clRow, 6).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        ws2.Cell(clRow, 7).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        clRow++;
+                    }
+
+                    ws2.Columns().AdjustToContents();
+
+                    // =========================================================================
+                    // SHEET 3: PHÂN TÍCH CHI TIẾT MÔN HỌC
+                    // =========================================================================
+                    var ws3 = workbook.Worksheets.Add("Phân Tích Chi Tiết Môn Học");
+                    ws3.Cell("A1").Value = "BẢNG PHÂN TÍCH HIỆU SUẤT & ĐỘ KHÓ CÁC HỌC PHẦN TÍN CHỈ";
+                    ws3.Range("A1:K1").Merge().Style.Font.SetBold().Font.SetFontSize(15).Font.SetFontColor(XLColor.FromHtml("#B45309"))
+                        .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+
+                    string[] subHeaders = { "STT", "Mã Học Phần", "Tên Môn Học", "Số Tín Chỉ", "Hình Thức", "Tổng Lượt Điểm", "Điểm TB Môn", "Tỷ Lệ Đạt (%)", "Tỷ Lệ Giỏi (%)", "Số Điểm F (Rớt)", "Đánh Giá Độ Khó" };
+                    for (int i = 0; i < subHeaders.Length; i++)
+                    {
+                        var cell = ws3.Cell(3, i + 1);
+                        cell.Value = subHeaders[i];
+                        cell.Style.Font.SetBold().Font.SetFontColor(XLColor.White)
+                            .Fill.SetBackgroundColor(XLColor.FromHtml("#D97706"))
+                            .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                    }
+
+                    int sRow = 4;
+                    int sStt = 1;
+                    foreach (var s in subjects)
+                    {
+                        ws3.Cell(sRow, 1).Value = sStt++;
+                        ws3.Cell(sRow, 2).Value = s.SubjectCode;
+                        ws3.Cell(sRow, 3).Value = s.SubjectName;
+                        ws3.Cell(sRow, 4).Value = s.Credits;
+                        ws3.Cell(sRow, 5).Value = s.AssessmentType;
+                        ws3.Cell(sRow, 6).Value = s.TotalTested;
+                        ws3.Cell(sRow, 7).Value = $"{s.AverageScore:F2}";
+                        ws3.Cell(sRow, 8).Value = $"{s.PassRate:F1}%";
+                        ws3.Cell(sRow, 9).Value = $"{s.EliteRate:F1}%";
+                        ws3.Cell(sRow, 10).Value = s.FailedCount;
+                        ws3.Cell(sRow, 11).Value = s.DifficultyLevel;
+
+                        ws3.Range(sRow, 1, sRow, 11).Style.Border.SetOutsideBorder(XLBorderStyleValues.Thin)
+                                                           .Border.SetInsideBorder(XLBorderStyleValues.Thin);
+                        if (sRow % 2 == 1) ws3.Range(sRow, 1, sRow, 11).Style.Fill.SetBackgroundColor(XLColor.FromHtml("#FFFBEB"));
+
+                        ws3.Cell(sRow, 1).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        ws3.Cell(sRow, 2).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        ws3.Cell(sRow, 4).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        ws3.Cell(sRow, 6).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        ws3.Cell(sRow, 7).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center).Font.SetBold();
+                        ws3.Cell(sRow, 8).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        ws3.Cell(sRow, 9).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        ws3.Cell(sRow, 10).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        sRow++;
+                    }
+
+                    ws3.Columns().AdjustToContents();
+
+                    // =========================================================================
+                    // SHEET 4: CẢNH BÁO HỌC VỤ & HỌC LẠI
+                    // =========================================================================
+                    var ws4 = workbook.Worksheets.Add("Cảnh Báo Học Vụ & Học Lại");
+                    ws4.Cell("A1").Value = "DANH SÁCH HỌC VIÊN TRONG DIỆN CẢNH BÁO HỌC VỤ & NỢ MÔN CẦN PHỤ ĐẠO";
+                    ws4.Range("A1:K1").Merge().Style.Font.SetBold().Font.SetFontSize(15).Font.SetFontColor(XLColor.FromHtml("#DC2626"))
+                        .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+
+                    string[] warnHeaders = { "STT", "Mã HV", "Họ và Tên", "Cấp Bậc", "Đơn Vị", "Lớp", "Điểm TB GPA", "Số TC Nợ/Thiếu", "Lý Do Cảnh Báo", "Mức Độ", "Kế Hoạch Khắc Phục" };
+                    for (int i = 0; i < warnHeaders.Length; i++)
+                    {
+                        var cell = ws4.Cell(3, i + 1);
+                        cell.Value = warnHeaders[i];
+                        cell.Style.Font.SetBold().Font.SetFontColor(XLColor.White)
+                            .Fill.SetBackgroundColor(XLColor.FromHtml("#DC2626"))
+                            .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                    }
+
+                    int wRow = 4;
+                    int wStt = 1;
+                    foreach (var w in warningCadets)
+                    {
+                        ws4.Cell(wRow, 1).Value = wStt++;
+                        ws4.Cell(wRow, 2).Value = w.CadetCode;
+                        ws4.Cell(wRow, 3).Value = w.FullName;
+                        ws4.Cell(wRow, 4).Value = w.Rank;
+                        ws4.Cell(wRow, 5).Value = w.Unit;
+                        ws4.Cell(wRow, 6).Value = w.ClassName;
+                        ws4.Cell(wRow, 7).Value = $"{w.Gpa:F2}";
+                        ws4.Cell(wRow, 8).Value = w.MissingSubjectsCount + w.FailedSubjectsCount;
+                        ws4.Cell(wRow, 9).Value = w.WarningReason;
+                        ws4.Cell(wRow, 10).Value = w.WarningSeverity;
+                        ws4.Cell(wRow, 11).Value = w.ActionPlan;
+
+                        ws4.Range(wRow, 1, wRow, 11).Style.Border.SetOutsideBorder(XLBorderStyleValues.Thin)
+                                                           .Border.SetInsideBorder(XLBorderStyleValues.Thin);
+                        if (wRow % 2 == 1) ws4.Range(wRow, 1, wRow, 11).Style.Fill.SetBackgroundColor(XLColor.FromHtml("#FEF2F2"));
+
+                        ws4.Cell(wRow, 1).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        ws4.Cell(wRow, 2).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        ws4.Cell(wRow, 7).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center).Font.SetBold();
+                        ws4.Cell(wRow, 8).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        ws4.Cell(wRow, 10).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        wRow++;
+                    }
+
+                    ws4.Columns().AdjustToContents();
+
+                    // =========================================================================
+                    // SHEET 5: BẢNG VÀNG DANH DỰ (TOP GPA)
+                    // =========================================================================
+                    var ws5 = workbook.Worksheets.Add("Bảng Vàng Danh Dự (Top GPA)");
+                    ws5.Cell("A1").Value = "BẢNG VÀNG DANH DỰ BIỂU DƯƠNG HỌC VIÊN CÓ THÀNH TÍCH HỌC TẬP XUẤT SẮC";
+                    ws5.Range("A1:J1").Merge().Style.Font.SetBold().Font.SetFontSize(15).Font.SetFontColor(XLColor.FromHtml("#15803D"))
+                        .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+
+                    string[] honorHeaders = { "Thứ Hạng", "Mã HV", "Họ và Tên", "Cấp Bậc", "Đơn Vị", "Lớp", "Điểm TB GPA", "TC Tích Lũy", "Danh Hiệu Khen Thưởng", "Môn Học Tiêu Biểu" };
+                    for (int i = 0; i < honorHeaders.Length; i++)
+                    {
+                        var cell = ws5.Cell(3, i + 1);
+                        cell.Value = honorHeaders[i];
+                        cell.Style.Font.SetBold().Font.SetFontColor(XLColor.White)
+                            .Fill.SetBackgroundColor(XLColor.FromHtml("#16A34A"))
+                            .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                    }
+
+                    int hRow = 4;
+                    int hRank = 1;
+                    foreach (var h in honoredCadets)
+                    {
+                        ws5.Cell(hRow, 1).Value = hRank++;
+                        ws5.Cell(hRow, 2).Value = h.CadetCode;
+                        ws5.Cell(hRow, 3).Value = h.FullName;
+                        ws5.Cell(hRow, 4).Value = h.Rank;
+                        ws5.Cell(hRow, 5).Value = h.Unit;
+                        ws5.Cell(hRow, 6).Value = h.ClassName;
+                        ws5.Cell(hRow, 7).Value = $"{h.Gpa:F2}";
+                        ws5.Cell(hRow, 8).Value = $"{h.TotalCreditsEarned:F2}";
+                        ws5.Cell(hRow, 9).Value = h.HonorTitle;
+                        ws5.Cell(hRow, 10).Value = $"{h.BestSubject} ({h.BestScore})";
+
+                        ws5.Range(hRow, 1, hRow, 10).Style.Border.SetOutsideBorder(XLBorderStyleValues.Thin)
+                                                           .Border.SetInsideBorder(XLBorderStyleValues.Thin);
+                        if (hRow % 2 == 1) ws5.Range(hRow, 1, hRow, 10).Style.Fill.SetBackgroundColor(XLColor.FromHtml("#F0FDF4"));
+
+                        ws5.Cell(hRow, 1).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        ws5.Cell(hRow, 2).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        ws5.Cell(hRow, 7).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center).Font.SetBold().Font.SetFontColor(XLColor.FromHtml("#15803D"));
+                        ws5.Cell(hRow, 8).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        ws5.Cell(hRow, 9).Style.Font.SetBold();
+                        hRow++;
+                    }
+
+                    ws5.Columns().AdjustToContents();
+
+                    // =========================================================================
+                    // SHEET 6: BẢNG ĐIỂM TÍCH LŨY CHI TIẾT
+                    // =========================================================================
+                    var ws6 = workbook.Worksheets.Add("Bảng Điểm Tích Lũy Chi Tiết");
+                    ws6.Cell("A1").Value = "BẢNG ĐIỂM TÍCH LŨY TOÀN DIỆN CỦA TOÀN BỘ HỌC VIÊN THEO HỆ THỐNG TÍN CHỈ";
+                    ws6.Range("A1:J1").Merge().Style.Font.SetBold().Font.SetFontSize(15).Font.SetFontColor(XLColor.FromHtml("#1E3A8A"))
+                        .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+
+                    string[] cumHeaders = { "STT", "Mã HV", "Họ và Tên", "Cấp Bậc", "Đơn Vị", "Lớp", "Điểm TB GPA", "Xếp Loại", "TC Đã Tích Lũy", "Tình Trạng Môn" };
+                    for (int i = 0; i < cumHeaders.Length; i++)
+                    {
+                        var cell = ws6.Cell(3, i + 1);
+                        cell.Value = cumHeaders[i];
+                        cell.Style.Font.SetBold().Font.SetFontColor(XLColor.White)
+                            .Fill.SetBackgroundColor(XLColor.FromHtml("#1E3A8A"))
+                            .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                    }
+
+                    int cumRow = 4;
+                    int cumStt = 1;
+                    foreach (var c in cumulativeCadets)
+                    {
+                        if (c.HasMissingSubjects)
+                        {
+                            ws6.Range(cumRow, 1, cumRow, 10).Style.Fill.BackgroundColor = XLColor.FromHtml("#FEF9C3");
+                        }
+                        else if (cumRow % 2 == 1)
+                        {
+                            ws6.Range(cumRow, 1, cumRow, 10).Style.Fill.BackgroundColor = XLColor.FromHtml("#F8FAFC");
+                        }
+
+                        ws6.Cell(cumRow, 1).Value = cumStt++;
+                        ws6.Cell(cumRow, 2).Value = c.CadetCode;
+                        ws6.Cell(cumRow, 3).Value = c.FullName;
+                        ws6.Cell(cumRow, 4).Value = c.Rank;
+                        ws6.Cell(cumRow, 5).Value = c.Unit;
+                        ws6.Cell(cumRow, 6).Value = c.ClassName;
+                        ws6.Cell(cumRow, 7).Value = $"{c.Gpa:F2}";
+                        ws6.Cell(cumRow, 8).Value = c.AcademicRating;
+                        ws6.Cell(cumRow, 9).Value = $"{c.TotalCreditsEarned:F2} / {c.TotalCurriculumCredits:F2}";
+                        ws6.Cell(cumRow, 10).Value = c.HasMissingSubjects ? $"Thiếu {c.MissingSubjectsCount} nội dung" : "Đủ 100% môn";
+
+                        ws6.Range(cumRow, 1, cumRow, 10).Style.Border.SetOutsideBorder(XLBorderStyleValues.Thin)
+                                                              .Border.SetInsideBorder(XLBorderStyleValues.Thin);
+
+                        ws6.Cell(cumRow, 1).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        ws6.Cell(cumRow, 2).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        ws6.Cell(cumRow, 7).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center).Font.SetBold();
+                        ws6.Cell(cumRow, 8).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        ws6.Cell(cumRow, 9).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        ws6.Cell(cumRow, 10).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
+                        cumRow++;
+                    }
+
+                    ws6.Columns().AdjustToContents();
+
+                    workbook.SaveAs(filePath);
+                    return (true, $"Xuất báo cáo học vụ đa sheet thành công (6 worksheets): {Path.GetFileName(filePath)}");
+                }
+                catch (Exception ex)
+                {
+                    return (false, $"Lỗi xuất báo cáo học vụ đa sheet: {ex.Message}");
+                }
+            });
+        }
         #endregion
     }
 }

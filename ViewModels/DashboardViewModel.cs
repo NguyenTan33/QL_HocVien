@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -8,27 +8,33 @@ using QL_HocVien.Models;
 using QL_HocVien.Models.DTOs;
 using QL_HocVien.Models.Filters;
 using QL_HocVien.Services;
+using QL_HocVien.Services.Interfaces;
 
 namespace QL_HocVien.ViewModels
 {
     public partial class DashboardViewModel : ViewModelBase
     {
         private readonly IDashboardAnalyticsService _analyticsService;
-        private readonly ITrainingRecommendationService _recommendationService;
+        private readonly ITrainingRecommendationService? _recommendationService;
         private readonly ITrainingEventService _eventService;
         private readonly ICadetService _cadetService;
         private readonly IExcelService _excelService;
         private readonly IFileDialogService _fileDialogService;
         private readonly ISecurityGateService _securityGate;
 
-        #region BỘ LỌC NÂNG CAO (FILTER PROPERTIES)
+        #region BỘ LỌC NÂNG CAO HỌC VỤ (ACADEMIC FILTER PROPERTIES)
         public ObservableCollection<string> UnitOptions { get; } = new();
         public ObservableCollection<string> ClassOptions { get; } = new();
         public ObservableCollection<string> SessionOptions { get; } = new();
+        public ObservableCollection<CreditSubject> CreditSubjectOptions { get; } = new();
         public ObservableCollection<Subject> SubjectOptions { get; } = new();
         public ObservableCollection<string> GradeOptions { get; } = new()
         {
-            "Tất cả", "Xuất sắc", "Giỏi", "Khá", "Đạt", "Không đạt"
+            "Tất cả", "Giỏi", "Khá", "Trung bình", "Yếu"
+        };
+        public ObservableCollection<string> StatusOptions { get; } = new()
+        {
+            "Tất cả", "Đủ môn", "Nợ/Thiếu môn"
         };
 
         [ObservableProperty]
@@ -41,10 +47,16 @@ namespace QL_HocVien.ViewModels
         private string _selectedSession = "Tất cả";
 
         [ObservableProperty]
+        private CreditSubject? _selectedCreditSubject;
+
+        [ObservableProperty]
         private Subject? _selectedSubject;
 
         [ObservableProperty]
         private string _selectedGrade = "Tất cả";
+
+        [ObservableProperty]
+        private string _selectedStatus = "Tất cả";
 
         [ObservableProperty]
         private DateTime? _fromDate;
@@ -59,7 +71,7 @@ namespace QL_HocVien.ViewModels
         private bool _isAdvancedFilterExpanded = true;
         #endregion
 
-        #region THẺ KPI CHỈ HUY CHIẾN LƯỢC (COMMAND STRATEGY KPIS)
+        #region THẺ KPI CHỈ HUY HỌC VỤ CHIẾN LƯỢC (ACADEMIC STRATEGY KPIS)
         [ObservableProperty]
         private int _totalCadets;
 
@@ -70,6 +82,12 @@ namespace QL_HocVien.ViewModels
         private int _totalClassesCount;
 
         [ObservableProperty]
+        private int _totalCreditSubjects;
+
+        [ObservableProperty]
+        private int _totalCreditScores;
+
+        [ObservableProperty]
         private int _totalExamRecords;
 
         [ObservableProperty]
@@ -77,6 +95,12 @@ namespace QL_HocVien.ViewModels
 
         [ObservableProperty]
         private int _uniqueTestedCadets;
+
+        [ObservableProperty]
+        private double _averageGpa;
+
+        [ObservableProperty]
+        private double _graduationReadinessRate;
 
         [ObservableProperty]
         private double _passRate;
@@ -91,6 +115,9 @@ namespace QL_HocVien.ViewModels
         private int _goodCount;
 
         [ObservableProperty]
+        private int _fairCount;
+
+        [ObservableProperty]
         private int _passCount;
 
         [ObservableProperty]
@@ -100,13 +127,19 @@ namespace QL_HocVien.ViewModels
         private double _failRate;
 
         [ObservableProperty]
-        private string _overallRatingLabel = "Đang tải...";
+        private int _warningCount;
+
+        [ObservableProperty]
+        private int _completedCadetsCount;
+
+        [ObservableProperty]
+        private string _overallRatingLabel = "Đang tải dữ liệu...";
 
         [ObservableProperty]
         private string _overallRatingColor = "#1E3A8A";
 
         [ObservableProperty]
-        private string _upcomingEventTitle = "Chưa có sự kiện gần nhất";
+        private string _upcomingEventTitle = "Chưa có lịch thi gần nhất";
 
         [ObservableProperty]
         private string _upcomingEventTime = "";
@@ -117,21 +150,17 @@ namespace QL_HocVien.ViewModels
 
         #region BIỂU ĐỒ & DỮ LIỆU PHÂN TÍCH (DATA COLLECTIONS)
         public ObservableCollection<UnitLeaderboardDto> UnitLeaderboard { get; } = new();
+        public ObservableCollection<AcademicClassComparisonDto> ClassLeaderboard { get; } = new();
         public ObservableCollection<SubjectPerformanceDto> SubjectPerformances { get; } = new();
         public ObservableCollection<TrainingEvent> MonthlyFocusEvents { get; } = new();
-        public ObservableCollection<UntestedCadetDto> UntestedCadets { get; } = new();
         public ObservableCollection<CadetHonorDto> HonoredCadets { get; } = new();
+        public ObservableCollection<AcademicWarningCadetDto> AcademicWarnings { get; } = new();
+        public ObservableCollection<UntestedCadetDto> UntestedCadets { get; } = new();
+        public ObservableCollection<AcademicCadetAnalyticsDto> CumulativeCadets { get; } = new();
         public ObservableCollection<PhysicalExamRecord> FailedRecords { get; } = new();
 
-        // 🤖 TRỢ LÝ ĐỀ XUẤT HUẤN LUYỆN AI
         [ObservableProperty]
-        private StrategicDirectiveDto _aiStrategicDirective = new();
-
-        public ObservableCollection<FitnessComponentPrescriptionDto> AiComponentPrescriptions { get; } = new();
-        public ObservableCollection<PersonalizedCadetPrescriptionDto> AiPersonalizedPrescriptions { get; } = new();
-
-        [ObservableProperty]
-        private int _selectedTabIndex = 0; // 0: HV Chưa Thi/KT, 1: AI Đề Xuất, 2: Chưa Đạt, 3: Vinh Danh, 4: Thi Đua Đơn Vị
+        private int _selectedTabIndex = 0; // 0: Bảng Vàng Danh Dự, 1: Cảnh Báo Học Vụ, 2: Hiệu Suất Học Phần, 3: Thi Đua Đơn Vị
 
         [ObservableProperty]
         private bool _isCombatMode = true;
@@ -139,7 +168,7 @@ namespace QL_HocVien.ViewModels
 
         public DashboardViewModel(
             IDashboardAnalyticsService analyticsService,
-            ITrainingRecommendationService recommendationService,
+            ITrainingRecommendationService? recommendationService,
             ITrainingEventService eventService,
             ICadetService cadetService,
             IExcelService excelService,
@@ -165,7 +194,7 @@ namespace QL_HocVien.ViewModels
                 _isCombatMode = ThemeService.CurrentIsCombatMode;
             }
 
-            Title = "Trung Tâm Chỉ Huy & Phân Tích Rèn Luyện Thể Lực Quân Đội";
+            Title = "Trung Tâm Quản Trị & Phân Tích Học Vụ Đào Tạo";
 
             _ = InitializeDashboardAsync();
         }
@@ -175,7 +204,6 @@ namespace QL_HocVien.ViewModels
             IsBusy = true;
             try
             {
-                // Nạp danh sách bộ lọc
                 var units = await _analyticsService.GetAvailableUnitsAsync();
                 UnitOptions.Clear();
                 foreach (var u in units) UnitOptions.Add(u);
@@ -188,15 +216,17 @@ namespace QL_HocVien.ViewModels
                 SessionOptions.Clear();
                 foreach (var s in sessions) SessionOptions.Add(s);
 
+                var creditSubjects = await _analyticsService.GetAvailableCreditSubjectsAsync();
+                CreditSubjectOptions.Clear();
+                foreach (var cs in creditSubjects) CreditSubjectOptions.Add(cs);
+                SelectedCreditSubject = CreditSubjectOptions.FirstOrDefault();
+
                 var subjects = await _analyticsService.GetAvailableSubjectsAsync();
                 SubjectOptions.Clear();
                 foreach (var sub in subjects) SubjectOptions.Add(sub);
                 SelectedSubject = SubjectOptions.FirstOrDefault();
 
-                // Nạp sự kiện huấn luyện gần nhất
                 await LoadUpcomingEventAsync();
-
-                // Nạp dữ liệu phân tích Dashboard
                 await LoadDashboardDataAsync();
             }
             catch (Exception ex)
@@ -228,8 +258,8 @@ namespace QL_HocVien.ViewModels
                 else
                 {
                     HasUpcomingEvent = false;
-                    UpcomingEventTitle = "Không có sự kiện sắp tới";
-                    UpcomingEventTime = "Duy trì rèn luyện thường xuyên";
+                    UpcomingEventTitle = "Không có lịch thi sắp tới";
+                    UpcomingEventTime = "Duy trì kế hoạch giảng dạy thường xuyên";
                 }
             }
             catch
@@ -249,75 +279,80 @@ namespace QL_HocVien.ViewModels
                     Unit = SelectedUnit,
                     ClassName = SelectedClass,
                     ExamSession = SelectedSession,
-                    SubjectId = SelectedSubject?.Id,
+                    SubjectId = SelectedCreditSubject?.Id ?? SelectedSubject?.Id,
                     Grade = SelectedGrade,
+                    AcademicRating = SelectedGrade,
+                    Status = SelectedStatus,
                     FromDate = FromDate,
                     ToDate = ToDate,
                     SearchKeyword = SearchKeyword
                 };
 
-                // 1. Tải Summary & KPI
+                // 1. Tải Summary & KPI Học Vụ
                 var summary = await _analyticsService.GetSummaryAsync(criteria);
                 TotalCadets = summary.TotalCadets;
                 TotalUnitsCount = summary.TotalUnitsCount;
                 TotalClassesCount = summary.TotalClassesCount;
-                TotalExamRecords = summary.TotalExamRecords;
+                TotalCreditSubjects = summary.TotalCreditSubjects;
+                TotalCreditScores = summary.TotalCreditScores;
                 TotalTestedSubjects = summary.TotalTestedSubjects;
+                TotalExamRecords = summary.TotalExamRecords;
                 UniqueTestedCadets = summary.UniqueTestedCadets;
-                PassRate = summary.OverallPassRate;
+                AverageGpa = summary.AverageGpa;
+                GraduationReadinessRate = summary.GraduationReadinessRate;
+                PassRate = summary.GraduationReadinessRate > 0 ? summary.GraduationReadinessRate : summary.PassRate;
                 EliteRate = summary.EliteRate;
                 ExcellentCount = summary.ExcellentCount;
                 GoodCount = summary.GoodCount;
+                FairCount = summary.FairCount;
                 PassCount = summary.PassCount;
                 FailCount = summary.FailCount;
                 FailRate = summary.FailRate;
+                WarningCount = summary.WarningCount;
+                CompletedCadetsCount = summary.CompletedCadetsCount;
                 OverallRatingLabel = summary.OverallRatingLabel;
                 OverallRatingColor = summary.OverallRatingColor;
 
-                // 2. Tải Xếp hạng thi đua giữa các đơn vị
+                // 2. Tải Xếp hạng thi đua đơn vị & lớp
                 var units = await _analyticsService.GetUnitLeaderboardAsync(criteria);
                 UnitLeaderboard.Clear();
                 foreach (var u in units) UnitLeaderboard.Add(u);
 
-                // 3. Tải Sự kiện trọng tâm trong tháng (xếp từ ngày gần nhất đến xa nhất)
+                var classes = await _analyticsService.GetClassLeaderboardAsync(criteria);
+                ClassLeaderboard.Clear();
+                foreach (var cl in classes) ClassLeaderboard.Add(cl);
+
+                // 3. Tải Sự kiện trọng tâm trong tháng
                 var monthlyEvents = await _analyticsService.GetMonthlyFocusEventsAsync();
                 MonthlyFocusEvents.Clear();
                 foreach (var ev in monthlyEvents) MonthlyFocusEvents.Add(ev);
 
-                // 4. Tải Danh sách học viên chưa thi / kiểm tra
-                var untested = await _analyticsService.GetUntestedCadetsAsync(criteria);
-                UntestedCadets.Clear();
-                foreach (var uc in untested) UntestedCadets.Add(uc);
-
-                // 5. Tải Phân tích môn thể lực
+                // 4. Tải Phân tích môn học tín chỉ
                 var subPerfs = await _analyticsService.GetSubjectPerformancesAsync(criteria);
                 SubjectPerformances.Clear();
                 foreach (var s in subPerfs) SubjectPerformances.Add(s);
 
-                // 6. Tải Danh sách vinh danh học viên xuất sắc
+                // 5. Tải Bảng vàng vinh danh học viên xuất sắc (Top GPA)
                 var honors = await _analyticsService.GetHonoredCadetsAsync(criteria, 15);
                 HonoredCadets.Clear();
                 foreach (var h in honors) HonoredCadets.Add(h);
 
-                // 7. Tải Danh sách học viên chưa đạt chuẩn
-                var failed = await _analyticsService.GetFailedRecordsAsync(criteria);
-                FailedRecords.Clear();
-                foreach (var f in failed) FailedRecords.Add(f);
+                // 6. Tải Danh sách Cảnh báo học vụ & Nợ môn
+                var warnings = await _analyticsService.GetAcademicWarningCadetsAsync(criteria);
+                AcademicWarnings.Clear();
+                foreach (var w in warnings) AcademicWarnings.Add(w);
 
-                // 8. 🤖 Sinh Đề Xuất Huấn Luyện AI
-                var filteredRecords = await _analyticsService.GetFilteredRecordsAsync(criteria);
-                var allCadets = await _cadetService.GetAllCadetsAsync();
-                var aiSummary = await _recommendationService.GenerateRecommendationsAsync(filteredRecords, allCadets, SelectedUnit);
+                // 7. Tải Học viên chưa thi / thiếu tín chỉ
+                var untested = await _analyticsService.GetUntestedCadetsAsync(criteria);
+                UntestedCadets.Clear();
+                foreach (var uc in untested) UntestedCadets.Add(uc);
 
-                AiStrategicDirective = aiSummary.StrategicDirective;
+                // 8. Tải Dữ liệu tích lũy toàn diện
+                var cumulative = await _analyticsService.GetCadetCumulativeAnalyticsAsync(criteria);
+                CumulativeCadets.Clear();
+                foreach (var c in cumulative) CumulativeCadets.Add(c);
 
-                AiComponentPrescriptions.Clear();
-                foreach (var p in aiSummary.ComponentPrescriptions) AiComponentPrescriptions.Add(p);
-
-                AiPersonalizedPrescriptions.Clear();
-                foreach (var pp in aiSummary.PersonalizedCadetPrescriptions) AiPersonalizedPrescriptions.Add(pp);
-
-                StatusMessage = $"Cập nhật thành công số liệu: {TotalTestedSubjects} môn đã thi/KT, tỷ lệ đạt {PassRate:F1}%.";
+                StatusMessage = $"Cập nhật thành công số liệu học vụ: {TotalCadets} học viên, Điểm TB GPA {AverageGpa:F2}/10, Tỷ lệ đạt chuẩn {GraduationReadinessRate:F1}%.";
             }
             catch (Exception ex)
             {
@@ -341,8 +376,10 @@ namespace QL_HocVien.ViewModels
             SelectedUnit = "Tất cả";
             SelectedClass = "Tất cả";
             SelectedSession = "Tất cả";
+            SelectedCreditSubject = CreditSubjectOptions.FirstOrDefault();
             SelectedSubject = SubjectOptions.FirstOrDefault();
             SelectedGrade = "Tất cả";
+            SelectedStatus = "Tất cả";
             FromDate = null;
             ToDate = null;
             SearchKeyword = string.Empty;
@@ -359,13 +396,13 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         public async Task ExportExecutiveReportAsync()
         {
-            if (!await _securityGate.EnsureUnlockedAsync("Xuất Báo Cáo Tổng Quan & Đề Xuất Huấn Luyện AI ra Excel")) return;
+            if (!await _securityGate.EnsureUnlockedAsync("Xuất Báo Cáo Tổng Quan Học Vụ & Đào Tạo Tín Chỉ ra Excel (6 Sheets)")) return;
 
-            var fileName = $"BaoCao_TongQuan_DeXuatHuấnLuyen_QLHV_{DateTime.Now:yyyyMMdd_HHmm}.xlsx";
+            var fileName = $"BaoCao_TongQuan_HocVu_TinChi_QLHV_{DateTime.Now:yyyyMMdd_HHmm}.xlsx";
             var filePath = _fileDialogService.ShowSaveFileDialog(
                 fileName, 
                 "Excel Files (*.xlsx)|*.xlsx", 
-                "Xuất Báo Cáo Tổng Quan & Đề Xuất Huấn Luyện AI ra Excel");
+                "Xuất Báo Cáo Học Vụ & Đào Tạo Tín Chỉ Đa Sheet ra Excel");
 
             if (string.IsNullOrWhiteSpace(filePath)) return;
 
@@ -377,29 +414,28 @@ namespace QL_HocVien.ViewModels
                     TotalCadets = TotalCadets,
                     TotalUnitsCount = TotalUnitsCount,
                     TotalClassesCount = TotalClassesCount,
-                    TotalExamRecords = TotalExamRecords,
-                    UniqueTestedCadets = UniqueTestedCadets,
+                    TotalCreditSubjects = TotalCreditSubjects,
+                    TotalCreditScores = TotalCreditScores,
+                    AverageGpa = AverageGpa,
                     ExcellentCount = ExcellentCount,
                     GoodCount = GoodCount,
+                    FairCount = FairCount,
                     PassCount = PassCount,
-                    FailCount = FailCount
+                    FailCount = FailCount,
+                    WarningCount = WarningCount,
+                    CompletedCadetsCount = CompletedCadetsCount,
+                    TotalExamRecords = TotalExamRecords
                 };
 
-                var aiRecSummary = new TrainingRecommendationSummaryDto
-                {
-                    StrategicDirective = AiStrategicDirective,
-                    ComponentPrescriptions = AiComponentPrescriptions.ToList(),
-                    PersonalizedCadetPrescriptions = AiPersonalizedPrescriptions.ToList()
-                };
-
-                var result = await _excelService.ExportDashboardExecutiveReportAsync(
+                var result = await _excelService.ExportAcademicDashboardMultiSheetReportAsync(
                     filePath,
                     summary,
                     UnitLeaderboard.ToList(),
+                    ClassLeaderboard.ToList(),
                     SubjectPerformances.ToList(),
-                    aiRecSummary,
-                    FailedRecords.ToList(),
-                    HonoredCadets.ToList());
+                    AcademicWarnings.ToList(),
+                    HonoredCadets.ToList(),
+                    CumulativeCadets.ToList());
 
                 StatusMessage = result.Message;
             }

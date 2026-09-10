@@ -199,10 +199,10 @@ namespace QL_HocVien.Services.Implementations
                 .AsNoTracking()
                 .AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(unit) && unit != "Táº¥t cáº£")
+            if (!string.IsNullOrWhiteSpace(unit) && !unit.Contains("Tất cả") && !unit.Contains("Táº¥t cáº£") && !unit.Equals("All", StringComparison.OrdinalIgnoreCase))
                 query = query.Where(c => c.Unit == unit);
 
-            if (!string.IsNullOrWhiteSpace(className) && className != "Táº¥t cáº£")
+            if (!string.IsNullOrWhiteSpace(className) && !className.Contains("Tất cả") && !className.Contains("Táº¥t cáº£") && !className.Equals("All", StringComparison.OrdinalIgnoreCase))
                 query = query.Where(c => c.MilitaryClass != null && c.MilitaryClass.ClassName == className);
 
             if (!string.IsNullOrWhiteSpace(keyword))
@@ -213,6 +213,7 @@ namespace QL_HocVien.Services.Implementations
 
             var cadets = await query.ToListAsync();
             var allScores = await _context.CreditScoreRecords
+                .Include(s => s.CreditSubject)
                 .AsNoTracking()
                 .ToListAsync();
 
@@ -317,14 +318,33 @@ namespace QL_HocVien.Services.Implementations
                 dto.MissingSubjectsList = missingActiveComponentNames;
                 dto.MissingSubjectsCount = missingActiveComponentNames.Count;
 
-                // TÃ­nh GPA tÃ­ch lÅ©y toÃ n khÃ³a trÃªn cÃ¡c Ä‘á»£t thi Ä‘Ã£ hoÃ n thÃ nh
-                var scoredComponents = allComponents
-                    .Where(c => cadetCompScores.TryGetValue(c.Id, out var sc) && sc.HasValue && sc.Value >= 0)
-                    .Select(c => (score: cadetCompScores[c.Id]!.Value, credits: c.Credits));
+                // Tính GPA tích lũy toàn khóa trên các đợt thi đã hoàn thành
+                if (allComponents.Count > 0)
+                {
+                    var scoredComponents = allComponents
+                        .Where(c => cadetCompScores.TryGetValue(c.Id, out var sc) && sc.HasValue && sc.Value >= 0)
+                        .Select(c => (score: cadetCompScores[c.Id]!.Value, credits: c.Credits));
 
-                dto.Gpa = _calculator.CalculateCurriculumTbm(scoredComponents, curriculumCredits);
-                dto.TotalCreditsEarned = Math.Round(scoredComponents.Sum(sc => sc.credits), 2);
-                dto.TotalSubjectsCompleted = majorSubjects.Count(s => dto.SubjectScores.TryGetValue(s.Id, out var sc) && sc.HasValue);
+                    dto.Gpa = _calculator.CalculateCurriculumTbm(scoredComponents, curriculumCredits);
+                    dto.TotalCreditsEarned = Math.Round(scoredComponents.Sum(sc => sc.credits), 2);
+                    dto.TotalSubjectsCompleted = majorSubjects.Count(s => dto.SubjectScores.TryGetValue(s.Id, out var sc) && sc.HasValue);
+                }
+                else
+                {
+                    // Fallback tính GPA trực tiếp theo môn học nếu chưa cấu hình đợt thi thành phần
+                    var directScores = cadetScores
+                        .Where(s => s.CreditSubject != null && s.FinalScore >= 0)
+                        .ToList();
+
+                    if (directScores.Count > 0)
+                    {
+                        double sumCredits = directScores.Sum(s => s.CreditSubject!.Credits);
+                        double weightedScore = directScores.Sum(s => s.FinalScore * s.CreditSubject!.Credits);
+                        dto.Gpa = sumCredits > 0 ? Math.Round(weightedScore / sumCredits, 2) : 0.0;
+                        dto.TotalCreditsEarned = Math.Round(sumCredits, 1);
+                        dto.TotalSubjectsCompleted = directScores.Count;
+                    }
+                }
 
                 // XÃ¢y dá»±ng báº£ng phÃ¢n rÃ£ Ä‘iá»ƒm thÃ nh pháº§n
                 dto.MajorSubjectBreakdowns = new List<MajorSubjectBreakdownDto>();

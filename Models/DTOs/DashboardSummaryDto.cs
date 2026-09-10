@@ -10,6 +10,13 @@ namespace QL_HocVien.Models.DTOs
         public int TotalExamRecords { get; set; }
         public int UniqueTestedCadets { get; set; }
 
+        // Các chỉ số học vụ & tín chỉ
+        public int TotalCreditSubjects { get; set; }
+        public int TotalCreditScores { get; set; }
+        public double AverageGpa { get; set; }
+        public int WarningCount { get; set; }
+        public int CompletedCadetsCount { get; set; }
+
         public int ExcellentCount { get; set; }
         public int GoodCount { get; set; }
         public int FairCount { get; set; }
@@ -62,6 +69,12 @@ namespace QL_HocVien.Models.DTOs
         public double EliteRate
         {
             get => Math.Round(ExcellentRate + GoodRate, 1);
+            set { }
+        }
+
+        public double GraduationReadinessRate
+        {
+            get => TotalCadets > 0 ? Math.Round((double)CompletedCadetsCount / TotalCadets * 100, 1) : 0;
             set { }
         }
 

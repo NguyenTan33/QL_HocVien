@@ -9,10 +9,13 @@ namespace QL_HocVien.Services.Interfaces
     public interface IDashboardAnalyticsService
     {
         Task<DashboardSummaryDto> GetSummaryAsync(DashboardFilterCriteria criteria);
-        Task<List<PhysicalExamRecord>> GetFilteredRecordsAsync(DashboardFilterCriteria criteria);
         Task<List<UnitLeaderboardDto>> GetUnitLeaderboardAsync(DashboardFilterCriteria criteria);
+        Task<List<AcademicClassComparisonDto>> GetClassLeaderboardAsync(DashboardFilterCriteria criteria);
         Task<List<SubjectPerformanceDto>> GetSubjectPerformancesAsync(DashboardFilterCriteria criteria);
-        Task<List<CadetHonorDto>> GetHonoredCadetsAsync(DashboardFilterCriteria criteria, int topCount = 10);
+        Task<List<CadetHonorDto>> GetHonoredCadetsAsync(DashboardFilterCriteria criteria, int topCount = 15);
+        Task<List<AcademicWarningCadetDto>> GetAcademicWarningCadetsAsync(DashboardFilterCriteria criteria);
+        Task<List<AcademicCadetAnalyticsDto>> GetCadetCumulativeAnalyticsAsync(DashboardFilterCriteria criteria);
+        Task<List<PhysicalExamRecord>> GetFilteredRecordsAsync(DashboardFilterCriteria criteria);
         Task<List<PhysicalExamRecord>> GetFailedRecordsAsync(DashboardFilterCriteria criteria);
         Task<List<TrainingEvent>> GetMonthlyFocusEventsAsync();
         Task<List<UntestedCadetDto>> GetUntestedCadetsAsync(DashboardFilterCriteria criteria);
@@ -21,5 +24,6 @@ namespace QL_HocVien.Services.Interfaces
         Task<List<string>> GetAvailableClassesAsync(string? unit = null);
         Task<List<string>> GetAvailableSessionsAsync();
         Task<List<Subject>> GetAvailableSubjectsAsync();
+        Task<List<CreditSubject>> GetAvailableCreditSubjectsAsync();
     }
 }

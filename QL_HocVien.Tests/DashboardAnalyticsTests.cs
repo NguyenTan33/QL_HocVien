@@ -645,5 +645,91 @@ namespace QL_HocVien.Tests
             var testedCount = await _dashboardService.GetTotalTestedSubjectsCountAsync(criteria);
             Assert.True(testedCount >= 0);
         }
+
+        [Fact]
+        public async Task Test_ExportAcademicDashboardMultiSheetReport_Generates6Sheets()
+        {
+            var criteria = new DashboardFilterCriteria();
+            var summary = await _dashboardService.GetSummaryAsync(criteria);
+            var units = await _dashboardService.GetUnitLeaderboardAsync(criteria);
+            var classes = await _dashboardService.GetClassLeaderboardAsync(criteria);
+            var subjects = await _dashboardService.GetSubjectPerformancesAsync(criteria);
+            var warnings = await _dashboardService.GetAcademicWarningCadetsAsync(criteria);
+            var honors = await _dashboardService.GetHonoredCadetsAsync(criteria);
+            var cumulative = await _dashboardService.GetCadetCumulativeAnalyticsAsync(criteria);
+
+            var filePath = Path.Combine(Path.GetTempPath(), $"Test_Academic_6Sheets_{Guid.NewGuid():N}.xlsx");
+
+            try
+            {
+                var result = await _excelService.ExportAcademicDashboardMultiSheetReportAsync(
+                    filePath, summary, units, classes, subjects, warnings, honors, cumulative);
+
+                Assert.True(result.Success, result.Message);
+                Assert.True(File.Exists(filePath));
+
+                // Kiểm tra 6 sheets chuyên gia bằng ClosedXML
+                using var wb = new XLWorkbook(filePath);
+                Assert.Equal(6, wb.Worksheets.Count);
+                Assert.NotNull(wb.Worksheet("Tổng Quan Học Vụ & KPI"));
+                Assert.NotNull(wb.Worksheet("Xếp Hạng Thi Đua Đơn Vị"));
+                Assert.NotNull(wb.Worksheet("Phân Tích Chi Tiết Môn Học"));
+                Assert.NotNull(wb.Worksheet("Cảnh Báo Học Vụ & Học Lại"));
+                Assert.NotNull(wb.Worksheet("Bảng Vàng Danh Dự (Top GPA)"));
+                Assert.NotNull(wb.Worksheet("Bảng Điểm Tích Lũy Chi Tiết"));
+
+                // Kiểm tra nội dung cơ bản trên Sheet 1
+                var sheet1 = wb.Worksheet("Tổng Quan Học Vụ & KPI");
+                Assert.Contains("HỌC VỤ", sheet1.Cell("A2").GetString());
+
+                // Kiểm tra nội dung cơ bản trên Sheet 4 (Cảnh báo)
+                var sheet4 = wb.Worksheet("Cảnh Báo Học Vụ & Học Lại");
+                var usedCells4 = string.Join(", ", sheet4.CellsUsed().Select(c => $"{c.Address}:{c.GetString()}").Take(5));
+                Assert.True(sheet4.CellsUsed().Any(), $"Cells used in sheet4: {usedCells4}");
+                Assert.Contains("CẢNH BÁO", sheet4.Row(1).Cells().Select(c => c.GetString()).FirstOrDefault(s => !string.IsNullOrEmpty(s)) ?? sheet4.Cell("A1").GetString());
+
+                // Kiểm tra nội dung cơ bản trên Sheet 5 (Bảng Vàng)
+                var sheet5 = wb.Worksheet("Bảng Vàng Danh Dự (Top GPA)");
+                Assert.Contains("BẢNG VÀNG", sheet5.Row(1).Cells().Select(c => c.GetString()).FirstOrDefault(s => !string.IsNullOrEmpty(s)) ?? sheet5.Cell("A1").GetString());
+            }
+            finally
+            {
+                if (File.Exists(filePath))
+                {
+                    try { File.Delete(filePath); } catch { }
+                }
+            }
+        }
+
+        [Fact]
+        public async Task Test_DashboardAnalytics_AcademicMethods()
+        {
+            var criteria = new DashboardFilterCriteria();
+
+            // 1. GetAcademicWarningCadetsAsync
+            var warnings = await _dashboardService.GetAcademicWarningCadetsAsync(criteria);
+            Assert.NotNull(warnings);
+
+            // 2. GetClassLeaderboardAsync
+            var classes = await _dashboardService.GetClassLeaderboardAsync(criteria);
+            Assert.NotNull(classes);
+
+            // 3. GetCadetCumulativeAnalyticsAsync
+            var cadetsAnalytics = await _dashboardService.GetCadetCumulativeAnalyticsAsync(criteria);
+            Assert.NotNull(cadetsAnalytics);
+
+            // 4. GetAvailableCreditSubjectsAsync
+            var creditSubjects = await _dashboardService.GetAvailableCreditSubjectsAsync();
+            Assert.NotNull(creditSubjects);
+            Assert.NotEmpty(creditSubjects);
+            Assert.Contains("Tất cả", creditSubjects[0].SubjectName);
+
+            // 5. Kiểm tra tính toán Academic trong Summary
+            var summary = await _dashboardService.GetSummaryAsync(criteria);
+            Assert.NotNull(summary);
+            Assert.True(summary.AverageGpa >= 0 && summary.AverageGpa <= 10);
+            Assert.True(summary.GraduationReadinessRate >= 0 && summary.GraduationReadinessRate <= 100);
+            Assert.True(summary.TotalCreditSubjects >= 0);
+        }
     }
 }

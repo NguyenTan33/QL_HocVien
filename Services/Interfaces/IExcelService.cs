@@ -46,6 +46,17 @@ namespace QL_HocVien.Services.Interfaces
             QL_HocVien.Models.DTOs.TrainingRecommendationSummaryDto aiRecommendations,
             IEnumerable<PhysicalExamRecord> failedRecords,
             IEnumerable<QL_HocVien.Models.DTOs.CadetHonorDto> honoredCadets);
+
+        // 10. Báo cáo Tổng quan Học vụ & Đào tạo Tín chỉ Đa Sheet (6 Worksheets)
+        Task<(bool Success, string Message)> ExportAcademicDashboardMultiSheetReportAsync(
+            string filePath,
+            QL_HocVien.Models.DTOs.DashboardSummaryDto summary,
+            IEnumerable<QL_HocVien.Models.DTOs.UnitLeaderboardDto> units,
+            IEnumerable<QL_HocVien.Models.DTOs.AcademicClassComparisonDto> classes,
+            IEnumerable<QL_HocVien.Models.DTOs.SubjectPerformanceDto> subjects,
+            IEnumerable<QL_HocVien.Models.DTOs.AcademicWarningCadetDto> warningCadets,
+            IEnumerable<QL_HocVien.Models.DTOs.CadetHonorDto> honoredCadets,
+            IEnumerable<QL_HocVien.Models.DTOs.AcademicCadetAnalyticsDto> cumulativeCadets);
     }
 }
 

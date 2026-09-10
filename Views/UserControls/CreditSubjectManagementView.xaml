@@ -276,7 +276,7 @@
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
 
-                                        <DataGridTextColumn Header="Môn Đã Học" Binding="{Binding TotalSubjectsCompleted, StringFormat='{}{0} môn'}" Width="100">
+                                        <DataGridTextColumn Header="Môn Đã Học" Binding="{Binding TotalSubjectsCompleted, StringFormat='{}{0} môn'}" Width="100" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock">
                                                     <Setter Property="VerticalAlignment" Value="Center"/>
@@ -286,7 +286,7 @@
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
 
-                                        <DataGridTextColumn Header="Tổng Tín Chỉ" Binding="{Binding TotalCreditsEarned, StringFormat='{}{0:F2} TC'}" Width="105">
+                                        <DataGridTextColumn Header="Tổng Tín Chỉ" Binding="{Binding TotalCreditsEarned, StringFormat='{}{0:F2} TC'}" Width="105" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock">
                                                     <Setter Property="FontWeight" Value="Bold"/>
@@ -298,21 +298,21 @@
                                         </DataGridTextColumn>
 
                                         <!-- CỘT ĐIỂM TB (TBM) CHUẨN ROUNDDOWN TRỌNG SỐ TÍN CHỈ -->
-                                        <DataGridTemplateColumn Header="ĐIỂM TB (TBM)" Width="120">
+                                        <DataGridTemplateColumn Header="ĐIỂM TB (TBM)" Width="120" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <Border Background="{Binding RatingBackground, Converter={StaticResource StringToBrush}}" 
                                                             CornerRadius="6" Padding="10,4" HorizontalAlignment="Center" VerticalAlignment="Center">
                                                         <TextBlock Text="{Binding Gpa, StringFormat='{}{0:F2}'}" 
-                                                                   FontWeight="ExtraBold" FontSize="13.5" 
-                                                                   Foreground="{Binding RatingColor, Converter={StaticResource StringToBrush}}"/>
+                                                            FontWeight="ExtraBold" FontSize="13.5" 
+                                                            Foreground="{Binding RatingColor, Converter={StaticResource StringToBrush}}"/>
                                                     </Border>
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
 
                                         <!-- XẾP LOẠI HỌC TẬP -->
-                                        <DataGridTemplateColumn Header="XẾP LOẠI" Width="100">
+                                        <DataGridTemplateColumn Header="XẾP LOẠI" Width="100" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <Border Background="{Binding RatingBackground, Converter={StaticResource StringToBrush}}" 
@@ -325,7 +325,7 @@
                                         </DataGridTemplateColumn>
 
                                         <!-- CỘT TRẠNG THÁI MÔN (NHẬN DIỆN HỌC VIÊN THIẾU MÔN - DÒNG MÀU VÀNG) -->
-                                        <DataGridTemplateColumn Header="Trạng Thái Môn" Width="140">
+                                        <DataGridTemplateColumn Header="Trạng Thái Môn" Width="140" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <Border Background="{Binding StatusBadgeBg, Converter={StaticResource StringToBrush}}" 
@@ -339,7 +339,7 @@
                                         </DataGridTemplateColumn>
 
                                         <!-- THAO TÁC -->
-                                        <DataGridTemplateColumn Header="Thao Tác" Width="165">
+                                        <DataGridTemplateColumn Header="Thao Tác" Width="165" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
@@ -402,7 +402,7 @@
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
 
-                                        <DataGridTemplateColumn Header="Số Tín Chỉ" Width="110">
+                                        <DataGridTemplateColumn Header="Số Tín Chỉ" Width="110" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <Border Background="{DynamicResource PageBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="8,3" HorizontalAlignment="Center">
@@ -412,7 +412,7 @@
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
 
-                                        <DataGridTemplateColumn Header="Số Đợt Thi" Width="100">
+                                        <DataGridTemplateColumn Header="Số Đợt Thi" Width="100" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <Border Background="{DynamicResource PageBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="8,3" HorizontalAlignment="Center">
@@ -422,7 +422,7 @@
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
 
-                                        <DataGridTemplateColumn Header="Dạng Đánh Giá" Width="170">
+                                        <DataGridTemplateColumn Header="Dạng Đánh Giá" Width="170" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <Border Background="{DynamicResource SuccessCardBackgroundBrush}" BorderBrush="{DynamicResource SuccessCardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="8,3" HorizontalAlignment="Center">
@@ -441,7 +441,7 @@
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
 
-                                        <DataGridTemplateColumn Header="Hành Động" Width="110">
+                                        <DataGridTemplateColumn Header="Hành Động" Width="110" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
@@ -897,7 +897,7 @@
                                 <!-- Cột Đợt 1 -->
                                 <DataGridTemplateColumn Header="{Binding Data.Col1Header, Source={StaticResource Proxy}}"
                                                         Visibility="{Binding Data.IsCol1Visible, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}"
-                                                        Width="110">
+                                                        Width="110" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBox Text="{Binding Score1, Converter={StaticResource NullableDoubleConverter}, UpdateSourceTrigger=LostFocus}"
@@ -913,7 +913,7 @@
                                 <!-- Cột Đợt 2 -->
                                 <DataGridTemplateColumn Header="{Binding Data.Col2Header, Source={StaticResource Proxy}}"
                                                         Visibility="{Binding Data.IsCol2Visible, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}"
-                                                        Width="110">
+                                                        Width="110" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBox Text="{Binding Score2, Converter={StaticResource NullableDoubleConverter}, UpdateSourceTrigger=LostFocus}"
@@ -929,7 +929,7 @@
                                 <!-- Cột Đợt 3 -->
                                 <DataGridTemplateColumn Header="{Binding Data.Col3Header, Source={StaticResource Proxy}}"
                                                         Visibility="{Binding Data.IsCol3Visible, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}"
-                                                        Width="110">
+                                                        Width="110" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBox Text="{Binding Score3, Converter={StaticResource NullableDoubleConverter}, UpdateSourceTrigger=LostFocus}"
@@ -945,7 +945,7 @@
                                 <!-- Cột Đợt 4 -->
                                 <DataGridTemplateColumn Header="{Binding Data.Col4Header, Source={StaticResource Proxy}}"
                                                         Visibility="{Binding Data.IsCol4Visible, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}"
-                                                        Width="110">
+                                                        Width="110" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBox Text="{Binding Score4, Converter={StaticResource NullableDoubleConverter}, UpdateSourceTrigger=LostFocus}"
@@ -961,7 +961,7 @@
                                 <!-- Cột Đợt 5 -->
                                 <DataGridTemplateColumn Header="{Binding Data.Col5Header, Source={StaticResource Proxy}}"
                                                         Visibility="{Binding Data.IsCol5Visible, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}"
-                                                        Width="110">
+                                                        Width="110" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBox Text="{Binding Score5, Converter={StaticResource NullableDoubleConverter}, UpdateSourceTrigger=LostFocus}"
@@ -977,7 +977,7 @@
                                 <!-- Cột Đợt 6 -->
                                 <DataGridTemplateColumn Header="{Binding Data.Col6Header, Source={StaticResource Proxy}}"
                                                         Visibility="{Binding Data.IsCol6Visible, Source={StaticResource Proxy}, Converter={StaticResource BoolToVis}}"
-                                                        Width="110">
+                                                        Width="110" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBox Text="{Binding Score6, Converter={StaticResource NullableDoubleConverter}, UpdateSourceTrigger=LostFocus}"
@@ -991,7 +991,7 @@
                                 </DataGridTemplateColumn>
 
                                 <!-- Cột Điểm Môn (Tổng kết) -->
-                                <DataGridTemplateColumn Header="Điểm Môn" Width="95" IsReadOnly="True">
+                                <DataGridTemplateColumn Header="Điểm Môn" Width="95" IsReadOnly="True" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Border Background="{DynamicResource SecondaryButtonBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2" HorizontalAlignment="Center">
@@ -1003,7 +1003,7 @@
                                 </DataGridTemplateColumn>
 
                                 <!-- Cột Trạng thái cảnh báo (Chưa thi / Dòng vàng) -->
-                                <DataGridTemplateColumn Header="Trạng Thái" Width="75">
+                                <DataGridTemplateColumn Header="Trạng Thái" Width="75" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Border Background="{Binding StatusBadgeBg, Converter={StaticResource StringToBrush}}"

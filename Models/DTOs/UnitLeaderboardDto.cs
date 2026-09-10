@@ -14,6 +14,7 @@ namespace QL_HocVien.Models.DTOs
         public int ExcellentCount { get; set; }
         public int GoodCount { get; set; }
         public int FairCount { get; set; }
+        public double AverageGpa { get; set; }
 
         public double PassRate
         {

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace QL_HocVien.Models.DTOs
@@ -15,7 +15,7 @@ namespace QL_HocVien.Models.DTOs
         // Môn học / Nội dung còn thiếu chưa thi hoặc chưa kiểm tra
         public string MissingSubjects { get; set; } = string.Empty;
         public int MissingCount { get; set; }
-        public string ExamType { get; set; } = "Môn Tín chỉ & Thể lực";
+        public string ExamType { get; set; } = "Học phần Tín chỉ";
         public string Status { get; set; } = "Chưa hoàn thành";
         public string Note { get; set; } = "Cần sắp xếp kiểm tra bù";
     }
