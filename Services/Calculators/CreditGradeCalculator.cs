@@ -49,21 +49,17 @@ namespace QL_HocVien.Services.Calculators
 
         public double CalculateCurriculumTbm(IEnumerable<(double score, double credits)> scoredComponents, double totalCurriculumCredits)
         {
-            var list = scoredComponents.ToList();
-            if (!list.Any()) return 0.0;
-
-            double divisor = totalCurriculumCredits > 0 ? totalCurriculumCredits : list.Sum(x => x.credits);
-            if (divisor <= 0) return 0.0;
-
+            if (totalCurriculumCredits <= 0) return 0.0;
             double weightedSum = 0.0;
-            foreach (var (score, credits) in list)
+
+            foreach (var (score, credits) in scoredComponents)
             {
                 weightedSum += score * credits;
             }
 
             // Chuẩn Excel ROUNDDOWN 2 chữ số thập phân: Math.Floor(x * 100) / 100
             // Khử sai số làm tròn dấu chấm động của vi xử lý trước khi Floor
-            double raw = Math.Round(weightedSum / divisor, 8);
+            double raw = Math.Round(weightedSum / totalCurriculumCredits, 8);
             return Math.Floor(raw * 100.0) / 100.0;
         }
 
