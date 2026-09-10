@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -6,7 +7,9 @@ using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QL_HocVien.Models;
+using QL_HocVien.Models.Entity;
 using QL_HocVien.Services;
+using QL_HocVien.Services.Interfaces;
 
 namespace QL_HocVien.ViewModels
 {
@@ -16,11 +19,19 @@ namespace QL_HocVien.ViewModels
         private readonly IExcelService _excelService;
         private readonly IFileDialogService _fileDialogService;
         private readonly ISecurityGateService _securityGate;
+        private readonly IClassService? _classService;
 
         public ObservableCollection<MilitaryRank> Ranks { get; } = new();
         public ObservableCollection<MilitaryPosition> Positions { get; } = new();
         public ObservableCollection<MilitaryUnit> Units { get; } = new();
         public ObservableCollection<MilitaryMajor> Majors { get; } = new();
+        public ObservableCollection<UnitTreeNode> UnitTreeNodes { get; } = new();
+
+        [ObservableProperty]
+        private bool _isTreeViewMode = true;
+
+        [ObservableProperty]
+        private UnitTreeNode? _selectedTreeNode;
 
         public ObservableCollection<string> RankGroups { get; } = new()
         {
@@ -125,12 +136,14 @@ namespace QL_HocVien.ViewModels
             ICatalogService catalogService,
             IExcelService excelService,
             IFileDialogService fileDialogService,
-            ISecurityGateService securityGate)
+            ISecurityGateService securityGate,
+            IClassService? classService = null)
         {
             _catalogService = catalogService;
             _excelService = excelService;
             _fileDialogService = fileDialogService;
             _securityGate = securityGate;
+            _classService = classService;
             Title = "Danh Mục Tổ Chức Quân Sự";
 
             _ = LoadAllDataAsync();
@@ -157,6 +170,8 @@ namespace QL_HocVien.ViewModels
                 var majors = await _catalogService.GetAllMajorsAsync();
                 Majors.Clear();
                 foreach (var m in majors) Majors.Add(m);
+
+                await BuildUnitTreeAsync();
 
                 StatusMessage = $"Đã tải: {Ranks.Count} cấp bậc, {Positions.Count} chức vụ, {Units.Count} đơn vị, {Majors.Count} chuyên ngành.";
             }
@@ -235,6 +250,7 @@ namespace QL_HocVien.ViewModels
                         Units.Clear();
                         foreach (var u in uList) Units.Add(u);
                         StatusMessage = $"Tìm thấy {Units.Count} đơn vị {(ActiveFilterCount > 0 ? $"({ActiveFilterCount} bộ lọc đang áp dụng)" : "")}.";
+                        await BuildUnitTreeAsync();
                         break;
                     case 3: // Chuyên ngành
                         var mCriteria = new QL_HocVien.Models.Filters.CatalogFilterCriteria
@@ -611,6 +627,292 @@ namespace QL_HocVien.ViewModels
                 IsBusy = false;
             }
         }
+
+        #region Quản Lý Sơ Đồ Rễ Cây Đơn Vị & Đại Đội
+
+        [RelayCommand]
+        public void ToggleViewMode()
+        {
+            IsTreeViewMode = !IsTreeViewMode;
+        }
+
+        [RelayCommand]
+        public void ExpandAllTree()
+        {
+            SetExpandRecursive(UnitTreeNodes, true);
+        }
+
+        [RelayCommand]
+        public void CollapseAllTree()
+        {
+            SetExpandRecursive(UnitTreeNodes, false);
+        }
+
+        private void SetExpandRecursive(IEnumerable<UnitTreeNode> nodes, bool expand)
+        {
+            foreach (var node in nodes)
+            {
+                node.IsExpanded = expand;
+                if (node.HasChildren)
+                {
+                    SetExpandRecursive(node.Children, expand);
+                }
+            }
+        }
+
+        [RelayCommand]
+        public void SelectTreeNode(UnitTreeNode? node)
+        {
+            if (node == null) return;
+            DeselectAllRecursive(UnitTreeNodes);
+            node.IsSelected = true;
+            SelectedTreeNode = node;
+            if (node.Unit != null)
+            {
+                SelectedUnit = node.Unit;
+            }
+        }
+
+        private void DeselectAllRecursive(IEnumerable<UnitTreeNode> nodes)
+        {
+            foreach (var n in nodes)
+            {
+                n.IsSelected = false;
+                if (n.HasChildren) DeselectAllRecursive(n.Children);
+            }
+        }
+
+        [RelayCommand]
+        public async Task AddChildUnitAsync(UnitTreeNode? parentNode)
+        {
+            if (!await _securityGate.EnsureUnlockedAsync("Thêm mới đơn vị quân sự")) return;
+
+            SelectedTabIndex = 2;
+            IsEditing = false;
+            ClearForm();
+
+            FormTitle = $"Thêm Đơn Vị Trực Thuộc: {parentNode?.Name ?? "Đơn vị"}";
+            FormParentUnit = parentNode?.Name ?? "Tiểu đoàn 1";
+            IsFormVisible = true;
+        }
+
+        [RelayCommand]
+        public async Task EditUnitNodeAsync(UnitTreeNode? node)
+        {
+            if (node?.Unit == null) return;
+            SelectedTabIndex = 2;
+            SelectedUnit = node.Unit;
+            await OpenEditModalAsync();
+        }
+
+        [RelayCommand]
+        public async Task DeleteUnitNodeAsync(UnitTreeNode? node)
+        {
+            if (node?.Unit == null) return;
+            SelectedTabIndex = 2;
+            SelectedUnit = node.Unit;
+            await DeleteAsync();
+        }
+
+        public async Task BuildUnitTreeAsync()
+        {
+            UnitTreeNodes.Clear();
+            var allUnits = Units.ToList();
+            if (allUnits.Count == 0) return;
+
+            List<MilitaryClass> classes = new();
+            if (_classService != null)
+            {
+                try
+                {
+                    var clsList = await _classService.GetAllClassesAsync();
+                    classes = clsList.ToList();
+                }
+                catch { }
+            }
+
+            var existingUnitNames = new HashSet<string>(allUnits.Select(u => u.UnitName.Trim()), StringComparer.OrdinalIgnoreCase);
+
+            var missingParents = allUnits
+                .Where(u => !string.IsNullOrWhiteSpace(u.ParentUnit) &&
+                            !existingUnitNames.Contains(u.ParentUnit.Trim()) &&
+                            !u.ParentUnit.Equals("Học viện", StringComparison.OrdinalIgnoreCase) &&
+                            !u.ParentUnit.Equals("Bộ chỉ huy", StringComparison.OrdinalIgnoreCase))
+                .Select(u => u.ParentUnit.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            var createdRoots = new Dictionary<string, UnitTreeNode>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var pName in missingParents)
+            {
+                var virtualRoot = new UnitTreeNode
+                {
+                    NodeId = $"root_{pName}",
+                    Name = pName,
+                    Code = "e1",
+                    Level = 1,
+                    LevelName = "CẤP TRUNG ĐOÀN",
+                    Commander = "Chỉ huy trưởng Trung đoàn",
+                    Phone = "024.3756.999",
+                    Description = "Cơ quan chỉ huy trực tiếp cấp trên",
+                    Icon = "🏛️",
+                    BadgeBrush = "#8B1E1E",
+                    IsExpanded = true
+                };
+                UnitTreeNodes.Add(virtualRoot);
+                createdRoots[pName] = virtualRoot;
+            }
+
+            var rootUnits = allUnits.Where(u =>
+                string.IsNullOrWhiteSpace(u.ParentUnit) ||
+                u.ParentUnit.Equals("Học viện", StringComparison.OrdinalIgnoreCase) ||
+                u.ParentUnit.Equals("Bộ chỉ huy", StringComparison.OrdinalIgnoreCase) ||
+                !existingUnitNames.Contains(u.ParentUnit.Trim())
+            ).ToList();
+
+            foreach (var ru in rootUnits)
+            {
+                if (!string.IsNullOrWhiteSpace(ru.ParentUnit) && createdRoots.TryGetValue(ru.ParentUnit.Trim(), out var parentNode))
+                {
+                    int level = DetermineLevel(ru);
+                    var node = CreateUnitNode(ru, level, classes);
+                    parentNode.Children.Add(node);
+                    AttachChildrenRecursive(node, allUnits, classes);
+                }
+                else
+                {
+                    int level = DetermineLevel(ru);
+                    var node = CreateUnitNode(ru, level, classes);
+                    UnitTreeNodes.Add(node);
+                    AttachChildrenRecursive(node, allUnits, classes);
+                }
+            }
+
+            var addedUnitIds = new HashSet<int>();
+            CollectAddedUnitIds(UnitTreeNodes, addedUnitIds);
+            foreach (var u in allUnits)
+            {
+                if (!addedUnitIds.Contains(u.Id))
+                {
+                    var orphanNode = CreateUnitNode(u, 3, classes);
+                    UnitTreeNodes.Add(orphanNode);
+                    AttachChildrenRecursive(orphanNode, allUnits, classes);
+                }
+            }
+        }
+
+        private void CollectAddedUnitIds(IEnumerable<UnitTreeNode> nodes, HashSet<int> ids)
+        {
+            foreach (var n in nodes)
+            {
+                if (n.Unit != null) ids.Add(n.Unit.Id);
+                if (n.HasChildren) CollectAddedUnitIds(n.Children, ids);
+            }
+        }
+
+        private int DetermineLevel(MilitaryUnit u)
+        {
+            string name = (u.UnitName ?? "").ToLowerInvariant();
+            string code = (u.UnitCode ?? "").ToLowerInvariant();
+            if (name.Contains("trung đoàn") || name.Contains("học viện") || name.Contains("sư đoàn") || code.StartsWith("e")) return 1;
+            if (name.Contains("tiểu đoàn") || code.StartsWith("d")) return 2;
+            if (name.Contains("đại đội") || code.StartsWith("c")) return 3;
+            if (name.Contains("trung đội") || name.Contains("lớp") || code.StartsWith("b")) return 4;
+            return 3;
+        }
+
+        private UnitTreeNode CreateUnitNode(MilitaryUnit u, int level, List<MilitaryClass> classes)
+        {
+            string levelName = level switch
+            {
+                1 => "CẤP TRUNG ĐOÀN",
+                2 => "CẤP TIỂU ĐOÀN",
+                3 => "CẤP ĐẠI ĐỘI",
+                _ => "PHÂN ĐỘI"
+            };
+
+            string icon = level switch
+            {
+                1 => "🏛️",
+                2 => "🛡️",
+                3 => "🚩",
+                _ => "🎖️"
+            };
+
+            string badgeBrush = level switch
+            {
+                1 => "#8B1E1E",
+                2 => "#2E5A36",
+                3 => "#9C4116",
+                _ => "#1E426D"
+            };
+
+            var node = new UnitTreeNode
+            {
+                Unit = u,
+                NodeId = $"unit_{u.Id}",
+                Name = u.UnitName,
+                Code = u.UnitCode,
+                Level = level,
+                LevelName = levelName,
+                Commander = !string.IsNullOrWhiteSpace(u.CommanderName) ? u.CommanderName : "Chưa biên chế",
+                Phone = !string.IsNullOrWhiteSpace(u.ContactPhone) ? u.ContactPhone : "---",
+                Description = u.Description ?? string.Empty,
+                Icon = icon,
+                BadgeBrush = badgeBrush,
+                IsExpanded = level <= 2
+            };
+
+            return node;
+        }
+
+        private void AttachChildrenRecursive(UnitTreeNode parentNode, List<MilitaryUnit> allUnits, List<MilitaryClass> classes)
+        {
+            var childUnits = allUnits
+                .Where(u => !string.IsNullOrWhiteSpace(u.ParentUnit) &&
+                            u.ParentUnit.Trim().Equals(parentNode.Name.Trim(), StringComparison.OrdinalIgnoreCase) &&
+                            u.Id != parentNode.Unit?.Id)
+                .ToList();
+
+            foreach (var cu in childUnits)
+            {
+                int nextLevel = parentNode.Level + 1;
+                var childNode = CreateUnitNode(cu, nextLevel, classes);
+                parentNode.Children.Add(childNode);
+                AttachChildrenRecursive(childNode, allUnits, classes);
+            }
+
+            if (parentNode.Level >= 3 && !parentNode.IsClassLeaf)
+            {
+                var unitClasses = classes
+                    .Where(c => !string.IsNullOrWhiteSpace(c.Unit) &&
+                                c.Unit.Trim().Equals(parentNode.Name.Trim(), StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+
+                foreach (var cls in unitClasses)
+                {
+                    var classNode = new UnitTreeNode
+                    {
+                        NodeId = $"class_{cls.Id}",
+                        Name = $"{cls.ClassCode} - {cls.ClassName}",
+                        Code = cls.ClassCode,
+                        Level = 4,
+                        LevelName = "PHÂN ĐỘI / LỚP HỌC VIÊN",
+                        Commander = !string.IsNullOrWhiteSpace(cls.OfficerInCharge) ? cls.OfficerInCharge : "Chưa phân công",
+                        Phone = !string.IsNullOrWhiteSpace(cls.AcademicYear) ? cls.AcademicYear : "Niên khóa đào tạo",
+                        Description = $"Chuyên ngành: {cls.Major} | Khóa: {cls.AcademicYear}",
+                        Icon = "🎓",
+                        BadgeBrush = "#1E426D",
+                        IsClassLeaf = true,
+                        IsExpanded = false
+                    };
+                    parentNode.Children.Add(classNode);
+                }
+            }
+        }
+
+        #endregion
 
         private void ClearForm()
         {

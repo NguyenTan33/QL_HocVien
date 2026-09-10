@@ -146,7 +146,21 @@ namespace QL_HocVien
                                 else if (target.Contains("setting")) mainVm.NavigateToSettings();
                                 else if (target.Contains("cadet")) mainVm.NavigateToCadetManagement();
                                 else if (target.Contains("class")) mainVm.NavigateToClassManagement();
-                                else if (target.Contains("catalog")) mainVm.NavigateToCatalogManagement();
+                                else if (target.Contains("catalog") || target.Contains("unit") || target.Contains("tree"))
+                                {
+                                    mainVm.NavigateToCatalogManagement();
+                                    if (target.Contains("unit") || target.Contains("tree") || target.Contains("daidoi"))
+                                    {
+                                        if (mainVm.CurrentView is CatalogManagementViewModel catVm)
+                                        {
+                                            catVm.SelectedTabIndex = 2;
+                                            if (target.Contains("collapse"))
+                                            {
+                                                catVm.CollapseAllTree();
+                                            }
+                                        }
+                                    }
+                                }
                                 else if (target.Contains("dashboard")) mainVm.NavigateToDashboard();
                             }
                         }
