@@ -1,0 +1,39 @@
+name: .NET Core Desktop
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        configuration: [Debug, Release]
+
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    # Install .NET SDK 8.0
+    - name: Install .NET Core
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    # Restore NuGet packages (tự tìm sln/csproj)
+    - name: Restore dependencies
+      run: dotnet restore
+
+    # Build solution
+    - name: Build
+      run: dotnet build --no-restore --configuration ${{ matrix.configuration }}
+
+    # Chạy toàn bộ Unit Tests trong solution
+    - name: Execute unit tests
+      run: dotnet test --no-build --configuration ${{ matrix.configuration }} --verbosity normal

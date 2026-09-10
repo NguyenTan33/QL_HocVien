@@ -1,5 +1,5 @@
 # 🎖️ HỆ THỐNG QUẢN LÝ HỌC VIÊN QUÂN SỰ (QL_HocVien)
-### *Military Academy Cadet Management System — Chuẩn Thông tư 32/2009/TTLT-BQP-BVHTTDL & Quy chế Tín chỉ Quân sự*
+### *Military Academy Cadet Management System *
 
 <p align="center">
   <img src="Resources/app_icon.png" alt="Logo QL_HocVien" width="120" height="120" />
