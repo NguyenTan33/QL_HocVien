@@ -242,9 +242,9 @@ namespace QL_HocVien.Services.Implementations
                 .Select(kvp => kvp.Key)
                 .ToHashSet();
 
-            // Tá»•ng tÃ­n chá»‰ toÃ n khÃ³a chuáº©n (tÃ­nh tá»« cÃ¡c Ä‘á»£t thi hoáº·c 62.90 theo file Excel chuáº©n)
+            // Tổng tín chỉ toàn khóa chuẩn theo file Excel chuẩn (62.90 TC)
             double curriculumCredits = allComponents.Sum(c => c.Credits);
-            if (curriculumCredits <= 0) curriculumCredits = 62.90;
+            if (curriculumCredits <= 0 || curriculumCredits > 100) curriculumCredits = 62.90;
 
             var result = new List<CadetAcademicSummaryDto>();
 
@@ -262,7 +262,7 @@ namespace QL_HocVien.Services.Implementations
                     TotalCurriculumCredits = Math.Round(curriculumCredits, 2)
                 };
 
-                // Äiá»ƒm theo tá»«ng Ä‘á»£t kiá»ƒm tra cá»§a há»c viÃªn nÃ y
+                // Ä iá»ƒm theo tá»«ng Ä‘á»£t kiá»ƒm tra cá»§a há» c viÃªn nÃ y
                 var cadetCompScores = new Dictionary<int, double?>();
                 foreach (var comp in allComponents)
                 {
@@ -279,7 +279,7 @@ namespace QL_HocVien.Services.Implementations
                     }
                 }
 
-                // TÃ­nh Ä‘iá»ƒm mÃ´n lá»›n: Äiá»ƒm trung bÃ¬nh mÃ´n CHá»ˆ CÃ“ KHI 100% CÃC Cá»˜T Cá»¦A MÃ”N CHÃNH ÄÆ¯á»¢C NHáº¬P
+                // TÃ­nh Ä‘iá»ƒm mÃ´n lá»›n: Ä Điểm trung bình môn CHỈ CÓ KHI 100% CÁC CỘT CỦA MÔN CHÍNH ĐƯỢC NHẬP
                 foreach (var subj in majorSubjects)
                 {
                     var subjComps = subj.Components.OrderBy(c => c.OrderIndex).ToList();
@@ -301,8 +301,8 @@ namespace QL_HocVien.Services.Implementations
                     }
                 }
 
-                // Kiá»ƒm tra thiáº¿u Ä‘á»£t thi trong cÃ¡c Ä‘á»£t ÄÃƒ DIá»„N RA (>= 20 há»c viÃªn cÃ³ Ä‘iá»ƒm)
-                // Náº¿u Ä‘á»£t kiá»ƒm tra chÆ°a cÃ³ ai thi (< 20 há»c sinh) thÃ¬ coi nhÆ° chÆ°a diá»…n ra vÃ  KHÃ”NG bá»‹ Ä‘Ã¡nh vÃ ng
+                // Kiá»ƒm tra thiáº¿u Ä‘á»£t thi trong cÃ¡c Ä‘á»£t Ä Ãƒ DIá»„N RA (>= 20 há» c viÃªn cÃ³ Ä‘iá»ƒm)
+                // Náº¿u Ä‘á»£t kiá»ƒm tra chÆ°a cÃ³ ai thi (< 20 há» c sinh) thÃ¬ coi nhÆ° chÆ°a diá»…n ra vÃ  KHÃ”NG bá»‹ Ä‘Ã¡nh vÃ ng
                 var missingActiveComponentNames = new List<string>();
                 foreach (var comp in allComponents)
                 {
@@ -318,15 +318,20 @@ namespace QL_HocVien.Services.Implementations
                 dto.MissingSubjectsList = missingActiveComponentNames;
                 dto.MissingSubjectsCount = missingActiveComponentNames.Count;
 
-                // Tính GPA tích lũy toàn khóa trên các đợt thi đã hoàn thành
+                // Tính GPA tích lũy toàn khóa trên các đợt thi đã hoàn thành:
+                // Chuẩn Excel: TBM = SUM(điểm đợt kiểm tra có điểm * tín chỉ) / tổng tín chỉ của các đợt kiểm tra đó
                 if (allComponents.Count > 0)
                 {
                     var scoredComponents = allComponents
                         .Where(c => cadetCompScores.TryGetValue(c.Id, out var sc) && sc.HasValue && sc.Value >= 0)
-                        .Select(c => (score: cadetCompScores[c.Id]!.Value, credits: c.Credits));
+                        .Select(c => (score: cadetCompScores[c.Id]!.Value, credits: c.Credits))
+                        .ToList();
 
-                    dto.Gpa = _calculator.CalculateCurriculumTbm(scoredComponents, curriculumCredits);
-                    dto.TotalCreditsEarned = Math.Round(scoredComponents.Sum(sc => sc.credits), 2);
+                    double earnedCredits = Math.Round(scoredComponents.Sum(sc => sc.credits), 2);
+                    dto.TotalCreditsEarned = earnedCredits;
+
+                    // Chia cho tổng tín chỉ các đợt kiểm tra có điểm (không chia tổng cả môn nếu chưa học đủ)
+                    dto.Gpa = _calculator.CalculateCurriculumTbm(scoredComponents, earnedCredits);
                     dto.TotalSubjectsCompleted = majorSubjects.Count(s => dto.SubjectScores.TryGetValue(s.Id, out var sc) && sc.HasValue);
                 }
                 else
@@ -1359,26 +1364,23 @@ namespace QL_HocVien.Services.Implementations
                     if (!File.Exists(filePath))
                         return (false, "File không tồn tại trên hệ thống.", 0, 0);
 
-                    using var wb = new XLWorkbook(filePath);
+                    using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                    using var wb = new XLWorkbook(fs);
                     var ws = wb.Worksheets.FirstOrDefault();
                     if (ws == null)
                         return (false, "File Excel không chứa bất kỳ sheet nào.", 0, 0);
 
-                    // Dọn dẹp các môn học mẫu ban đầu nếu có
-                    var dummySubjs = await _context.CreditSubjects
-                        .Where(s => s.SubjectCode.StartsWith("TOAN01") || 
-                                    s.SubjectCode.StartsWith("TRIET01") || 
-                                    s.SubjectCode.StartsWith("ANH01") || 
-                                    s.SubjectCode.StartsWith("CHIEN01") || 
-                                    s.SubjectCode.StartsWith("PHAP01")).ToListAsync();
-                    if (dummySubjs.Any())
-                    {
-                        var dummyIds = dummySubjs.Select(s => s.Id).ToList();
-                        var dummyScores = await _context.CreditScoreRecords.Where(s => dummyIds.Contains(s.CreditSubjectId)).ToListAsync();
-                        _context.CreditScoreRecords.RemoveRange(dummyScores);
-                        _context.CreditSubjects.RemoveRange(dummySubjs);
-                        await _context.SaveChangesAsync();
-                    }
+                    // Dọn dẹp điểm số và môn học tín chỉ cũ để đồng bộ chuẩn theo cấu trúc mới của file Excel, bảo lưu 100% học viên
+                    var oldScores = await _context.CreditScoreRecords.ToListAsync();
+                    _context.CreditScoreRecords.RemoveRange(oldScores);
+
+                    var oldComps = await _context.SubjectAssessmentComponents.ToListAsync();
+                    _context.SubjectAssessmentComponents.RemoveRange(oldComps);
+
+                    var oldSubjs = await _context.CreditSubjects.ToListAsync();
+                    _context.CreditSubjects.RemoveRange(oldSubjs);
+
+                    await _context.SaveChangesAsync();
 
                     var res = await ExecuteImportStandardTbmExcelAsync(ws);
                     return (res.Success, res.Message, res.ImportedCadets, res.ImportedScores);
@@ -1418,7 +1420,8 @@ namespace QL_HocVien.Services.Implementations
                     await _context.SaveChangesAsync();
 
                     // 2. Nạp mới toàn bộ từ file Excel
-                    using var wb = new XLWorkbook(filePath);
+                    using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                    using var wb = new XLWorkbook(fs);
                     var ws = wb.Worksheets.FirstOrDefault();
                     if (ws == null)
                         return (false, "File Excel không chứa bất kỳ sheet nào.", 0, 0, 0);
