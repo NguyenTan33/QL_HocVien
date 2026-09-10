@@ -397,5 +397,93 @@ namespace QL_HocVien.Tests
                 }
             }
         }
+
+        [Fact]
+        public async Task Test_ImportRealStandardTbmExcel_ExactGrouping_And_TbmMatching()
+        {
+            var realFilePath = @"C:\Users\minht\Downloads\Điểm TBM chuẩn .xlsx";
+            if (!File.Exists(realFilePath))
+            {
+                // Bỏ qua nếu môi trường test không có file trên máy người dùng
+                return;
+            }
+
+            // 1. Thực hiện import từ file Excel chuẩn của người dùng
+            var (success, message, newCadets, importedScores) = await _creditService.ImportStandardTbmExcelAsync(realFilePath);
+            Assert.True(success, message);
+            Assert.Equal(66, newCadets);
+            Assert.True(importedScores > 0);
+
+            // 2. Kiểm tra việc gom nhóm môn học
+            // Có đúng 28 môn lớn (IsComponent = false)
+            var majorSubjects = await _context.CreditSubjects
+                .Where(s => !s.IsComponent)
+                .Include(s => s.Components)
+                .ToListAsync();
+            Assert.Equal(28, majorSubjects.Count);
+
+            // Có đúng 57 bài kiểm tra / môn thành phần (SubjectAssessmentComponent)
+            var components = await _context.SubjectAssessmentComponents.ToListAsync();
+            Assert.Equal(57, components.Count);
+
+            // Tổng số tín chỉ của các môn/thành phần = 62.90
+            var totalCredits = Math.Round(components.Sum(c => c.Credits), 2);
+            Assert.Equal(62.90, totalCredits);
+
+            // 3. Kiểm tra chi tiết một số môn lớn quan trọng
+            var toan = majorSubjects.FirstOrDefault(m => m.SubjectName == "Toán");
+            Assert.NotNull(toan);
+            Assert.Equal(1.0, toan.Credits);
+
+            var banSung = majorSubjects.FirstOrDefault(m => m.SubjectName == "Bắn súng");
+            Assert.NotNull(banSung);
+            Assert.Equal(6, banSung.Components.Count);
+            Assert.Equal(5.2, Math.Round(banSung.Credits, 2));
+
+            var cntt = majorSubjects.FirstOrDefault(m => m.SubjectName == "CNTT");
+            Assert.NotNull(cntt);
+            Assert.Equal(4, cntt.Components.Count);
+            Assert.Equal(4.1, Math.Round(cntt.Credits, 2));
+
+            var theLuc = majorSubjects.FirstOrDefault(m => m.SubjectName == "Thể lực");
+            Assert.NotNull(theLuc);
+            Assert.Equal(4, theLuc.Components.Count);
+            Assert.Equal(3.2, Math.Round(theLuc.Credits, 2));
+
+            // 4. Kiểm tra điểm TBM và MSSV của các học viên mẫu khớp chuẩn 100% với Excel
+            var summaries = await _creditService.GetCadetAcademicSummariesAsync();
+            Assert.Equal(66, summaries.Count);
+
+            // HD123 - Đặng Thắng An -> 7.74
+            var s123 = summaries.FirstOrDefault(c => c.CadetCode == "HD123");
+            Assert.NotNull(s123);
+            Assert.Equal("Đặng Thắng An", s123.FullName);
+            Assert.Equal("b2", s123.Unit);
+            Assert.Equal(7.74, s123.Gpa);
+
+            // HD124 - Nguyễn Lê Quốc An -> 8.01
+            var s124 = summaries.FirstOrDefault(c => c.CadetCode == "HD124");
+            Assert.NotNull(s124);
+            Assert.Equal(8.01, s124.Gpa);
+
+            // HD187 - Huỳnh Chí Vỹ -> 7.61
+            var s187 = summaries.FirstOrDefault(c => c.CadetCode == "HD187");
+            Assert.NotNull(s187);
+            Assert.Equal(7.61, s187.Gpa);
+
+            // 5. Kiểm tra toàn bộ 66 học viên so với cột TBM (Cột 64) trong file Excel gốc
+            using var workbook = new XLWorkbook(realFilePath);
+            var ws = workbook.Worksheets.First();
+            for (int r = 5; r <= 69; r++)
+            {
+                var code = ws.Cell(r, 2).GetString().Trim();
+                var expectedTbm = Math.Round(ws.Cell(r, 64).GetDouble(), 2);
+
+                var s = summaries.FirstOrDefault(c => c.CadetCode == code);
+                Assert.NotNull(s);
+                Assert.True(Math.Abs(expectedTbm - s.Gpa) < 0.001,
+                    $"Học viên {code} ({s.FullName}) tính ra {s.Gpa} nhưng Excel là {expectedTbm}");
+            }
+        }
     }
 }

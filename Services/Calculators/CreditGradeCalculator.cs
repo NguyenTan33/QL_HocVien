@@ -58,7 +58,9 @@ namespace QL_HocVien.Services.Calculators
             }
 
             // Chuẩn Excel ROUNDDOWN 2 chữ số thập phân: Math.Floor(x * 100) / 100
-            return Math.Floor((weightedSum / totalCurriculumCredits) * 100.0) / 100.0;
+            // Khử sai số làm tròn dấu chấm động của vi xử lý trước khi Floor
+            double raw = Math.Round(weightedSum / totalCurriculumCredits, 8);
+            return Math.Floor(raw * 100.0) / 100.0;
         }
 
         public (bool HasMissing, List<string> MissingList, int MissingCount) IdentifyMissingSubjects(

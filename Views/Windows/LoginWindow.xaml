@@ -230,7 +230,7 @@
                             <Button Content="🔑 Nhập Passkey" Height="22" Padding="8,0"
                                     Background="#8F1515" Foreground="#FFE17A" BorderBrush="#D4B547" BorderThickness="1"
                                     FontSize="10" FontWeight="Bold" Cursor="Hand"
-                                    ToolTip="Tùy chọn: Kích hoạt trước bản quyền vĩnh viễn cho tài khoản"
+                                    ToolTip="Tùy chọn: Kích hoạt bản quyền vĩnh viễn cho tài khoản"
                                     Command="{Binding OpenPasskeyModalCommand}">
                                 <Button.Resources>
                                     <Style TargetType="Border">
@@ -562,7 +562,7 @@
                         </Grid>
                     </Grid>
 
-                    <!-- ==================== HỘP THOẠI MODAL: KÍCH HOẠT 10 PASSKEY BẢN QUYỀN ==================== -->
+                    <!-- ==================== HỘP THOẠI MODAL: KÍCH HOẠT PASSKEY BẢN QUYỀN ==================== -->
                     <Grid x:Name="PasskeyModalGrid" DataContext="{Binding LoginVm}"
                           Background="#B5000000"
                           Visibility="{Binding IsPasskeyModalVisible, Converter={x:Static local_cv:BooleanToVisibilityConverter.Instance}, FallbackValue=Collapsed}"
@@ -596,7 +596,7 @@
                                 </Border>
 
                                 <!-- Nhập mã Passkey -->
-                                <TextBlock Text="Mã Passkey bản quyền (Ví dụ: QD-2026-HQ88-K01A):" FontSize="12" FontWeight="SemiBold" Foreground="#F7F1D4" Margin="0,0,0,4"/>
+                                <TextBlock Text="Mã Passkey bản quyền:" FontSize="12" FontWeight="SemiBold" Foreground="#F7F1D4" Margin="0,0,0,4"/>
                                 <Border CornerRadius="6" Background="#2B3D2B" BorderBrush="#D4B547" BorderThickness="1.5" Height="42" Padding="10,0" Margin="0,0,0,20">
                                     <TextBox Text="{Binding PasskeyInput, UpdateSourceTrigger=PropertyChanged}"
                                              Background="Transparent" Foreground="#36C567" FontWeight="ExtraBold" FontSize="15"

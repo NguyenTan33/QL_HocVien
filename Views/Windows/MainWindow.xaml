@@ -7,7 +7,7 @@
         xmlns:views="clr-namespace:QL_HocVien.Views.UserControls"
         xmlns:local_cv="clr-namespace:QL_HocVien.Converters"
         mc:Ignorable="d"
-        Title="Hệ Thống Quản Lý Học Viên Quân Đội - Tiêu Chuẩn Thể Lực TT32"
+        Title="Hệ Thống Quản Lý Học Viên Quân Đội"
         Icon="pack://application:,,,/QL_HocVien;component/Resources/app_icon.ico"
         Height="800" Width="1280"
         MinHeight="680" MinWidth="1050"
@@ -168,7 +168,7 @@
                             </Style>
                         </TextBlock.Style>
                     </TextBlock>
-                    <TextBlock Text="  HỆ THỐNG QUẢN LÝ HỌC VIÊN &amp; RÈN LUYỆN THỂ LỰC (TT 32/2009)" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center">
+                    <TextBlock Text="  HỆ THỐNG QUẢN LÝ HỌC VIÊN " FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
                                 <Setter Property="Foreground" Value="#F7F1D4"/>
@@ -514,7 +514,7 @@
                                     Visibility="{Binding IsAdmin, Converter={x:Static local_cv:BooleanToVisibilityConverter.Instance}}">
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                     <TextBlock Text="⚙" FontSize="14" Foreground="{DynamicResource SidebarIconBrush}" Width="24" TextAlignment="Center" Margin="0,0,8,0"/>
-                                    <TextBlock Text="Cài Đặt &amp; Bảo Mật" FontSize="12.5"/>
+                                    <TextBlock Text="Cài Đặt" FontSize="12.5"/>
                                 </StackPanel>
                             </Button>
                         </StackPanel>
@@ -546,7 +546,7 @@
 
                             <!-- Tên và vai trò -->
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding CurrentUser.FullName, FallbackValue='Quản Trị Viên Hệ Thống'}" 
+                                <TextBlock Text="{Binding CurrentUser.FullName, FallbackValue='Nguyễn Lê Quốc An'}" 
                                            FontWeight="Bold" FontSize="12" Foreground="#F7F1D4" TextTrimming="CharacterEllipsis"/>
                                 <Border Background="#168A40" CornerRadius="4" Padding="7,2" HorizontalAlignment="Left" Margin="0,3,0,0">
                                     <TextBlock Text="{Binding CurrentUser.Role, FallbackValue='Admin'}" FontSize="9.5" FontWeight="Bold" Foreground="#FFFFFF"/>
@@ -555,7 +555,7 @@
 
                             <!-- Nút Đăng xuất cửa đỏ chuẩn DemoUI -->
                             <Button Grid.Column="2" Width="26" Height="30" Background="Transparent" BorderThickness="0"
-                                    Cursor="Hand" ToolTip="Đăng xuất khỏi hệ thống" VerticalAlignment="Center"
+                                    Cursor="Hand" ToolTip="Đăng Xuất" VerticalAlignment="Center"
                                     Command="{Binding LogoutCommand}">
                                 <Image Source="/Assets/Images/logout_icon.png" Width="18" Height="22" Stretch="Uniform"/>
                             </Button>
@@ -618,9 +618,8 @@
                         <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock Text="● " Foreground="#22C55E" FontSize="9"/>
                             <TextBlock Text="HỆ THỐNG SẴN SÀNG" FontSize="11" FontWeight="Bold" Foreground="#CBD5E1"/>
-                            <TextBlock Text="  |  Cơ sở dữ liệu SQLite &amp; Mã hóa AES-256" FontSize="11" Foreground="#64748B"/>
                         </StackPanel>
-                        <TextBlock Grid.Column="1" Text="QUẢN TRỊ CÔNG TÁC HỌC VIÊN &amp; TIÊU CHUẨN THỂ LỰC TT 32/2009" 
+                        <TextBlock Grid.Column="1" Text="QUẢN TRỊ CÔNG TÁC HỌC VIÊN" 
                                    FontSize="11" FontWeight="SemiBold" Foreground="#64748B" HorizontalAlignment="Center"/>
                         <TextBlock Grid.Column="2" Text="CHẾ ĐỘ HÀNH CHÍNH (BASIC ENTERPRISE)" FontSize="10" FontWeight="Bold" Foreground="#38BDF8"/>
                     </Grid>
