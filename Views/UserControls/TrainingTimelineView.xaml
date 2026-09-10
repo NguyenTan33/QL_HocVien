@@ -14,10 +14,17 @@
 
         <!-- Nút Trắng Ngà Dã Chiến (✓ Đổi Hoàn Thành, ✏ Sửa) chuẩn Celandar.png -->
         <Style x:Key="ParchmentOutlineButton" TargetType="Button">
-            <Setter Property="Background" Value="#EFE7D5"/>
-            <Setter Property="BorderBrush" Value="#C5BAA0"/>
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#FBF7EE" Offset="0"/>
+                        <GradientStop Color="#EFE6D2" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="BorderBrush" Value="#C2B59B"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Foreground" Value="#1E2518"/>
+            <Setter Property="Foreground" Value="#1A2216"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="Padding" Value="12,5"/>
@@ -30,15 +37,27 @@
                                 BorderThickness="{TemplateBinding BorderThickness}" 
                                 CornerRadius="5" Padding="{TemplateBinding Padding}"
                                 SnapsToDevicePixels="True">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="3" ShadowDepth="1" Direction="270" Opacity="0.10" Color="#2A241A"/>
+                            </Border.Effect>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                              TextBlock.Foreground="{TemplateBinding Foreground}"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#E5DCC2"/>
-                                <Setter TargetName="border" Property="BorderBrush" Value="#AFA083"/>
+                                <Setter TargetName="border" Property="Background">
+                                    <Setter.Value>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                            <GradientStop Color="#FFFDF8" Offset="0"/>
+                                            <GradientStop Color="#F3ECD9" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Setter.Value>
+                                </Setter>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#A8997B"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#D9CDAE"/>
+                                <Setter TargetName="border" Property="Background" Value="#E4DAC0"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#96876A"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -48,8 +67,15 @@
 
         <!-- Nút Đỏ Xóa Dã Chiến (🗑 Xóa) chuẩn Celandar.png -->
         <Style x:Key="ParchmentDangerButton" TargetType="Button">
-            <Setter Property="Background" Value="#9E1616"/>
-            <Setter Property="BorderBrush" Value="#801010"/>
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#C51F1F" Offset="0"/>
+                        <GradientStop Color="#9E1414" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="BorderBrush" Value="#831010"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Foreground" Value="#FFFFFF"/>
             <Setter Property="FontWeight" Value="Bold"/>
@@ -64,15 +90,27 @@
                                 BorderThickness="{TemplateBinding BorderThickness}" 
                                 CornerRadius="5" Padding="{TemplateBinding Padding}"
                                 SnapsToDevicePixels="True">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="3" ShadowDepth="1" Direction="270" Opacity="0.25" Color="#330000"/>
+                            </Border.Effect>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                              TextBlock.Foreground="{TemplateBinding Foreground}"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#BD2020"/>
+                                <Setter TargetName="border" Property="Background">
+                                    <Setter.Value>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                            <GradientStop Color="#D92626" Offset="0"/>
+                                            <GradientStop Color="#B01818" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Setter.Value>
+                                </Setter>
                                 <Setter TargetName="border" Property="BorderBrush" Value="#E53935"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#881212"/>
+                                <Setter TargetName="border" Property="Background" Value="#8A1010"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#6E0C0C"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -107,7 +145,8 @@
                             <Border.Effect>
                                 <DropShadowEffect BlurRadius="6" ShadowDepth="2" Opacity="0.30" Color="#000000"/>
                             </Border.Effect>
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                              TextBlock.Foreground="{TemplateBinding Foreground}"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
@@ -152,7 +191,8 @@
                                 BorderThickness="{TemplateBinding BorderThickness}" 
                                 CornerRadius="5" Padding="{TemplateBinding Padding}"
                                 SnapsToDevicePixels="True">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                              TextBlock.Foreground="{TemplateBinding Foreground}"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
@@ -190,7 +230,8 @@
                                 BorderThickness="{TemplateBinding BorderThickness}" 
                                 CornerRadius="5" Padding="{TemplateBinding Padding}"
                                 SnapsToDevicePixels="True">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                              TextBlock.Foreground="{TemplateBinding Foreground}"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
@@ -227,7 +268,8 @@
                                 BorderThickness="{TemplateBinding BorderThickness}" 
                                 CornerRadius="5" Padding="{TemplateBinding Padding}"
                                 SnapsToDevicePixels="True">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                              TextBlock.Foreground="{TemplateBinding Foreground}"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
@@ -257,7 +299,8 @@
                                 BorderThickness="{TemplateBinding BorderThickness}" 
                                 CornerRadius="5" Padding="{TemplateBinding Padding}"
                                 SnapsToDevicePixels="True">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                              TextBlock.Foreground="{TemplateBinding Foreground}"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
@@ -307,7 +350,7 @@
                 <!-- Cụm 3 nút thao tác góc trên bên phải chuẩn Celandar.png -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                     <!-- Nút 1: Chuyển đổi Cuộn Lịch Tháng / Dòng Thời Gian -->
-                    <Button Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,0" Height="36"
+                    <Button Style="{StaticResource TopHeaderDarkButton}" Margin="0,0,10,0" Height="36"
                             Command="{Binding SwitchToCalendarViewCommand}"
                             Visibility="{Binding IsCalendarViewVisible, Converter={StaticResource InvBoolToVis}}">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -315,7 +358,7 @@
                             <TextBlock Text="Xem Cuộn Lịch Tháng" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
-                    <Button Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,0" Height="36"
+                    <Button Style="{StaticResource TopHeaderDarkButton}" Margin="0,0,10,0" Height="36"
                             Command="{Binding SwitchToTimelineViewCommand}"
                             Visibility="{Binding IsCalendarViewVisible, Converter={StaticResource BoolToVis}}">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -325,7 +368,7 @@
                     </Button>
 
                     <!-- Nút 2: Tải lại lịch -->
-                    <Button Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,10,0" Height="36"
+                    <Button Style="{StaticResource TopHeaderDarkButton}" Margin="0,0,10,0" Height="36"
                             Command="{Binding LoadEventsCommand}">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock Text="🔄  " FontSize="13" VerticalAlignment="Center"/>
@@ -334,7 +377,7 @@
                     </Button>
 
                     <!-- Nút 3: Thêm mốc sự kiện đỏ quân kỳ viền vàng -->
-                    <Button Style="{StaticResource PrimaryButtonStyle}" Height="36"
+                    <Button Style="{StaticResource TopHeaderCrimsonButton}" Height="36"
                             Command="{Binding OpenAddFormCommand}">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock Text="➕  " FontSize="13" VerticalAlignment="Center"/>
@@ -469,7 +512,7 @@
                     </StackPanel>
 
                     <!-- Nút Lọc Lịch Trình (Đỏ viền vàng với icon phễu) -->
-                    <Button Grid.Column="4" Style="{StaticResource PrimaryButtonStyle}" 
+                    <Button Grid.Column="4" Style="{StaticResource FilterCrimsonButton}" 
                             VerticalAlignment="Bottom" Height="34" Padding="20,0"
                             Command="{Binding LoadEventsCommand}">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -480,7 +523,7 @@
                     </Button>
 
                     <!-- Nút Tất Cả (Reset) -->
-                    <Button Grid.Column="6" Content="Tất Cả" Style="{StaticResource SecondaryButtonStyle}" 
+                    <Button Grid.Column="6" Content="Tất Cả" Style="{StaticResource FilterResetButton}" 
                             VerticalAlignment="Bottom" Height="34" Padding="18,0"
                             Command="{Binding ResetFilterCommand}"/>
                 </Grid>
@@ -616,25 +659,25 @@
 
                                                         <!-- Hàng 3: Các nút hành động góc dưới phải chuẩn Celandar.png -->
                                                         <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,4,0,0">
-                                                            <Button Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"
+                                                            <Button Style="{StaticResource ParchmentOutlineButton}" Margin="0,0,8,0"
                                                                     Command="{Binding DataContext.ToggleCompleteCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                                     CommandParameter="{Binding}">
                                                                 <StackPanel Orientation="Horizontal">
-                                                                    <TextBlock Text="✓ " FontWeight="Bold" Foreground="#1E2518"/>
-                                                                    <TextBlock Text="Đổi Hoàn Thành" Foreground="#1E2518"/>
+                                                                    <TextBlock Text="✓ " FontWeight="Bold" Foreground="#1A2216"/>
+                                                                    <TextBlock Text="Đổi Hoàn Thành" Foreground="#1A2216" FontWeight="SemiBold"/>
                                                                 </StackPanel>
                                                             </Button>
 
-                                                            <Button Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"
+                                                            <Button Style="{StaticResource ParchmentOutlineButton}" Margin="0,0,8,0"
                                                                     Command="{Binding DataContext.OpenEditFormCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                                     CommandParameter="{Binding}">
                                                                 <StackPanel Orientation="Horizontal">
-                                                                    <TextBlock Text="✏ " FontSize="11" Foreground="#1E2518"/>
-                                                                    <TextBlock Text="Sửa" Foreground="#1E2518"/>
+                                                                    <TextBlock Text="✏ " FontSize="11" Foreground="#1A2216"/>
+                                                                    <TextBlock Text="Sửa" Foreground="#1A2216" FontWeight="SemiBold"/>
                                                                 </StackPanel>
                                                             </Button>
 
-                                                            <Button Style="{StaticResource DangerButtonStyle}"
+                                                            <Button Style="{StaticResource ParchmentDangerButton}"
                                                                     Command="{Binding DataContext.DeleteEventCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                                     CommandParameter="{Binding}">
                                                                 <StackPanel Orientation="Horizontal">
@@ -682,10 +725,10 @@
                                     </Grid.ColumnDefinitions>
 
                                     <StackPanel Grid.Column="0" Orientation="Horizontal">
-                                        <Button Content="◀ Tháng Trước" Style="{StaticResource SecondaryButtonStyle}" 
-                                                Margin="0,0,6,0" Command="{Binding PreviousMonthCommand}"/>
-                                        <Button Content="Hôm Nay" Style="{StaticResource SecondaryButtonStyle}" 
-                                                Command="{Binding TodayCommand}"/>
+                                        <Button Content="◀ Tháng Trước" Style="{StaticResource ParchmentOutlineButton}" 
+                                                Padding="10,5" Margin="0,0,6,0" Command="{Binding PreviousMonthCommand}"/>
+                                        <Button Content="Hôm Nay" Style="{StaticResource ParchmentOutlineButton}" 
+                                                Padding="10,5" Command="{Binding TodayCommand}"/>
                                     </StackPanel>
 
                                     <!-- Tiêu đề Tháng Năm -->
@@ -693,8 +736,8 @@
                                                FontSize="15" FontWeight="ExtraBold" Foreground="#0F172A"
                                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
-                                    <Button Grid.Column="2" Content="Tháng Sau ▶" Style="{StaticResource SecondaryButtonStyle}" 
-                                            Command="{Binding NextMonthCommand}"/>
+                                    <Button Grid.Column="2" Content="Tháng Sau ▶" Style="{StaticResource ParchmentOutlineButton}" 
+                                            Padding="10,5" Command="{Binding NextMonthCommand}"/>
                                 </Grid>
                             </Border>
 
@@ -898,15 +941,15 @@
 
                                                                 <!-- Nút thao tác -->
                                                                 <WrapPanel Grid.Row="3" HorizontalAlignment="Right" Margin="0,4,0,0">
-                                                                    <Button Content="✓ Hoàn Thành" Style="{StaticResource SecondaryButtonStyle}" 
-                                                                            Padding="8,3" Margin="0,0,4,0" FontSize="11"
+                                                                    <Button Content="✓ Hoàn Thành" Style="{StaticResource ParchmentOutlineButton}" 
+                                                                            Padding="8,3" Margin="0,0,4,0" FontSize="11" FontWeight="SemiBold"
                                                                             Command="{Binding DataContext.ToggleCompleteCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                                             CommandParameter="{Binding}"/>
-                                                                    <Button Content="✏ Sửa" Style="{StaticResource SecondaryButtonStyle}" 
-                                                                            Padding="8,3" Margin="0,0,4,0" FontSize="11"
+                                                                    <Button Content="✏ Sửa" Style="{StaticResource ParchmentOutlineButton}" 
+                                                                            Padding="8,3" Margin="0,0,4,0" FontSize="11" FontWeight="SemiBold"
                                                                             Command="{Binding DataContext.OpenEditFormCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                                             CommandParameter="{Binding}"/>
-                                                                    <Button Content="🗑" Style="{StaticResource DangerButtonStyle}" 
+                                                                    <Button Content="🗑 Xóa" Style="{StaticResource ParchmentDangerButton}" 
                                                                             Padding="8,3" FontSize="11"
                                                                             Command="{Binding DataContext.DeleteEventCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                                             CommandParameter="{Binding}"/>
@@ -938,7 +981,7 @@
                                                                HorizontalAlignment="Center" Margin="0,0,0,16"/>
                                                     
                                                     <!-- Nút Đỏ Gradient Quân Kỳ Viền Vàng chuẩn Celandar.png -->
-                                                    <Button Style="{StaticResource PrimaryButtonStyle}" 
+                                                    <Button Style="{StaticResource ParchmentRedActionButton}" 
                                                             Padding="20,9" HorizontalAlignment="Center"
                                                             Command="{Binding AddEventForSelectedDayCommand}">
                                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -954,7 +997,7 @@
                             </Border>
 
                             <!-- Nút đỏ lớn ở chân bảng: + Thêm Mốc Sự Kiện Mới -->
-                            <Button Grid.Row="2" Style="{StaticResource PrimaryButtonStyle}" 
+                            <Button Grid.Row="2" Style="{StaticResource ParchmentRedActionButton}" 
                                     Height="42" Margin="0,12,0,0" Padding="14,0" HorizontalAlignment="Stretch"
                                     Command="{Binding OpenAddFormCommand}">
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -1059,11 +1102,11 @@
 
                                 <!-- Các nút Lưu và Hủy -->
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,4,0,0">
-                                    <Button Content="✕ Hủy" Style="{StaticResource SecondaryButtonStyle}" 
+                                    <Button Content="✕ Hủy" Style="{StaticResource ParchmentOutlineButton}" 
                                             Padding="16,8" Margin="0,0,8,0"
                                             Command="{Binding CloseFormCommand}"/>
 
-                                    <Button Style="{StaticResource PrimaryButtonStyle}" 
+                                    <Button Style="{StaticResource ParchmentRedActionButton}" 
                                             Padding="18,8"
                                             Command="{Binding SaveEventCommand}">
                                         <StackPanel Orientation="Horizontal">
