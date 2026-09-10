@@ -411,7 +411,7 @@ namespace QL_HocVien.Tests
             // 1. Thực hiện import từ file Excel chuẩn của người dùng
             var (success, message, newCadets, importedScores) = await _creditService.ImportStandardTbmExcelAsync(realFilePath);
             Assert.True(success, message);
-            Assert.Equal(66, newCadets);
+            Assert.Equal(65, newCadets); // File Excel có 65 học viên (STT 33 bị khuyết trong file gốc, từ HD123 đến HD187)
             Assert.True(importedScores > 0);
 
             // 2. Kiểm tra việc gom nhóm môn học
@@ -452,7 +452,8 @@ namespace QL_HocVien.Tests
 
             // 4. Kiểm tra điểm TBM và MSSV của các học viên mẫu khớp chuẩn 100% với Excel
             var summaries = await _creditService.GetCadetAcademicSummariesAsync();
-            Assert.Equal(66, summaries.Count);
+            var hdSummaries = summaries.Where(c => c.CadetCode.StartsWith("HD")).ToList();
+            Assert.Equal(65, hdSummaries.Count);
 
             // HD123 - Đặng Thắng An -> 7.74
             var s123 = summaries.FirstOrDefault(c => c.CadetCode == "HD123");

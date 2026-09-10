@@ -982,6 +982,31 @@ namespace QL_HocVien.Services.Implementations
                 }
             }
 
+            // Kiểm tra phân tách Họ đệm, Tên, Họ và tên từ dòng học viên đầu tiên
+            if (studentStartRow > 0)
+            {
+                for (int c = 1; c <= 8; c++)
+                {
+                    string v1 = ws.Cell(studentStartRow, c).GetString().Trim();
+                    string v2 = ws.Cell(studentStartRow, c + 1).GetString().Trim();
+                    string v3 = ws.Cell(studentStartRow, c + 2).GetString().Trim();
+
+                    if (!string.IsNullOrWhiteSpace(v1) && !string.IsNullOrWhiteSpace(v2) && !string.IsNullOrWhiteSpace(v3))
+                    {
+                        string combinedName = $"{v1} {v2}".Trim();
+                        if (v3.Equals(combinedName, StringComparison.OrdinalIgnoreCase) || 
+                            (v3.StartsWith(v1, StringComparison.OrdinalIgnoreCase) && v3.EndsWith(v2, StringComparison.OrdinalIgnoreCase)))
+                        {
+                            meta.ColLastName = c;
+                            meta.ColFirstName = c + 1;
+                            meta.ColFullName = c + 2;
+                            maxMetaCol = Math.Max(maxMetaCol, c + 2);
+                            break;
+                        }
+                    }
+                }
+            }
+
             if (meta.ColCode == 2 && meta.ColUnit == -1)
             {
                 string uVal = ws.Cell(studentStartRow, 3).GetString().Trim();
@@ -1027,6 +1052,7 @@ namespace QL_HocVien.Services.Implementations
         {
             var result = new Dictionary<int, (string Name, double Credits)>();
             var scannedNames = new List<(int Col, string RawName)>();
+            int consecutiveEmpty = 0;
 
             for (int c = startCol; c <= 120; c++)
             {
@@ -1038,12 +1064,13 @@ namespace QL_HocVien.Services.Implementations
 
                 if (string.IsNullOrWhiteSpace(subjName))
                 {
-                    string nextVal = ws.Cell(headerRow, c + 1).GetString().Trim();
-                    if (IsSummaryOrEndColumn(nextVal) || string.IsNullOrWhiteSpace(nextVal))
+                    consecutiveEmpty++;
+                    if (scannedNames.Count > 0 && consecutiveEmpty >= 3)
                         break;
                     continue;
                 }
 
+                consecutiveEmpty = 0;
                 scannedNames.Add((c, subjName));
             }
 
