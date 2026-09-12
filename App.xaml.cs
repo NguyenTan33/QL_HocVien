@@ -195,46 +195,7 @@ namespace QL_HocVien
                     return;
                 }
 
-                // Kiểm tra bản cập nhật hệ thống trước khi hiển thị màn hình Đăng nhập (Auto-Update)
-                if (!Array.Exists(e.Args, a => a == "--skip-update" || a == "--screenshot"))
-                {
-                    try
-                    {
-                        var updateService = ServiceProvider.GetRequiredService<IUpdateService>();
-                        var updateResult = await updateService.CheckForUpdateAsync();
-
-                        if (updateResult.HasUpdate)
-                        {
-                            var updateWindow = ServiceProvider.GetRequiredService<UpdateWindow>();
-                            updateWindow.Initialize(updateResult);
-
-                            bool? dialogResult = updateWindow.ShowDialog();
-
-                            // Nếu bản cập nhật bắt buộc mà không cập nhật -> Thoát hoàn toàn
-                            if (updateResult.IsMandatory && dialogResult != true)
-                            {
-                                Shutdown(0);
-                                return;
-                            }
-
-                            // Nếu người dùng đã bấm cập nhật và installer đã được kích hoạt -> Thoát
-                            if (dialogResult == true)
-                            {
-                                return;
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        // Lỗi mạng hoặc lỗi kiểm tra cập nhật không được làm sập ứng dụng
-                        try
-                        {
-                            File.AppendAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "update_error.log"),
-                                $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] Lỗi kiểm tra cập nhật: {ex.Message}\n");
-                        }
-                        catch { }
-                    }
-                }
+                // Bỏ luồng tự động kiểm tra cập nhật khi khởi động để chạy offline mượt mà không bị làm phiền
 
                 // Hiển thị màn hình Đăng nhập đầu tiên
                 var loginWindow = ServiceProvider.GetRequiredService<LoginWindow>();
