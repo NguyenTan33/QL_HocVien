@@ -125,10 +125,10 @@ namespace QL_HocVien.Services.Implementations
                     Code = pName,
                     Value = pName,
                     Level = pLevel,
-                    LevelName = pLevel switch { 1 => "CẤP TRUNG ĐOÀN", 2 => "CẤP TIỂU ĐOÀN", _ => "CẤP TRÊN" },
-                    Commander = "Chỉ huy trưởng",
-                    Icon = pLevel == 1 ? "🏛️" : "🛡️",
-                    BadgeBrush = pLevel == 1 ? "#8B1E1E" : "#2E5A36",
+                    LevelName = pLevel switch { 0 => "CẤP KHÓA HỌC", 1 => "CẤP TRUNG ĐOÀN", 2 => "CẤP TIỂU ĐOÀN", _ => "CẤP TRÊN" },
+                    Commander = pLevel == 0 ? "Ban Chỉ huy Khóa" : "Chỉ huy trưởng",
+                    Icon = pLevel == 0 ? "🎓" : pLevel == 1 ? "🏛️" : "🛡️",
+                    BadgeBrush = pLevel == 0 ? "#1E40AF" : pLevel == 1 ? "#8B1E1E" : "#2E5A36",
                     IsExpanded = true
                 };
                 roots.Add(virtualRoot);
@@ -218,6 +218,7 @@ namespace QL_HocVien.Services.Implementations
             string name = (u.UnitName ?? "").ToLowerInvariant();
             string code = (u.UnitCode ?? "").ToLowerInvariant();
 
+            if (name.Contains("khóa") || code.StartsWith("k") || name.StartsWith("k")) return 0;
             if (name.Contains("trung đoàn") || name.Contains("học viện") || name.Contains("sư đoàn") || code.StartsWith("e")) return 1;
             if (name.Contains("tiểu đoàn") || code.StartsWith("d")) return 2;
             if (name.Contains("đại đội") || code.StartsWith("c")) return 3;
@@ -231,6 +232,7 @@ namespace QL_HocVien.Services.Implementations
         {
             string levelName = level switch
             {
+                0 => "CẤP KHÓA HỌC",
                 1 => "CẤP TRUNG ĐOÀN",
                 2 => "CẤP TIỂU ĐOÀN",
                 3 => "CẤP ĐẠI ĐỘI",
@@ -242,6 +244,7 @@ namespace QL_HocVien.Services.Implementations
 
             string icon = level switch
             {
+                0 => "🎓",
                 1 => "🏛️",
                 2 => "🛡️",
                 3 => "🚩",
@@ -253,13 +256,14 @@ namespace QL_HocVien.Services.Implementations
 
             string badgeBrush = level switch
             {
+                0 => "#1E40AF",
                 1 => "#8B1E1E", // Đỏ cờ
                 2 => "#2E5A36", // Xanh lục quân
-                3 => "#9C4116", // Nâu đồng
-                4 => "#1E426D", // Xanh navy
-                5 => "#4F46E5", // Tím chàm
-                6 => "#0D9488", // Xanh mòng két
-                _ => "#334155"
+                3 => "#1E3A8A", // Xanh navy
+                4 => "#B45309", // Nâu đồng
+                5 => "#4338CA", // Tím chàm
+                6 => "#047857", // Xanh mòng két
+                _ => "#475569"
             };
 
             return new UnitTreeNode

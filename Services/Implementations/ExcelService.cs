@@ -107,7 +107,7 @@ namespace QL_HocVien.Services.Implementations
             }
             catch { }
 
-            return "Đại đội 1";
+            return string.Empty;
         }
 
         #region 1. XUẤT & NHẬP HỌC VIÊN
@@ -433,6 +433,31 @@ namespace QL_HocVien.Services.Implementations
                         }
                     }
 
+                    // Tự động nhận diện Khóa học từ Mã học viên dạng ĐH.075.299 (bỏ qua ĐH, lấy 075 -> K75)
+                    string extractedCohort = string.Empty;
+                    int? extractedCohortId = null;
+                    var cohortCodeMatch = Regex.Match(code, @"^[A-Za-zÀ-ỹĐđ]+[\.\-_](\d{2,3})[\.\-_](\d+)$");
+                    if (cohortCodeMatch.Success && int.TryParse(cohortCodeMatch.Groups[1].Value, out int cohortNum))
+                    {
+                        extractedCohort = $"K{cohortNum}";
+                        var foundCohort = await _context.AcademicCohorts
+                            .FirstOrDefaultAsync(c => c.CohortCode == extractedCohort || c.CohortNumber == cohortNum);
+                        if (foundCohort == null)
+                        {
+                            foundCohort = new AcademicCohort
+                            {
+                                CohortCode = extractedCohort,
+                                CohortName = $"Khóa {cohortNum}",
+                                CohortNumber = cohortNum,
+                                AcademicYear = $"{DateTime.Today.Year} - {DateTime.Today.Year + 4}",
+                                CreatedAt = DateTime.Now
+                            };
+                            _context.AcademicCohorts.Add(foundCohort);
+                            await _context.SaveChangesAsync();
+                        }
+                        extractedCohortId = foundCohort.Id;
+                    }
+
                     var matchedClass = allClasses.FirstOrDefault(c => 
                         c.ClassName.Equals(className, StringComparison.OrdinalIgnoreCase) || 
                         c.ClassCode.Equals(className, StringComparison.OrdinalIgnoreCase));
@@ -444,6 +469,11 @@ namespace QL_HocVien.Services.Implementations
                         if (!string.IsNullOrWhiteSpace(rank)) existing.Rank = rank;
                         if (!string.IsNullOrWhiteSpace(pos)) existing.Position = pos;
                         if (!string.IsNullOrWhiteSpace(unit)) existing.Unit = unit;
+                        if (!string.IsNullOrWhiteSpace(extractedCohort))
+                        {
+                            existing.Cohort = extractedCohort;
+                            existing.CohortId = extractedCohortId;
+                        }
                         if (matchedClass != null)
                         {
                             existing.ClassId = matchedClass.Id;
@@ -472,9 +502,11 @@ namespace QL_HocVien.Services.Implementations
                             Position = !string.IsNullOrWhiteSpace(pos) ? pos : "Học viên",
                             Unit = !string.IsNullOrWhiteSpace(unit) ? unit : fallbackUnit,
                             ClassId = matchedClass?.Id,
-                            ClassName = matchedClass?.ClassName ?? (!string.IsNullOrWhiteSpace(className) ? className : "K26A"),
+                            ClassName = matchedClass?.ClassName ?? (!string.IsNullOrWhiteSpace(className) ? className : (extractedCohort.Length > 0 ? extractedCohort : "K26A")),
+                            Cohort = extractedCohort,
+                            CohortId = extractedCohortId,
                             PhoneNumber = !string.IsNullOrWhiteSpace(phone) ? phone : $"09{new Random().Next(10000000, 99999999)}",
-                            Email = !string.IsNullOrWhiteSpace(email) ? email : $"{code.ToLower().Replace("-", "").Replace(" ", "")}@hocvien.edu.vn",
+                            Email = !string.IsNullOrWhiteSpace(email) ? email : $"{code.ToLower().Replace("-", "").Replace(".", "").Replace(" ", "")}@hocvien.edu.vn",
                             DateOfBirth = dob,
                             Age = age,
                             Gender = gender,
