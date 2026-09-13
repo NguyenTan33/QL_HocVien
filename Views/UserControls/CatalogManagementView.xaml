@@ -64,7 +64,7 @@
                             <Grid Grid.Row="1" x:Name="ItemsHostGrid" Visibility="Collapsed" Margin="28,2,0,4">
                                 <!-- Đường rễ cây kết nối thẳng đứng (Vertical Branch Root Line) -->
                                 <Border Width="2.5" HorizontalAlignment="Left" Margin="-14,0,0,0" 
-                                        Background="{DynamicResource AccentBrush}" Opacity="0.35"/>
+                                        Background="{DynamicResource UnitBranchLineBrush}" Opacity="0.85"/>
                                 <ItemsPresenter/>
                             </Grid>
                         </Grid>
@@ -80,9 +80,9 @@
 
         <!-- HierarchicalDataTemplate cho UnitTreeNode -->
         <HierarchicalDataTemplate x:Key="UnitTreeNodeTemplate" DataType="{x:Type vm:UnitTreeNode}" ItemsSource="{Binding Children}">
-            <Border Background="{DynamicResource CardBackgroundBrush}"
-                    BorderBrush="{DynamicResource CardBorderBrush}"
-                    BorderThickness="1.5" CornerRadius="8" Padding="12,10" Margin="0,2,8,2"
+            <Border Background="{DynamicResource UnitCardBackgroundBrush}"
+                    BorderBrush="{DynamicResource UnitCardBorderBrush}"
+                    BorderThickness="1.5" CornerRadius="8" Padding="14,10" Margin="0,3,8,3"
                     Cursor="Hand">
                 <Border.InputBindings>
                     <MouseBinding Gesture="LeftClick" 
@@ -90,11 +90,14 @@
                                   CommandParameter="{Binding}"/>
                 </Border.InputBindings>
                 <Border.Style>
-                    <Style TargetType="Border" BasedOn="{StaticResource CardBorderStyle}">
+                    <Style TargetType="Border">
                         <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="BorderBrush" Value="{DynamicResource UnitCardHoverBorderBrush}"/>
+                            </Trigger>
                             <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
-                                <Setter Property="Background" Value="{DynamicResource TabHeaderActiveBackgroundBrush}"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource UnitCardSelectedBorderBrush}"/>
+                                <Setter Property="Background" Value="{DynamicResource UnitCardSelectedBackgroundBrush}"/>
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
@@ -113,8 +116,8 @@
                     </Grid.ColumnDefinitions>
 
                     <!-- Cánh tay rễ cây nối ngang từ đường thẳng đứng vào thẻ card (Horizontal Connector Arm) -->
-                    <Border Height="2" Width="14" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="-26,0,0,0"
-                            Background="{DynamicResource AccentBrush}" Opacity="0.35"/>
+                    <Border Height="2.5" Width="14" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="-26,0,0,0"
+                            Background="{DynamicResource UnitBranchLineBrush}" Opacity="0.85"/>
 
                     <!-- Nút bấm [+] mở rộng / [-] thu gọn (Rễ sơ đồ bộ máy) -->
                     <Grid Grid.Column="0" VerticalAlignment="Center" Margin="0,0,10,0">
@@ -127,7 +130,7 @@
                                 <ControlTemplate TargetType="Button">
                                     <Border x:Name="btnBorder" CornerRadius="15" 
                                             Background="{DynamicResource PageBackgroundBrush}" 
-                                            BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1.5">
+                                            BorderBrush="{DynamicResource UnitBranchLineBrush}" BorderThickness="1.5">
                                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
                                     <ControlTemplate.Triggers>
@@ -145,7 +148,7 @@
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding IsExpanded}" Value="False">
                                                 <Setter Property="Text" Value="＋"/>
-                                                <Setter Property="Foreground" Value="#E5A93C"/>
+                                                <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
@@ -156,71 +159,126 @@
                         <!-- Dấu chấm chốt tròn khi là đơn vị cơ sở không có cấp con -->
                         <Border Width="30" Height="30"
                                 Visibility="{Binding HasChildren, Converter={x:Static local_cv:InvertedBooleanToVisibilityConverter.Instance}}">
-                            <Ellipse Width="8" Height="8" Fill="{DynamicResource AccentBrush}" Opacity="0.4" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <Ellipse Width="8" Height="8" Fill="{DynamicResource UnitBranchLineBrush}" Opacity="0.75" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                     </Grid>
 
                     <!-- Cột 1: Icon Huy hiệu theo phân cấp (🏛️ Trung đoàn, 🛡️ Tiểu đoàn, 🚩 Đại đội, 🎓 Lớp) -->
                     <Border Grid.Column="1" Width="44" Height="44" CornerRadius="8" 
-                            Background="{DynamicResource CardBackgroundBrush}"
-                            BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1.2"
+                            Background="{DynamicResource PageBackgroundBrush}"
+                            BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1.5"
                             VerticalAlignment="Center" Margin="0,0,14,0">
-                        <TextBlock Text="{Binding Icon}" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding Icon}" FontFamily="Segoe UI Emoji, Segoe UI" FontSize="22" 
+                                   Foreground="{DynamicResource AccentLightBrush}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
 
                     <!-- Cột 2: Thông tin chi tiết đơn vị -->
                     <StackPanel Grid.Column="2" VerticalAlignment="Center">
                         <!-- Hàng 1: Tên đơn vị, Mã định danh, Cấp bậc nhãn, Số lượng đơn vị trực thuộc -->
-                        <WrapPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,4">
-                            <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <WrapPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,5">
+                            <TextBlock Text="{Binding Name}" FontSize="15.5" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,10,0" VerticalAlignment="Center"/>
                             
                             <!-- Badge Mã đơn vị -->
-                            <Border Background="{DynamicResource PageBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,6,0" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding Code, StringFormat='{}Mã: {0}'}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}"/>
+                            <Border Background="{DynamicResource PageBackgroundBrush}" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,6,0" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Code, StringFormat='{}Mã: {0}'}" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}"/>
                             </Border>
 
                             <!-- Badge Cấp bậc phân cấp bộ máy -->
-                            <Border Background="{DynamicResource PrimaryButtonBackgroundBrush}" CornerRadius="4" Padding="6,2" Margin="0,0,6,0" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding LevelName}" FontSize="10.5" FontWeight="Bold" Foreground="#FFFFFF"/>
+                            <Border Background="{Binding BadgeBrush}" CornerRadius="4" Padding="8,2" Margin="0,0,6,0" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding LevelName}" FontSize="11" FontWeight="Bold" Foreground="#FFFFFF"/>
                             </Border>
 
                             <!-- Badge Số lượng cấp con -->
-                            <Border Background="{DynamicResource PageBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,6,0" VerticalAlignment="Center"
+                            <Border Background="{DynamicResource PageBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="7,2" Margin="0,0,6,0" VerticalAlignment="Center"
                                     Visibility="{Binding HasChildren, Converter={x:Static local_cv:BooleanToVisibilityConverter.Instance}}">
-                                <TextBlock Text="{Binding ChildCountText}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Text="{Binding ChildCountText}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource UnitCardSubtextBrush}"/>
                             </Border>
                         </WrapPanel>
 
                         <!-- Hàng 2: Chỉ huy trưởng, Số điện thoại liên hệ, Mô tả chức trách -->
                         <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="{Binding Commander, StringFormat='{}👤 Chỉ huy: {0}'}" FontSize="12.5" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,14,0"/>
-                            <TextBlock Text="{Binding Phone, StringFormat='{}📞 SĐT: {0}'}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,14,0"/>
-                            <TextBlock Text="{Binding Description, StringFormat='{}• {0}'}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" MaxWidth="450" TextTrimming="CharacterEllipsis"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,14,0" VerticalAlignment="Center">
+                                <TextBlock Text="👤 Chỉ huy: " FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}"/>
+                                <TextBlock Text="{Binding Commander}" FontSize="12.5" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,14,0" VerticalAlignment="Center">
+                                <TextBlock Text="📞 SĐT: " FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}"/>
+                                <TextBlock Text="{Binding Phone}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding Description, StringFormat='{}• {0}'}" FontSize="12" Foreground="{DynamicResource UnitCardSubtextBrush}" MaxWidth="450" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
                         </WrapPanel>
                     </StackPanel>
 
                     <!-- Cột 3: Nút thao tác nhanh trực tiếp trên Card -->
                     <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0">
                         <!-- Nút Thêm đơn vị con (+) -->
-                        <Button Content="➕ Cấp con" Style="{StaticResource SecondaryButtonStyle}" Height="28" Padding="8,2" Margin="0,0,6,0" FontSize="11"
-                                ToolTip="Thêm đơn vị con trực thuộc đơn vị này"
+                        <Button Command="{Binding DataContext.AddChildUnitCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                CommandParameter="{Binding}"
                                 Visibility="{Binding CanAddChild, Converter={x:Static local_cv:BooleanToVisibilityConverter.Instance}}"
-                                Command="{Binding DataContext.AddChildUnitCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                CommandParameter="{Binding}"/>
+                                Height="28" Padding="10,2" Margin="0,0,6,0" Cursor="Hand" ToolTip="Thêm đơn vị con trực thuộc đơn vị này">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="bd" Background="{DynamicResource UnitAddButtonBackgroundBrush}" 
+                                            BorderBrush="{DynamicResource UnitAddButtonBorderBrush}" BorderThickness="1.2" CornerRadius="5" Padding="{TemplateBinding Padding}">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <TextBlock Text="➕ " FontSize="11" Foreground="{DynamicResource UnitAddButtonForegroundBrush}"/>
+                                            <TextBlock Text="Cấp con" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource UnitAddButtonForegroundBrush}"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="bd" Property="Opacity" Value="0.85"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
 
                         <!-- Nút Sửa -->
-                        <Button Content="✏️ Sửa" Style="{StaticResource SecondaryButtonStyle}" Height="28" Padding="8,2" Margin="0,0,6,0" FontSize="11"
-                                ToolTip="Chỉnh sửa thông tin đơn vị này"
+                        <Button Command="{Binding DataContext.EditUnitNodeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                CommandParameter="{Binding}"
                                 Visibility="{Binding CanEdit, Converter={x:Static local_cv:BooleanToVisibilityConverter.Instance}}"
-                                Command="{Binding DataContext.EditUnitNodeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                CommandParameter="{Binding}"/>
+                                Height="28" Padding="10,2" Margin="0,0,6,0" Cursor="Hand" ToolTip="Chỉnh sửa thông tin đơn vị này">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="bd" Background="{DynamicResource UnitEditButtonBackgroundBrush}" 
+                                            BorderBrush="{DynamicResource UnitEditButtonBorderBrush}" BorderThickness="1.2" CornerRadius="5" Padding="{TemplateBinding Padding}">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <TextBlock Text="✏️ " FontSize="11" Foreground="{DynamicResource UnitEditButtonForegroundBrush}"/>
+                                            <TextBlock Text="Sửa" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource UnitEditButtonForegroundBrush}"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="bd" Property="Opacity" Value="0.85"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
 
                         <!-- Nút Xóa -->
-                        <Button Content="🗑️ Xóa" Style="{StaticResource DangerButtonStyle}" Height="28" Padding="8,2" FontSize="11"
-                                ToolTip="Xóa đơn vị này khỏi cơ cấu"
+                        <Button Command="{Binding DataContext.DeleteUnitNodeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                CommandParameter="{Binding}"
                                 Visibility="{Binding CanDelete, Converter={x:Static local_cv:BooleanToVisibilityConverter.Instance}}"
-                                Command="{Binding DataContext.DeleteUnitNodeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                CommandParameter="{Binding}"/>
+                                Height="28" Padding="10,2" Cursor="Hand" ToolTip="Xóa đơn vị này khỏi cơ cấu">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="bd" Background="#8F1515" BorderBrush="#DC2626" BorderThickness="1.2" CornerRadius="5" Padding="{TemplateBinding Padding}">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <TextBlock Text="🗑️ " FontSize="11" Foreground="#FFFFFF"/>
+                                            <TextBlock Text="Xóa" FontSize="11" FontWeight="Bold" Foreground="#FFFFFF"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="bd" Property="Background" Value="#B32020"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
                     </StackPanel>
                 </Grid>
             </Border>
@@ -432,13 +490,17 @@
                                     <!-- Tiêu đề & Chú giải sơ đồ -->
                                     <StackPanel Grid.Column="0" VerticalAlignment="Center">
                                         <TextBlock Text="🌳 SƠ ĐỒ CƠ CẤU BỘ MÁY TỔ CHỨC ĐƠN VỊ &amp; ĐẠI ĐỘI" 
-                                                   FontSize="13" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}"/>
+                                                   FontSize="14" FontWeight="ExtraBold" Foreground="{DynamicResource AccentBrush}"/>
                                         <TextBlock Text="Mô hình rễ cây phân cấp quân sự: Trung đoàn ➔ Tiểu đoàn ➔ Đại đội ➔ Lớp đào tạo. Bấm dấu cộng [+] để mở rộng hoặc dấu trừ [−] để thu gọn." 
-                                                   FontSize="11.5" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,2,0,0"/>
+                                                   FontSize="11.5" Foreground="{DynamicResource UnitCardSubtextBrush}" Margin="0,3,0,0"/>
                                     </StackPanel>
 
                                     <!-- Các nút mở rộng, thu gọn, chuyển chế độ xem -->
                                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Button Content="➕ Thêm Đơn Vị Gốc" Style="{StaticResource PrimaryButtonStyle}" Height="32" Padding="12,0" Margin="0,0,8,0"
+                                                ToolTip="Thêm một nhánh đơn vị mới cấp cao nhất (Học viện / Độc lập)"
+                                                Command="{Binding AddRootUnitCommand}"/>
+
                                         <Button Content="➕ Mở Rộng Tất Cả" Style="{StaticResource SecondaryButtonStyle}" Height="32" Padding="12,0" Margin="0,0,8,0"
                                                 ToolTip="Bung mở toàn bộ các nhánh rễ cây bộ máy tổ chức"
                                                 Command="{Binding ExpandAllTreeCommand}"/>
@@ -485,7 +547,8 @@
                             </Border>
 
                             <!-- CHẾ ĐỘ 1: SƠ ĐỒ RỄ CÂY PHÂN CẤP BỘ MÁY (Mặc định) -->
-                            <Border Grid.Row="1" Style="{StaticResource CardBorderStyle}" Padding="16,12"
+                            <Border Grid.Row="1" Background="{DynamicResource UnitTreeContainerBackgroundBrush}" 
+                                    BorderBrush="{DynamicResource UnitTreeContainerBorderBrush}" BorderThickness="1.5" CornerRadius="8" Padding="16,12"
                                     Visibility="{Binding IsTreeViewMode, Converter={x:Static local_cv:BooleanToVisibilityConverter.Instance}}">
                                 <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
                                     <TreeView ItemsSource="{Binding UnitTreeNodes}"

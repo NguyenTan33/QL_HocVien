@@ -159,6 +159,20 @@ namespace QL_HocVien.Data.Repositories.Implementations
             if (string.IsNullOrWhiteSpace(unitCode)) return false;
             return await _context.MilitaryUnits.AnyAsync(u => u.UnitCode.ToLower() == unitCode.Trim().ToLower());
         }
+
+        public string? GetOriginalUnitName(MilitaryUnit unit)
+        {
+            try
+            {
+                var entry = _context.Entry(unit);
+                if (entry != null)
+                {
+                    return entry.Property(u => u.UnitName).OriginalValue;
+                }
+            }
+            catch { }
+            return null;
+        }
     }
 
     public class MajorRepository : Repository<MilitaryMajor>, IMajorRepository

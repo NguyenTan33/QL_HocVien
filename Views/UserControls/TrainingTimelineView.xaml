@@ -13,19 +13,12 @@
         <cv:InvertedBooleanToVisibilityConverter x:Key="InvBoolToVis"/>
         <cv:StringToBrushConverter x:Key="StringToBrush"/>
 
-        <!-- Nút Trắng Ngà Dã Chiến (✓ Đổi Hoàn Thành, ✏ Sửa) chuẩn Celandar.png -->
-        <Style x:Key="ParchmentOutlineButton" TargetType="Button">
-            <Setter Property="Background">
-                <Setter.Value>
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                        <GradientStop Color="#FBF7EE" Offset="0"/>
-                        <GradientStop Color="#EFE6D2" Offset="1"/>
-                    </LinearGradientBrush>
-                </Setter.Value>
-            </Setter>
-            <Setter Property="BorderBrush" Value="#C2B59B"/>
+        <!-- Nút Hoàn Thành sự kiện (Dual-Theme) -->
+        <Style x:Key="TimelineCompleteButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{DynamicResource TimelineItemCompleteBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource TimelineItemCompleteBorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Foreground" Value="#1A2216"/>
+            <Setter Property="Foreground" Value="{DynamicResource TimelineItemCompleteForegroundBrush}"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="Padding" Value="12,5"/>
@@ -39,26 +32,15 @@
                                 CornerRadius="5" Padding="{TemplateBinding Padding}"
                                 SnapsToDevicePixels="True">
                             <Border.Effect>
-                                <DropShadowEffect BlurRadius="3" ShadowDepth="1" Direction="270" Opacity="0.10" Color="#2A241A"/>
+                                <DropShadowEffect BlurRadius="3" ShadowDepth="1" Direction="270" Opacity="0.08" Color="#000000"/>
                             </Border.Effect>
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
                                               TextBlock.Foreground="{TemplateBinding Foreground}"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background">
-                                    <Setter.Value>
-                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                            <GradientStop Color="#FFFDF8" Offset="0"/>
-                                            <GradientStop Color="#F3ECD9" Offset="1"/>
-                                        </LinearGradientBrush>
-                                    </Setter.Value>
-                                </Setter>
-                                <Setter TargetName="border" Property="BorderBrush" Value="#A8997B"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#E4DAC0"/>
-                                <Setter TargetName="border" Property="BorderBrush" Value="#96876A"/>
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource TimelineItemCompleteHoverBackgroundBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TimelineItemCompleteHoverForegroundBrush}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -66,19 +48,47 @@
             </Setter>
         </Style>
 
-        <!-- Nút Đỏ Xóa Dã Chiến (🗑 Xóa) chuẩn Celandar.png -->
-        <Style x:Key="ParchmentDangerButton" TargetType="Button">
-            <Setter Property="Background">
+        <!-- Nút Outline Sự Kiện (✏ Sửa, điều hướng lịch) -->
+        <Style x:Key="ParchmentOutlineButton" TargetType="Button">
+            <Setter Property="Background" Value="{DynamicResource TimelineItemEditBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource TimelineItemEditBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Foreground" Value="{DynamicResource TimelineItemEditForegroundBrush}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="12,5"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
                 <Setter.Value>
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                        <GradientStop Color="#C51F1F" Offset="0"/>
-                        <GradientStop Color="#9E1414" Offset="1"/>
-                    </LinearGradientBrush>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="{TemplateBinding BorderThickness}" 
+                                CornerRadius="5" Padding="{TemplateBinding Padding}"
+                                SnapsToDevicePixels="True">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="3" ShadowDepth="1" Direction="270" Opacity="0.08" Color="#000000"/>
+                            </Border.Effect>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                              TextBlock.Foreground="{TemplateBinding Foreground}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource TimelineItemEditHoverBackgroundBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TimelineItemEditHoverForegroundBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
                 </Setter.Value>
             </Setter>
-            <Setter Property="BorderBrush" Value="#831010"/>
+        </Style>
+
+        <!-- Nút Đỏ Xóa Sự Kiện (🗑 Xóa) -->
+        <Style x:Key="ParchmentDangerButton" TargetType="Button">
+            <Setter Property="Background" Value="{DynamicResource TimelineItemDeleteBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource TimelineItemDeleteBorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="Foreground" Value="{DynamicResource TimelineItemDeleteForegroundBrush}"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="Padding" Value="14,5"/>
@@ -92,26 +102,15 @@
                                 CornerRadius="5" Padding="{TemplateBinding Padding}"
                                 SnapsToDevicePixels="True">
                             <Border.Effect>
-                                <DropShadowEffect BlurRadius="3" ShadowDepth="1" Direction="270" Opacity="0.25" Color="#330000"/>
+                                <DropShadowEffect BlurRadius="3" ShadowDepth="1" Direction="270" Opacity="0.15" Color="#330000"/>
                             </Border.Effect>
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
                                               TextBlock.Foreground="{TemplateBinding Foreground}"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background">
-                                    <Setter.Value>
-                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                            <GradientStop Color="#D92626" Offset="0"/>
-                                            <GradientStop Color="#B01818" Offset="1"/>
-                                        </LinearGradientBrush>
-                                    </Setter.Value>
-                                </Setter>
-                                <Setter TargetName="border" Property="BorderBrush" Value="#E53935"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#8A1010"/>
-                                <Setter TargetName="border" Property="BorderBrush" Value="#6E0C0C"/>
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource TimelineItemDeleteHoverBackgroundBrush}"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -119,19 +118,12 @@
             </Setter>
         </Style>
 
-        <!-- Nút Đỏ Gradient Quân Kỳ Viền Vàng (+ Thêm Sự Kiện Cho Ngày Này, + Thêm Mốc Sự Kiện Mới) -->
+        <!-- Nút Hành Động Lịch Trình (+ Thêm Sự Kiện Cho Ngày Này, + Thêm Mốc Sự Kiện Mới) -->
         <Style x:Key="ParchmentRedActionButton" TargetType="Button">
-            <Setter Property="Background">
-                <Setter.Value>
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                        <GradientStop Color="#9E1616" Offset="0"/>
-                        <GradientStop Color="#7C0F0F" Offset="1"/>
-                    </LinearGradientBrush>
-                </Setter.Value>
-            </Setter>
-            <Setter Property="BorderBrush" Value="#ECC867"/>
+            <Setter Property="Background" Value="{DynamicResource TimelineActionButtonBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource TimelineActionButtonBorderBrush}"/>
             <Setter Property="BorderThickness" Value="1.2"/>
-            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="Foreground" Value="{DynamicResource TimelineActionButtonForegroundBrush}"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -144,22 +136,14 @@
                                 CornerRadius="6" Padding="{TemplateBinding Padding}"
                                 SnapsToDevicePixels="True">
                             <Border.Effect>
-                                <DropShadowEffect BlurRadius="6" ShadowDepth="2" Opacity="0.30" Color="#000000"/>
+                                <DropShadowEffect BlurRadius="6" ShadowDepth="2" Opacity="0.20" Color="#000000"/>
                             </Border.Effect>
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
                                               TextBlock.Foreground="{TemplateBinding Foreground}"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background">
-                                    <Setter.Value>
-                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                            <GradientStop Color="#B71C1C" Offset="0"/>
-                                            <GradientStop Color="#8F1212" Offset="1"/>
-                                        </LinearGradientBrush>
-                                    </Setter.Value>
-                                </Setter>
-                                <Setter TargetName="border" Property="BorderBrush" Value="#FFE082"/>
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource TimelineActionButtonHoverBackgroundBrush}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -167,19 +151,12 @@
             </Setter>
         </Style>
 
-        <!-- Nút Đỏ Header (+ Thêm Mốc Sự Kiện) -->
+        <!-- Nút Chính Header (+ Thêm Mốc Sự Kiện) -->
         <Style x:Key="TopHeaderCrimsonButton" TargetType="Button">
-            <Setter Property="Background">
-                <Setter.Value>
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                        <GradientStop Color="#A31818" Offset="0"/>
-                        <GradientStop Color="#831212" Offset="1"/>
-                    </LinearGradientBrush>
-                </Setter.Value>
-            </Setter>
-            <Setter Property="BorderBrush" Value="#E55353"/>
+            <Setter Property="Background" Value="{DynamicResource TimelinePrimaryButtonBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource TimelinePrimaryButtonBorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="Foreground" Value="{DynamicResource TimelinePrimaryButtonForegroundBrush}"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="Padding" Value="16,8"/>
@@ -197,15 +174,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background">
-                                    <Setter.Value>
-                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                            <GradientStop Color="#BA2020" Offset="0"/>
-                                            <GradientStop Color="#991515" Offset="1"/>
-                                        </LinearGradientBrush>
-                                    </Setter.Value>
-                                </Setter>
-                                <Setter TargetName="border" Property="BorderBrush" Value="#FF7373"/>
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource TimelinePrimaryButtonHoverBackgroundBrush}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -213,12 +182,12 @@
             </Setter>
         </Style>
 
-        <!-- Nút Tối Header (📅 Xem Cuộn Lịch Tháng, 🔄 Tải Lại Lịch) -->
+        <!-- Nút Header Phụ (📅 Xem Cuộn Lịch Tháng, 🔄 Tải Lại Lịch) -->
         <Style x:Key="TopHeaderDarkButton" TargetType="Button">
-            <Setter Property="Background" Value="#182619"/>
-            <Setter Property="BorderBrush" Value="#756A3C"/>
+            <Setter Property="Background" Value="{DynamicResource TimelineHeaderButtonBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource TimelineHeaderButtonBorderBrush}"/>
             <Setter Property="BorderThickness" Value="1.2"/>
-            <Setter Property="Foreground" Value="#E8CE7E"/>
+            <Setter Property="Foreground" Value="{DynamicResource TimelineHeaderButtonForegroundBrush}"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="Padding" Value="15,8"/>
@@ -236,8 +205,8 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#233825"/>
-                                <Setter TargetName="border" Property="BorderBrush" Value="#9E8F52"/>
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource TimelineHeaderButtonHoverBackgroundBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TimelineHeaderButtonHoverForegroundBrush}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -245,19 +214,12 @@
             </Setter>
         </Style>
 
-        <!-- Nút Lọc Tác Chiến Đỏ Viền Vàng -->
+        <!-- Nút Lọc Lịch Trình -->
         <Style x:Key="FilterCrimsonButton" TargetType="Button">
-            <Setter Property="Background">
-                <Setter.Value>
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                        <GradientStop Color="#8A1414" Offset="0"/>
-                        <GradientStop Color="#A81A1A" Offset="1"/>
-                    </LinearGradientBrush>
-                </Setter.Value>
-            </Setter>
-            <Setter Property="BorderBrush" Value="#DFC57B"/>
+            <Setter Property="Background" Value="{DynamicResource TimelineFilterButtonBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource TimelineFilterButtonBorderBrush}"/>
             <Setter Property="BorderThickness" Value="1.2"/>
-            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="Foreground" Value="{DynamicResource TimelineFilterButtonForegroundBrush}"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -274,8 +236,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#BA1E1E"/>
-                                <Setter TargetName="border" Property="BorderBrush" Value="#FFE082"/>
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource TimelineFilterButtonHoverBackgroundBrush}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -283,12 +244,12 @@
             </Setter>
         </Style>
 
-        <!-- Nút Tất Cả (Reset) Viền Vàng -->
+        <!-- Nút Tất Cả (Reset Bộ Lọc) -->
         <Style x:Key="FilterResetButton" TargetType="Button">
-            <Setter Property="Background" Value="#1A2619"/>
-            <Setter Property="BorderBrush" Value="#6D673B"/>
+            <Setter Property="Background" Value="{DynamicResource TimelineFilterResetBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource TimelineFilterResetBorderBrush}"/>
             <Setter Property="BorderThickness" Value="1.2"/>
-            <Setter Property="Foreground" Value="#E5DFCA"/>
+            <Setter Property="Foreground" Value="{DynamicResource TimelineFilterResetForegroundBrush}"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -305,8 +266,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#253A26"/>
-                                <Setter TargetName="border" Property="BorderBrush" Value="#998F53"/>
+                                <Setter TargetName="border" Property="Background" Value="{DynamicResource TimelineFilterResetHoverBackgroundBrush}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -402,82 +362,82 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- KPI 1: TỔNG SỐ MỐC SỰ KIỆN (Xanh lục camo viền vàng) -->
-                <Border Grid.Column="0" Background="{DynamicResource TimelineKpi1BackgroundBrush}" BorderBrush="{DynamicResource TimelineKpi1BorderBrush}" BorderThickness="1.2" CornerRadius="7" Padding="14,10">
+                <!-- KPI 1: TỔNG SỐ MỐC SỰ KIỆN -->
+                <Border Grid.Column="0" Background="{DynamicResource TimelineKpi1BackgroundBrush}" BorderBrush="{DynamicResource TimelineKpi1BorderBrush}" BorderThickness="1.5" CornerRadius="8" Padding="14,11">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <!-- Icon tròn xanh rêu quân đội -->
-                        <Border Grid.Column="0" Width="46" Height="46" CornerRadius="23" Background="{DynamicResource InfoCardBackgroundBrush}" BorderBrush="{DynamicResource InfoCardBorderBrush}" BorderThickness="1.5" VerticalAlignment="Center">
-                            <TextBlock Text="📅" FontSize="20" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <!-- Icon tròn -->
+                        <Border Grid.Column="0" Width="46" Height="46" CornerRadius="23" Background="{DynamicResource TimelineKpi1CircleBackgroundBrush}" BorderBrush="{DynamicResource TimelineKpi1CircleBorderBrush}" BorderThickness="1.5" VerticalAlignment="Center">
+                            <TextBlock Text="📅" FontFamily="Segoe UI Emoji, Segoe UI" FontSize="20" Foreground="{DynamicResource TimelineKpi1ForegroundBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <!-- Số liệu & Tiêu đề -->
                         <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
-                            <TextBlock Text="TỔNG SỐ MỐC SỰ KIỆN" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                            <TextBlock Text="TỔNG SỐ MỐC SỰ KIỆN" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TimelineKpi1ForegroundBrush}"/>
                             <TextBlock Text="{Binding TotalEventsCount}" FontSize="30" FontWeight="ExtraBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,1,0,0"/>
-                            <TextBlock Text="Lịch trình trong cơ sở dữ liệu" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,1,0,0"/>
+                            <TextBlock Text="Lịch trình trong cơ sở dữ liệu" FontSize="11" Foreground="{DynamicResource TimelineKpiSubtextBrush}" Margin="0,1,0,0"/>
                         </StackPanel>
                     </Grid>
                 </Border>
 
-                <!-- KPI 2: ĐANG DIỄN RA (Xanh thủy quân viền lam-vàng) -->
-                <Border Grid.Column="2" Background="{DynamicResource TimelineKpi2BackgroundBrush}" BorderBrush="{DynamicResource TimelineKpi2BorderBrush}" BorderThickness="1.2" CornerRadius="7" Padding="14,10">
+                <!-- KPI 2: ĐANG DIỄN RA -->
+                <Border Grid.Column="2" Background="{DynamicResource TimelineKpi2BackgroundBrush}" BorderBrush="{DynamicResource TimelineKpi2BorderBrush}" BorderThickness="1.5" CornerRadius="8" Padding="14,11">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <!-- Icon tròn lam dã chiến -->
-                        <Border Grid.Column="0" Width="46" Height="46" CornerRadius="23" Background="{DynamicResource InfoCardBackgroundBrush}" BorderBrush="{DynamicResource InfoCardBorderBrush}" BorderThickness="1.5" VerticalAlignment="Center">
-                            <TextBlock Text="⌛" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <!-- Icon tròn lam -->
+                        <Border Grid.Column="0" Width="46" Height="46" CornerRadius="23" Background="{DynamicResource TimelineKpi2CircleBackgroundBrush}" BorderBrush="{DynamicResource TimelineKpi2CircleBorderBrush}" BorderThickness="1.5" VerticalAlignment="Center">
+                            <TextBlock Text="⌛" FontFamily="Segoe UI Emoji, Segoe UI" FontSize="20" Foreground="{DynamicResource TimelineKpi2ForegroundBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <!-- Số liệu & Tiêu đề -->
                         <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
-                            <TextBlock Text="ĐANG DIỄN RA" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource InfoCardForegroundBrush}"/>
-                            <TextBlock Text="{Binding OngoingEventsCount}" FontSize="30" FontWeight="ExtraBold" Foreground="{DynamicResource InfoCardForegroundBrush}" Margin="0,1,0,0"/>
-                            <TextBlock Text="Sự kiện đang trong tiến trình" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,1,0,0"/>
+                            <TextBlock Text="ĐANG DIỄN RA" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TimelineKpi2ForegroundBrush}"/>
+                            <TextBlock Text="{Binding OngoingEventsCount}" FontSize="30" FontWeight="ExtraBold" Foreground="{DynamicResource TimelineKpi2ForegroundBrush}" Margin="0,1,0,0"/>
+                            <TextBlock Text="Sự kiện đang trong tiến trình" FontSize="11" Foreground="{DynamicResource TimelineKpiSubtextBrush}" Margin="0,1,0,0"/>
                         </StackPanel>
                     </Grid>
                 </Border>
 
-                <!-- KPI 3: KHẨN CẤP / TRỌNG ĐIỂM (Đỏ đun viền huyết dụ-vàng) -->
-                <Border Grid.Column="4" Background="{DynamicResource TimelineKpi3BackgroundBrush}" BorderBrush="{DynamicResource TimelineKpi3BorderBrush}" BorderThickness="1.2" CornerRadius="7" Padding="14,10">
+                <!-- KPI 3: KHẨN CẤP / TRỌNG ĐIỂM -->
+                <Border Grid.Column="4" Background="{DynamicResource TimelineKpi3BackgroundBrush}" BorderBrush="{DynamicResource TimelineKpi3BorderBrush}" BorderThickness="1.5" CornerRadius="8" Padding="14,11">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <!-- Icon tròn đỏ cảnh báo -->
-                        <Border Grid.Column="0" Width="46" Height="46" CornerRadius="23" Background="{DynamicResource DangerCardBackgroundBrush}" BorderBrush="{DynamicResource DangerCardBorderBrush}" BorderThickness="1.5" VerticalAlignment="Center">
-                            <TextBlock Text="⚠️" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Border Grid.Column="0" Width="46" Height="46" CornerRadius="23" Background="{DynamicResource TimelineKpi3CircleBackgroundBrush}" BorderBrush="{DynamicResource TimelineKpi3CircleBorderBrush}" BorderThickness="1.5" VerticalAlignment="Center">
+                            <TextBlock Text="⚠️" FontFamily="Segoe UI Emoji, Segoe UI" FontSize="20" Foreground="{DynamicResource TimelineKpi3ForegroundBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <!-- Số liệu & Tiêu đề -->
                         <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
-                            <TextBlock Text="KHẨN CẤP / TRỌNG ĐIỂM" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource DangerCardForegroundBrush}"/>
-                            <TextBlock Text="{Binding UrgentEventsCount}" FontSize="30" FontWeight="ExtraBold" Foreground="{DynamicResource DangerCardForegroundBrush}" Margin="0,1,0,0"/>
-                            <TextBlock Text="Ưu tiên cần tập trung chuẩn bị" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,1,0,0"/>
+                            <TextBlock Text="KHẨN CẤP / TRỌNG ĐIỂM" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TimelineKpi3ForegroundBrush}"/>
+                            <TextBlock Text="{Binding UrgentEventsCount}" FontSize="30" FontWeight="ExtraBold" Foreground="{DynamicResource TimelineKpi3ForegroundBrush}" Margin="0,1,0,0"/>
+                            <TextBlock Text="Ưu tiên cần tập trung chuẩn bị" FontSize="11" Foreground="{DynamicResource TimelineKpiSubtextBrush}" Margin="0,1,0,0"/>
                         </StackPanel>
                     </Grid>
                 </Border>
 
-                <!-- KPI 4: ĐÃ HOÀN THÀNH (Lục bảo viền ngọc) -->
-                <Border Grid.Column="6" Background="{DynamicResource TimelineKpi4BackgroundBrush}" BorderBrush="{DynamicResource TimelineKpi4BorderBrush}" BorderThickness="1.2" CornerRadius="7" Padding="14,10">
+                <!-- KPI 4: ĐÃ HOÀN THÀNH -->
+                <Border Grid.Column="6" Background="{DynamicResource TimelineKpi4BackgroundBrush}" BorderBrush="{DynamicResource TimelineKpi4BorderBrush}" BorderThickness="1.5" CornerRadius="8" Padding="14,11">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <!-- Icon tròn xanh hoàn thành -->
-                        <Border Grid.Column="0" Width="46" Height="46" CornerRadius="23" Background="{DynamicResource SuccessCardBackgroundBrush}" BorderBrush="{DynamicResource SuccessCardBorderBrush}" BorderThickness="1.5" VerticalAlignment="Center">
-                            <TextBlock Text="✔️" FontSize="20" Foreground="{DynamicResource SuccessCardForegroundBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Border Grid.Column="0" Width="46" Height="46" CornerRadius="23" Background="{DynamicResource TimelineKpi4CircleBackgroundBrush}" BorderBrush="{DynamicResource TimelineKpi4CircleBorderBrush}" BorderThickness="1.5" VerticalAlignment="Center">
+                            <TextBlock Text="✔️" FontFamily="Segoe UI Emoji, Segoe UI" FontSize="20" Foreground="{DynamicResource TimelineKpi4ForegroundBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <!-- Số liệu & Tiêu đề -->
                         <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
-                            <TextBlock Text="ĐÃ HOÀN THÀNH" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource SuccessCardForegroundBrush}"/>
-                            <TextBlock Text="{Binding CompletedEventsCount}" FontSize="30" FontWeight="ExtraBold" Foreground="{DynamicResource SuccessCardForegroundBrush}" Margin="0,1,0,0"/>
-                            <TextBlock Text="Đã thực hiện xong kiểm tra / sự kiện" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,1,0,0"/>
+                            <TextBlock Text="ĐÃ HOÀN THÀNH" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TimelineKpi4ForegroundBrush}"/>
+                            <TextBlock Text="{Binding CompletedEventsCount}" FontSize="30" FontWeight="ExtraBold" Foreground="{DynamicResource TimelineKpi4ForegroundBrush}" Margin="0,1,0,0"/>
+                            <TextBlock Text="Đã thực hiện xong kiểm tra / sự kiện" FontSize="11" Foreground="{DynamicResource TimelineKpiSubtextBrush}" Margin="0,1,0,0"/>
                         </StackPanel>
                     </Grid>
                 </Border>
@@ -660,12 +620,12 @@
 
                                                         <!-- Hàng 3: Các nút hành động góc dưới phải chuẩn Celandar.png -->
                                                         <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,4,0,0">
-                                                            <Button Style="{StaticResource ParchmentOutlineButton}" Margin="0,0,8,0"
+                                                            <Button Style="{StaticResource TimelineCompleteButtonStyle}" Margin="0,0,8,0"
                                                                     Command="{Binding DataContext.ToggleCompleteCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                                     CommandParameter="{Binding}">
                                                                 <StackPanel Orientation="Horizontal">
-                                                                    <TextBlock Text="✓ " FontWeight="Bold" Foreground="#1A2216"/>
-                                                                    <TextBlock Text="Đổi Hoàn Thành" Foreground="#1A2216" FontWeight="SemiBold"/>
+                                                                    <TextBlock Text="✓ " FontWeight="Bold"/>
+                                                                    <TextBlock Text="Hoàn Thành" FontWeight="SemiBold"/>
                                                                 </StackPanel>
                                                             </Button>
 
@@ -673,8 +633,8 @@
                                                                     Command="{Binding DataContext.OpenEditFormCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                                     CommandParameter="{Binding}">
                                                                 <StackPanel Orientation="Horizontal">
-                                                                    <TextBlock Text="✏ " FontSize="11" Foreground="#1A2216"/>
-                                                                    <TextBlock Text="Sửa" Foreground="#1A2216" FontWeight="SemiBold"/>
+                                                                    <TextBlock Text="✏ " FontSize="11"/>
+                                                                    <TextBlock Text="Sửa" FontWeight="SemiBold"/>
                                                                 </StackPanel>
                                                             </Button>
 
@@ -682,8 +642,8 @@
                                                                     Command="{Binding DataContext.DeleteEventCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                                     CommandParameter="{Binding}">
                                                                 <StackPanel Orientation="Horizontal">
-                                                                    <TextBlock Text="🗑 " FontSize="11" Foreground="#FFFFFF"/>
-                                                                    <TextBlock Text="Xóa" Foreground="#FFFFFF" FontWeight="Bold"/>
+                                                                    <TextBlock Text="🗑 " FontSize="11"/>
+                                                                    <TextBlock Text="Xóa" FontWeight="Bold"/>
                                                                 </StackPanel>
                                                             </Button>
                                                         </StackPanel>
@@ -717,7 +677,7 @@
                             </Grid.RowDefinitions>
 
                             <!-- HÀNG 0: HEADER ĐIỀU HƯỚNG THÁNG / NĂM -->
-                            <Border Grid.Row="0" Background="#E5DCBF" BorderBrush="#C5BAA0" BorderThickness="1" CornerRadius="6" Padding="12,8" Margin="0,0,0,10">
+                            <Border Grid.Row="0" Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12,8" Margin="0,0,0,10">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
@@ -734,7 +694,7 @@
 
                                     <!-- Tiêu đề Tháng Năm -->
                                     <TextBlock Grid.Column="1" Text="{Binding MonthYearTitle}" 
-                                               FontSize="15" FontWeight="ExtraBold" Foreground="#0F172A"
+                                               FontSize="15" FontWeight="ExtraBold" Foreground="{DynamicResource TextPrimaryBrush}"
                                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
                                     <Button Grid.Column="2" Content="Tháng Sau ▶" Style="{StaticResource ParchmentOutlineButton}" 
@@ -942,7 +902,7 @@
 
                                                                 <!-- Nút thao tác -->
                                                                 <WrapPanel Grid.Row="3" HorizontalAlignment="Right" Margin="0,4,0,0">
-                                                                    <Button Content="✓ Hoàn Thành" Style="{StaticResource ParchmentOutlineButton}" 
+                                                                    <Button Content="✓ Hoàn Thành" Style="{StaticResource TimelineCompleteButtonStyle}" 
                                                                             Padding="8,3" Margin="0,0,4,0" FontSize="11" FontWeight="SemiBold"
                                                                             Command="{Binding DataContext.ToggleCompleteCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                                             CommandParameter="{Binding}"/>

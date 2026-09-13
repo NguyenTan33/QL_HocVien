@@ -36,6 +36,7 @@ namespace QL_HocVien.Services.Interfaces
         Task<(bool Success, string Message, MilitaryUnit? Unit)> AddUnitAsync(MilitaryUnit unit);
         Task<(bool Success, string Message)> UpdateUnitAsync(MilitaryUnit unit);
         Task<(bool Success, string Message)> DeleteUnitAsync(int id);
+        Task<(bool Success, string Message)> DeleteUnitCascadeAsync(int id, bool cascadeDeleteChildren);
         Task<List<string>> GetUnitNamesAsync();
         Task<List<string>> GetUnitDropdownAsync();
         event System.Action? OnUnitsChanged;

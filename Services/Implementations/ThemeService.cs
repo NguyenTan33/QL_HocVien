@@ -108,15 +108,48 @@ namespace QL_HocVien.Services.Implementations
                     SetBrush(res, "TimelineCardBackgroundBrush", "#FAF6EC");
                     SetBrush(res, "TimelineCardBorderBrush", "#D5CAAE");
                     SetBrush(res, "TimelineFilterBackgroundBrush", "#162417");
-                    SetBrush(res, "TimelineFilterBorderBrush", "#72683A");
-                    SetBrush(res, "TimelineKpi1BackgroundBrush", "#15261A");
-                    SetBrush(res, "TimelineKpi1BorderBrush", "#7B6F3E");
-                    SetBrush(res, "TimelineKpi2BackgroundBrush", "#11232E");
-                    SetBrush(res, "TimelineKpi2BorderBrush", "#3A5E70");
-                    SetBrush(res, "TimelineKpi3BackgroundBrush", "#2D1215");
-                    SetBrush(res, "TimelineKpi3BorderBrush", "#782E32");
-                    SetBrush(res, "TimelineKpi4BackgroundBrush", "#12281C");
-                    SetBrush(res, "TimelineKpi4BorderBrush", "#356E49");
+                    SetBrush(res, "TimelineKpi1BackgroundBrush", "#1B3322");
+                    SetBrush(res, "TimelineKpi1BorderBrush", "#C4A035");
+                    SetBrush(res, "TimelineKpi1CircleBackgroundBrush", "#122417");
+                    SetBrush(res, "TimelineKpi1CircleBorderBrush", "#D4B547");
+                    SetBrush(res, "TimelineKpi1ForegroundBrush", "#FFE17A");
+
+                    SetBrush(res, "TimelineKpi2BackgroundBrush", "#132F42");
+                    SetBrush(res, "TimelineKpi2BorderBrush", "#38BDF8");
+                    SetBrush(res, "TimelineKpi2CircleBackgroundBrush", "#0E2333");
+                    SetBrush(res, "TimelineKpi2CircleBorderBrush", "#38BDF8");
+                    SetBrush(res, "TimelineKpi2ForegroundBrush", "#7DD3FC");
+
+                    SetBrush(res, "TimelineKpi3BackgroundBrush", "#3D161A");
+                    SetBrush(res, "TimelineKpi3BorderBrush", "#EF4444");
+                    SetBrush(res, "TimelineKpi3CircleBackgroundBrush", "#2B0E11");
+                    SetBrush(res, "TimelineKpi3CircleBorderBrush", "#EF4444");
+                    SetBrush(res, "TimelineKpi3ForegroundBrush", "#FCA5A5");
+
+                    SetBrush(res, "TimelineKpi4BackgroundBrush", "#133824");
+                    SetBrush(res, "TimelineKpi4BorderBrush", "#22C55E");
+                    SetBrush(res, "TimelineKpi4CircleBackgroundBrush", "#0D2618");
+                    SetBrush(res, "TimelineKpi4CircleBorderBrush", "#22C55E");
+                    SetBrush(res, "TimelineKpi4ForegroundBrush", "#86EFAC");
+
+                    SetBrush(res, "TimelineKpiSubtextBrush", "#D5CEBD");
+
+                    // Unit Tree Cơ Cấu Đơn Vị (Tác Chiến)
+                    SetBrush(res, "UnitTreeContainerBackgroundBrush", "#0F1A12");
+                    SetBrush(res, "UnitTreeContainerBorderBrush", "#596645");
+                    SetBrush(res, "UnitCardBackgroundBrush", "#1B3122");
+                    SetBrush(res, "UnitCardBorderBrush", "#7C6E3E");
+                    SetBrush(res, "UnitCardHoverBorderBrush", "#F2C94C");
+                    SetBrush(res, "UnitCardSelectedBackgroundBrush", "#28442E");
+                    SetBrush(res, "UnitCardSelectedBorderBrush", "#FFE17A");
+                    SetBrush(res, "UnitCardSubtextBrush", "#D5CEBD");
+                    SetBrush(res, "UnitBranchLineBrush", "#D4B547");
+                    SetBrush(res, "UnitAddButtonBackgroundBrush", "#163A24");
+                    SetBrush(res, "UnitAddButtonBorderBrush", "#22C55E");
+                    SetBrush(res, "UnitAddButtonForegroundBrush", "#86EFAC");
+                    SetBrush(res, "UnitEditButtonBackgroundBrush", "#132B3E");
+                    SetBrush(res, "UnitEditButtonBorderBrush", "#38BDF8");
+                    SetBrush(res, "UnitEditButtonForegroundBrush", "#7DD3FC");
 
                     // Training Timeline Tác Chiến Buttons
                     SetBrush(res, "TimelineHeaderButtonBackgroundBrush", "#182619");
@@ -187,36 +220,36 @@ namespace QL_HocVien.Services.Implementations
                     SetBrush(res, "BottomBarBackgroundBrush", "#101B14");
                     SetBrush(res, "BottomBarBorderBrush", "#625C34");
 
-                    // 6 Thẻ KPI Dashboard (Tác chiến dã chiến quân đội)
-                    SetBrush(res, "Kpi1BackgroundBrush", "#18251A");
-                    SetBrush(res, "Kpi1BorderBrush", "#625C34");
-                    SetBrush(res, "Kpi1ForegroundBrush", "#F2C94C");
-                    SetBrush(res, "Kpi1SubtextBrush", "#A3A899");
+                    // 6 Thẻ KPI Dashboard (Tác chiến dã chiến sắc nét, tương phản cao)
+                    SetBrush(res, "Kpi1BackgroundBrush", "#1C3022");
+                    SetBrush(res, "Kpi1BorderBrush", "#8C7D46");
+                    SetBrush(res, "Kpi1ForegroundBrush", "#FFE17A");
+                    SetBrush(res, "Kpi1SubtextBrush", "#E5E7EB");
 
-                    SetBrush(res, "Kpi2BackgroundBrush", "#12281C");
-                    SetBrush(res, "Kpi2BorderBrush", "#356E49");
-                    SetBrush(res, "Kpi2ForegroundBrush", "#86EFAC");
-                    SetBrush(res, "Kpi2SubtextBrush", "#86EFAC");
+                    SetBrush(res, "Kpi2BackgroundBrush", "#142C38");
+                    SetBrush(res, "Kpi2BorderBrush", "#38BDF8");
+                    SetBrush(res, "Kpi2ForegroundBrush", "#7DD3FC");
+                    SetBrush(res, "Kpi2SubtextBrush", "#BAE6FD");
 
-                    SetBrush(res, "Kpi3BackgroundBrush", "#12281C");
-                    SetBrush(res, "Kpi3BorderBrush", "#356E49");
-                    SetBrush(res, "Kpi3ForegroundBrush", "#86EFAC");
-                    SetBrush(res, "Kpi3SubtextBrush", "#86EFAC");
+                    SetBrush(res, "Kpi3BackgroundBrush", "#1B2B3E");
+                    SetBrush(res, "Kpi3BorderBrush", "#60A5FA");
+                    SetBrush(res, "Kpi3ForegroundBrush", "#93C5FD");
+                    SetBrush(res, "Kpi3SubtextBrush", "#BFDBFE");
 
-                    SetBrush(res, "Kpi4BackgroundBrush", "#12281C");
-                    SetBrush(res, "Kpi4BorderBrush", "#356E49");
+                    SetBrush(res, "Kpi4BackgroundBrush", "#153323");
+                    SetBrush(res, "Kpi4BorderBrush", "#22C55E");
                     SetBrush(res, "Kpi4ForegroundBrush", "#86EFAC");
-                    SetBrush(res, "Kpi4SubtextBrush", "#86EFAC");
+                    SetBrush(res, "Kpi4SubtextBrush", "#BBF7D0");
 
-                    SetBrush(res, "Kpi5BackgroundBrush", "#2D240E");
+                    SetBrush(res, "Kpi5BackgroundBrush", "#33280F");
                     SetBrush(res, "Kpi5BorderBrush", "#F59E0B");
                     SetBrush(res, "Kpi5ForegroundBrush", "#FDE047");
-                    SetBrush(res, "Kpi5SubtextBrush", "#FDE047");
+                    SetBrush(res, "Kpi5SubtextBrush", "#FEF08A");
 
-                    SetBrush(res, "Kpi6BackgroundBrush", "#2A1515");
-                    SetBrush(res, "Kpi6BorderBrush", "#DC2626");
-                    SetBrush(res, "Kpi6ForegroundBrush", "#F87171");
-                    SetBrush(res, "Kpi6SubtextBrush", "#F87171");
+                    SetBrush(res, "Kpi6BackgroundBrush", "#361517");
+                    SetBrush(res, "Kpi6BorderBrush", "#EF4444");
+                    SetBrush(res, "Kpi6ForegroundBrush", "#FCA5A5");
+                    SetBrush(res, "Kpi6SubtextBrush", "#FECACA");
 
                     // Đồng bộ lại các khóa kế thừa
                     SetBrush(res, "BgDarkBrush", "#101B14");
@@ -312,12 +345,46 @@ namespace QL_HocVien.Services.Implementations
                     SetBrush(res, "TimelineFilterBorderBrush", "#CBD5E1");
                     SetBrush(res, "TimelineKpi1BackgroundBrush", "#FFFFFF");
                     SetBrush(res, "TimelineKpi1BorderBrush", "#E2E8F0");
+                    SetBrush(res, "TimelineKpi1CircleBackgroundBrush", "#EFF6FF");
+                    SetBrush(res, "TimelineKpi1CircleBorderBrush", "#BFDBFE");
+                    SetBrush(res, "TimelineKpi1ForegroundBrush", "#2563EB");
+
                     SetBrush(res, "TimelineKpi2BackgroundBrush", "#FFFFFF");
                     SetBrush(res, "TimelineKpi2BorderBrush", "#E2E8F0");
+                    SetBrush(res, "TimelineKpi2CircleBackgroundBrush", "#F0FDF4");
+                    SetBrush(res, "TimelineKpi2CircleBorderBrush", "#BBF7D0");
+                    SetBrush(res, "TimelineKpi2ForegroundBrush", "#16A34A");
+
                     SetBrush(res, "TimelineKpi3BackgroundBrush", "#FFFFFF");
                     SetBrush(res, "TimelineKpi3BorderBrush", "#E2E8F0");
+                    SetBrush(res, "TimelineKpi3CircleBackgroundBrush", "#FEF2F2");
+                    SetBrush(res, "TimelineKpi3CircleBorderBrush", "#FECACA");
+                    SetBrush(res, "TimelineKpi3ForegroundBrush", "#DC2626");
+
                     SetBrush(res, "TimelineKpi4BackgroundBrush", "#FFFFFF");
                     SetBrush(res, "TimelineKpi4BorderBrush", "#E2E8F0");
+                    SetBrush(res, "TimelineKpi4CircleBackgroundBrush", "#ECFDF5");
+                    SetBrush(res, "TimelineKpi4CircleBorderBrush", "#A7F3D0");
+                    SetBrush(res, "TimelineKpi4ForegroundBrush", "#059669");
+
+                    SetBrush(res, "TimelineKpiSubtextBrush", "#64748B");
+
+                    // Unit Tree Cơ Cấu Đơn Vị (Hành Chính)
+                    SetBrush(res, "UnitTreeContainerBackgroundBrush", "#F8FAFC");
+                    SetBrush(res, "UnitTreeContainerBorderBrush", "#E2E8F0");
+                    SetBrush(res, "UnitCardBackgroundBrush", "#FFFFFF");
+                    SetBrush(res, "UnitCardBorderBrush", "#E2E8F0");
+                    SetBrush(res, "UnitCardHoverBorderBrush", "#2563EB");
+                    SetBrush(res, "UnitCardSelectedBackgroundBrush", "#EFF6FF");
+                    SetBrush(res, "UnitCardSelectedBorderBrush", "#2563EB");
+                    SetBrush(res, "UnitCardSubtextBrush", "#64748B");
+                    SetBrush(res, "UnitBranchLineBrush", "#3B82F6");
+                    SetBrush(res, "UnitAddButtonBackgroundBrush", "#ECFDF5");
+                    SetBrush(res, "UnitAddButtonBorderBrush", "#10B981");
+                    SetBrush(res, "UnitAddButtonForegroundBrush", "#059669");
+                    SetBrush(res, "UnitEditButtonBackgroundBrush", "#EFF6FF");
+                    SetBrush(res, "UnitEditButtonBorderBrush", "#3B82F6");
+                    SetBrush(res, "UnitEditButtonForegroundBrush", "#2563EB");
 
                     // Training Timeline Hành Chính Buttons (Đồng bộ, hiện đại, màu sắc bắt mắt)
                     SetBrush(res, "TimelineHeaderButtonBackgroundBrush", "#FFFFFF");

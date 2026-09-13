@@ -241,14 +241,35 @@ namespace QL_HocVien.Services.Implementations
                     return (false, $"Mã đơn vị '{unit.UnitCode}' đã tồn tại.");
             }
 
+            string oldName = existing.UnitName;
+            var trackedOriginal = _unitRepo.GetOriginalUnitName(existing);
+            if (!string.IsNullOrWhiteSpace(trackedOriginal))
+            {
+                oldName = trackedOriginal;
+            }
+            string newName = unit.UnitName;
+
             existing.UnitCode = unit.UnitCode;
             existing.UnitName = unit.UnitName;
-            existing.ParentUnit = unit.ParentUnit;
-            existing.CommanderName = unit.CommanderName;
-            existing.ContactPhone = unit.ContactPhone;
-            existing.Description = unit.Description;
+            existing.ParentUnit = unit.ParentUnit ?? string.Empty;
+            existing.CommanderName = unit.CommanderName ?? string.Empty;
+            existing.ContactPhone = unit.ContactPhone ?? string.Empty;
+            existing.Description = unit.Description ?? string.Empty;
 
             _unitRepo.Update(existing);
+
+            // Nếu tên đơn vị thay đổi, đồng bộ cập nhật ParentUnit của tất cả đơn vị con
+            if (!string.Equals(oldName, newName, StringComparison.OrdinalIgnoreCase))
+            {
+                var allUnits = (await _unitRepo.GetAllAsync()).ToList();
+                var childUnits = allUnits.Where(u => u.ParentUnit.Equals(oldName, StringComparison.OrdinalIgnoreCase)).ToList();
+                foreach (var child in childUnits)
+                {
+                    child.ParentUnit = newName;
+                    _unitRepo.Update(child);
+                }
+            }
+
             await _unitRepo.SaveChangesAsync();
             OnUnitsChanged?.Invoke();
             return (true, "Cập nhật đơn vị thành công!");
@@ -256,11 +277,55 @@ namespace QL_HocVien.Services.Implementations
 
         public async Task<(bool Success, string Message)> DeleteUnitAsync(int id)
         {
+            return await DeleteUnitCascadeAsync(id, cascadeDeleteChildren: false);
+        }
+
+        public async Task<(bool Success, string Message)> DeleteUnitCascadeAsync(int id, bool cascadeDeleteChildren)
+        {
             var existing = await _unitRepo.GetByIdAsync(id);
             if (existing == null)
                 return (false, "Không tìm thấy đơn vị cần xóa.");
 
-            _unitRepo.Delete(existing);
+            var allUnits = (await _unitRepo.GetAllAsync()).ToList();
+            var directChildren = allUnits
+                .Where(u => u.ParentUnit.Equals(existing.UnitName, StringComparison.OrdinalIgnoreCase) ||
+                            u.ParentUnit.Equals(existing.UnitCode, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            if (cascadeDeleteChildren)
+            {
+                // Xóa đệ quy toàn bộ con, cháu...
+                var toDelete = new List<MilitaryUnit>();
+                void CollectChildren(MilitaryUnit parent)
+                {
+                    var children = allUnits.Where(u => u.ParentUnit.Equals(parent.UnitName, StringComparison.OrdinalIgnoreCase) ||
+                                                       u.ParentUnit.Equals(parent.UnitCode, StringComparison.OrdinalIgnoreCase)).ToList();
+                    foreach (var c in children)
+                    {
+                        toDelete.Add(c);
+                        CollectChildren(c);
+                    }
+                }
+                CollectChildren(existing);
+
+                foreach (var c in toDelete)
+                {
+                    _unitRepo.Delete(c);
+                }
+                _unitRepo.Delete(existing);
+            }
+            else
+            {
+                // Nâng các đơn vị con lên cấp trên của đơn vị bị xóa
+                string newParent = existing.ParentUnit ?? string.Empty;
+                foreach (var child in directChildren)
+                {
+                    child.ParentUnit = newParent;
+                    _unitRepo.Update(child);
+                }
+                _unitRepo.Delete(existing);
+            }
+
             await _unitRepo.SaveChangesAsync();
             OnUnitsChanged?.Invoke();
             return (true, "Đã xóa đơn vị thành công!");

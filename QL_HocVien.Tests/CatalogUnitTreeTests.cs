@@ -289,5 +289,95 @@ namespace QL_HocVien.Tests
             Assert.True(root.IsExpanded);
             Assert.True(child.IsExpanded);
         }
+
+        [Fact]
+        public async Task Test_All_TreeNodes_Have_Real_Unit_And_Can_Edit_And_Delete()
+        {
+            var fakeGate = new QL_HocVien.Tests.TestDoubles.FakeSecurityGateService();
+            var fileDialog = new FileDialogService();
+            var vm = new CatalogManagementViewModel(_catalogService, _excelService, fileDialog, fakeGate, _classService);
+
+            // Seed only child units with missing parent strings
+            var u1 = new MilitaryUnit { UnitCode = "c10", UnitName = "Đại đội 10", ParentUnit = "Tiểu đoàn 5", CommanderName = "Đại úy Nam" };
+            await _catalogService.AddUnitAsync(u1);
+
+            await vm.LoadAllDataAsync();
+
+            Assert.NotEmpty(vm.UnitTreeNodes);
+
+            // Duyệt toàn bộ node để kiểm tra: Mọi node tổ chức quân sự phải có Unit != null, CanEdit == true, CanDelete == true
+            void VerifyNodePermissions(UnitTreeNode node)
+            {
+                if (!node.IsClassLeaf)
+                {
+                    Assert.NotNull(node.Unit);
+                    Assert.True(node.CanEdit, $"Node {node.Name} phải có CanEdit = true");
+                    Assert.True(node.CanDelete, $"Node {node.Name} phải có CanDelete = true");
+                    Assert.True(node.CanAddChild, $"Node {node.Name} phải có CanAddChild = true");
+                }
+                foreach (var child in node.Children)
+                {
+                    VerifyNodePermissions(child);
+                }
+            }
+
+            foreach (var root in vm.UnitTreeNodes)
+            {
+                VerifyNodePermissions(root);
+            }
+        }
+
+        [Fact]
+        public async Task Test_CatalogService_DeleteUnitCascade_And_Reparent()
+        {
+            // Tạo nhánh: Trung đoàn X -> Tiểu đoàn Y -> Đại đội Z
+            var eX = new MilitaryUnit { UnitCode = "eX", UnitName = "Trung đoàn X", ParentUnit = "Học viện" };
+            var dY = new MilitaryUnit { UnitCode = "dY", UnitName = "Tiểu đoàn Y", ParentUnit = "Trung đoàn X" };
+            var cZ = new MilitaryUnit { UnitCode = "cZ", UnitName = "Đại đội Z", ParentUnit = "Tiểu đoàn Y" };
+
+            var res1 = await _catalogService.AddUnitAsync(eX);
+            var res2 = await _catalogService.AddUnitAsync(dY);
+            var res3 = await _catalogService.AddUnitAsync(cZ);
+
+            Assert.True(res1.Success && res2.Success && res3.Success);
+
+            // Test 1: Xóa không cascade (cascadeDeleteChildren = false) -> con được chuyển lên cấp trên của cha
+            var delReparentRes = await _catalogService.DeleteUnitCascadeAsync(res2.Unit!.Id, cascadeDeleteChildren: false);
+            Assert.True(delReparentRes.Success);
+
+            var cZUpdated = await _catalogService.GetUnitByIdAsync(res3.Unit!.Id);
+            Assert.NotNull(cZUpdated);
+            Assert.Equal("Trung đoàn X", cZUpdated.ParentUnit); // Đã chuyển lên cấp trên của Tiểu đoàn Y
+
+            // Test 2: Xóa cascade toàn bộ nhánh
+            var delCascadeRes = await _catalogService.DeleteUnitCascadeAsync(res1.Unit!.Id, cascadeDeleteChildren: true);
+            Assert.True(delCascadeRes.Success);
+
+            var eXCheck = await _catalogService.GetUnitByIdAsync(res1.Unit!.Id);
+            var cZCheck = await _catalogService.GetUnitByIdAsync(res3.Unit!.Id);
+            Assert.Null(eXCheck);
+            Assert.Null(cZCheck); // cZ đã bị xóa cùng eX do thuộc nhánh eX
+        }
+
+        [Fact]
+        public async Task Test_CatalogService_UpdateUnit_Renames_Children_ParentUnit()
+        {
+            var dParent = new MilitaryUnit { UnitCode = "d_test", UnitName = "Tiểu đoàn Test", ParentUnit = "Học viện" };
+            var cChild = new MilitaryUnit { UnitCode = "c_test", UnitName = "Đại đội Test", ParentUnit = "Tiểu đoàn Test" };
+
+            var resP = await _catalogService.AddUnitAsync(dParent);
+            var resC = await _catalogService.AddUnitAsync(cChild);
+
+            Assert.True(resP.Success && resC.Success);
+
+            // Đổi tên Tiểu đoàn Test -> Tiểu đoàn Mới
+            resP.Unit!.UnitName = "Tiểu đoàn Mới";
+            var updateRes = await _catalogService.UpdateUnitAsync(resP.Unit!);
+            Assert.True(updateRes.Success);
+
+            var cUpdated = await _catalogService.GetUnitByIdAsync(resC.Unit!.Id);
+            Assert.NotNull(cUpdated);
+            Assert.Equal("Tiểu đoàn Mới", cUpdated.ParentUnit);
+        }
     }
 }

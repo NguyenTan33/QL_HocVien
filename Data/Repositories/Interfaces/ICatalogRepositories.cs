@@ -26,6 +26,7 @@ namespace QL_HocVien.Data.Repositories.Interfaces
         Task<IEnumerable<MilitaryUnit>> SearchWithCriteriaAsync(QL_HocVien.Models.Filters.CatalogFilterCriteria criteria);
         Task<MilitaryUnit?> GetByCodeAsync(string unitCode);
         Task<bool> ExistsByCodeAsync(string unitCode);
+        string? GetOriginalUnitName(MilitaryUnit unit);
     }
 
     public interface IMajorRepository : IRepository<MilitaryMajor>

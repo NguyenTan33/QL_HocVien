@@ -98,14 +98,48 @@
     <SolidColorBrush x:Key="TimelineCardBorderBrush" Color="#D5CAAE"/>
     <SolidColorBrush x:Key="TimelineFilterBackgroundBrush" Color="#162417"/>
     <SolidColorBrush x:Key="TimelineFilterBorderBrush" Color="#72683A"/>
-    <SolidColorBrush x:Key="TimelineKpi1BackgroundBrush" Color="#15261A"/>
-    <SolidColorBrush x:Key="TimelineKpi1BorderBrush" Color="#7B6F3E"/>
-    <SolidColorBrush x:Key="TimelineKpi2BackgroundBrush" Color="#11232E"/>
-    <SolidColorBrush x:Key="TimelineKpi2BorderBrush" Color="#3A5E70"/>
-    <SolidColorBrush x:Key="TimelineKpi3BackgroundBrush" Color="#2D1215"/>
-    <SolidColorBrush x:Key="TimelineKpi3BorderBrush" Color="#782E32"/>
-    <SolidColorBrush x:Key="TimelineKpi4BackgroundBrush" Color="#12281C"/>
-    <SolidColorBrush x:Key="TimelineKpi4BorderBrush" Color="#356E49"/>
+    <SolidColorBrush x:Key="TimelineKpi1BackgroundBrush" Color="#1B3322"/>
+    <SolidColorBrush x:Key="TimelineKpi1BorderBrush" Color="#C4A035"/>
+    <SolidColorBrush x:Key="TimelineKpi1CircleBackgroundBrush" Color="#122417"/>
+    <SolidColorBrush x:Key="TimelineKpi1CircleBorderBrush" Color="#D4B547"/>
+    <SolidColorBrush x:Key="TimelineKpi1ForegroundBrush" Color="#FFE17A"/>
+
+    <SolidColorBrush x:Key="TimelineKpi2BackgroundBrush" Color="#132F42"/>
+    <SolidColorBrush x:Key="TimelineKpi2BorderBrush" Color="#38BDF8"/>
+    <SolidColorBrush x:Key="TimelineKpi2CircleBackgroundBrush" Color="#0E2333"/>
+    <SolidColorBrush x:Key="TimelineKpi2CircleBorderBrush" Color="#38BDF8"/>
+    <SolidColorBrush x:Key="TimelineKpi2ForegroundBrush" Color="#7DD3FC"/>
+
+    <SolidColorBrush x:Key="TimelineKpi3BackgroundBrush" Color="#3D161A"/>
+    <SolidColorBrush x:Key="TimelineKpi3BorderBrush" Color="#EF4444"/>
+    <SolidColorBrush x:Key="TimelineKpi3CircleBackgroundBrush" Color="#2B0E11"/>
+    <SolidColorBrush x:Key="TimelineKpi3CircleBorderBrush" Color="#EF4444"/>
+    <SolidColorBrush x:Key="TimelineKpi3ForegroundBrush" Color="#FCA5A5"/>
+
+    <SolidColorBrush x:Key="TimelineKpi4BackgroundBrush" Color="#133824"/>
+    <SolidColorBrush x:Key="TimelineKpi4BorderBrush" Color="#22C55E"/>
+    <SolidColorBrush x:Key="TimelineKpi4CircleBackgroundBrush" Color="#0D2618"/>
+    <SolidColorBrush x:Key="TimelineKpi4CircleBorderBrush" Color="#22C55E"/>
+    <SolidColorBrush x:Key="TimelineKpi4ForegroundBrush" Color="#86EFAC"/>
+
+    <SolidColorBrush x:Key="TimelineKpiSubtextBrush" Color="#D5CEBD"/>
+
+    <!-- Unit Tree Organization Brushes (Cơ cấu đơn vị) -->
+    <SolidColorBrush x:Key="UnitTreeContainerBackgroundBrush" Color="#0F1A12"/>
+    <SolidColorBrush x:Key="UnitTreeContainerBorderBrush" Color="#596645"/>
+    <SolidColorBrush x:Key="UnitCardBackgroundBrush" Color="#1B3122"/>
+    <SolidColorBrush x:Key="UnitCardBorderBrush" Color="#7C6E3E"/>
+    <SolidColorBrush x:Key="UnitCardHoverBorderBrush" Color="#F2C94C"/>
+    <SolidColorBrush x:Key="UnitCardSelectedBackgroundBrush" Color="#28442E"/>
+    <SolidColorBrush x:Key="UnitCardSelectedBorderBrush" Color="#FFE17A"/>
+    <SolidColorBrush x:Key="UnitCardSubtextBrush" Color="#D5CEBD"/>
+    <SolidColorBrush x:Key="UnitBranchLineBrush" Color="#D4B547"/>
+    <SolidColorBrush x:Key="UnitAddButtonBackgroundBrush" Color="#163A24"/>
+    <SolidColorBrush x:Key="UnitAddButtonBorderBrush" Color="#22C55E"/>
+    <SolidColorBrush x:Key="UnitAddButtonForegroundBrush" Color="#86EFAC"/>
+    <SolidColorBrush x:Key="UnitEditButtonBackgroundBrush" Color="#132B3E"/>
+    <SolidColorBrush x:Key="UnitEditButtonBorderBrush" Color="#38BDF8"/>
+    <SolidColorBrush x:Key="UnitEditButtonForegroundBrush" Color="#7DD3FC"/>
 
     <!-- Watermark Visibility -->
     <Visibility x:Key="CardWatermarkVisibility">Visible</Visibility>

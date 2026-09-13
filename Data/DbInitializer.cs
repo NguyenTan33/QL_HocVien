@@ -589,6 +589,13 @@ namespace QL_HocVien.Data
                     }
                 }
 
+                AddIfNotExists("e1", "Trung đoàn 1", "Học viện", "Thượng tá Nguyễn Mạnh Hùng", "0981111099", "Trung đoàn quản lý & huấn luyện toàn diện");
+                AddIfNotExists("d1", "Tiểu đoàn 1", "Trung đoàn 1", "Trung tá Hoàng Minh Tuấn", "0981111010", "Tiểu đoàn quản lý khóa K26");
+                AddIfNotExists("d2", "Tiểu đoàn 2", "Trung đoàn 1", "Trung tá Vũ Đình Cường", "0981111020", "Tiểu đoàn quản lý khóa K27");
+                AddIfNotExists("c1", "Đại đội 1", "Tiểu đoàn 1", "Đại úy Nguyễn Văn Hùng", "0981111001", "Đại đội đào tạo Chỉ huy Tham mưu");
+                AddIfNotExists("c2", "Đại đội 2", "Tiểu đoàn 1", "Đại úy Trần Văn Quân", "0981111002", "Đại đội đào tạo Hậu cần Quân sự");
+                AddIfNotExists("c3", "Đại đội 3", "Tiểu đoàn 1", "Thiếu tá Lê Hồng Sơn", "0981111003", "Đại đội đào tạo Kỹ thuật Quân sự");
+                AddIfNotExists("c4", "Đại đội 4", "Tiểu đoàn 1", "Đại úy Phạm Văn Toàn", "0981111004", "Đại đội đào tạo Trinh sát Đặc nhiệm");
                 AddIfNotExists("b1", "Trung đội 1", "Đại đội 1", "Trung úy Lê Văn An", "0981111031", "Trung đội 1 (b1)");
                 AddIfNotExists("b2", "Trung đội 2", "Đại đội 1", "Trung úy Đặng Minh Tuấn", "0981111032", "Trung đội 2 (b2)");
                 AddIfNotExists("b3", "Trung đội 3", "Đại đội 1", "Thượng úy Hoàng Quốc Bảo", "0981111033", "Trung đội 3 (b3)");
@@ -600,6 +607,43 @@ namespace QL_HocVien.Data
                 AddIfNotExists("a3", "Tiểu đội 3", "Trung đội 1", "Trung sĩ Nguyễn Thái Học", "0981111043", "Tiểu đội 3 (a3)");
                 AddIfNotExists("n1", "Nhóm 1", "Tiểu đội 1", "Hạ sĩ Đinh Tiên Hoàng", "0981111051", "Nhóm 1 (Tổ chiến đấu 1)");
                 AddIfNotExists("n2", "Nhóm 2", "Tiểu đội 1", "Hạ sĩ Lê Lợi", "0981111052", "Nhóm 2 (Tổ chiến đấu 2)");
+
+                // Tự động kiểm tra và chèn bản ghi thật vào SQLite cho bất kỳ ParentUnit nào được tham chiếu mà chưa có row
+                var allDbUnits = context.MilitaryUnits.ToList();
+                var existingNames = new HashSet<string>(allDbUnits.Select(u => (u.UnitName ?? "").ToLower()), StringComparer.OrdinalIgnoreCase);
+                foreach (var item in toAdd)
+                {
+                    existingNames.Add((item.UnitName ?? "").ToLower());
+                }
+
+                var referencedParents = allDbUnits
+                    .Where(u => !string.IsNullOrWhiteSpace(u.ParentUnit) &&
+                                !u.ParentUnit.Equals("Học viện", StringComparison.OrdinalIgnoreCase) &&
+                                !u.ParentUnit.Equals("Bộ chỉ huy", StringComparison.OrdinalIgnoreCase))
+                    .Select(u => u.ParentUnit.Trim())
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+
+                int autoCodeIndex = 1;
+                foreach (var pName in referencedParents)
+                {
+                    if (!existingNames.Contains(pName.ToLower()))
+                    {
+                        string pCode = pName.ToLower().Contains("tiểu đoàn") ? $"d_auto{autoCodeIndex++}" :
+                                       pName.ToLower().Contains("trung đoàn") ? $"e_auto{autoCodeIndex++}" :
+                                       $"u_auto{autoCodeIndex++}";
+                        toAdd.Add(new MilitaryUnit
+                        {
+                            UnitCode = pCode,
+                            UnitName = pName,
+                            ParentUnit = "Học viện",
+                            CommanderName = $"Chỉ huy trưởng {pName}",
+                            ContactPhone = "0981111000",
+                            Description = "Cơ quan chỉ huy cấp trên"
+                        });
+                        existingNames.Add(pName.ToLower());
+                    }
+                }
 
                 if (toAdd.Count > 0)
                 {

@@ -507,6 +507,59 @@ namespace QL_HocVien.ViewModels
         {
             if (!await _securityGate.EnsureUnlockedAsync("Xóa mục trong danh mục tổ chức")) return;
 
+            if (SelectedTabIndex == 2)
+            {
+                if (SelectedUnit == null) return;
+                var allUnits = Units.ToList();
+                bool hasChildren = allUnits.Any(u => !string.IsNullOrWhiteSpace(u.ParentUnit) &&
+                    (u.ParentUnit.Equals(SelectedUnit.UnitName, StringComparison.OrdinalIgnoreCase) ||
+                     u.ParentUnit.Equals(SelectedUnit.UnitCode, StringComparison.OrdinalIgnoreCase)));
+                bool cascade = false;
+                if (hasChildren)
+                {
+                    var confirmBranch = MessageBox.Show(
+                        $"Đơn vị '{SelectedUnit.UnitName}' hiện có các đơn vị trực thuộc.\n\n" +
+                        "• Bấm 'Yes' để XÓA TOÀN BỘ đơn vị này và tất cả các đơn vị con trực thuộc.\n" +
+                        "• Bấm 'No' để CHUYỂN các đơn vị con lên đơn vị cấp trên (không xóa con).\n" +
+                        "• Bấm 'Cancel' để hủy thao tác.",
+                        "Xác nhận xóa đơn vị có cấp con",
+                        MessageBoxButton.YesNoCancel,
+                        MessageBoxImage.Warning);
+                    if (confirmBranch == MessageBoxResult.Cancel) return;
+                    cascade = (confirmBranch == MessageBoxResult.Yes);
+                }
+                else
+                {
+                    var confirm = MessageBox.Show($"Bạn có chắc chắn muốn xóa Đơn vị: {SelectedUnit.UnitName} ({SelectedUnit.UnitCode}) không?",
+                        "Xác nhận xóa", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                    if (confirm != MessageBoxResult.Yes) return;
+                }
+
+                IsBusy = true;
+                try
+                {
+                    var res = await _catalogService.DeleteUnitCascadeAsync(SelectedUnit.Id, cascade);
+                    StatusMessage = res.Message;
+                    if (!res.Success)
+                    {
+                        MessageBox.Show(res.Message, "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    }
+                    else
+                    {
+                        await LoadAllDataAsync();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Lỗi xóa: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                finally
+                {
+                    IsBusy = false;
+                }
+                return;
+            }
+
             string itemDesc = "";
             switch (SelectedTabIndex)
             {
@@ -518,18 +571,14 @@ namespace QL_HocVien.ViewModels
                     if (SelectedPosition == null) return;
                     itemDesc = $"Chức vụ: {SelectedPosition.PositionName} ({SelectedPosition.PositionCode})";
                     break;
-                case 2:
-                    if (SelectedUnit == null) return;
-                    itemDesc = $"Đơn vị: {SelectedUnit.UnitName} ({SelectedUnit.UnitCode})";
-                    break;
                 case 3:
                     if (SelectedMajor == null) return;
                     itemDesc = $"Chuyên ngành: {SelectedMajor.MajorName} ({SelectedMajor.MajorCode})";
                     break;
             }
 
-            var confirm = MessageBox.Show($"Bạn có chắc chắn muốn xóa {itemDesc} không?", "Xác nhận xóa", MessageBoxButton.YesNo, MessageBoxImage.Question);
-            if (confirm != MessageBoxResult.Yes) return;
+            var confirmGen = MessageBox.Show($"Bạn có chắc chắn muốn xóa {itemDesc} không?", "Xác nhận xóa", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (confirmGen != MessageBoxResult.Yes) return;
 
             IsBusy = true;
             try
@@ -542,9 +591,6 @@ namespace QL_HocVien.ViewModels
                         break;
                     case 1:
                         res = await _catalogService.DeletePositionAsync(SelectedPosition!.Id);
-                        break;
-                    case 2:
-                        res = await _catalogService.DeleteUnitAsync(SelectedUnit!.Id);
                         break;
                     case 3:
                         res = await _catalogService.DeleteMajorAsync(SelectedMajor!.Id);
@@ -697,6 +743,20 @@ namespace QL_HocVien.ViewModels
         }
 
         [RelayCommand]
+        public async Task AddRootUnitAsync()
+        {
+            if (!await _securityGate.EnsureUnlockedAsync("Thêm mới đơn vị quân sự")) return;
+
+            SelectedTabIndex = 2;
+            IsEditing = false;
+            ClearForm();
+
+            FormTitle = "Thêm Đơn Vị Gốc Mới (Cấp Cao Nhất / Độc Lập)";
+            FormParentUnit = "Học viện";
+            IsFormVisible = true;
+        }
+
+        [RelayCommand]
         public async Task EditUnitNodeAsync(UnitTreeNode? node)
         {
             if (node?.Unit == null) return;
@@ -742,26 +802,28 @@ namespace QL_HocVien.ViewModels
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
-            var createdRoots = new Dictionary<string, UnitTreeNode>(StringComparer.OrdinalIgnoreCase);
-
+            int autoIdx = 1;
             foreach (var pName in missingParents)
             {
-                var virtualRoot = new UnitTreeNode
+                string pCode = pName.ToLower().Contains("tiểu đoàn") ? $"d_auto{autoIdx++}" :
+                               pName.ToLower().Contains("trung đoàn") ? $"e_auto{autoIdx++}" :
+                               $"u_auto{autoIdx++}";
+                var newUnit = new MilitaryUnit
                 {
-                    NodeId = $"root_{pName}",
-                    Name = pName,
-                    Code = "e1",
-                    Level = 1,
-                    LevelName = "CẤP TRUNG ĐOÀN",
-                    Commander = "Chỉ huy trưởng Trung đoàn",
-                    Phone = "024.3756.999",
-                    Description = "Cơ quan chỉ huy trực tiếp cấp trên",
-                    Icon = "🏛️",
-                    BadgeBrush = "#8B1E1E",
-                    IsExpanded = true
+                    UnitCode = pCode,
+                    UnitName = pName,
+                    ParentUnit = "Học viện",
+                    CommanderName = $"Chỉ huy trưởng {pName}",
+                    ContactPhone = "0981111000",
+                    Description = "Cơ quan chỉ huy cấp trên"
                 };
-                UnitTreeNodes.Add(virtualRoot);
-                createdRoots[pName] = virtualRoot;
+                var addRes = await _catalogService.AddUnitAsync(newUnit);
+                if (addRes.Success && addRes.Unit != null)
+                {
+                    allUnits.Add(addRes.Unit);
+                    Units.Add(addRes.Unit);
+                    existingUnitNames.Add(pName);
+                }
             }
 
             var rootUnits = allUnits.Where(u =>
@@ -773,20 +835,10 @@ namespace QL_HocVien.ViewModels
 
             foreach (var ru in rootUnits)
             {
-                if (!string.IsNullOrWhiteSpace(ru.ParentUnit) && createdRoots.TryGetValue(ru.ParentUnit.Trim(), out var parentNode))
-                {
-                    int level = DetermineLevel(ru);
-                    var node = CreateUnitNode(ru, level, classes);
-                    parentNode.Children.Add(node);
-                    AttachChildrenRecursive(node, allUnits, classes);
-                }
-                else
-                {
-                    int level = DetermineLevel(ru);
-                    var node = CreateUnitNode(ru, level, classes);
-                    UnitTreeNodes.Add(node);
-                    AttachChildrenRecursive(node, allUnits, classes);
-                }
+                int level = DetermineLevel(ru);
+                var node = CreateUnitNode(ru, level, classes);
+                UnitTreeNodes.Add(node);
+                AttachChildrenRecursive(node, allUnits, classes);
             }
 
             var addedUnitIds = new HashSet<int>();
@@ -795,7 +847,7 @@ namespace QL_HocVien.ViewModels
             {
                 if (!addedUnitIds.Contains(u.Id))
                 {
-                    var orphanNode = CreateUnitNode(u, 3, classes);
+                    var orphanNode = CreateUnitNode(u, DetermineLevel(u), classes);
                     UnitTreeNodes.Add(orphanNode);
                     AttachChildrenRecursive(orphanNode, allUnits, classes);
                 }
@@ -819,6 +871,8 @@ namespace QL_HocVien.ViewModels
             if (name.Contains("tiểu đoàn") || code.StartsWith("d")) return 2;
             if (name.Contains("đại đội") || code.StartsWith("c")) return 3;
             if (name.Contains("trung đội") || name.Contains("lớp") || code.StartsWith("b")) return 4;
+            if (name.Contains("tiểu đội") || code.StartsWith("a")) return 5;
+            if (name.Contains("nhóm") || name.Contains("tổ") || code.StartsWith("n")) return 6;
             return 3;
         }
 
@@ -829,6 +883,9 @@ namespace QL_HocVien.ViewModels
                 1 => "CẤP TRUNG ĐOÀN",
                 2 => "CẤP TIỂU ĐOÀN",
                 3 => "CẤP ĐẠI ĐỘI",
+                4 => "CẤP TRUNG ĐỘI",
+                5 => "CẤP TIỂU ĐỘI",
+                6 => "CẤP NHÓM / TỔ",
                 _ => "PHÂN ĐỘI"
             };
 
@@ -837,6 +894,9 @@ namespace QL_HocVien.ViewModels
                 1 => "🏛️",
                 2 => "🛡️",
                 3 => "🚩",
+                4 => "🎖️",
+                5 => "🎯",
+                6 => "🔹",
                 _ => "🎖️"
             };
 
@@ -845,7 +905,10 @@ namespace QL_HocVien.ViewModels
                 1 => "#8B1E1E",
                 2 => "#2E5A36",
                 3 => "#9C4116",
-                _ => "#1E426D"
+                4 => "#1E426D",
+                5 => "#4F46E5",
+                6 => "#0D9488",
+                _ => "#334155"
             };
 
             var node = new UnitTreeNode
@@ -854,6 +917,7 @@ namespace QL_HocVien.ViewModels
                 NodeId = $"unit_{u.Id}",
                 Name = u.UnitName,
                 Code = u.UnitCode,
+                Value = !string.IsNullOrWhiteSpace(u.UnitName) ? u.UnitName : u.UnitCode,
                 Level = level,
                 LevelName = levelName,
                 Commander = !string.IsNullOrWhiteSpace(u.CommanderName) ? u.CommanderName : "Chưa biên chế",
@@ -867,23 +931,33 @@ namespace QL_HocVien.ViewModels
             return node;
         }
 
-        private void AttachChildrenRecursive(UnitTreeNode parentNode, List<MilitaryUnit> allUnits, List<MilitaryClass> classes)
+        private void AttachChildrenRecursive(UnitTreeNode parentNode, List<MilitaryUnit> allUnits, List<MilitaryClass> classes, HashSet<string>? branchKeys = null)
         {
+            branchKeys ??= new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            if (!string.IsNullOrWhiteSpace(parentNode.Code)) branchKeys.Add(parentNode.Code.Trim());
+            if (!string.IsNullOrWhiteSpace(parentNode.Name)) branchKeys.Add(parentNode.Name.Trim());
+
             var childUnits = allUnits
                 .Where(u => !string.IsNullOrWhiteSpace(u.ParentUnit) &&
-                            u.ParentUnit.Trim().Equals(parentNode.Name.Trim(), StringComparison.OrdinalIgnoreCase) &&
-                            u.Id != parentNode.Unit?.Id)
+                            (u.ParentUnit.Trim().Equals(parentNode.Name.Trim(), StringComparison.OrdinalIgnoreCase) ||
+                             (!string.IsNullOrWhiteSpace(parentNode.Code) && u.ParentUnit.Trim().Equals(parentNode.Code.Trim(), StringComparison.OrdinalIgnoreCase))) &&
+                            !string.Equals(u.UnitCode, parentNode.Code, StringComparison.OrdinalIgnoreCase) &&
+                            !ReferenceEquals(u, parentNode.Unit) &&
+                            (string.IsNullOrWhiteSpace(u.UnitCode) || !branchKeys.Contains(u.UnitCode.Trim())) &&
+                            (string.IsNullOrWhiteSpace(u.UnitName) || !branchKeys.Contains(u.UnitName.Trim())))
                 .ToList();
 
             foreach (var cu in childUnits)
             {
                 int nextLevel = parentNode.Level + 1;
                 var childNode = CreateUnitNode(cu, nextLevel, classes);
+                childNode.ParentNode = parentNode;
                 parentNode.Children.Add(childNode);
-                AttachChildrenRecursive(childNode, allUnits, classes);
+                var nextBranch = new HashSet<string>(branchKeys, StringComparer.OrdinalIgnoreCase);
+                AttachChildrenRecursive(childNode, allUnits, classes, nextBranch);
             }
 
-            if (parentNode.Level >= 3 && !parentNode.IsClassLeaf)
+            if (!parentNode.IsClassLeaf)
             {
                 var unitClasses = classes
                     .Where(c => !string.IsNullOrWhiteSpace(c.Unit) &&
@@ -894,10 +968,11 @@ namespace QL_HocVien.ViewModels
                 {
                     var classNode = new UnitTreeNode
                     {
+                        ParentNode = parentNode,
                         NodeId = $"class_{cls.Id}",
                         Name = $"{cls.ClassCode} - {cls.ClassName}",
                         Code = cls.ClassCode,
-                        Level = 4,
+                        Level = parentNode.Level + 1,
                         LevelName = "PHÂN ĐỘI / LỚP HỌC VIÊN",
                         Commander = !string.IsNullOrWhiteSpace(cls.OfficerInCharge) ? cls.OfficerInCharge : "Chưa phân công",
                         Phone = !string.IsNullOrWhiteSpace(cls.AcademicYear) ? cls.AcademicYear : "Niên khóa đào tạo",
