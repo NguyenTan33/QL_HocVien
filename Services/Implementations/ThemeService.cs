@@ -134,6 +134,15 @@ namespace QL_HocVien.Services.Implementations
 
                     SetBrush(res, "TimelineKpiSubtextBrush", "#D5CEBD");
 
+                    // Dashboard Monthly Focus Events Brushes (Trọng tâm trong tháng - Tác chiến)
+                    SetBrush(res, "DashboardEventDateBackgroundBrush", "#162417");
+                    SetBrush(res, "DashboardEventDateBorderBrush", "#7C6E3E");
+                    SetBrush(res, "DashboardEventDateForegroundBrush", "#FFE17A");
+                    SetBrush(res, "DashboardEventYearForegroundBrush", "#D5CEBD");
+                    SetBrush(res, "DashboardEventStatusBackgroundBrush", "#28442E");
+                    SetBrush(res, "DashboardEventStatusBorderBrush", "#3F6847");
+                    SetBrush(res, "DashboardEventStatusForegroundBrush", "#86EFAC");
+
                     // Unit Tree Cơ Cấu Đơn Vị (Tác Chiến)
                     SetBrush(res, "UnitTreeContainerBackgroundBrush", "#0F1A12");
                     SetBrush(res, "UnitTreeContainerBorderBrush", "#596645");
@@ -368,6 +377,15 @@ namespace QL_HocVien.Services.Implementations
                     SetBrush(res, "TimelineKpi4ForegroundBrush", "#059669");
 
                     SetBrush(res, "TimelineKpiSubtextBrush", "#64748B");
+
+                    // Dashboard Monthly Focus Events Brushes (Trọng tâm trong tháng - Hành chính)
+                    SetBrush(res, "DashboardEventDateBackgroundBrush", "#EFF6FF");
+                    SetBrush(res, "DashboardEventDateBorderBrush", "#BFDBFE");
+                    SetBrush(res, "DashboardEventDateForegroundBrush", "#1D4ED8");
+                    SetBrush(res, "DashboardEventYearForegroundBrush", "#64748B");
+                    SetBrush(res, "DashboardEventStatusBackgroundBrush", "#F1F5F9");
+                    SetBrush(res, "DashboardEventStatusBorderBrush", "#CBD5E1");
+                    SetBrush(res, "DashboardEventStatusForegroundBrush", "#1E293B");
 
                     // Unit Tree Cơ Cấu Đơn Vị (Hành Chính)
                     SetBrush(res, "UnitTreeContainerBackgroundBrush", "#F8FAFC");

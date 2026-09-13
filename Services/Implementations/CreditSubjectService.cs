@@ -270,9 +270,25 @@ namespace QL_HocVien.Services.Implementations
                 .Select(kvp => kvp.Key)
                 .ToHashSet();
 
-            // Tá»•ng tÃ­n chá»‰ toÃ n khÃ³a chuáº©n (tÃ­nh tá»« cÃ¡c Ä‘á»£t thi hoáº·c 62.90 theo file Excel chuáº©n)
+            // Tự động phát hiện và dọn dẹp các đợt thi trùng lặp nếu tổng tín chỉ bị dội lên > 63.5 (ví dụ 84.6)
+            if (allComponents.Sum(c => c.Credits) > 63.5)
+            {
+                await NormalizeAndDeduplicateCurriculumAsync();
+                majorSubjects = await _context.CreditSubjects
+                    .Include(s => s.Components)
+                    .Where(s => !s.IsComponent)
+                    .AsNoTracking()
+                    .ToListAsync();
+                allComponents = majorSubjects
+                    .SelectMany(s => s.Components)
+                    .OrderBy(c => c.CreditSubjectId)
+                    .ThenBy(c => c.OrderIndex)
+                    .ToList();
+            }
+
+            // Tổng tín chỉ toàn khóa chuẩn (tính từ các đợt thi hoặc 62.90 theo file Excel chuẩn)
             double curriculumCredits = allComponents.Sum(c => c.Credits);
-            if (curriculumCredits <= 0) curriculumCredits = 62.90;
+            if (curriculumCredits <= 0 || Math.Abs(curriculumCredits - 62.90) < 0.1) curriculumCredits = 62.90;
 
             var result = new List<CadetAcademicSummaryDto>();
 
@@ -812,7 +828,7 @@ namespace QL_HocVien.Services.Implementations
             return (subjName, false);
         }
 
-        private sealed class CadetMetadataColumns
+        public sealed class CadetMetadataColumns
         {
             public int ColStt { get; set; } = 1;
             public int ColCode { get; set; } = -1;
@@ -823,7 +839,7 @@ namespace QL_HocVien.Services.Implementations
             public int StartSubjectCol { get; set; } = 7;
         }
 
-        private sealed class ExcelSheetLayout
+        public sealed class ExcelSheetLayout
         {
             public CadetMetadataColumns Meta { get; set; } = new();
             public int HeaderRow { get; set; } = 4;
@@ -833,7 +849,7 @@ namespace QL_HocVien.Services.Implementations
             public int LastStudentRow { get; set; } = 69;
         }
 
-        private static ExcelSheetLayout DetectExcelLayout(IXLWorksheet ws)
+        public static ExcelSheetLayout DetectExcelLayout(IXLWorksheet ws)
         {
             var layout = new ExcelSheetLayout();
             int lastRowUsed = ws.LastRowUsed()?.RowNumber() ?? 70;
@@ -1080,10 +1096,23 @@ namespace QL_HocVien.Services.Implementations
                 }
             }
 
-            if (meta.ColCode == 2 && meta.ColUnit == -1)
+            // Tự động nhận diện Cột 3 là Cột Đơn Vị nếu cột 2 là Mã học viên và cột 4 là Họ tên
+            if (meta.ColUnit == -1 && (meta.ColCode == 2 || meta.ColCode == -1))
             {
-                string uVal = ws.Cell(studentStartRow, 3).GetString().Trim();
-                if (!string.IsNullOrWhiteSpace(uVal) && (uVal.StartsWith("b") || uVal.StartsWith("c") || uVal.StartsWith("d")))
+                string u3 = ws.Cell(3, 3).GetString().Trim();
+                string u4 = ws.Cell(4, 3).GetString().Trim();
+                string uVal = studentStartRow > 0 ? ws.Cell(studentStartRow, 3).GetString().Trim() : string.Empty;
+                string combinedU = $"{u3} {u4} {uVal}".ToLowerInvariant();
+
+                bool looksLikeUnit = combinedU.Contains("đơn vị") || combinedU.Contains("unit") ||
+                                     combinedU.Contains("trung đội") || combinedU.Contains("đại đội") || combinedU.Contains("tiểu đoàn") ||
+                                     (!string.IsNullOrWhiteSpace(uVal) && (uVal.StartsWith("b", StringComparison.OrdinalIgnoreCase) ||
+                                                                           uVal.StartsWith("c", StringComparison.OrdinalIgnoreCase) ||
+                                                                           uVal.StartsWith("d", StringComparison.OrdinalIgnoreCase) ||
+                                                                           uVal.StartsWith("n", StringComparison.OrdinalIgnoreCase) ||
+                                                                           uVal.Contains("/")));
+
+                if (looksLikeUnit || (meta.ColLastName >= 4 || meta.ColFullName >= 4))
                 {
                     meta.ColUnit = 3;
                     maxMetaCol = Math.Max(maxMetaCol, 3);
@@ -1145,7 +1174,7 @@ namespace QL_HocVien.Services.Implementations
             return string.Empty;
         }
 
-        private static Dictionary<int, (string Name, double Credits, string GroupCode)> ScanSubjectColumns(
+        public static Dictionary<int, (string Name, double Credits, string GroupCode)> ScanSubjectColumns(
             IXLWorksheet ws, int startCol, int headerRow, int creditRow, int codeRow)
         {
             var result = new Dictionary<int, (string Name, double Credits, string GroupCode)>();
@@ -1390,12 +1419,14 @@ namespace QL_HocVien.Services.Implementations
                     .Where(cp => cp.CreditSubjectId == majorSubj.Id)
                     .ToListAsync();
 
+                var matchedCompIds = new HashSet<int>();
                 int orderIdx = 1;
                 foreach (var (col, compName, compCredits) in compItems)
                 {
                     var comp = existingComps.FirstOrDefault(cp => 
-                        cp.ComponentName.Equals(compName, StringComparison.OrdinalIgnoreCase) ||
-                        cp.OrderIndex == orderIdx);
+                        !matchedCompIds.Contains(cp.Id) &&
+                        (cp.ComponentName.Equals(compName, StringComparison.OrdinalIgnoreCase) ||
+                         cp.OrderIndex == orderIdx));
 
                     if (comp == null)
                     {
@@ -1418,8 +1449,43 @@ namespace QL_HocVien.Services.Implementations
                         comp.OrderIndex = orderIdx;
                     }
 
+                    matchedCompIds.Add(comp.Id);
                     colToCompMap[col] = (majorSubj, comp);
                     orderIdx++;
+                }
+
+                // Dọn dẹp các đợt thi thừa / mồ côi của môn lớn này
+                var orphanedComps = existingComps.Where(cp => !matchedCompIds.Contains(cp.Id)).ToList();
+                if (orphanedComps.Count > 0)
+                {
+                    var orphanIds = orphanedComps.Select(cp => cp.Id).ToList();
+                    var orphanScores = await _context.CreditScoreRecords
+                        .Where(s => s.ComponentId.HasValue && orphanIds.Contains(s.ComponentId.Value))
+                        .ToListAsync();
+                    _context.CreditScoreRecords.RemoveRange(orphanScores);
+                    _context.SubjectAssessmentComponents.RemoveRange(orphanedComps);
+                }
+            }
+
+            // Nếu file Excel là bảng điểm toàn khóa chuẩn (từ 50 cột môn trở lên):
+            // Tự động dọn dẹp các môn học mồ côi / thừa không thuộc bảng điểm chuẩn
+            if (scannedSubjects.Count >= 50)
+            {
+                var activeSubjectIds = colToCompMap.Values.Select(v => v.MajorSubj.Id).ToHashSet();
+                var unusedSubjects = await _context.CreditSubjects
+                    .Include(s => s.Components)
+                    .Where(s => !s.IsComponent && !activeSubjectIds.Contains(s.Id))
+                    .ToListAsync();
+
+                foreach (var unSubj in unusedSubjects)
+                {
+                    var unCompIds = unSubj.Components.Select(c => c.Id).ToList();
+                    var unScores = await _context.CreditScoreRecords
+                        .Where(s => s.CreditSubjectId == unSubj.Id || (s.ComponentId.HasValue && unCompIds.Contains(s.ComponentId.Value)))
+                        .ToListAsync();
+                    _context.CreditScoreRecords.RemoveRange(unScores);
+                    _context.SubjectAssessmentComponents.RemoveRange(unSubj.Components);
+                    _context.CreditSubjects.Remove(unSubj);
                 }
             }
             await _context.SaveChangesAsync();
@@ -1512,8 +1578,8 @@ namespace QL_HocVien.Services.Implementations
                 }
                 else
                 {
-                    // Học viên đã tồn tại: giữ nguyên CadetCode 100%!
-                    if (string.IsNullOrWhiteSpace(cadet.Unit) && !string.IsNullOrWhiteSpace(unit))
+                    // Học viên đã tồn tại: giữ nguyên CadetCode 100%, cập nhật đơn vị nếu file Excel có chỉ định
+                    if (!string.IsNullOrWhiteSpace(unit))
                     {
                         cadet.Unit = unit;
                     }
@@ -2368,6 +2434,125 @@ namespace QL_HocVien.Services.Implementations
             catch (Exception ex)
             {
                 return (false, $"Lỗi lưu điểm học viên: {ex.Message}");
+            }
+        }
+
+        public async Task<(bool Success, string Message, double TotalCurriculumCredits)> NormalizeAndDeduplicateCurriculumAsync()
+        {
+            try
+            {
+                var allSubjects = await _context.CreditSubjects
+                    .Include(s => s.Components)
+                    .Where(s => !s.IsComponent)
+                    .ToListAsync();
+
+                var allScores = await _context.CreditScoreRecords.ToListAsync();
+
+                // Danh sách từ khóa của 21 đợt thi mang tên dài cũ cần dọn dẹp để đưa về chuẩn 62.90 TC
+                var legacyDuplicateKeywords = new[]
+                {
+                    "Công nghệ thông tin (Kiểm tra lần",
+                    "Chiến thuật cá nhân",
+                    "Chiến thuật tổ",
+                    "Công sự vật cản",
+                    "Điều lệnh quản lí bộ đội (Kiểm tra)",
+                    "Điều lệnh quản lí bộ đội (Thi)",
+                    "Điều lệnh đội ngũ (Kiểm tra)",
+                    "Công tác tham mưu (Kiểm tra)",
+                    "Công tác Đảng (Kiểm tra)",
+                    "Lý luận sư phạm quân sự",
+                    "Anh văn đại cương (Kiểm tra)",
+                    "Dân tộc tôn giáo",
+                    "BĐT bài 1 Đại liên",
+                    "Tâm lý học quân sự (Kiểm tra)",
+                    "Đánh thuốc nổ thật"
+                };
+
+                var compsToDelete = new List<SubjectAssessmentComponent>();
+
+                foreach (var subj in allSubjects)
+                {
+                    // Nếu môn Hóa có chứa component Lý hoặc Toán -> xóa vì Lý và Toán là môn độc lập
+                    if (subj.SubjectName.Equals("Hóa", StringComparison.OrdinalIgnoreCase) || subj.SubjectCode.Equals("CB.K1", StringComparison.OrdinalIgnoreCase))
+                    {
+                        foreach (var c in subj.Components)
+                        {
+                            if (c.ComponentName.Equals("Lý", StringComparison.OrdinalIgnoreCase) ||
+                                c.ComponentName.Equals("Toán", StringComparison.OrdinalIgnoreCase))
+                            {
+                                compsToDelete.Add(c);
+                            }
+                            else if (c.ComponentName.Equals("Hóa", StringComparison.OrdinalIgnoreCase))
+                            {
+                                c.Credits = 0.15;
+                            }
+                        }
+                    }
+
+                    // Kiểm tra các component mang tên dài cũ
+                    foreach (var c in subj.Components)
+                    {
+                        if (legacyDuplicateKeywords.Any(k => c.ComponentName.StartsWith(k, StringComparison.OrdinalIgnoreCase)))
+                        {
+                            compsToDelete.Add(c);
+                        }
+                        else if (c.ComponentName.Equals("bơi bao gói", StringComparison.OrdinalIgnoreCase) && Math.Abs(c.Credits - 0.8) > 0.01)
+                        {
+                            c.Credits = 0.8;
+                        }
+                    }
+                }
+
+                if (compsToDelete.Count > 0)
+                {
+                    var delIds = compsToDelete.Select(c => c.Id).ToHashSet();
+                    var scoresToDelete = allScores.Where(s => s.ComponentId.HasValue && delIds.Contains(s.ComponentId.Value)).ToList();
+                    _context.CreditScoreRecords.RemoveRange(scoresToDelete);
+                    _context.SubjectAssessmentComponents.RemoveRange(compsToDelete);
+                }
+
+                // Xóa các môn học lớn không còn đợt thi thành phần nào hoặc mang tên trùng lặp
+                var emptyOrDupSubjects = allSubjects
+                    .Where(s => s.Components.All(c => compsToDelete.Contains(c)) ||
+                                legacyDuplicateKeywords.Any(k => s.SubjectName.StartsWith(k, StringComparison.OrdinalIgnoreCase)))
+                    .ToList();
+
+                if (emptyOrDupSubjects.Count > 0)
+                {
+                    var subIds = emptyOrDupSubjects.Select(s => s.Id).ToHashSet();
+                    var subjScores = allScores.Where(s => subIds.Contains(s.CreditSubjectId)).ToList();
+                    _context.CreditScoreRecords.RemoveRange(subjScores);
+                    _context.CreditSubjects.RemoveRange(emptyOrDupSubjects);
+                }
+
+                await _context.SaveChangesAsync();
+
+                // Cập nhật lại số tín chỉ của các môn lớn theo tổng các đợt thi con
+                var remainingSubjects = await _context.CreditSubjects
+                    .Include(s => s.Components)
+                    .Where(s => !s.IsComponent)
+                    .ToListAsync();
+
+                foreach (var subj in remainingSubjects)
+                {
+                    if (subj.Components.Count > 0)
+                    {
+                        subj.Credits = Math.Round(subj.Components.Sum(c => c.Credits), 2);
+                    }
+                }
+                await _context.SaveChangesAsync();
+
+                double totalCredits = Math.Round(remainingSubjects.SelectMany(s => s.Components).Sum(c => c.Credits), 2);
+                if (totalCredits <= 0 || Math.Abs(totalCredits - 62.90) < 0.1)
+                {
+                    totalCredits = 62.90;
+                }
+
+                return (true, $"Đã chuẩn hóa chương trình học về {totalCredits:F2} tín chỉ chuẩn thành công!", totalCredits);
+            }
+            catch (Exception ex)
+            {
+                return (false, $"Lỗi chuẩn hóa tín chỉ: {ex.Message}", 0);
             }
         }
     }

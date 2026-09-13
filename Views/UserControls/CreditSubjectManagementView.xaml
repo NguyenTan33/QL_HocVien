@@ -74,6 +74,9 @@
                     <Button Content="📤 Nhập Excel Chuẩn" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,8"
                             ToolTip="Nhập danh mục môn, số tín chỉ và điểm học viên từ file 'Điểm TBM chuẩn .xlsx'"
                             Command="{Binding ImportStandardExcelCommand}"/>
+                    <Button Content="⚙️ Chuẩn Hóa 62.9 TC" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,8"
+                            ToolTip="Dọn dẹp các môn và đợt thi trùng lặp, khôi phục chương trình đào tạo chuẩn 62.90 tín chỉ"
+                            Command="{Binding NormalizeCurriculumCreditsCommand}"/>
                     <Button Content="📥 Xuất Báo Cáo Excel" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,0,8"
                             Command="{Binding ExportToExcelCommand}"/>
                 </WrapPanel>

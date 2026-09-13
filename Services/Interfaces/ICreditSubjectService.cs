@@ -35,5 +35,6 @@ namespace QL_HocVien.Services.Interfaces
         Task ConsolidateMajorSubjectsAsync();
         Task<(CreditSubject? Subject, List<CadetSingleSubjectGradeDto> Components, double? CalculatedSubjectScore, bool HasMissingWarning)> GetCadetSubjectGradesAsync(int cadetId, int subjectId);
         Task<(bool Success, string Message)> SaveCadetSubjectGradesAsync(int cadetId, int subjectId, List<(int componentId, double? score)> componentScores);
+        Task<(bool Success, string Message, double TotalCurriculumCredits)> NormalizeAndDeduplicateCurriculumAsync();
     }
 }

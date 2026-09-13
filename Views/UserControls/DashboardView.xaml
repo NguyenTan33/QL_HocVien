@@ -608,13 +608,13 @@
                         </Grid>
 
                         <TextBlock Text="Các mốc sự kiện kiểm tra, thi cử, rèn luyện trong tháng xếp từ ngày gần nhất đến xa nhất:" 
-                                   FontSize="11" Foreground="#CBD5E1" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                                   FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,8"/>
 
                         <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="340">
                             <ItemsControl ItemsSource="{Binding MonthlyFocusEvents}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <!-- Thẻ sự kiện nền giấy kaki, chữ mực tối chuẩn DemoUI -->
+                                        <!-- Thẻ sự kiện nền giấy kaki / thẻ trắng hiện đại -->
                                         <Border Background="{DynamicResource TimelineCardBackgroundBrush}" CornerRadius="5" Padding="7,5" Margin="0,0,0,6" BorderBrush="{DynamicResource TimelineCardBorderBrush}" BorderThickness="1">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
@@ -623,27 +623,27 @@
                                                     <ColumnDefinition Width="Auto"/>
                                                 </Grid.ColumnDefinitions>
 
-                                                <!-- Badge Ngày tháng khối tối viền vàng -->
-                                                <Border Grid.Column="0" Background="{DynamicResource TimelineFilterBackgroundBrush}" BorderBrush="{DynamicResource TimelineFilterBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="2,3" VerticalAlignment="Center" Margin="0,0,7,0">
+                                                <!-- Badge Ngày tháng phân biệt rõ cả 2 chế độ (không bị tàng hình ngày) -->
+                                                <Border Grid.Column="0" Background="{DynamicResource DashboardEventDateBackgroundBrush}" BorderBrush="{DynamicResource DashboardEventDateBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="2,3" VerticalAlignment="Center" Margin="0,0,7,0">
                                                     <StackPanel HorizontalAlignment="Center">
-                                                        <TextBlock Text="{Binding StartDate, StringFormat='{}{0:dd/MM}'}" FontWeight="ExtraBold" FontSize="11.5" Foreground="#FFFFFF" HorizontalAlignment="Center"/>
-                                                        <TextBlock Text="{Binding StartDate, StringFormat='{}{0:yyyy}'}" FontSize="9" Foreground="#A3A899" HorizontalAlignment="Center"/>
+                                                        <TextBlock Text="{Binding StartDate, StringFormat='{}{0:dd/MM}'}" FontWeight="ExtraBold" FontSize="11.5" Foreground="{DynamicResource DashboardEventDateForegroundBrush}" HorizontalAlignment="Center"/>
+                                                        <TextBlock Text="{Binding StartDate, StringFormat='{}{0:yyyy}'}" FontSize="9" Foreground="{DynamicResource DashboardEventYearForegroundBrush}" HorizontalAlignment="Center"/>
                                                     </StackPanel>
                                                 </Border>
 
                                                 <!-- Thông tin sự kiện chữ mực tối -->
                                                 <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,5,0">
                                                     <TextBlock Text="{Binding Title}" FontSize="11.5" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Title}"/>
-                                                    <TextBlock FontSize="10" Foreground="#4B5842" Margin="0,1,0,0" TextTrimming="CharacterEllipsis">
+                                                    <TextBlock FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,1,0,0" TextTrimming="CharacterEllipsis">
                                                         <Run Text="{Binding Category}"/> <Run Text=" • "/>
                                                         <Run Text="{Binding TargetUnit}"/> <Run Text=" • "/>
                                                         <Run Text="{Binding Location}"/>
                                                     </TextBlock>
                                                 </StackPanel>
 
-                                                <!-- Badge Trạng thái thẻ kaki tối -->
-                                                <Border Grid.Column="2" Background="#C2B488" CornerRadius="4" Padding="6,2" VerticalAlignment="Center" HorizontalAlignment="Right">
-                                                    <TextBlock Text="{Binding Status}" FontSize="9.5" FontWeight="Bold" Foreground="#182012"/>
+                                                <!-- Badge Trạng thái đồng bộ sắc sảo -->
+                                                <Border Grid.Column="2" Background="{DynamicResource DashboardEventStatusBackgroundBrush}" BorderBrush="{DynamicResource DashboardEventStatusBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2" VerticalAlignment="Center" HorizontalAlignment="Right">
+                                                    <TextBlock Text="{Binding Status}" FontSize="9.5" FontWeight="Bold" Foreground="{DynamicResource DashboardEventStatusForegroundBrush}"/>
                                                 </Border>
                                             </Grid>
                                         </Border>

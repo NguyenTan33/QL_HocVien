@@ -124,6 +124,15 @@
 
     <SolidColorBrush x:Key="TimelineKpiSubtextBrush" Color="#D5CEBD"/>
 
+    <!-- Dashboard Monthly Focus Events Brushes (Trọng tâm trong tháng) -->
+    <SolidColorBrush x:Key="DashboardEventDateBackgroundBrush" Color="#162417"/>
+    <SolidColorBrush x:Key="DashboardEventDateBorderBrush" Color="#7C6E3E"/>
+    <SolidColorBrush x:Key="DashboardEventDateForegroundBrush" Color="#FFE17A"/>
+    <SolidColorBrush x:Key="DashboardEventYearForegroundBrush" Color="#D5CEBD"/>
+    <SolidColorBrush x:Key="DashboardEventStatusBackgroundBrush" Color="#28442E"/>
+    <SolidColorBrush x:Key="DashboardEventStatusBorderBrush" Color="#3F6847"/>
+    <SolidColorBrush x:Key="DashboardEventStatusForegroundBrush" Color="#86EFAC"/>
+
     <!-- Unit Tree Organization Brushes (Cơ cấu đơn vị) -->
     <SolidColorBrush x:Key="UnitTreeContainerBackgroundBrush" Color="#0F1A12"/>
     <SolidColorBrush x:Key="UnitTreeContainerBorderBrush" Color="#596645"/>

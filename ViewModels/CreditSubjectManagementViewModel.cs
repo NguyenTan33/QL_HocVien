@@ -1052,6 +1052,56 @@ namespace QL_HocVien.ViewModels
                 IsBusy = false;
             }
         }
+
+        [RelayCommand]
+        public async Task NormalizeCurriculumCreditsAsync()
+        {
+            if (!CheckCanBoOrAdminPermission("chuẩn hóa chương trình tín chỉ")) return;
+            if (!await _securityGate.EnsureUnlockedAsync("Chuẩn hóa dữ liệu chương trình 62.90 tín chỉ"))
+                return;
+
+            var confirm = System.Windows.MessageBox.Show(
+                "Hệ thống sẽ thực hiện:\n" +
+                "1. Dọn dẹp các đợt thi thành phần và môn học trùng lặp/dư thừa cũ.\n" +
+                "2. Khôi phục chương trình chuẩn về đúng 62.90 tín chỉ.\n" +
+                "3. Tự động tính toán lại điểm TBM và tín chỉ tích lũy chuẩn cho toàn bộ học viên.\n\n" +
+                "Đồng chí có chắc chắn muốn thực hiện chuẩn hóa?",
+                "Chuẩn Hóa 62.90 Tín Chỉ",
+                System.Windows.MessageBoxButton.YesNo,
+                System.Windows.MessageBoxImage.Question);
+
+            if (confirm != System.Windows.MessageBoxResult.Yes) return;
+
+            IsBusy = true;
+            StatusMessage = "Đang chuẩn hóa chương trình đào tạo về 62.90 tín chỉ chuẩn...";
+            try
+            {
+                var res = await _creditService.NormalizeAndDeduplicateCurriculumAsync();
+                StatusMessage = res.Message;
+
+                if (res.Success)
+                {
+                    System.Windows.MessageBox.Show(res.Message, "Chuẩn Hóa Thành Công",
+                        System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+                    await InitializeAsync();
+                }
+                else
+                {
+                    System.Windows.MessageBox.Show(res.Message, "Lỗi Chuẩn Hóa",
+                        System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Lỗi chuẩn hóa: {ex.Message}";
+                System.Windows.MessageBox.Show($"Lỗi chuẩn hóa: {ex.Message}", "Lỗi",
+                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
         #endregion
     }
 }

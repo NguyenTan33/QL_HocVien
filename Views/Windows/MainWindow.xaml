@@ -258,9 +258,23 @@
                             BorderBrush="{DynamicResource SidebarBorderBrush}"
                             BorderThickness="0,0,0,1">
                         <Grid>
-                            <!-- Chế độ Tác chiến: Banner quân hiệu camo DemoUI -->
-                            <Image Source="/Assets/Images/sidebar_header.png" Stretch="UniformToFill" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                   Visibility="{Binding IsCombatMode, Converter={x:Static local_cv:BooleanToVisibilityConverter.Instance}}"/>
+                            <!-- Chế độ Tác chiến: Header dã chiến trang trọng với Logo Quân đội tách nền trong suốt (Đã xóa bỏ hoàn toàn nền mờ lính) -->
+                            <Border Visibility="{Binding IsCombatMode, Converter={x:Static local_cv:BooleanToVisibilityConverter.Instance}}"
+                                    Padding="16,14" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                <StackPanel HorizontalAlignment="Center">
+                                    <Image Source="/Assets/Images/military_logo_transparent.png" 
+                                           Width="60" Height="70" Stretch="Uniform" HorizontalAlignment="Center" Margin="0,0,0,6">
+                                        <Image.Effect>
+                                            <DropShadowEffect BlurRadius="12" Color="#FFE17A" Opacity="0.45" ShadowDepth="1"/>
+                                        </Image.Effect>
+                                    </Image>
+                                    <TextBlock Text="QUÂN ĐỘI NHÂN DÂN" FontSize="12.5" FontWeight="Bold" Foreground="#FFE17A" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="VIỆT NAM" FontSize="12" FontWeight="Bold" Foreground="#FFE17A" HorizontalAlignment="Center" Margin="0,1,0,0"/>
+                                    <Border Margin="0,5,0,0" Padding="8,1.5" Background="#281414" BorderBrush="#8F1515" BorderThickness="1" CornerRadius="3">
+                                        <TextBlock Text="★ VÌ TỔ QUỐC XÃ HỘI CHỦ NGHĨA ★" FontSize="8.5" FontWeight="Bold" Foreground="#FCA5A5" HorizontalAlignment="Center"/>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
                             
                             <!-- Chế độ Hành chính: Header sáng hiện đại với Logo Quân đội tách nền trong suốt -->
                             <Border Visibility="{Binding IsCombatMode, Converter={x:Static local_cv:InvertedBooleanToVisibilityConverter.Instance}}"
