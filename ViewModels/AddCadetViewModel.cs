@@ -314,9 +314,9 @@ namespace QL_HocVien.ViewModels
                 return false;
             }
 
-            if (string.IsNullOrWhiteSpace(ClassName))
+            if (string.IsNullOrWhiteSpace(SelectedUnit))
             {
-                ErrorMessage = "Vui lòng nhập Lớp học viên.";
+                ErrorMessage = "Vui lòng chọn Đơn vị quân đội của học viên.";
                 return false;
             }
 
@@ -331,8 +331,8 @@ namespace QL_HocVien.ViewModels
                 CadetCode = CadetCode.Trim(),
                 FullName = FullName.Trim(),
                 PhoneNumber = PhoneNumber.Trim(),
-                ClassId = SelectedMilitaryClass?.Id,
-                ClassName = !string.IsNullOrWhiteSpace(ClassName) ? ClassName.Trim() : (SelectedMilitaryClass?.ClassName ?? string.Empty),
+                ClassId = null,
+                ClassName = string.Empty,
                 Cohort = SelectedCohort.CohortCode,
                 CohortId = SelectedCohort.Id,
                 EnrollmentYear = EnrollmentYear ?? SelectedCohort.EnrollmentYear,

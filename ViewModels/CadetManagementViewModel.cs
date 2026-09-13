@@ -626,7 +626,8 @@ namespace QL_HocVien.ViewModels
             SelectedCadet.Rank = EditRank;
             SelectedCadet.Position = EditPosition;
             SelectedCadet.Unit = EditUnit;
-            SelectedCadet.ClassName = EditClassName;
+            SelectedCadet.ClassName = string.Empty;
+            SelectedCadet.ClassId = null;
             SelectedCadet.PhoneNumber = EditPhone;
             SelectedCadet.Email = EditEmail;
 

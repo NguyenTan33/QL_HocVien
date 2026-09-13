@@ -58,24 +58,11 @@
                         </StackPanel>
                     </Grid>
 
-                    <!-- Hàng 3: Lớp học & Đơn vị -->
-                    <Grid Margin="0,0,0,18">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="16"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Grid.Column="0">
-                            <TextBlock Text="Lớp học (*):" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,6"/>
-                            <ComboBox ItemsSource="{Binding AvailableClasses}" SelectedItem="{Binding SelectedMilitaryClass}"
-                                      DisplayMemberPath="ClassName" IsEditable="False"
-                                      Style="{StaticResource ModernComboBoxStyle}" Height="40"/>
-                        </StackPanel>
-                        <StackPanel Grid.Column="2">
-                            <TextBlock Text="Đơn vị quân đội:" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,6"/>
-                            <components:UnitTreeComboBox SelectedUnit="{Binding SelectedUnit, Mode=TwoWay}" Height="40" Placeholder="Chọn đơn vị học viên..."/>
-                        </StackPanel>
-                    </Grid>
+                    <!-- Hàng 3: Đơn vị -->
+                    <StackPanel Margin="0,0,0,18">
+                        <TextBlock Text="Đơn vị quân đội (*):" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,6"/>
+                        <components:UnitTreeComboBox SelectedUnit="{Binding SelectedUnit, Mode=TwoWay}" Height="40" Placeholder="Chọn đơn vị học viên..."/>
+                    </StackPanel>
 
                     <!-- Hàng: Khóa đào tạo & Năm nhập học -->
                     <Grid Margin="0,0,0,18">

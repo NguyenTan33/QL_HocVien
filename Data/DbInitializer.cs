@@ -526,7 +526,12 @@ namespace QL_HocVien.Data
                 context.SaveChanges();
             }
 
-            // 3. Quản lý danh mục: không tạo sẵn dữ liệu (người dùng tự quản lý từ CSDL thực tế).
+            // 3. Quản lý danh mục: mặc định không tạo sẵn dữ liệu khi chạy thực tế (người dùng tự quản lý).
+            // Nếu chạy kiểm thử hệ thống (seedSampleCatalogs == true), tiến hành nạp danh mục chuẩn để test toàn diện.
+            if (seedSampleCatalogs)
+            {
+                SeedSampleCatalogs(context);
+            }
 
             // Đồng bộ liên kết lớp cho các học viên đã có từ trước
             try

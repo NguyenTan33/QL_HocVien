@@ -534,6 +534,69 @@ namespace QL_HocVien.ViewModels
         }
 
         [RelayCommand]
+        public async Task DeleteSelectedCadetsAsync()
+        {
+            if (!CheckCanBoOrAdminPermission("xóa học viên")) return;
+
+            var selected = CadetSummaries.Where(c => c.IsSelected).ToList();
+            if (!selected.Any())
+            {
+                System.Windows.MessageBox.Show(
+                    "Vui lòng tích chọn ít nhất một học viên trong bảng để thực hiện thao tác xóa!",
+                    "Chưa Chọn Học Viên",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Information);
+                return;
+            }
+
+            if (!await _securityGate.EnsureUnlockedAsync($"Xóa {selected.Count} học viên khỏi hệ thống")) return;
+
+            var confirm = System.Windows.MessageBox.Show(
+                $"CẢNH BÁO NGUY HIỂM:\nBạn có chắc chắn muốn xóa vĩnh viễn {selected.Count} học viên đã chọn?\n\n" +
+                "Toàn bộ hồ sơ học viên, kết quả rèn luyện thể lực và điểm môn học tín chỉ liên quan sẽ bị xóa hoàn toàn khỏi cơ sở dữ liệu.\n\n" +
+                "Thao tác này KHÔNG THỂ HOÀN TÁC!",
+                "Xác Nhận Xóa Vĩnh Viễn Học Viên",
+                System.Windows.MessageBoxButton.YesNo,
+                System.Windows.MessageBoxImage.Warning);
+
+            if (confirm != System.Windows.MessageBoxResult.Yes) return;
+
+            IsBusy = true;
+            try
+            {
+                var result = await _cadetService.DeleteMultipleCadetsAsync(selected.Select(c => c.CadetId));
+                StatusMessage = result.Message;
+                if (result.Success)
+                {
+                    IsAllSelected = false;
+                    await LoadDataAsync();
+                    System.Windows.MessageBox.Show(
+                        $"Đã xóa thành công {result.DeletedCount} học viên!",
+                        "Thành Công",
+                        System.Windows.MessageBoxButton.OK,
+                        System.Windows.MessageBoxImage.Information);
+                }
+                else
+                {
+                    System.Windows.MessageBox.Show(
+                        $"Có lỗi xảy ra: {result.Message}",
+                        "Lỗi",
+                        System.Windows.MessageBoxButton.OK,
+                        System.Windows.MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Lỗi xóa học viên: {ex.Message}";
+                System.Windows.MessageBox.Show($"Lỗi: {ex.Message}", "Lỗi Xóa Học Viên", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        [RelayCommand]
         public async Task FilterMissingOnlyAsync()
         {
             SelectedStatusFilter = "⚠️ Thiếu môn (Dòng vàng)";

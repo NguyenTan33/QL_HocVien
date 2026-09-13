@@ -30,7 +30,6 @@ namespace QL_HocVien.Tests
 
             _context = new AppDbContext(options);
             _context.Database.EnsureCreated();
-            DbInitializer.SeedSampleCatalogs(_context);
 
             var rankRepo = new RankRepository(_context);
             var posRepo = new PositionRepository(_context);
@@ -211,6 +210,7 @@ namespace QL_HocVien.Tests
         [Fact]
         public async Task Test_UnitHierarchyService_Builds_Complete_Military_Hierarchy()
         {
+            DbInitializer.SeedSampleCatalogs(_context);
             var hierarchyService = new QL_HocVien.Services.Implementations.UnitHierarchyService(_catalogService);
             var tree = await hierarchyService.GetUnitTreeAsync(isFilterMode: false);
 
@@ -256,6 +256,7 @@ namespace QL_HocVien.Tests
         [Fact]
         public async Task Test_UnitHierarchyService_FilterMode_And_Cloning()
         {
+            DbInitializer.SeedSampleCatalogs(_context);
             var hierarchyService = new QL_HocVien.Services.Implementations.UnitHierarchyService(_catalogService);
             var filterTree = await hierarchyService.GetUnitTreeAsync(isFilterMode: true);
 

@@ -170,15 +170,15 @@
                                 <Border Grid.Row="0" Background="{DynamicResource CardBackgroundBrush}" CornerRadius="6" Padding="12" Margin="0,0,0,14" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="1.2*"/>
+                                            <ColumnDefinition Width="1.3*"/>
                                             <ColumnDefinition Width="8"/>
-                                            <ColumnDefinition Width="1*"/>
-                                            <ColumnDefinition Width="8"/>
-                                            <ColumnDefinition Width="1*"/>
+                                            <ColumnDefinition Width="1.1*"/>
                                             <ColumnDefinition Width="8"/>
                                             <ColumnDefinition Width="1.1*"/>
                                             <ColumnDefinition Width="8"/>
                                             <ColumnDefinition Width="1.4*"/>
+                                            <ColumnDefinition Width="8"/>
+                                            <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="8"/>
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="8"/>
@@ -197,20 +197,14 @@
                                             <ComboBox ItemsSource="{Binding CohortOptions}" SelectedItem="{Binding SelectedCohort}" Style="{StaticResource ModernComboBoxStyle}" Height="34"/>
                                         </StackPanel>
 
-                                        <!-- Lọc Năm học -->
-                                        <StackPanel Grid.Column="4">
-                                            <TextBlock Text="Năm học:" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
-                                            <ComboBox ItemsSource="{Binding SchoolYearOptions}" SelectedItem="{Binding SelectedSchoolYear}" Style="{StaticResource ModernComboBoxStyle}" Height="34"/>
-                                        </StackPanel>
-
                                         <!-- Lọc Trạng thái học tập -->
-                                        <StackPanel Grid.Column="6">
+                                        <StackPanel Grid.Column="4">
                                             <TextBlock Text="Trạng thái môn học:" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
                                             <ComboBox ItemsSource="{Binding StatusFilterOptions}" SelectedItem="{Binding SelectedStatusFilter}" Style="{StaticResource ModernComboBoxStyle}" Height="34"/>
                                         </StackPanel>
 
                                         <!-- Tìm kiếm -->
-                                        <StackPanel Grid.Column="8">
+                                        <StackPanel Grid.Column="6">
                                             <TextBlock Text="Tìm kiếm học viên:" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
                                             <TextBox Text="{Binding SearchKeyword, UpdateSourceTrigger=PropertyChanged}" Height="34" 
                                                      VerticalContentAlignment="Center" Style="{StaticResource ModernTextBoxStyle}"
@@ -218,14 +212,20 @@
                                         </StackPanel>
 
                                         <!-- Nút Áp dụng Lọc -->
-                                        <Button Grid.Column="10" Content="🔍 Lọc" Style="{StaticResource PrimaryButtonStyle}" 
+                                        <Button Grid.Column="8" Content="🔍 Lọc" Style="{StaticResource PrimaryButtonStyle}" 
                                                 Height="34" VerticalAlignment="Bottom" Padding="14,0"
                                                 Command="{Binding FilterCommand}"/>
 
                                         <!-- Nút Đặt lại -->
-                                        <Button Grid.Column="12" Content="🔄 Đặt Lại" Style="{StaticResource SecondaryButtonStyle}" 
+                                        <Button Grid.Column="10" Content="🔄 Đặt Lại" Style="{StaticResource SecondaryButtonStyle}" 
                                                 Height="34" VerticalAlignment="Bottom" Padding="12,0"
                                                 Command="{Binding ResetFilterCommand}"/>
+
+                                        <!-- Nút Thùng Rác Xóa Học Viên Đã Chọn -->
+                                        <Button Grid.Column="12" Content="🗑️ Xóa" Style="{StaticResource DangerButtonStyle}" 
+                                                Height="34" VerticalAlignment="Bottom" Padding="12,0"
+                                                ToolTip="Xóa các học viên đã tích chọn cùng toàn bộ điểm số"
+                                                Command="{Binding DeleteSelectedCadetsCommand}"/>
                                     </Grid>
                                 </Border>
 
@@ -302,14 +302,6 @@
                                              </DataGridTextColumn.ElementStyle>
                                          </DataGridTextColumn>
 
-                                         <DataGridTextColumn Header="Lớp" Binding="{Binding ClassName}" Width="90" IsReadOnly="True">
-                                             <DataGridTextColumn.ElementStyle>
-                                                 <Style TargetType="TextBlock">
-                                                     <Setter Property="VerticalAlignment" Value="Center"/>
-                                                     <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
-                                                 </Style>
-                                             </DataGridTextColumn.ElementStyle>
-                                         </DataGridTextColumn>
 
                                          <DataGridTextColumn Header="Khóa" Binding="{Binding Cohort}" Width="75" IsReadOnly="True">
                                              <DataGridTextColumn.ElementStyle>
