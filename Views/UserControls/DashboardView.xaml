@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:cv="clr-namespace:QL_HocVien.Converters"
+             xmlns:components="clr-namespace:QL_HocVien.Views.Components"
              mc:Ignorable="d" 
              d:DesignHeight="1100" d:DesignWidth="1280">
 
@@ -192,7 +193,7 @@
                             <!-- Đơn vị -->
                             <StackPanel Grid.Column="0">
                                 <TextBlock Text="Đơn vị / Đại đội:" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
-                                <ComboBox ItemsSource="{Binding UnitOptions}" SelectedItem="{Binding SelectedUnit}" Height="32"/>
+                                <components:UnitTreeComboBox SelectedUnit="{Binding SelectedUnit, Mode=TwoWay}" IsFilterMode="True" Height="32" Placeholder="[ Tất cả đơn vị ]"/>
                             </StackPanel>
 
                             <!-- Lớp -->

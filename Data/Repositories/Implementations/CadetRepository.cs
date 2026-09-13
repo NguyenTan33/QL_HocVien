@@ -54,7 +54,16 @@ namespace QL_HocVien.Data.Repositories.Implementations
             // 3. Đơn vị
             if (!string.IsNullOrWhiteSpace(criteria.Unit) && criteria.Unit != "Tất cả")
             {
-                query = query.Where(c => c.Unit == criteria.Unit);
+                var targetUnit = criteria.Unit.Trim();
+                var altUnit = GetEquivalentUnit(targetUnit);
+                if (!string.IsNullOrEmpty(altUnit))
+                {
+                    query = query.Where(c => c.Unit == targetUnit || c.Unit == altUnit || c.Unit.Contains(targetUnit) || c.Unit.Contains(altUnit));
+                }
+                else
+                {
+                    query = query.Where(c => c.Unit == targetUnit || c.Unit.Contains(targetUnit));
+                }
             }
 
             // 4. Lớp học
@@ -225,6 +234,51 @@ namespace QL_HocVien.Data.Repositories.Implementations
 
             _context.Cadets.RemoveRange(cadetsToDelete);
             return await _context.SaveChangesAsync();
+        }
+
+        private static string GetEquivalentUnit(string unit)
+        {
+            if (string.IsNullOrWhiteSpace(unit)) return string.Empty;
+            return unit.Trim().ToLowerInvariant() switch
+            {
+                "b1" => "Trung đội 1",
+                "trung đội 1" => "b1",
+                "b2" => "Trung đội 2",
+                "trung đội 2" => "b2",
+                "b3" => "Trung đội 3",
+                "trung đội 3" => "b3",
+                "b4" => "Trung đội 4",
+                "trung đội 4" => "b4",
+                "b5" => "Trung đội 5",
+                "trung đội 5" => "b5",
+                "b6" => "Trung đội 6",
+                "trung đội 6" => "b6",
+                "c1" => "Đại đội 1",
+                "đại đội 1" => "c1",
+                "c2" => "Đại đội 2",
+                "đại đội 2" => "c2",
+                "c3" => "Đại đội 3",
+                "đại đội 3" => "c3",
+                "c4" => "Đại đội 4",
+                "đại đội 4" => "c4",
+                "d1" => "Tiểu đoàn 1",
+                "tiểu đoàn 1" => "d1",
+                "d2" => "Tiểu đoàn 2",
+                "tiểu đoàn 2" => "d2",
+                "e1" => "Trung đoàn 1",
+                "trung đoàn 1" => "e1",
+                "a1" => "Tiểu đội 1",
+                "tiểu đội 1" => "a1",
+                "a2" => "Tiểu đội 2",
+                "tiểu đội 2" => "a2",
+                "a3" => "Tiểu đội 3",
+                "tiểu đội 3" => "a3",
+                "n1" => "Nhóm 1",
+                "nhóm 1" => "n1",
+                "n2" => "Nhóm 2",
+                "nhóm 2" => "n2",
+                _ => string.Empty
+            };
         }
     }
 }
