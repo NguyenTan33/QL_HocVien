@@ -548,11 +548,13 @@ namespace QL_HocVien.Services.Implementations
                     ws.Cell(hRow1, 3).Value = "Đơn vị";
                     ws.Cell(hRow1, 4).Value = "Họ và tên đệm";
                     ws.Cell(hRow1, 5).Value = "Tên";
-                    ws.Cell(hRow1, 6).Value = "Họ và tên ghép";
+                    ws.Cell(hRow1, 6).Value = "Mã Môn";
+                    ws.Cell(hRow2, 6).Value = "Họ và tên ghép";
 
                     col = startCol;
                     foreach (var comp in components)
                     {
+                        ws.Cell(hRow1, col).Value = comp.CreditSubject?.SubjectCode ?? string.Empty;
                         ws.Cell(hRow2, col).Value = comp.ComponentName;
                         col++;
                     }
@@ -792,6 +794,7 @@ namespace QL_HocVien.Services.Implementations
         {
             public CadetMetadataColumns Meta { get; set; } = new();
             public int HeaderRow { get; set; } = 4;
+            public int CodeRow { get; set; } = -1; // Dòng mã môn / mã gộp nằm ngay phía trên HeaderRow nếu có
             public int StudentStartRow { get; set; } = 5;
             public int CreditRow { get; set; } = 70;
             public int LastStudentRow { get; set; } = 69;
@@ -870,6 +873,42 @@ namespace QL_HocVien.Services.Implementations
                 }
             }
 
+            // 3.5. Dò dòng Mã Môn / Mã Gộp (CodeRow) nằm ngay phía trên HeaderRow
+            int detectedCodeRow = -1;
+            if (headerRow > 1)
+            {
+                int candRow = headerRow - 1;
+                bool hasCodeKeyword = false;
+                for (int c = 1; c <= 15; c++)
+                {
+                    string txt = ws.Cell(candRow, c).GetString().Trim().ToLowerInvariant();
+                    if (txt.Contains("mã môn") || txt.Contains("mã gộp") || txt.Contains("ma mon") || txt.Contains("ma gop") || txt.Contains("mã hp"))
+                    {
+                        hasCodeKeyword = true;
+                        break;
+                    }
+                }
+
+                int codeLikeCount = 0;
+                for (int c = 6; c <= 30; c++)
+                {
+                    string txt = ws.Cell(candRow, c).GetString().Trim();
+                    if (!string.IsNullOrWhiteSpace(txt) &&
+                        !txt.Contains("kết quả", StringComparison.OrdinalIgnoreCase) &&
+                        !txt.Contains("học tập", StringComparison.OrdinalIgnoreCase) &&
+                        !txt.Contains("bảng điểm", StringComparison.OrdinalIgnoreCase) &&
+                        !double.TryParse(txt, out _))
+                    {
+                        codeLikeCount++;
+                    }
+                }
+
+                if (hasCodeKeyword || codeLikeCount >= 1)
+                {
+                    detectedCodeRow = candRow;
+                }
+            }
+
             // 4. CreditRow
             if (detectedCreditRow == -1)
             {
@@ -922,8 +961,9 @@ namespace QL_HocVien.Services.Implementations
                 if (string.IsNullOrWhiteSpace(combined)) continue;
                 if (IsSummaryOrEndColumn(combined)) break;
 
-                // Mã học viên / CadetCode / MSSV
+                // Mã học viên / CadetCode / MSSV (Lưu ý: Không nhận nhầm cột Mã Môn / Mã gộp)
                 if (meta.ColCode == -1 &&
+                    !combined.Contains("mã môn") && !combined.Contains("mã gộp") && !combined.Contains("mã hp") && !combined.Contains("ma mon") &&
                     (combined.Contains("mssv") || combined.Contains("mã hv") || combined.Contains("mã học viên") ||
                      combined.Contains("mahv") || combined.Contains("shsv") || combined.Contains("cadetcode") ||
                      combined.Contains("mã sv") || combined.Contains("số hiệu") || combined.Equals("mã")))
@@ -1040,6 +1080,7 @@ namespace QL_HocVien.Services.Implementations
 
             layout.Meta = meta;
             layout.HeaderRow = headerRow;
+            layout.CodeRow = detectedCodeRow;
             layout.StudentStartRow = studentStartRow;
             layout.CreditRow = detectedCreditRow;
             layout.LastStudentRow = lastStudentRow;
@@ -1047,10 +1088,34 @@ namespace QL_HocVien.Services.Implementations
             return layout;
         }
 
-        private static Dictionary<int, (string Name, double Credits)> ScanSubjectColumns(
-            IXLWorksheet ws, int startCol, int headerRow, int creditRow)
+        private static string GetCellStringWithMergeSupport(IXLWorksheet ws, int row, int col)
         {
-            var result = new Dictionary<int, (string Name, double Credits)>();
+            var cell = ws.Cell(row, col);
+            string val = cell.GetString().Trim();
+            if (!string.IsNullOrWhiteSpace(val))
+                return val;
+
+            if (ws.MergedRanges != null)
+            {
+                foreach (var range in ws.MergedRanges)
+                {
+                    var rAddr = range.RangeAddress;
+                    if (row >= rAddr.FirstAddress.RowNumber && row <= rAddr.LastAddress.RowNumber &&
+                        col >= rAddr.FirstAddress.ColumnNumber && col <= rAddr.LastAddress.ColumnNumber)
+                    {
+                        string mergedVal = range.FirstCell().GetString().Trim();
+                        if (!string.IsNullOrWhiteSpace(mergedVal))
+                            return mergedVal;
+                    }
+                }
+            }
+            return string.Empty;
+        }
+
+        private static Dictionary<int, (string Name, double Credits, string GroupCode)> ScanSubjectColumns(
+            IXLWorksheet ws, int startCol, int headerRow, int creditRow, int codeRow)
+        {
+            var result = new Dictionary<int, (string Name, double Credits, string GroupCode)>();
             var scannedNames = new List<(int Col, string RawName)>();
             int consecutiveEmpty = 0;
 
@@ -1098,7 +1163,20 @@ namespace QL_HocVien.Services.Implementations
                     }
                 }
 
-                result[c] = (finalName, credits);
+                string groupCode = string.Empty;
+                if (codeRow > 0)
+                {
+                    string rawCode = GetCellStringWithMergeSupport(ws, codeRow, c);
+                    if (!string.IsNullOrWhiteSpace(rawCode) &&
+                        !rawCode.Contains("kết quả", StringComparison.OrdinalIgnoreCase) &&
+                        !rawCode.Contains("học tập", StringComparison.OrdinalIgnoreCase) &&
+                        !rawCode.Contains("bảng điểm", StringComparison.OrdinalIgnoreCase))
+                    {
+                        groupCode = rawCode;
+                    }
+                }
+
+                result[c] = (finalName, credits, groupCode);
             }
 
             return result;
@@ -1108,7 +1186,7 @@ namespace QL_HocVien.Services.Implementations
         {
             var layout = DetectExcelLayout(ws);
             var meta = layout.Meta;
-            var scannedSubjects = ScanSubjectColumns(ws, meta.StartSubjectCol, layout.HeaderRow, layout.CreditRow);
+            var scannedSubjects = ScanSubjectColumns(ws, meta.StartSubjectCol, layout.HeaderRow, layout.CreditRow, layout.CodeRow);
 
             if (scannedSubjects.Count == 0)
             {
@@ -1116,14 +1194,37 @@ namespace QL_HocVien.Services.Implementations
             }
 
             // 1. Gom nhóm các cột kiểm tra thành các Môn lớn (Major Subjects)
-            var groupBuckets = new Dictionary<string, List<(int Col, string CompName, double Credits)>>(StringComparer.OrdinalIgnoreCase);
-            foreach (var (c, (compName, credits)) in scannedSubjects)
+            // Ưu tiên gom theo Mã Gộp (GroupCode), nếu không có mã thì gom theo tên (InferSubjectGroup)
+            var groupBuckets = new Dictionary<string, (string? Code, string SuggestedName, List<(int Col, string CompName, double Credits)> Items)>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var (c, (compName, credits, groupCode)) in scannedSubjects)
             {
-                var (grp, _) = InferSubjectGroup(compName);
-                string groupKey = !string.IsNullOrWhiteSpace(grp) ? grp : compName;
-                if (!groupBuckets.ContainsKey(groupKey))
-                    groupBuckets[groupKey] = new List<(int Col, string CompName, double Credits)>();
-                groupBuckets[groupKey].Add((c, compName, credits));
+                string bucketKey;
+                string? definedCode = null;
+                string suggestedName;
+
+                if (!string.IsNullOrWhiteSpace(groupCode))
+                {
+                    // Có mã gộp từ Excel: Gom các cột cùng mã này vào chung một môn lớn!
+                    definedCode = groupCode.Trim();
+                    bucketKey = $"CODE::{definedCode.ToUpperInvariant()}";
+                    var (grp, _) = InferSubjectGroup(compName);
+                    suggestedName = !string.IsNullOrWhiteSpace(grp) ? grp : compName;
+                }
+                else
+                {
+                    // Không có mã gộp: Fallback gom theo tên đợt thi
+                    var (grp, _) = InferSubjectGroup(compName);
+                    suggestedName = !string.IsNullOrWhiteSpace(grp) ? grp : compName;
+                    bucketKey = $"NAME::{suggestedName.ToUpperInvariant()}";
+                }
+
+                if (!groupBuckets.ContainsKey(bucketKey))
+                {
+                    groupBuckets[bucketKey] = (definedCode, suggestedName, new List<(int Col, string CompName, double Credits)>());
+                }
+
+                groupBuckets[bucketKey].Items.Add((c, compName, credits));
             }
 
             var subjectsInDb = await _context.CreditSubjects.Include(s => s.Components).ToListAsync();
@@ -1136,25 +1237,49 @@ namespace QL_HocVien.Services.Implementations
 
             foreach (var kvp in groupBuckets)
             {
-                string groupKey = kvp.Key;
-                var compItems = kvp.Value;
+                var (definedCode, suggestedName, compItems) = kvp.Value;
                 double totalGroupCredits = Math.Round(compItems.Sum(x => x.Credits), 2);
                 if (totalGroupCredits <= 0) totalGroupCredits = 1.0;
 
-                var majorSubj = subjectsInDb.FirstOrDefault(s => 
-                    s.SubjectName.Equals(groupKey, StringComparison.OrdinalIgnoreCase) ||
-                    (!string.IsNullOrWhiteSpace(s.SubjectGroup) && s.SubjectGroup.Equals(groupKey, StringComparison.OrdinalIgnoreCase)));
+                CreditSubject? majorSubj = null;
+
+                if (!string.IsNullOrWhiteSpace(definedCode))
+                {
+                    // Ưu tiên 1: Khớp theo SubjectCode đã có
+                    majorSubj = subjectsInDb.FirstOrDefault(s => 
+                        !string.IsNullOrWhiteSpace(s.SubjectCode) && 
+                        s.SubjectCode.Equals(definedCode, StringComparison.OrdinalIgnoreCase));
+
+                    // Ưu tiên 2: Khớp theo Tên môn nếu môn chưa có SubjectCode hoặc có tên khớp
+                    if (majorSubj == null)
+                    {
+                        majorSubj = subjectsInDb.FirstOrDefault(s => 
+                            s.SubjectName.Equals(suggestedName, StringComparison.OrdinalIgnoreCase) ||
+                            (!string.IsNullOrWhiteSpace(s.SubjectGroup) && s.SubjectGroup.Equals(suggestedName, StringComparison.OrdinalIgnoreCase)));
+
+                        if (majorSubj != null)
+                        {
+                            majorSubj.SubjectCode = definedCode;
+                        }
+                    }
+                }
+                else
+                {
+                    majorSubj = subjectsInDb.FirstOrDefault(s => 
+                        s.SubjectName.Equals(suggestedName, StringComparison.OrdinalIgnoreCase) ||
+                        (!string.IsNullOrWhiteSpace(s.SubjectGroup) && s.SubjectGroup.Equals(suggestedName, StringComparison.OrdinalIgnoreCase)));
+                }
 
                 if (majorSubj == null)
                 {
-                    string subjCode = $"TC{subjOrder++:D2}";
+                    string subjCode = !string.IsNullOrWhiteSpace(definedCode) ? definedCode : $"TC{subjOrder++:D2}";
                     majorSubj = new CreditSubject
                     {
                         SubjectCode = subjCode,
-                        SubjectName = groupKey,
+                        SubjectName = suggestedName,
                         Credits = totalGroupCredits,
                         AssessmentType = compItems.Count > 1 ? "Kiểm tra và thi" : "Kiểm tra thường xuyên",
-                        SubjectGroup = groupKey,
+                        SubjectGroup = suggestedName,
                         IsComponent = false,
                         Description = $"Môn học lớn gồm {compItems.Count} đợt kiểm tra / thi ({totalGroupCredits} tín chỉ)",
                         CreatedAt = DateTime.Now
@@ -1166,8 +1291,15 @@ namespace QL_HocVien.Services.Implementations
                 else
                 {
                     majorSubj.Credits = totalGroupCredits;
-                    majorSubj.SubjectName = groupKey;
-                    majorSubj.SubjectGroup = groupKey;
+                    if (!string.IsNullOrWhiteSpace(definedCode))
+                    {
+                        majorSubj.SubjectCode = definedCode;
+                    }
+                    if (string.IsNullOrWhiteSpace(majorSubj.SubjectName))
+                    {
+                        majorSubj.SubjectName = suggestedName;
+                    }
+                    majorSubj.SubjectGroup = majorSubj.SubjectName;
                     majorSubj.IsComponent = false;
                 }
 
@@ -1359,7 +1491,8 @@ namespace QL_HocVien.Services.Implementations
                     if (!File.Exists(filePath))
                         return (false, "File không tồn tại trên hệ thống.", 0, 0);
 
-                    using var wb = new XLWorkbook(filePath);
+                    using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                    using var wb = new XLWorkbook(stream);
                     var ws = wb.Worksheets.FirstOrDefault();
                     if (ws == null)
                         return (false, "File Excel không chứa bất kỳ sheet nào.", 0, 0);

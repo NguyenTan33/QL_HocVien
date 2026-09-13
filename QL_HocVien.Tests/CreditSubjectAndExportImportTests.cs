@@ -473,7 +473,8 @@ namespace QL_HocVien.Tests
             Assert.Equal(7.61, s187.Gpa);
 
             // 5. Kiểm tra toàn bộ 66 học viên so với cột TBM (Cột 64) trong file Excel gốc
-            using var workbook = new XLWorkbook(realFilePath);
+            using var testStream = new FileStream(realFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            using var workbook = new XLWorkbook(testStream);
             var ws = workbook.Worksheets.First();
             for (int r = 5; r <= 69; r++)
             {
@@ -484,6 +485,107 @@ namespace QL_HocVien.Tests
                 Assert.NotNull(s);
                 Assert.True(Math.Abs(expectedTbm - s.Gpa) < 0.001,
                     $"Học viên {code} ({s.FullName}) tính ra {s.Gpa} nhưng Excel là {expectedTbm}");
+            }
+        }
+
+        [Fact]
+        public async Task Test_ImportStandardTbmExcel_With_GroupCodeRow_Merges_Components_Correctly()
+        {
+            string tempExcel = Path.Combine(Path.GetTempPath(), $"Test_GroupCode_{Guid.NewGuid():N}.xlsx");
+            try
+            {
+                using (var wb = new XLWorkbook())
+                {
+                    var ws = wb.Worksheets.Add("Sheet1");
+                    // Row 1: Tín chỉ
+                    ws.Cell(1, 7).Value = 0.8;
+                    ws.Cell(1, 8).Value = 0.2;
+                    ws.Cell(1, 9).Value = 1.5;
+
+                    // Row 3: Mã Môn (Mã gộp)
+                    ws.Cell(3, 6).Value = "Mã Môn";
+                    ws.Cell(3, 7).Value = "ad.vc.1";
+                    ws.Cell(3, 8).Value = "ad.vc.1";
+                    ws.Cell(3, 9).Value = "ntrk.1";
+
+                    // Row 4: Header tên môn
+                    ws.Cell(4, 1).Value = "STT";
+                    ws.Cell(4, 2).Value = "Mã HV";
+                    ws.Cell(4, 3).Value = "Đơn vị";
+                    ws.Cell(4, 6).Value = "Họ và tên ghép";
+                    ws.Cell(4, 7).Value = "2 AK";
+                    ws.Cell(4, 8).Value = "AK 1";
+                    ws.Cell(4, 9).Value = "THI TH M-L";
+
+                    // Row 5: Học viên 1
+                    ws.Cell(5, 1).Value = 1;
+                    ws.Cell(5, 2).Value = "HV-TEST-999";
+                    ws.Cell(5, 3).Value = "b1";
+                    ws.Cell(5, 6).Value = "Trần Văn TestGroupCode";
+                    ws.Cell(5, 7).Value = 8.0;
+                    ws.Cell(5, 8).Value = 9.0;
+                    ws.Cell(5, 9).Value = 7.0;
+
+                    wb.SaveAs(tempExcel);
+                }
+
+                // Thực hiện Import
+                var (success, msg, cadetsCount, scoresCount) = await _creditService.ImportStandardTbmExcelAsync(tempExcel);
+                Assert.True(success, msg);
+                Assert.Equal(1, cadetsCount);
+                Assert.Equal(3, scoresCount);
+
+                // Kiểm tra Môn lớn có mã "ad.vc.1" được gom từ cả 2 đợt "2 AK" và "AK 1"
+                var mergedSubj = await _context.CreditSubjects
+                    .Include(s => s.Components)
+                    .FirstOrDefaultAsync(s => s.SubjectCode == "ad.vc.1");
+
+                Assert.NotNull(mergedSubj);
+                Assert.Equal(1.0, mergedSubj.Credits); // 0.8 + 0.2 = 1.0
+                Assert.Equal(2, mergedSubj.Components.Count);
+                Assert.Contains(mergedSubj.Components, c => c.ComponentName == "2 AK" && Math.Abs(c.Credits - 0.8) < 0.001);
+                Assert.Contains(mergedSubj.Components, c => c.ComponentName == "AK 1" && Math.Abs(c.Credits - 0.2) < 0.001);
+
+                // Kiểm tra môn độc lập "ntrk.1"
+                var indepSubj = await _context.CreditSubjects
+                    .Include(s => s.Components)
+                    .FirstOrDefaultAsync(s => s.SubjectCode == "ntrk.1");
+
+                Assert.NotNull(indepSubj);
+                Assert.Equal(1.5, indepSubj.Credits);
+                Assert.Single(indepSubj.Components);
+                Assert.Equal("THI TH M-L", indepSubj.Components.First().ComponentName);
+
+                // Kiểm tra tính điểm
+                var summaries = await _creditService.GetCadetAcademicSummariesAsync();
+                var cadetSummary = summaries.FirstOrDefault(c => c.FullName == "Trần Văn TestGroupCode");
+                Assert.NotNull(cadetSummary);
+
+                // Điểm môn gộp ad.vc.1: (8.0 * 0.8 + 9.0 * 0.2) / 1.0 = 8.2
+                Assert.True(cadetSummary.SubjectScores.ContainsKey(mergedSubj.Id));
+                Assert.Equal(8.2, cadetSummary.SubjectScores[mergedSubj.Id]);
+
+                // Export ra file Excel và kiểm tra lại dòng mã môn
+                string exportExcel = Path.Combine(Path.GetTempPath(), $"Test_Export_{Guid.NewGuid():N}.xlsx");
+                var allSubjects = await _context.CreditSubjects.ToListAsync();
+                var (expSuccess, expMsg) = await _creditService.ExportAcademicReportAsync(exportExcel, summaries, allSubjects);
+                Assert.True(expSuccess, expMsg);
+
+                using (var expWb = new XLWorkbook(exportExcel))
+                {
+                    var expWs = expWb.Worksheets.First();
+                    // Kiểm tra dòng 4 cột 6 ghi "Mã Môn"
+                    Assert.Equal("Mã Môn", expWs.Cell(4, 6).GetString().Trim());
+                    // Cột 7 và 8 của đợt thi mang mã môn "ad.vc.1"
+                    Assert.Equal("ad.vc.1", expWs.Cell(4, 7).GetString().Trim());
+                    Assert.Equal("ad.vc.1", expWs.Cell(4, 8).GetString().Trim());
+                }
+
+                if (File.Exists(exportExcel)) File.Delete(exportExcel);
+            }
+            finally
+            {
+                if (File.Exists(tempExcel)) File.Delete(tempExcel);
             }
         }
     }
