@@ -202,8 +202,8 @@
                         <TextBlock Text="{Binding IsEditing, Converter={x:Static local_cv:BooleanToVisibilityConverter.Instance}}" 
                                    Visibility="Collapsed"/>
                         <TextBlock Text="THÔNG TIN LỚP HỌC QUÂN ĐỘI" 
-                                   FontSize="18" FontWeight="Bold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
-                        <TextBlock Text="Cấu hình mã lớp, tên lớp, đơn vị và phân công cán bộ chủ nhiệm" FontSize="12" Foreground="#FFFFFF" Margin="0,0,0,16"/>
+                                   FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                        <TextBlock Text="Cấu hình mã lớp, tên lớp, đơn vị và phân công cán bộ chủ nhiệm" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,16"/>
 
                         <!-- Thông báo lỗi modal -->
                         <Border Background="#FEF2F2" BorderBrush="#FCA5A5" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,14"
@@ -219,11 +219,11 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="Mã lớp (*):" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
+                                <TextBlock Text="Mã lớp (*):" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
                                 <TextBox Text="{Binding FormClassCode, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
                             </StackPanel>
                             <StackPanel Grid.Column="2">
-                                <TextBlock Text="Tên lớp (*):" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
+                                <TextBlock Text="Tên lớp (*):" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
                                 <TextBox Text="{Binding FormClassName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
                             </StackPanel>
                         </Grid>
@@ -236,11 +236,11 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="Đơn vị trực thuộc (*):" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
+                                <TextBlock Text="Đơn vị trực thuộc (*):" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
                                 <components:UnitTreeComboBox SelectedUnit="{Binding FormUnit, Mode=TwoWay}" Height="36" Placeholder="Chọn đơn vị trực thuộc..."/>
                             </StackPanel>
                             <StackPanel Grid.Column="2">
-                                <TextBlock Text="Chuyên ngành (*):" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
+                                <TextBlock Text="Chuyên ngành (*):" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
                                 <ComboBox ItemsSource="{Binding AvailableMajors}" SelectedItem="{Binding FormMajor}" Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
                             </StackPanel>
                         </Grid>
@@ -253,19 +253,19 @@
                                 <ColumnDefinition Width="160"/>
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="Cán bộ chủ nhiệm / Phụ trách:" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
+                                <TextBlock Text="Cán bộ chủ nhiệm / Phụ trách:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
                                 <ComboBox ItemsSource="{Binding AvailableOfficers}" SelectedItem="{Binding FormOfficerInCharge}" 
                                           IsEditable="False" Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
                             </StackPanel>
                             <StackPanel Grid.Column="2">
-                                <TextBlock Text="Khóa / Niên khóa (*):" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
+                                <TextBlock Text="Khóa / Niên khóa (*):" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
                                 <ComboBox ItemsSource="{Binding AvailableAcademicYears}" SelectedItem="{Binding FormAcademicYear}" Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
                             </StackPanel>
                         </Grid>
 
                         <!-- Mô tả -->
                         <StackPanel Margin="0,0,0,20">
-                            <TextBlock Text="Mô tả / Ghi chú:" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
+                            <TextBlock Text="Mô tả / Ghi chú:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
                             <TextBox Text="{Binding FormDescription, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="60" TextWrapping="Wrap"/>
                         </StackPanel>
 

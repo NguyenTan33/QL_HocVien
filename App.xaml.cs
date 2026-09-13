@@ -186,6 +186,22 @@ namespace QL_HocVien
                                 }
                                 else if (target.Contains("dashboard")) mainVm.NavigateToDashboard();
                             }
+
+                            if (Array.Exists(e.Args, a => a == "--modal") && mainWindow.DataContext is MainViewModel mv)
+                            {
+                                if (mv.CurrentView is OfficerManagementViewModel offVm)
+                                {
+                                    offVm.OpenAddFormCommand.Execute(null);
+                                }
+                                else if (mv.CurrentView is CreditSubjectManagementViewModel credVm)
+                                {
+                                    credVm.OpenAddSubjectFormCommand.Execute(null);
+                                }
+                                else if (mv.CurrentView is ClassManagementViewModel clsVm)
+                                {
+                                    clsVm.OpenAddFormCommand.Execute(null);
+                                }
+                            }
                         }
                     }
 

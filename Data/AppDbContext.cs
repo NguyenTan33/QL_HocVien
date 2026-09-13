@@ -113,6 +113,8 @@ namespace QL_HocVien.Data
                 entity.HasIndex(e => e.CadetCode).IsUnique();
                 entity.Property(e => e.CadetCode).IsRequired().HasMaxLength(30);
                 entity.Property(e => e.FullName).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Cohort).HasMaxLength(50).HasDefaultValue(string.Empty);
+                entity.Property(e => e.AcademicYear).HasMaxLength(50).HasDefaultValue(string.Empty);
 
                 entity.HasOne(e => e.User)
                       .WithMany()
@@ -200,6 +202,7 @@ namespace QL_HocVien.Data
             modelBuilder.Entity<CreditScoreRecord>(entity =>
             {
                 entity.HasKey(e => e.Id);
+                entity.Property(e => e.SchoolYear).HasMaxLength(50).HasDefaultValue(string.Empty);
                 entity.HasOne(e => e.Cadet)
                       .WithMany()
                       .HasForeignKey(e => e.CadetId)

@@ -103,7 +103,7 @@
             </Grid.RowDefinitions>
 
             <!-- ==================== 1. HEADER ==================== -->
-            <Border Grid.Row="0" Background="#18271C" CornerRadius="9,9,0,0" Padding="20,16" BorderBrush="#2F4333" BorderThickness="0,0,0,1">
+            <Border Grid.Row="0" Background="{DynamicResource CardBackgroundBrush}" CornerRadius="9,9,0,0" Padding="20,16" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,0,0,1">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
@@ -112,30 +112,30 @@
                     </Grid.ColumnDefinitions>
 
                     <!-- Icon Cập nhật -->
-                    <Border Grid.Column="0" Width="44" Height="44" CornerRadius="22" Background="#243728" BorderBrush="#D4B547" BorderThickness="1.2" Margin="0,0,14,0">
+                    <Border Grid.Column="0" Width="44" Height="44" CornerRadius="22" Background="{DynamicResource PageBackgroundBrush}" BorderBrush="{DynamicResource PrimaryBorderBrush}" BorderThickness="1.2" Margin="0,0,14,0">
                         <TextBlock Text="🚀" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
 
                     <!-- Tiêu đề và Phiên bản -->
                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="CẬP NHẬT PHIÊN BẢN HỆ THỐNG" FontSize="16" FontWeight="Bold" Foreground="#FFE17A" VerticalAlignment="Center"/>
+                            <TextBlock Text="CẬP NHẬT PHIÊN BẢN HỆ THỐNG" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}" VerticalAlignment="Center"/>
                             <Border x:Name="bdMandatoryBadge" Background="#7F1D1D" BorderBrush="#EF4444" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="10,0,0,0" VerticalAlignment="Center">
                                 <TextBlock x:Name="txtBadgeText" Text="BẮT BUỘC" FontSize="10" FontWeight="Bold" Foreground="#FEE2E2"/>
                             </Border>
                         </StackPanel>
 
                         <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                            <TextBlock Text="Phiên bản hiện tại: " FontSize="12" Foreground="#FFFFFF"/>
-                            <TextBlock x:Name="txtCurrentVersion" Text="v1.0.0" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF" Margin="0,0,10,0"/>
-                            <TextBlock Text="➔  Phiên bản mới: " FontSize="12" Foreground="#FFFFFF"/>
-                            <TextBlock x:Name="txtLatestVersion" Text="v1.3.0" FontSize="12" FontWeight="Bold" Foreground="#4ADE80"/>
+                            <TextBlock Text="Phiên bản hiện tại: " FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBlock x:Name="txtCurrentVersion" Text="v1.0.0" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,10,0"/>
+                            <TextBlock Text="➔  Phiên bản mới: " FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBlock x:Name="txtLatestVersion" Text="v1.3.0" FontSize="12" FontWeight="Bold" Foreground="#16A34A"/>
                         </StackPanel>
                     </StackPanel>
 
                     <!-- Nút Đóng (Chỉ hiển thị nếu không phải mandatory) -->
                     <Button Grid.Column="2" x:Name="btnCloseHeader" Content="✕" Width="28" Height="28"
-                            Background="Transparent" Foreground="#FFFFFF" BorderThickness="0" FontSize="13" FontWeight="Bold" Cursor="Hand"
+                            Background="Transparent" Foreground="{DynamicResource TextPrimaryBrush}" BorderThickness="0" FontSize="13" FontWeight="Bold" Cursor="Hand"
                             Click="BtnClose_Click"/>
                 </Grid>
             </Border>
@@ -147,12 +147,12 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <TextBlock Grid.Row="0" Text="Nội dung cập nhật và cải tiến:" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,6"/>
+                <TextBlock Grid.Row="0" Text="Nội dung cập nhật và cải tiến:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,6"/>
 
-                <Border Grid.Row="1" Background="#0C140E" BorderBrush="#2F4333" BorderThickness="1" CornerRadius="6" Padding="12">
+                <Border Grid.Row="1" Background="{DynamicResource PageBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12">
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <TextBlock x:Name="txtReleaseNotes" Text="Đang tải thông tin bản phát hành..."
-                                   Foreground="#FFFFFF" FontSize="12.5" LineHeight="20" TextWrapping="Wrap" FontFamily="Segoe UI"/>
+                                   Foreground="{DynamicResource TextPrimaryBrush}" FontSize="12.5" LineHeight="20" TextWrapping="Wrap" FontFamily="Segoe UI"/>
                     </ScrollViewer>
                 </Border>
             </Grid>
@@ -160,12 +160,12 @@
             <!-- ==================== 3. KHU VỰC TIẾN ĐỘ TẢI (PROGRESS BAR) ==================== -->
             <StackPanel Grid.Row="2" x:Name="spDownloadProgress" Margin="20,0,20,10" Visibility="Collapsed">
                 <Grid Margin="0,0,0,6">
-                    <TextBlock x:Name="txtDownloadStatus" Text="Đang tải gói cài đặt cập nhật..." FontSize="12" Foreground="#FFFFFF" FontWeight="SemiBold"/>
-                    <TextBlock x:Name="txtDownloadSpeed" Text="0.0 MB/s" HorizontalAlignment="Right" FontSize="12" Foreground="#38BDF8" FontWeight="SemiBold" FontFamily="Consolas"/>
+                    <TextBlock x:Name="txtDownloadStatus" Text="Đang tải gói cài đặt cập nhật..." FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
+                    <TextBlock x:Name="txtDownloadSpeed" Text="0.0 MB/s" HorizontalAlignment="Right" FontSize="12" Foreground="{DynamicResource PrimaryBrush}" FontWeight="SemiBold" FontFamily="Consolas"/>
                 </Grid>
 
                 <!-- Thanh Tiến độ hiện đại -->
-                <ProgressBar x:Name="pbDownload" Height="10" Value="0" Maximum="100" Background="#1E293B" Foreground="#22C55E" BorderThickness="0">
+                <ProgressBar x:Name="pbDownload" Height="10" Value="0" Maximum="100" Background="{DynamicResource PageBackgroundBrush}" Foreground="#22C55E" BorderThickness="0">
                     <ProgressBar.Resources>
                         <Style TargetType="ProgressBar">
                             <Setter Property="Template">
@@ -190,11 +190,11 @@
                     </ProgressBar.Resources>
                 </ProgressBar>
 
-                <TextBlock x:Name="txtDownloadSize" Text="0 MB / 0 MB (0%)" FontSize="11" Foreground="#FFFFFF" Margin="0,4,0,0" HorizontalAlignment="Right" FontFamily="Consolas"/>
+                <TextBlock x:Name="txtDownloadSize" Text="0 MB / 0 MB (0%)" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0" HorizontalAlignment="Right" FontFamily="Consolas"/>
             </StackPanel>
 
             <!-- ==================== 4. CỤM NÚT ĐIỀU KHIỂN THAO TÁC ==================== -->
-            <Border Grid.Row="3" Background="#142117" CornerRadius="0,0,9,9" Padding="20,14" BorderBrush="#2F4333" BorderThickness="0,1,0,0">
+            <Border Grid.Row="3" Background="{DynamicResource PageBackgroundBrush}" CornerRadius="0,0,9,9" Padding="20,14" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="0,1,0,0">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>

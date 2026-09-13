@@ -16,6 +16,8 @@ namespace QL_HocVien.Data.Repositories.Interfaces
         Task<List<string>> GetDistinctClassesAsync();
         Task<List<string>> GetDistinctRanksAsync();
         Task<List<string>> GetDistinctPositionsAsync();
+        Task<List<string>> GetDistinctCohortsAsync();
+        Task<List<string>> GetDistinctAcademicYearsAsync();
         Task<int> DeleteMultipleAsync(IEnumerable<int> ids);
     }
 }

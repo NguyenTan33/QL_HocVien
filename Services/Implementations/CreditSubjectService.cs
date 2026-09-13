@@ -141,15 +141,28 @@ namespace QL_HocVien.Services.Implementations
                 .ToListAsync();
         }
 
+        public async Task<List<string>> GetDistinctSchoolYearsAsync()
+        {
+            return await _context.CreditScoreRecords
+                .Where(s => !string.IsNullOrWhiteSpace(s.SchoolYear))
+                .Select(s => s.SchoolYear.Trim())
+                .Distinct()
+                .OrderBy(y => y)
+                .ToListAsync();
+        }
+
         public async Task<(bool Success, string Message)> SaveScoreAsync(CreditScoreRecord score)
         {
             try
             {
                 if (score.FinalScore < 0 || score.FinalScore > 10)
-                    return (false, "Äiá»ƒm mÃ´n há»c pháº£i náº±m trong khoáº£ng tá»« 0.0 Ä‘áº¿n 10.0.");
+                    return (false, "Điểm môn học phải nằm trong khoảng từ 0.0 đến 10.0.");
 
                 var existing = await _context.CreditScoreRecords
-                    .FirstOrDefaultAsync(s => s.CadetId == score.CadetId && s.CreditSubjectId == score.CreditSubjectId && s.ExamSession == score.ExamSession);
+                    .FirstOrDefaultAsync(s => s.CadetId == score.CadetId && 
+                                              s.CreditSubjectId == score.CreditSubjectId && 
+                                              s.ExamSession == score.ExamSession &&
+                                              (string.IsNullOrEmpty(score.SchoolYear) || s.SchoolYear == score.SchoolYear));
 
                 if (existing != null)
                 {
@@ -158,6 +171,10 @@ namespace QL_HocVien.Services.Implementations
                     existing.FinalScore = score.FinalScore;
                     existing.ExamDate = score.ExamDate;
                     existing.Notes = score.Notes;
+                    if (!string.IsNullOrWhiteSpace(score.SchoolYear))
+                    {
+                        existing.SchoolYear = score.SchoolYear;
+                    }
                 }
                 else
                 {
@@ -165,11 +182,11 @@ namespace QL_HocVien.Services.Implementations
                 }
 
                 await _context.SaveChangesAsync();
-                return (true, "LÆ°u Ä‘iá»ƒm mÃ´n há»c tÃ­n chá»‰ thÃ nh cÃ´ng.");
+                return (true, "Lưu điểm môn học tín chỉ thành công.");
             }
             catch (Exception ex)
             {
-                return (false, $"Lá»—i khi lÆ°u Ä‘iá»ƒm: {ex.Message}");
+                return (false, $"Lỗi khi lưu điểm: {ex.Message}");
             }
         }
 
@@ -179,20 +196,21 @@ namespace QL_HocVien.Services.Implementations
             {
                 var record = await _context.CreditScoreRecords.FindAsync(scoreId);
                 if (record == null)
-                    return (false, "KhÃ´ng tÃ¬m tháº¥y báº£n ghi Ä‘iá»ƒm.");
+                    return (false, "Không tìm thấy bản ghi điểm.");
 
                 _context.CreditScoreRecords.Remove(record);
                 await _context.SaveChangesAsync();
-                return (true, "XÃ³a Ä‘iá»ƒm thÃ nh cÃ´ng.");
+                return (true, "Xóa điểm thành công.");
             }
             catch (Exception ex)
             {
-                return (false, $"Lá»—i khi xÃ³a Ä‘iá»ƒm: {ex.Message}");
+                return (false, $"Lỗi khi xóa điểm: {ex.Message}");
             }
         }
 
         public async Task<List<CadetAcademicSummaryDto>> GetCadetAcademicSummariesAsync(
-            string? unit = null, string? className = null, string? keyword = null)
+            string? unit = null, string? className = null, string? keyword = null,
+            string? schoolYear = null, string? cohort = null)
         {
             var query = _context.Cadets
                 .Include(c => c.MilitaryClass)
@@ -205,6 +223,9 @@ namespace QL_HocVien.Services.Implementations
             if (!string.IsNullOrWhiteSpace(className) && !className.Contains("Tất cả") && !className.Contains("Táº¥t cáº£") && !className.Equals("All", StringComparison.OrdinalIgnoreCase))
                 query = query.Where(c => c.MilitaryClass != null && c.MilitaryClass.ClassName == className);
 
+            if (!string.IsNullOrWhiteSpace(cohort) && !cohort.Contains("Tất cả") && !cohort.Contains("Táº¥t cáº£") && !cohort.Equals("All", StringComparison.OrdinalIgnoreCase))
+                query = query.Where(c => c.Cohort == cohort);
+
             if (!string.IsNullOrWhiteSpace(keyword))
             {
                 keyword = keyword.Trim().ToLower();
@@ -212,10 +233,17 @@ namespace QL_HocVien.Services.Implementations
             }
 
             var cadets = await query.ToListAsync();
-            var allScores = await _context.CreditScoreRecords
+            var scoresQuery = _context.CreditScoreRecords
                 .Include(s => s.CreditSubject)
                 .AsNoTracking()
-                .ToListAsync();
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(schoolYear) && !schoolYear.Contains("Tất cả") && !schoolYear.Contains("Táº¥t cáº£") && !schoolYear.Equals("All", StringComparison.OrdinalIgnoreCase))
+            {
+                scoresQuery = scoresQuery.Where(s => s.SchoolYear == schoolYear);
+            }
+
+            var allScores = await scoresQuery.ToListAsync();
 
             // Láº¥y danh sÃ¡ch cÃ¡c mÃ´n lá»›n vÃ  cÃ¡c Ä‘á»£t thi thÃ nh pháº§n trá»±c thuá»™c
             var majorSubjects = await _context.CreditSubjects
@@ -259,6 +287,11 @@ namespace QL_HocVien.Services.Implementations
                     Rank = cadet.Rank,
                     Unit = cadet.Unit,
                     ClassName = cadet.MilitaryClass?.ClassName ?? cadet.Unit,
+                    Cohort = cadet.Cohort,
+                    EnrollmentYear = cadet.EnrollmentYear,
+                    SchoolYearDisplay = !string.IsNullOrWhiteSpace(schoolYear) && !schoolYear.Contains("Tất cả")
+                        ? schoolYear
+                        : (cadetScores.FirstOrDefault(s => !string.IsNullOrEmpty(s.SchoolYear))?.SchoolYear ?? string.Empty),
                     TotalCurriculumCredits = Math.Round(curriculumCredits, 2)
                 };
 
@@ -1182,8 +1215,58 @@ namespace QL_HocVien.Services.Implementations
             return result;
         }
 
-        private async Task<(bool Success, string Message, int ImportedCadets, int ImportedScores, int MajorSubjectsCount)> ExecuteImportStandardTbmExcelAsync(IXLWorksheet ws)
+        private static (string? DetectedSchoolYear, string? DetectedCohort, int? DetectedEnrollmentYear) DetectMetadataFromExcelHeader(IXLWorksheet ws)
         {
+            string? detectedSchoolYear = null;
+            string? detectedCohort = null;
+            int? detectedEnrollmentYear = null;
+
+            for (int r = 1; r <= 6; r++)
+            {
+                for (int c = 1; c <= 15; c++)
+                {
+                    string cellVal = ws.Cell(r, c).GetString().Trim();
+                    if (string.IsNullOrWhiteSpace(cellVal)) continue;
+
+                    // 1. Tìm Năm học (VD: "Năm học: 2023 - 2024", "Năm học 2023-2024", "2023 - 2024")
+                    if (detectedSchoolYear == null)
+                    {
+                        var matchYear = System.Text.RegularExpressions.Regex.Match(cellVal, @"(\d{4}\s*[-–/]\s*\d{4})");
+                        if (matchYear.Success)
+                        {
+                            string rawYear = matchYear.Groups[1].Value.Replace("–", "-").Replace("/", "-").Trim();
+                            var parts = rawYear.Split('-');
+                            if (parts.Length == 2 && int.TryParse(parts[0].Trim(), out int y1) && int.TryParse(parts[1].Trim(), out int y2))
+                            {
+                                detectedSchoolYear = $"{y1} - {y2}";
+                                if (detectedEnrollmentYear == null) detectedEnrollmentYear = y1;
+                            }
+                        }
+                    }
+
+                    // 2. Tìm Khóa học (VD: "Khóa: K29", "Khóa K29", "Khóa 29", "K29")
+                    if (detectedCohort == null)
+                    {
+                        var matchCohort = System.Text.RegularExpressions.Regex.Match(cellVal, @"(?i)\b(?:khóa|khoá)\s*[:\-]?\s*(K?\d+)\b");
+                        if (matchCohort.Success)
+                        {
+                            string rawCohort = matchCohort.Groups[1].Value.Trim().ToUpperInvariant();
+                            detectedCohort = rawCohort.StartsWith("K") ? rawCohort : $"K{rawCohort}";
+                        }
+                    }
+                }
+            }
+
+            return (detectedSchoolYear, detectedCohort, detectedEnrollmentYear);
+        }
+
+        private async Task<(bool Success, string Message, int ImportedCadets, int ImportedScores, int MajorSubjectsCount)> ExecuteImportStandardTbmExcelAsync(
+            IXLWorksheet ws, string? schoolYear = null, string? cohort = null)
+        {
+            var (detectedYear, detectedCohort, detectedEnrollmentYear) = DetectMetadataFromExcelHeader(ws);
+            string effectiveSchoolYear = !string.IsNullOrWhiteSpace(schoolYear) ? schoolYear.Trim() : (detectedYear ?? string.Empty);
+            string effectiveCohort = !string.IsNullOrWhiteSpace(cohort) ? cohort.Trim() : (detectedCohort ?? string.Empty);
+
             var layout = DetectExcelLayout(ws);
             var meta = layout.Meta;
             var scannedSubjects = ScanSubjectColumns(ws, meta.StartSubjectCol, layout.HeaderRow, layout.CreditRow, layout.CodeRow);
@@ -1413,6 +1496,11 @@ namespace QL_HocVien.Services.Implementations
                         Unit = unit,
                         Rank = "Binh nhì",
                         Position = "Học viên",
+                        Cohort = effectiveCohort,
+                        EnrollmentYear = detectedEnrollmentYear,
+                        AcademicYear = !string.IsNullOrWhiteSpace(effectiveCohort) && detectedEnrollmentYear.HasValue
+                            ? $"{detectedEnrollmentYear} - {detectedEnrollmentYear + 4}"
+                            : string.Empty,
                         DateOfBirth = new DateTime(2002, 1, 1),
                         CreatedAt = DateTime.Now
                     };
@@ -1429,6 +1517,18 @@ namespace QL_HocVien.Services.Implementations
                     {
                         cadet.Unit = unit;
                     }
+                    if (string.IsNullOrWhiteSpace(cadet.Cohort) && !string.IsNullOrWhiteSpace(effectiveCohort))
+                    {
+                        cadet.Cohort = effectiveCohort;
+                    }
+                    if (!cadet.EnrollmentYear.HasValue && detectedEnrollmentYear.HasValue)
+                    {
+                        cadet.EnrollmentYear = detectedEnrollmentYear;
+                    }
+                    if (string.IsNullOrWhiteSpace(cadet.AcademicYear) && !string.IsNullOrWhiteSpace(cadet.Cohort) && cadet.EnrollmentYear.HasValue)
+                    {
+                        cadet.AcademicYear = $"{cadet.EnrollmentYear} - {cadet.EnrollmentYear + 4}";
+                    }
                 }
 
                 // Đọc điểm cho từng cột đợt thi
@@ -1441,6 +1541,7 @@ namespace QL_HocVien.Services.Implementations
                         {
                             var existingScore = existingScoresInDb.FirstOrDefault(s => 
                                 s.CadetId == cadet.Id && 
+                                (string.IsNullOrEmpty(effectiveSchoolYear) || s.SchoolYear == effectiveSchoolYear) &&
                                 (s.ComponentId == comp.Id || (s.CreditSubjectId == majorSubj.Id && s.ComponentId == null)));
 
                             if (existingScore != null)
@@ -1450,6 +1551,10 @@ namespace QL_HocVien.Services.Implementations
                                 existingScore.CreditSubjectId = majorSubj.Id;
                                 existingScore.ComponentId = comp.Id;
                                 existingScore.ExamDate = DateTime.Today;
+                                if (!string.IsNullOrWhiteSpace(effectiveSchoolYear))
+                                {
+                                    existingScore.SchoolYear = effectiveSchoolYear;
+                                }
                             }
                             else
                             {
@@ -1458,6 +1563,7 @@ namespace QL_HocVien.Services.Implementations
                                     CadetId = cadet.Id,
                                     CreditSubjectId = majorSubj.Id,
                                     ComponentId = comp.Id,
+                                    SchoolYear = effectiveSchoolYear,
                                     FinalScore = scoreVal,
                                     RegularScore = scoreVal,
                                     ExamSession = "Toàn khóa",
@@ -1482,7 +1588,8 @@ namespace QL_HocVien.Services.Implementations
         }
         #endregion
 
-        public async Task<(bool Success, string Message, int ImportedCadets, int ImportedScores)> ImportStandardTbmExcelAsync(string filePath)
+        public async Task<(bool Success, string Message, int ImportedCadets, int ImportedScores)> ImportStandardTbmExcelAsync(
+            string filePath, string? schoolYear = null, string? cohort = null)
         {
             return await Task.Run(async () =>
             {
@@ -1513,7 +1620,7 @@ namespace QL_HocVien.Services.Implementations
                         await _context.SaveChangesAsync();
                     }
 
-                    var res = await ExecuteImportStandardTbmExcelAsync(ws);
+                    var res = await ExecuteImportStandardTbmExcelAsync(ws, schoolYear, cohort);
                     return (res.Success, res.Message, res.ImportedCadets, res.ImportedScores);
                 }
                 catch (Exception ex)
@@ -1684,7 +1791,7 @@ namespace QL_HocVien.Services.Implementations
         }
 
         public async Task<(CreditSubject? Subject, List<SubjectAssessmentComponent> Components, List<CadetSubjectGradeRowDto> Rows)> GetSubjectGradeMatrixAsync(
-            int subjectId, string? unit = null, string? className = null)
+            int subjectId, string? unit = null, string? className = null, string? schoolYear = null, string? cohort = null)
         {
             var subject = await _context.CreditSubjects
                 .Include(s => s.Components)
@@ -1714,19 +1821,29 @@ namespace QL_HocVien.Services.Implementations
                 .AsNoTracking()
                 .AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(unit) && unit != "Táº¥t cáº£")
+            if (!string.IsNullOrWhiteSpace(unit) && unit != "Tất cả")
                 cadetQuery = cadetQuery.Where(c => c.Unit == unit);
 
-            if (!string.IsNullOrWhiteSpace(className) && className != "Táº¥t cáº£")
+            if (!string.IsNullOrWhiteSpace(className) && className != "Tất cả")
                 cadetQuery = cadetQuery.Where(c => c.MilitaryClass != null && c.MilitaryClass.ClassName == className);
+
+            if (!string.IsNullOrWhiteSpace(cohort) && cohort != "Tất cả")
+                cadetQuery = cadetQuery.Where(c => c.Cohort == cohort);
 
             var cadets = await cadetQuery.OrderBy(c => c.Unit).ThenBy(c => c.FullName).ToListAsync();
             var compIds = components.Select(c => c.Id).ToList();
 
-            var scores = await _context.CreditScoreRecords
+            var scoresQuery = _context.CreditScoreRecords
                 .Where(s => s.CreditSubjectId == subjectId || (s.ComponentId.HasValue && compIds.Contains(s.ComponentId.Value)))
                 .AsNoTracking()
-                .ToListAsync();
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(schoolYear) && schoolYear != "Tất cả")
+            {
+                scoresQuery = scoresQuery.Where(s => s.SchoolYear == schoolYear);
+            }
+
+            var scores = await scoresQuery.ToListAsync();
 
             var scoreMap = new Dictionary<(int CadetId, int ComponentId), double>();
             foreach (var sc in scores)
@@ -1741,7 +1858,7 @@ namespace QL_HocVien.Services.Implementations
                 }
             }
 
-            // Äáº¿m sá»‘ lÆ°á»£ng há»c viÃªn cÃ³ Ä‘iá»ƒm cho tá»«ng Ä‘á»£t kiá»ƒm tra
+            // Đếm số lượng học viên có điểm cho từng đợt kiểm tra
             var activeComponentIds = new HashSet<int>();
             foreach (var comp in components)
             {
@@ -1762,7 +1879,9 @@ namespace QL_HocVien.Services.Implementations
                     CadetCode = cadet.CadetCode,
                     FullName = cadet.FullName,
                     Unit = cadet.Unit,
-                    ClassName = cadet.MilitaryClass?.ClassName ?? cadet.Unit
+                    ClassName = cadet.MilitaryClass?.ClassName ?? cadet.Unit,
+                    Cohort = cadet.Cohort,
+                    SchoolYear = schoolYear ?? string.Empty
                 };
 
                 for (int i = 0; i < components.Count; i++)
@@ -1820,7 +1939,7 @@ namespace QL_HocVien.Services.Implementations
         }
 
         public async Task<(bool Success, string Message)> SaveSubjectGradeMatrixAsync(
-            int subjectId, List<CadetSubjectGradeRowDto> rows)
+            int subjectId, List<CadetSubjectGradeRowDto> rows, string? schoolYear = null)
         {
             try
             {
@@ -1854,6 +1973,7 @@ namespace QL_HocVien.Services.Implementations
 
                         var existingScore = await _context.CreditScoreRecords
                             .FirstOrDefaultAsync(s => s.CadetId == row.CadetId && 
+                                                      (string.IsNullOrEmpty(schoolYear) || s.SchoolYear == schoolYear) &&
                                                       (s.ComponentId == comp.Id || 
                                                        (s.CreditSubjectId == subjectId && s.ComponentId == null && components.Count == 1)));
 
@@ -1866,6 +1986,10 @@ namespace QL_HocVien.Services.Implementations
                                 existingScore.ComponentId = comp.Id;
                                 existingScore.CreditSubjectId = subjectId;
                                 existingScore.ExamDate = DateTime.Today;
+                                if (!string.IsNullOrWhiteSpace(schoolYear))
+                                {
+                                    existingScore.SchoolYear = schoolYear;
+                                }
                             }
                             else
                             {
@@ -1874,6 +1998,7 @@ namespace QL_HocVien.Services.Implementations
                                     CadetId = row.CadetId,
                                     CreditSubjectId = subjectId,
                                     ComponentId = comp.Id,
+                                    SchoolYear = schoolYear ?? string.Empty,
                                     FinalScore = scoreVal.Value,
                                     RegularScore = scoreVal.Value,
                                     ExamDate = DateTime.Today,

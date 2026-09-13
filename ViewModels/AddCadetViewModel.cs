@@ -61,6 +61,23 @@ namespace QL_HocVien.ViewModels
         private DateTime? _dateOfBirth = new DateTime(2004, 1, 1);
 
         [ObservableProperty]
+        private string _cohort = "K29";
+
+        [ObservableProperty]
+        private int? _enrollmentYear = 2023;
+
+        partial void OnEnrollmentYearChanged(int? value)
+        {
+            if (value.HasValue)
+            {
+                AcademicYear = $"{value.Value} - {value.Value + 4}";
+            }
+        }
+
+        [ObservableProperty]
+        private string _academicYear = "2023 - 2027";
+
+        [ObservableProperty]
         private string _email = string.Empty;
 
         [ObservableProperty]
@@ -258,6 +275,9 @@ namespace QL_HocVien.ViewModels
                 PhoneNumber = PhoneNumber.Trim(),
                 ClassId = SelectedMilitaryClass?.Id,
                 ClassName = !string.IsNullOrWhiteSpace(ClassName) ? ClassName.Trim() : (SelectedMilitaryClass?.ClassName ?? string.Empty),
+                Cohort = Cohort.Trim(),
+                EnrollmentYear = EnrollmentYear,
+                AcademicYear = !string.IsNullOrWhiteSpace(AcademicYear) ? AcademicYear.Trim() : (EnrollmentYear.HasValue ? $"{EnrollmentYear} - {EnrollmentYear + 4}" : string.Empty),
                 Rank = SelectedRank,
                 Position = SelectedPosition,
                 Unit = SelectedUnit,

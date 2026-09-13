@@ -58,14 +58,14 @@
             <views:TrainingTimelineView/>
         </DataTemplate>
 
-        <!-- Style cho các nút điều hướng Sidebar (Tự động Active Đỏ Gradient Viền Vàng theo ActiveMenu) -->
+        <!-- Style cho các nút điều hướng Sidebar (Tự động Active theo Chế độ Tác chiến / Hành chính) -->
         <Style x:Key="SidebarNavButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#CBD5E1"/>
+            <Setter Property="Foreground" Value="{DynamicResource SidebarNavForegroundBrush}"/>
             <Setter Property="FontSize" Value="12.5"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Height" Value="33"/>
-            <Setter Property="Margin" Value="8,1"/>
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="Margin" Value="8,2"/>
             <Setter Property="HorizontalContentAlignment" Value="Left"/>
             <Setter Property="Padding" Value="10,0"/>
             <Setter Property="BorderThickness" Value="1"/>
@@ -90,7 +90,7 @@
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Background" Value="{DynamicResource SidebarNavHoverBackgroundBrush}"/>
                     <Setter Property="BorderBrush" Value="{DynamicResource SidebarNavHoverBorderBrush}"/>
-                    <Setter Property="Foreground" Value="#FFFFFF"/>
+                    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
                 </Trigger>
                 <!-- Trạng thái Đang được chọn (Active Menu - Đổi theo Chế độ Tác chiến / Hành chính) -->
                 <DataTrigger Value="True">
@@ -120,21 +120,11 @@
             <RowDefinition Height="32"/>
         </Grid.RowDefinitions>
 
-        <!-- ==================== 0. CUSTOM TOPBAR QUÂN KỲ QUYẾT THẮNG ==================== -->
-        <Border Grid.Row="0" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
-            <Border.Style>
-                <Style TargetType="Border">
-                    <Setter Property="Background" Value="{StaticResource MilTopBarGradient}"/>
-                    <Setter Property="BorderBrush" Value="#625C34"/>
-                    <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding IsCombatMode}" Value="False">
-                            <Setter Property="Background" Value="#0A1329"/>
-                            <Setter Property="BorderBrush" Value="#1E293B"/>
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </Border.Style>
+        <!-- ==================== 0. CUSTOM TOPBAR ==================== -->
+        <Border Grid.Row="0" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown"
+                Background="{DynamicResource TopBarBackgroundBrush}"
+                BorderBrush="{DynamicResource TopBarBorderBrush}"
+                BorderThickness="0,0,0,1">
             <Grid Margin="14,0,8,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -142,81 +132,38 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Trái: Quân hiệu sao vàng & Tiêu đề hệ thống -->
+                <!-- Trái: Quân hiệu & Tiêu đề hệ thống -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="★" FontSize="15" FontWeight="Bold" Margin="0,0,8,0" VerticalAlignment="Center">
-                        <TextBlock.Style>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="Foreground" Value="#F2C94C"/>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsCombatMode}" Value="False">
-                                        <Setter Property="Foreground" Value="#60A5FA"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBlock.Style>
-                    </TextBlock>
-                    <TextBlock Text="QUÂN ĐỘI NHÂN DÂN VIỆT NAM  |" FontSize="11" FontWeight="Bold" VerticalAlignment="Center">
-                        <TextBlock.Style>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="Foreground" Value="#FFE17A"/>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsCombatMode}" Value="False">
-                                        <Setter Property="Foreground" Value="#CBD5E1"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBlock.Style>
-                    </TextBlock>
-                    <TextBlock Text="  HỆ THỐNG QUẢN LÝ HỌC VIÊN " FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center">
-                        <TextBlock.Style>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="Foreground" Value="#F7F1D4"/>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsCombatMode}" Value="False">
-                                        <Setter Property="Foreground" Value="#94A3B8"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBlock.Style>
-                    </TextBlock>
+                    <!-- Biểu tượng cho Chế độ Tác chiến: Ngôi sao vàng -->
+                    <TextBlock Text="★" FontSize="15" FontWeight="Bold" Margin="0,0,8,0" VerticalAlignment="Center"
+                               Foreground="{DynamicResource AccentBrush}"
+                               Visibility="{Binding IsCombatMode, Converter={x:Static local_cv:BooleanToVisibilityConverter.Instance}}"/>
+                    
+                    <!-- Biểu tượng cho Chế độ Hành chính: Logo Quân đội tách nền trong suốt -->
+                    <Image Source="/Assets/Images/military_logo_transparent.png" 
+                           Height="22" Width="19" Stretch="Uniform" Margin="0,0,8,0" VerticalAlignment="Center"
+                           Visibility="{Binding IsCombatMode, Converter={x:Static local_cv:InvertedBooleanToVisibilityConverter.Instance}}"/>
+
+                    <TextBlock Text="QUÂN ĐỘI NHÂN DÂN VIỆT NAM  |" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"
+                               Foreground="{DynamicResource TopBarTitleForegroundBrush}"/>
+                    <TextBlock Text="  HỆ THỐNG QUẢN LÝ HỌC VIÊN " FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"
+                               Foreground="{DynamicResource TopBarSubForegroundBrush}"/>
                 </StackPanel>
 
                 <!-- Giữa: Khẩu hiệu truyền thống -->
                 <TextBlock Grid.Column="1" Text="“VÌ NHÂN DÂN PHỤC VỤ”" 
                            FontSize="11.5" FontWeight="ExtraBold" 
-                           HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10,0">
-                    <TextBlock.Style>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="Foreground" Value="#FFE17A"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsCombatMode}" Value="False">
-                                    <Setter Property="Foreground" Value="#94A3B8"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TextBlock.Style>
-                </TextBlock>
+                           HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10,0"
+                           Foreground="{DynamicResource TopBarTitleForegroundBrush}"/>
 
                 <!-- Phải: Nút Gạt Dual-Theme + Khóa Bảo Mật + Điều Khiển Cửa Sổ -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                     <!-- Nút Gạt Chuyển Đổi 2 Giao Diện (Dual-Theme) -->
                     <Button Command="{Binding ToggleThemeModeCommand}" ToolTip="{Binding ThemeModeTooltip}"
-                            Height="26" Padding="10,0" Margin="0,0,12,0" Cursor="Hand" BorderThickness="1">
-                        <Button.Style>
-                            <Style TargetType="Button">
-                                <Setter Property="Background" Value="#18251A"/>
-                                <Setter Property="BorderBrush" Value="#F2C94C"/>
-                                <Setter Property="Foreground" Value="#FFE17A"/>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsCombatMode}" Value="False">
-                                        <Setter Property="Background" Value="#1E293B"/>
-                                        <Setter Property="BorderBrush" Value="#60A5FA"/>
-                                        <Setter Property="Foreground" Value="#93C5FD"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Button.Style>
+                            Height="26" Padding="10,0" Margin="0,0,12,0" Cursor="Hand" BorderThickness="1"
+                            Background="{DynamicResource SecondaryButtonBackgroundBrush}"
+                            BorderBrush="{DynamicResource SecondaryButtonBorderBrush}"
+                            Foreground="{DynamicResource TextPrimaryBrush}">
                         <Button.Resources>
                             <Style TargetType="Border">
                                 <Setter Property="CornerRadius" Value="4"/>
@@ -253,7 +200,8 @@
                         </StackPanel>
 
                         <!-- Trạng thái: Đang khóa (bấm để mở khóa) -->
-                        <Button Background="#1E293B" BorderBrush="#475569" BorderThickness="1" Padding="8,2" Height="24" Cursor="Hand"
+                        <Button Background="{DynamicResource SecondaryButtonBackgroundBrush}" 
+                                BorderBrush="{DynamicResource SecondaryButtonBorderBrush}" BorderThickness="1" Padding="8,2" Height="24" Cursor="Hand"
                                 ToolTip="{Binding SecurityStatusTooltip}"
                                 Command="{Binding QuickUnlockCommand}"
                                 Visibility="{Binding IsSecurityUnlocked, Converter={x:Static local_cv:InvertedBooleanToVisibilityConverter.Instance}}">
@@ -264,17 +212,17 @@
                             </Button.Resources>
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                 <TextBlock Text="🔒" FontSize="10" Margin="0,0,4,0"/>
-                                <TextBlock Text="KHÓA BẢO MẬT (CHỈ XEM)" FontSize="10" FontWeight="Bold" Foreground="#F59E0B"/>
+                                <TextBlock Text="KHÓA BẢO MẬT (CHỈ XEM)" FontSize="10" FontWeight="Bold" Foreground="#D97706"/>
                             </StackPanel>
                         </Button>
                     </StackPanel>
 
                     <!-- Các nút điều khiển cửa sổ -->
-                    <Button Content="—" Width="34" Height="28" Background="Transparent" Foreground="#F7F1D4" BorderThickness="0"
+                    <Button Content="—" Width="34" Height="28" Background="Transparent" Foreground="{DynamicResource TopBarSubForegroundBrush}" BorderThickness="0"
                             Cursor="Hand" Click="BtnMinimize_Click"/>
-                    <Button x:Name="BtnMax" Content="☐" Width="34" Height="28" Background="Transparent" Foreground="#F7F1D4" BorderThickness="0"
+                    <Button x:Name="BtnMax" Content="☐" Width="34" Height="28" Background="Transparent" Foreground="{DynamicResource TopBarSubForegroundBrush}" BorderThickness="0"
                             Cursor="Hand" Click="BtnMaximize_Click"/>
-                    <Button Content="✕" Width="34" Height="28" Background="Transparent" Foreground="#F7F1D4" BorderThickness="0"
+                    <Button Content="✕" Width="34" Height="28" Background="Transparent" Foreground="{DynamicResource TopBarSubForegroundBrush}" BorderThickness="0"
                             Cursor="Hand" Click="BtnClose_Click"/>
                 </StackPanel>
             </Grid>
@@ -290,20 +238,10 @@
             </Grid.ColumnDefinitions>
 
             <!-- SIDEBAR BÊN TRÁI -->
-            <Border Grid.Column="0">
-                <Border.Style>
-                    <Style TargetType="Border">
-                        <Setter Property="Background" Value="{StaticResource MilSidebarBrush}"/>
-                        <Setter Property="BorderBrush" Value="#18291D"/>
-                        <Setter Property="BorderThickness" Value="0,0,1,0"/>
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsCombatMode}" Value="False">
-                                <Setter Property="Background" Value="#0F172A"/>
-                                <Setter Property="BorderBrush" Value="#1E293B"/>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Border.Style>
+            <Border Grid.Column="0"
+                    Background="{DynamicResource SidebarBackgroundBrush}"
+                    BorderBrush="{DynamicResource SidebarBorderBrush}"
+                    BorderThickness="0,0,1,0">
                 <Grid>
                     <Grid.RowDefinitions>
                         <!-- Header Sidebar: Quân hiệu & Biểu trưng QĐNDVN -->
@@ -314,39 +252,28 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <!-- Header Sidebar: Tác chiến (Quân hiệu DemoUI) / Hành chính (Hiện đại basic) -->
-                    <Border Grid.Row="0" Height="168">
-                        <Border.Style>
-                            <Style TargetType="Border">
-                                <Setter Property="Background" Value="#0D1610"/>
-                                <Setter Property="BorderBrush" Value="#2B3D2B"/>
-                                <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsCombatMode}" Value="False">
-                                        <Setter Property="Background" Value="#0B132B"/>
-                                        <Setter Property="BorderBrush" Value="#1E293B"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Border.Style>
+                    <!-- Header Sidebar: Tác chiến (Quân hiệu DemoUI) / Hành chính (Hiện đại sáng với Logo tách nền) -->
+                    <Border Grid.Row="0" Height="168"
+                            Background="{DynamicResource SidebarBackgroundBrush}"
+                            BorderBrush="{DynamicResource SidebarBorderBrush}"
+                            BorderThickness="0,0,0,1">
                         <Grid>
                             <!-- Chế độ Tác chiến: Banner quân hiệu camo DemoUI -->
                             <Image Source="/Assets/Images/sidebar_header.png" Stretch="UniformToFill" HorizontalAlignment="Center" VerticalAlignment="Center"
                                    Visibility="{Binding IsCombatMode, Converter={x:Static local_cv:BooleanToVisibilityConverter.Instance}}"/>
                             
-                            <!-- Chế độ Hành chính: Header tối giản, hiện đại, màu basic chuẩn công vụ -->
+                            <!-- Chế độ Hành chính: Header sáng hiện đại với Logo Quân đội tách nền trong suốt -->
                             <Border Visibility="{Binding IsCombatMode, Converter={x:Static local_cv:InvertedBooleanToVisibilityConverter.Instance}}"
-                                    Padding="16,20" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                    Padding="16,12" VerticalAlignment="Center" HorizontalAlignment="Center">
                                 <StackPanel HorizontalAlignment="Center">
-                                    <Border Width="48" Height="48" CornerRadius="24" Background="#1E3A8A" BorderBrush="#3B82F6" BorderThickness="1.5"
-                                            HorizontalAlignment="Center" Margin="0,0,0,10">
-                                        <TextBlock Text="★" FontSize="24" FontWeight="Bold" Foreground="#60A5FA" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-2,0,0"/>
-                                    </Border>
-                                    <TextBlock Text="HỆ THỐNG QUẢN TRỊ" FontSize="13.5" FontWeight="Bold" Foreground="#FFFFFF" HorizontalAlignment="Center"/>
-                                    <TextBlock Text="HỌC VIỆN QUÂN SỰ" FontSize="11" FontWeight="SemiBold" Foreground="#94A3B8" HorizontalAlignment="Center" Margin="0,2,0,0"/>
-                                    <Border Background="#1E293B" CornerRadius="4" Padding="8,2" Margin="0,8,0,0" HorizontalAlignment="Center">
-                                        <TextBlock Text="CHẾ ĐỘ HÀNH CHÍNH" FontSize="9" FontWeight="Bold" Foreground="#38BDF8"/>
-                                    </Border>
+                                    <Image Source="/Assets/Images/military_logo_transparent.png" 
+                                           Width="58" Height="68" Stretch="Uniform" HorizontalAlignment="Center" Margin="0,0,0,6">
+                                        <Image.Effect>
+                                            <DropShadowEffect BlurRadius="8" Color="#DC2626" Opacity="0.25" ShadowDepth="1.5"/>
+                                        </Image.Effect>
+                                    </Image>
+                                    <TextBlock Text="QUÂN ĐỘI NHÂN DÂN VIỆT NAM" FontSize="11" FontWeight="Bold" Foreground="#DC2626" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="HỆ THỐNG QUẢN LÝ HỌC VIÊN" FontSize="11" FontWeight="Bold" Foreground="#0F172A" HorizontalAlignment="Center" Margin="0,2,0,0"/>
                                 </StackPanel>
                             </Border>
                         </Grid>
@@ -356,29 +283,10 @@
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Hidden" Margin="0,2" PanningMode="VerticalOnly">
                         <StackPanel>
                             <!-- NHÓM 1: HỆ THỐNG QUẢN LÝ -->
-                            <Border BorderThickness="0,0,0,1" Margin="12,4,12,2" Padding="0,0,0,2">
-                                <Border.Style>
-                                    <Style TargetType="Border">
-                                        <Setter Property="BorderBrush" Value="#2B3D2B"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsCombatMode}" Value="False">
-                                                <Setter Property="BorderBrush" Value="#1E293B"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Border.Style>
-                                <TextBlock Text="HỆ THỐNG QUẢN LÝ" FontSize="10" FontWeight="Bold">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="#8C7D46"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsCombatMode}" Value="False">
-                                                    <Setter Property="Foreground" Value="#64748B"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
+                            <Border BorderThickness="0,0,0,1" Margin="12,4,12,2" Padding="0,0,0,2"
+                                    BorderBrush="{DynamicResource SidebarBorderBrush}">
+                                <TextBlock Text="HỆ THỐNG QUẢN LÝ" FontSize="10" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
                             </Border>
 
                             <!-- 1. Bảng Tổng Quan -->
@@ -456,29 +364,10 @@
                             </Button>
 
                             <!-- NHÓM 2: RÈN LUYỆN & HỆ THỐNG -->
-                            <Border BorderThickness="0,0,0,1" Margin="12,5,12,2" Padding="0,0,0,2">
-                                <Border.Style>
-                                    <Style TargetType="Border">
-                                        <Setter Property="BorderBrush" Value="#2B3D2B"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsCombatMode}" Value="False">
-                                                <Setter Property="BorderBrush" Value="#1E293B"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Border.Style>
-                                <TextBlock Text="RÈN LUYỆN &amp; HỆ THỐNG" FontSize="10" FontWeight="Bold">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="#8C7D46"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsCombatMode}" Value="False">
-                                                    <Setter Property="Foreground" Value="#64748B"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
+                            <Border BorderThickness="0,0,0,1" Margin="12,5,12,2" Padding="0,0,0,2"
+                                    BorderBrush="{DynamicResource SidebarBorderBrush}">
+                                <TextBlock Text="RÈN LUYỆN &amp; HỆ THỐNG" FontSize="10" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
                             </Border>
 
                             <!-- 9. Rèn Luyện Thể Lực (Chuẩn TT 32) -->
@@ -528,8 +417,8 @@
                                 <Setter Property="BorderBrush" Value="#1F3022"/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding IsCombatMode}" Value="False">
-                                        <Setter Property="Background" Value="#0A0F1D"/>
-                                        <Setter Property="BorderBrush" Value="#1E293B"/>
+                                        <Setter Property="Background" Value="#F8FAFC"/>
+                                        <Setter Property="BorderBrush" Value="#E2E8F0"/>
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
@@ -547,7 +436,7 @@
                             <!-- Tên và vai trò -->
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                 <TextBlock Text="{Binding CurrentUser.FullName, FallbackValue='Nguyễn Lê Quốc An'}" 
-                                           FontWeight="Bold" FontSize="12" Foreground="#F7F1D4" TextTrimming="CharacterEllipsis"/>
+                                           FontWeight="Bold" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
                                 <Border Background="#168A40" CornerRadius="4" Padding="7,2" HorizontalAlignment="Left" Margin="0,3,0,0">
                                     <TextBlock Text="{Binding CurrentUser.Role, FallbackValue='Admin'}" FontSize="9.5" FontWeight="Bold" Foreground="#FFFFFF"/>
                                 </Border>
@@ -606,9 +495,9 @@
                     </TextBlock>
                 </Grid>
 
-                <!-- Chế độ Hành chính: Thanh công vụ hiện đại, basic -->
+                <!-- Chế độ Hành chính: Thanh công vụ hiện đại, sáng -->
                 <Border Visibility="{Binding IsCombatMode, Converter={x:Static local_cv:InvertedBooleanToVisibilityConverter.Instance}}"
-                        Background="#0F172A" BorderBrush="#1E293B" BorderThickness="0,1,0,0" Padding="16,0">
+                        Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="16,0">
                     <Grid VerticalAlignment="Center">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -616,12 +505,11 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="● " Foreground="#22C55E" FontSize="9"/>
-                            <TextBlock Text="HỆ THỐNG SẴN SÀNG" FontSize="11" FontWeight="Bold" Foreground="#CBD5E1"/>
+                            <TextBlock Text="● " Foreground="#16A34A" FontSize="9"/>
+                            <TextBlock Text="HỆ THỐNG SẴN SÀNG" FontSize="11" FontWeight="Bold" Foreground="#1E293B"/>
                         </StackPanel>
                         <TextBlock Grid.Column="1" Text="QUẢN TRỊ CÔNG TÁC HỌC VIÊN" 
                                    FontSize="11" FontWeight="SemiBold" Foreground="#64748B" HorizontalAlignment="Center"/>
-                        <TextBlock Grid.Column="2" Text="CHẾ ĐỘ HÀNH CHÍNH (BASIC ENTERPRISE)" FontSize="10" FontWeight="Bold" Foreground="#38BDF8"/>
                     </Grid>
                 </Border>
             </Grid>

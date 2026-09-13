@@ -40,6 +40,7 @@ namespace QL_HocVien.ViewModels
         {
             "Tất cả", "Đạt chuẩn", "Không đạt", "Xuất sắc", "Giỏi", "Khá", "Đạt", "Chưa kiểm tra"
         };
+        public ObservableCollection<string> CohortList { get; } = new() { "Tất cả" };
 
         public ObservableCollection<string> AvailableRanks { get; } = new();
         public ObservableCollection<string> AvailablePositions { get; } = new();
@@ -77,6 +78,9 @@ namespace QL_HocVien.ViewModels
         private string _selectedFitnessGrade = "Tất cả";
 
         [ObservableProperty]
+        private string _selectedCohort = "Tất cả";
+
+        [ObservableProperty]
         private bool _isAdvancedFilterVisible;
 
         [ObservableProperty]
@@ -94,6 +98,15 @@ namespace QL_HocVien.ViewModels
 
         [ObservableProperty]
         private string _editFullName = string.Empty;
+
+        [ObservableProperty]
+        private string _editCohort = string.Empty;
+
+        [ObservableProperty]
+        private int? _editEnrollmentYear;
+
+        [ObservableProperty]
+        private string _editAcademicYear = string.Empty;
 
         [ObservableProperty]
         private string _editRank = "Binh nhì";
@@ -232,6 +245,14 @@ namespace QL_HocVien.ViewModels
                     PositionList.Add(p);
                     AvailablePositions.Add(p);
                 }
+
+                var distinctCohorts = await _cadetService.GetDistinctCohortsAsync();
+                CohortList.Clear();
+                CohortList.Add("Tất cả");
+                foreach (var ch in distinctCohorts)
+                {
+                    if (!string.IsNullOrWhiteSpace(ch)) CohortList.Add(ch);
+                }
             }
             catch
             {
@@ -291,6 +312,8 @@ namespace QL_HocVien.ViewModels
                 SelectedHasAccount = "Tất cả";
             if (string.IsNullOrEmpty(SelectedFitnessGrade))
                 SelectedFitnessGrade = "Tất cả";
+            if (string.IsNullOrEmpty(SelectedCohort) || !CohortList.Contains(SelectedCohort))
+                SelectedCohort = "Tất cả";
         }
 
         [RelayCommand]
@@ -311,6 +334,7 @@ namespace QL_HocVien.ViewModels
                 SelectedClass = "Tất cả";
                 SelectedPosition = "Tất cả";
                 SelectedGender = "Tất cả";
+                SelectedCohort = "Tất cả";
                 FilterMinAge = null;
                 FilterMaxAge = null;
                 SelectedHasAccount = "Tất cả";
@@ -339,6 +363,7 @@ namespace QL_HocVien.ViewModels
                 var gender = string.IsNullOrWhiteSpace(SelectedGender) ? "Tất cả" : SelectedGender;
                 var grade = string.IsNullOrWhiteSpace(SelectedFitnessGrade) ? "Tất cả" : SelectedFitnessGrade;
                 var account = string.IsNullOrWhiteSpace(SelectedHasAccount) ? "Tất cả" : SelectedHasAccount;
+                var cohort = string.IsNullOrWhiteSpace(SelectedCohort) ? "Tất cả" : SelectedCohort;
 
                 int count = 0;
                 if (!string.IsNullOrWhiteSpace(SearchKeyword)) count++;
@@ -347,6 +372,7 @@ namespace QL_HocVien.ViewModels
                 if (className != "Tất cả") count++;
                 if (position != "Tất cả") count++;
                 if (gender != "Tất cả") count++;
+                if (cohort != "Tất cả") count++;
                 if (FilterMinAge.HasValue || FilterMaxAge.HasValue) count++;
                 if (account != "Tất cả") count++;
                 if (grade != "Tất cả") count++;
@@ -363,6 +389,7 @@ namespace QL_HocVien.ViewModels
                     ClassName = className,
                     Position = position,
                     Gender = gender,
+                    Cohort = cohort,
                     MinAge = FilterMinAge,
                     MaxAge = FilterMaxAge,
                     HasAccount = hasAccount,
@@ -508,6 +535,9 @@ namespace QL_HocVien.ViewModels
 
             EditCadetCode = SelectedCadet.CadetCode;
             EditFullName = SelectedCadet.FullName;
+            EditCohort = SelectedCadet.Cohort;
+            EditEnrollmentYear = SelectedCadet.EnrollmentYear;
+            EditAcademicYear = SelectedCadet.AcademicYear;
             EditRank = SelectedCadet.Rank;
             EditPosition = SelectedCadet.Position;
             EditUnit = SelectedCadet.Unit;
@@ -532,6 +562,9 @@ namespace QL_HocVien.ViewModels
 
             SelectedCadet.CadetCode = EditCadetCode.Trim();
             SelectedCadet.FullName = EditFullName;
+            SelectedCadet.Cohort = EditCohort?.Trim() ?? string.Empty;
+            SelectedCadet.EnrollmentYear = EditEnrollmentYear;
+            SelectedCadet.AcademicYear = EditAcademicYear?.Trim() ?? string.Empty;
             SelectedCadet.Rank = EditRank;
             SelectedCadet.Position = EditPosition;
             SelectedCadet.Unit = EditUnit;

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -186,12 +186,12 @@ namespace QL_HocVien.ViewModels
 
             if (themeService != null)
             {
-                _isCombatMode = themeService.IsCombatMode;
+                IsCombatMode = themeService.IsCombatMode;
                 themeService.ThemeChanged += mode => IsCombatMode = mode;
             }
             else
             {
-                _isCombatMode = ThemeService.CurrentIsCombatMode;
+                IsCombatMode = ThemeService.CurrentIsCombatMode;
             }
 
             Title = "Trung Tâm Quản Trị & Phân Tích Học Vụ Đào Tạo";

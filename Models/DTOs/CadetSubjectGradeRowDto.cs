@@ -15,6 +15,8 @@ namespace QL_HocVien.Models.DTOs
         public string FullName { get; set; } = string.Empty;
         public string Unit { get; set; } = string.Empty;
         public string ClassName { get; set; } = string.Empty;
+        public string Cohort { get; set; } = string.Empty;
+        public string SchoolYear { get; set; } = string.Empty;
 
         /// <summary>
         /// Điểm của từng đợt kiểm tra theo ComponentId (Key = ComponentId, Value = Điểm số hoặc null nếu chưa thi)

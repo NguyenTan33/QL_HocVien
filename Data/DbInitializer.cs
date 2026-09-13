@@ -149,6 +149,7 @@ namespace QL_HocVien.Data
                         ""ExamScore"" REAL NULL,
                         ""FinalScore"" REAL NOT NULL,
                         ""ExamSession"" TEXT NOT NULL,
+                        ""SchoolYear"" TEXT NOT NULL DEFAULT '',
                         ""ExamDate"" TEXT NOT NULL,
                         ""Notes"" TEXT NOT NULL,
                         ""CreatedAt"" TEXT NOT NULL,
@@ -204,15 +205,34 @@ namespace QL_HocVien.Data
             }
             catch { }
 
-            // Đảm bảo cột ClassId tồn tại trong bảng Cadets
+            // Đảm bảo cột ClassId, Cohort, EnrollmentYear, AcademicYear tồn tại trong bảng Cadets
             try
             {
                 context.Database.ExecuteSqlRaw(@"ALTER TABLE ""Cadets"" ADD COLUMN ""ClassId"" INTEGER NULL REFERENCES ""MilitaryClasses""(""Id"") ON DELETE SET NULL;");
             }
-            catch
+            catch { }
+            try
             {
-                // Bỏ qua nếu cột đã tồn tại
+                context.Database.ExecuteSqlRaw(@"ALTER TABLE ""Cadets"" ADD COLUMN ""Cohort"" TEXT NOT NULL DEFAULT '';");
             }
+            catch { }
+            try
+            {
+                context.Database.ExecuteSqlRaw(@"ALTER TABLE ""Cadets"" ADD COLUMN ""EnrollmentYear"" INTEGER NULL;");
+            }
+            catch { }
+            try
+            {
+                context.Database.ExecuteSqlRaw(@"ALTER TABLE ""Cadets"" ADD COLUMN ""AcademicYear"" TEXT NOT NULL DEFAULT '';");
+            }
+            catch { }
+
+            // Đảm bảo cột SchoolYear tồn tại trong bảng CreditScoreRecords
+            try
+            {
+                context.Database.ExecuteSqlRaw(@"ALTER TABLE ""CreditScoreRecords"" ADD COLUMN ""SchoolYear"" TEXT NOT NULL DEFAULT '';");
+            }
+            catch { }
 
             // Đảm bảo cột OfficerId tồn tại trong bảng MilitaryClasses
             try

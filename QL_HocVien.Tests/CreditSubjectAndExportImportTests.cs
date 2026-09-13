@@ -588,5 +588,168 @@ namespace QL_HocVien.Tests
                 if (File.Exists(tempExcel)) File.Delete(tempExcel);
             }
         }
+
+        [Fact]
+        public async Task Test_SchoolYear_And_Cohort_Filtering_And_Scoping()
+        {
+            // 1. Tạo 2 học viên thuộc 2 khóa khác nhau
+            var hv1 = new Cadet
+            {
+                CadetCode = "HV-K29-01",
+                FullName = "Nguyễn Văn K29",
+                Cohort = "K29",
+                EnrollmentYear = 2023,
+                AcademicYear = "2023 - 2027",
+                Unit = "Đại đội 1",
+                ClassName = "Lớp K29"
+            };
+
+            var hv2 = new Cadet
+            {
+                CadetCode = "HV-K30-01",
+                FullName = "Trần Văn K30",
+                Cohort = "K30",
+                EnrollmentYear = 2024,
+                AcademicYear = "2024 - 2028",
+                Unit = "Đại đội 2",
+                ClassName = "Lớp K30"
+            };
+
+            _context.Cadets.AddRange(hv1, hv2);
+
+            // 2. Tạo môn học
+            var subj = new CreditSubject
+            {
+                SubjectCode = "TOANCC",
+                SubjectName = "Toán Cao Cấp",
+                Credits = 2.0,
+                IsComponent = false
+            };
+            _context.CreditSubjects.Add(subj);
+            await _context.SaveChangesAsync();
+
+            var comp = new SubjectAssessmentComponent
+            {
+                CreditSubjectId = subj.Id,
+                ComponentName = "Thi Kết Thúc",
+                Credits = 2.0,
+                OrderIndex = 1
+            };
+            _context.SubjectAssessmentComponents.Add(comp);
+            await _context.SaveChangesAsync();
+
+            // 3. HV1 có điểm năm 2023 - 2024 (8.0) và năm 2024 - 2025 (9.0)
+            _context.CreditScoreRecords.Add(new CreditScoreRecord
+            {
+                CadetId = hv1.Id,
+                ComponentId = comp.Id,
+                CreditSubjectId = subj.Id,
+                FinalScore = 8.0,
+                SchoolYear = "2023 - 2024",
+                CreatedAt = DateTime.UtcNow
+            });
+            _context.CreditScoreRecords.Add(new CreditScoreRecord
+            {
+                CadetId = hv1.Id,
+                ComponentId = comp.Id,
+                CreditSubjectId = subj.Id,
+                FinalScore = 9.0,
+                SchoolYear = "2024 - 2025",
+                CreatedAt = DateTime.UtcNow
+            });
+
+            // HV2 có điểm năm 2024 - 2025 (7.0)
+            _context.CreditScoreRecords.Add(new CreditScoreRecord
+            {
+                CadetId = hv2.Id,
+                ComponentId = comp.Id,
+                CreditSubjectId = subj.Id,
+                FinalScore = 7.0,
+                SchoolYear = "2024 - 2025",
+                CreatedAt = DateTime.UtcNow
+            });
+            await _context.SaveChangesAsync();
+
+            // 4. Test GetDistinctSchoolYearsAsync
+            var schoolYears = await _creditService.GetDistinctSchoolYearsAsync();
+            Assert.Contains("2023 - 2024", schoolYears);
+            Assert.Contains("2024 - 2025", schoolYears);
+
+            // 5. Test lọc theo SchoolYear "2023 - 2024"
+            var summaries2023 = await _creditService.GetCadetAcademicSummariesAsync(schoolYear: "2023 - 2024");
+            var s1 = summaries2023.FirstOrDefault(c => c.CadetId == hv1.Id);
+            var s2 = summaries2023.FirstOrDefault(c => c.CadetId == hv2.Id);
+            Assert.NotNull(s1);
+            Assert.Equal(8.0, s1.SubjectScores[subj.Id]);
+            Assert.NotNull(s2);
+            Assert.Null(s2.SubjectScores[subj.Id]); // HV2 chưa có điểm năm 2023 - 2024
+
+            // 6. Test lọc theo Cohort "K29"
+            var summariesK29 = await _creditService.GetCadetAcademicSummariesAsync(cohort: "K29");
+            Assert.All(summariesK29, c => Assert.Equal("K29", c.Cohort));
+            Assert.Contains(summariesK29, c => c.CadetId == hv1.Id);
+            Assert.DoesNotContain(summariesK29, c => c.CadetId == hv2.Id);
+
+            // 7. Test lọc theo Cohort "K30"
+            var summariesK30 = await _creditService.GetCadetAcademicSummariesAsync(cohort: "K30");
+            Assert.All(summariesK30, c => Assert.Equal("K30", c.Cohort));
+            Assert.Contains(summariesK30, c => c.CadetId == hv2.Id);
+            Assert.DoesNotContain(summariesK30, c => c.CadetId == hv1.Id);
+        }
+
+        [Fact]
+        public async Task Test_ImportStandardTbmExcel_Detects_Cohort_And_SchoolYear_Automatically()
+        {
+            string tempExcel = Path.Combine(Path.GetTempPath(), $"Test_DetectCohortSchoolYear_{Guid.NewGuid():N}.xlsx");
+            try
+            {
+                using (var wb = new XLWorkbook())
+                {
+                    var ws = wb.Worksheets.Add("DiemTB");
+
+                    // Header có chứa Khóa K29 và Năm học 2023-2024
+                    ws.Cell(1, 1).Value = "HỌC VIỆN HẢI QUÂN";
+                    ws.Cell(2, 1).Value = "BẢNG TỔNG HỢP ĐIỂM HỌC VIÊN KHÓA K29 - NĂM HỌC 2023 - 2024";
+
+                    // Row 3: Tên đợt
+                    ws.Cell(3, 7).Value = "Thi Cuối Kỳ";
+                    // Row 4: Tín chỉ
+                    ws.Cell(4, 1).Value = "STT";
+                    ws.Cell(4, 2).Value = "Mã học viên";
+                    ws.Cell(4, 6).Value = "Môn Tin";
+                    ws.Cell(4, 7).Value = 2.0;
+
+                    // Row 5: Học viên
+                    ws.Cell(5, 1).Value = 1;
+                    ws.Cell(5, 2).Value = "HV-DETECT-01";
+                    ws.Cell(5, 6).Value = "Lê Văn Tự Động";
+                    ws.Cell(5, 7).Value = 8.5;
+
+                    wb.SaveAs(tempExcel);
+                }
+
+                // Thực hiện import không truyền schoolYear/cohort -> Service sẽ tự động nhận diện từ header
+                var (success, msg, cadetsCount, scoresCount) = await _creditService.ImportStandardTbmExcelAsync(tempExcel);
+                Assert.True(success, msg);
+                Assert.Equal(1, cadetsCount);
+                Assert.Equal(1, scoresCount);
+
+                // Kiểm tra học viên được gán Cohort = K29, EnrollmentYear = 2023
+                var cadet = await _context.Cadets.FirstOrDefaultAsync(c => c.CadetCode == "HV-DETECT-01");
+                Assert.NotNull(cadet);
+                Assert.Equal("K29", cadet.Cohort);
+                Assert.Equal(2023, cadet.EnrollmentYear);
+
+                // Kiểm tra điểm được gán SchoolYear = "2023 - 2024"
+                var score = await _context.CreditScoreRecords.FirstOrDefaultAsync(s => s.CadetId == cadet.Id);
+                Assert.NotNull(score);
+                Assert.Equal("2023 - 2024", score.SchoolYear);
+                Assert.Equal(8.5, score.FinalScore);
+            }
+            finally
+            {
+                if (File.Exists(tempExcel)) File.Delete(tempExcel);
+            }
+        }
     }
 }

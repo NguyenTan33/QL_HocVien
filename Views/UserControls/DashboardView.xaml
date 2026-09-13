@@ -96,7 +96,7 @@
                 <Image Source="/Assets/Images/flag_soldier_banner.png" 
                        HorizontalAlignment="Right" VerticalAlignment="Top" 
                        Height="78" Stretch="Uniform" Opacity="0.88" 
-                       Visibility="{Binding IsCombatMode, Converter={StaticResource BoolToVis}}" 
+                       Visibility="{DynamicResource CardWatermarkVisibility}" 
                        IsHitTestVisible="False" Margin="0,-4,-10,0"/>
 
                 <Grid>
@@ -142,14 +142,14 @@
                                 Command="{Binding LoadDashboardDataCommand}">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="🔄 " Foreground="#FFE17A" FontSize="11" VerticalAlignment="Center"/>
-                                <TextBlock Text="LÀM MỚI" FontWeight="Bold" FontSize="10.5" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                                <TextBlock Text="LÀM MỚI" FontWeight="Bold" FontSize="10.5" Foreground="{DynamicResource SecondaryButtonForegroundBrush}" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
                         <Button Style="{StaticResource SecondaryButtonStyle}" Height="32" Padding="8,0"
                                 Command="{Binding ExportAllDataCommand}">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="📋 " Foreground="#FFE17A" FontSize="11" VerticalAlignment="Center"/>
-                                <TextBlock Text="SAO LƯU TOÀN VIỆN" FontWeight="Bold" FontSize="10.5" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                                <TextBlock Text="SAO LƯU TOÀN VIỆN" FontWeight="Bold" FontSize="10.5" Foreground="{DynamicResource SecondaryButtonForegroundBrush}" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
                     </StackPanel>
@@ -294,19 +294,23 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- KPI 1: Quân số (Watermark Chiến sĩ) -->
-                <Border Grid.Column="0" Background="{DynamicResource KpiCardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="11,8">
+                <Border Grid.Column="0" Background="{DynamicResource Kpi1BackgroundBrush}" BorderBrush="{DynamicResource Kpi1BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,10">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="8" Color="#000000" Opacity="0.08" ShadowDepth="2" Direction="270"/>
+                    </Border.Effect>
                     <Grid>
                         <!-- Hình mờ Chiến sĩ đứng nghiêm -->
                         <Image Source="/Assets/Images/card_watermark_cadets.png" 
                                HorizontalAlignment="Right" VerticalAlignment="Bottom" 
-                               Width="65" Height="50" Opacity="0.4" IsHitTestVisible="False" Margin="0,0,2,2"/>
+                               Width="65" Height="50" Opacity="0.25" IsHitTestVisible="False" Margin="0,0,2,2"
+                               Visibility="{DynamicResource CardWatermarkVisibility}"/>
                         <StackPanel>
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="👤 " Foreground="{DynamicResource AccentBrush}" FontSize="11" FontWeight="Bold"/>
-                                <TextBlock Text="TỔNG QUÂN SỐ" FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}"/>
+                                <TextBlock Text="👤 " Foreground="{DynamicResource Kpi1ForegroundBrush}" FontSize="11" FontWeight="Bold"/>
+                                <TextBlock Text="TỔNG QUÂN SỐ" FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource Kpi1ForegroundBrush}"/>
                             </StackPanel>
-                            <TextBlock Text="{Binding TotalCadets}" FontSize="28" FontWeight="ExtraBold" Foreground="{DynamicResource AccentBrush}" Margin="0,2,0,0"/>
-                            <TextBlock FontSize="10.5" Foreground="#A3A899" Margin="0,2,0,0">
+                            <TextBlock Text="{Binding TotalCadets}" FontSize="28" FontWeight="ExtraBold" Foreground="{DynamicResource Kpi1ForegroundBrush}" Margin="0,2,0,0"/>
+                            <TextBlock FontSize="10.5" Foreground="{DynamicResource Kpi1SubtextBrush}" Margin="0,2,0,0">
                                 <Run Text="{Binding TotalUnitsCount}"/> <Run Text="đơn vị • "/>
                                 <Run Text="{Binding TotalClassesCount}"/> <Run Text="lớp"/>
                             </TextBlock>
@@ -315,18 +319,22 @@
                 </Border>
 
                 <!-- KPI 2: Học phần tín chỉ (Watermark Nguyệt quế) -->
-                <Border Grid.Column="2" Background="{DynamicResource SuccessCardBackgroundBrush}" BorderBrush="{DynamicResource SuccessCardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="11,8">
+                <Border Grid.Column="2" Background="{DynamicResource Kpi2BackgroundBrush}" BorderBrush="{DynamicResource Kpi2BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,10">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="8" Color="#000000" Opacity="0.08" ShadowDepth="2" Direction="270"/>
+                    </Border.Effect>
                     <Grid>
                         <Image Source="/Assets/Images/card_watermark_wreath.png" 
                                HorizontalAlignment="Right" VerticalAlignment="Center" 
-                               Width="55" Height="50" Opacity="0.35" IsHitTestVisible="False" Margin="0,0,4,0"/>
+                               Width="55" Height="50" Opacity="0.22" IsHitTestVisible="False" Margin="0,0,4,0"
+                               Visibility="{DynamicResource CardWatermarkVisibility}"/>
                         <StackPanel>
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="📚 " Foreground="{DynamicResource SuccessCardForegroundBrush}" FontSize="11" FontWeight="Bold"/>
-                                <TextBlock Text="HỌC PHẦN TÍN CHỈ" FontSize="9.5" FontWeight="Bold" Foreground="{DynamicResource SuccessCardForegroundBrush}"/>
+                                <TextBlock Text="📚 " Foreground="{DynamicResource Kpi2ForegroundBrush}" FontSize="11" FontWeight="Bold"/>
+                                <TextBlock Text="HỌC PHẦN TÍN CHỈ" FontSize="9.5" FontWeight="Bold" Foreground="{DynamicResource Kpi2ForegroundBrush}"/>
                             </StackPanel>
-                            <TextBlock Text="{Binding TotalCreditSubjects}" FontSize="28" FontWeight="ExtraBold" Foreground="{DynamicResource SuccessCardForegroundBrush}" Margin="0,2,0,0"/>
-                            <TextBlock FontSize="10.5" Foreground="{DynamicResource SuccessCardForegroundBrush}" Margin="0,2,0,0">
+                            <TextBlock Text="{Binding TotalCreditSubjects}" FontSize="28" FontWeight="ExtraBold" Foreground="{DynamicResource Kpi2ForegroundBrush}" Margin="0,2,0,0"/>
+                            <TextBlock FontSize="10.5" Foreground="{DynamicResource Kpi2SubtextBrush}" Margin="0,2,0,0">
                                 <Run Text="{Binding TotalCreditScores}"/> <Run Text="lượt điểm tích lũy"/>
                             </TextBlock>
                         </StackPanel>
@@ -334,55 +342,65 @@
                 </Border>
 
                 <!-- KPI 3: Điểm trung bình toàn viện (GPA) (Watermark Sao & Nguyệt quế) -->
-                <Border Grid.Column="4" Background="{DynamicResource SuccessCardBackgroundBrush}" BorderBrush="{DynamicResource SuccessCardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="11,8">
+                <Border Grid.Column="4" Background="{DynamicResource Kpi3BackgroundBrush}" BorderBrush="{DynamicResource Kpi3BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,10">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="8" Color="#000000" Opacity="0.08" ShadowDepth="2" Direction="270"/>
+                    </Border.Effect>
                     <Grid>
                         <Image Source="/Assets/Images/card_watermark_wreath.png" 
                                HorizontalAlignment="Right" VerticalAlignment="Center" 
-                               Width="55" Height="50" Opacity="0.45" IsHitTestVisible="False" Margin="0,0,4,0"/>
+                               Width="55" Height="50" Opacity="0.25" IsHitTestVisible="False" Margin="0,0,4,0"
+                               Visibility="{DynamicResource CardWatermarkVisibility}"/>
                         <StackPanel>
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="🎓 " Foreground="{DynamicResource SuccessCardForegroundBrush}" FontSize="11" FontWeight="Bold"/>
-                                <TextBlock Text="ĐIỂM TRUNG BÌNH (GPA)" FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource SuccessCardForegroundBrush}"/>
+                                <TextBlock Text="🎓 " Foreground="{DynamicResource Kpi3ForegroundBrush}" FontSize="11" FontWeight="Bold"/>
+                                <TextBlock Text="ĐIỂM TRUNG BÌNH (GPA)" FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource Kpi3ForegroundBrush}"/>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
-                                <TextBlock Text="{Binding AverageGpa, StringFormat={}{0:F2}}" FontSize="28" FontWeight="ExtraBold" Foreground="{DynamicResource SuccessCardForegroundBrush}"/>
-                                <TextBlock Text=" / 10" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource SuccessCardForegroundBrush}" VerticalAlignment="Bottom" Margin="2,0,0,4"/>
+                                <TextBlock Text="{Binding AverageGpa, StringFormat={}{0:F2}}" FontSize="28" FontWeight="ExtraBold" Foreground="{DynamicResource Kpi3ForegroundBrush}"/>
+                                <TextBlock Text=" / 10" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource Kpi3ForegroundBrush}" VerticalAlignment="Bottom" Margin="2,0,0,4"/>
                             </StackPanel>
                             <TextBlock Text="{Binding OverallRatingLabel}" FontSize="10.5" FontWeight="Bold" 
-                                       Foreground="{DynamicResource SuccessCardForegroundBrush}" Margin="0,2,0,0" TextTrimming="CharacterEllipsis"/>
+                                       Foreground="{DynamicResource Kpi3SubtextBrush}" Margin="0,2,0,0" TextTrimming="CharacterEllipsis"/>
                         </StackPanel>
                     </Grid>
                 </Border>
 
                 <!-- KPI 4: Tỷ lệ đạt chuẩn tốt nghiệp / tích lũy -->
-                <Border Grid.Column="6" Background="{DynamicResource SuccessCardBackgroundBrush}" BorderBrush="{DynamicResource SuccessCardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="11,8">
+                <Border Grid.Column="6" Background="{DynamicResource Kpi4BackgroundBrush}" BorderBrush="{DynamicResource Kpi4BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,10">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="8" Color="#000000" Opacity="0.08" ShadowDepth="2" Direction="270"/>
+                    </Border.Effect>
                     <StackPanel>
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="🎯 " Foreground="{DynamicResource SuccessCardForegroundBrush}" FontSize="11" FontWeight="Bold"/>
-                            <TextBlock Text="ĐẠT CHUẨN TÍCH LŨY" FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource SuccessCardForegroundBrush}"/>
+                            <TextBlock Text="🎯 " Foreground="{DynamicResource Kpi4ForegroundBrush}" FontSize="11" FontWeight="Bold"/>
+                            <TextBlock Text="ĐẠT CHUẨN TÍCH LŨY" FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource Kpi4ForegroundBrush}"/>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
-                            <TextBlock Text="{Binding GraduationReadinessRate, StringFormat={}{0:F1}}" FontSize="28" FontWeight="ExtraBold" Foreground="{DynamicResource SuccessCardForegroundBrush}"/>
-                            <TextBlock Text="%" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource SuccessCardForegroundBrush}" VerticalAlignment="Bottom" Margin="1,0,0,4"/>
+                            <TextBlock Text="{Binding GraduationReadinessRate, StringFormat={}{0:F1}}" FontSize="28" FontWeight="ExtraBold" Foreground="{DynamicResource Kpi4ForegroundBrush}"/>
+                            <TextBlock Text="%" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource Kpi4ForegroundBrush}" VerticalAlignment="Bottom" Margin="1,0,0,4"/>
                         </StackPanel>
-                        <TextBlock FontSize="10.5" Foreground="{DynamicResource SuccessCardForegroundBrush}" Margin="0,2,0,0">
+                        <TextBlock FontSize="10.5" Foreground="{DynamicResource Kpi4SubtextBrush}" Margin="0,2,0,0">
                             <Run Text="{Binding CompletedCadetsCount}"/> <Run Text="/"/> <Run Text="{Binding TotalCadets}"/> <Run Text="đ/c hoàn thành"/>
                         </TextBlock>
                     </StackPanel>
                 </Border>
 
                 <!-- KPI 5: Tỷ lệ Giỏi & Khá -->
-                <Border Grid.Column="8" Background="{DynamicResource WarningCardBackgroundBrush}" BorderBrush="{DynamicResource WarningCardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="11,8">
+                <Border Grid.Column="8" Background="{DynamicResource Kpi5BackgroundBrush}" BorderBrush="{DynamicResource Kpi5BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,10">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="8" Color="#000000" Opacity="0.08" ShadowDepth="2" Direction="270"/>
+                    </Border.Effect>
                     <StackPanel>
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="★ " Foreground="{DynamicResource WarningCardForegroundBrush}" FontSize="11" FontWeight="Bold"/>
-                            <TextBlock Text="HỌC LỰC KHÁ &amp; GIỎI" FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource WarningCardForegroundBrush}"/>
+                            <TextBlock Text="★ " Foreground="{DynamicResource Kpi5ForegroundBrush}" FontSize="11" FontWeight="Bold"/>
+                            <TextBlock Text="HỌC LỰC KHÁ &amp; GIỎI" FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource Kpi5ForegroundBrush}"/>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
-                            <TextBlock Text="{Binding EliteRate, StringFormat={}{0:F1}}" FontSize="28" FontWeight="ExtraBold" Foreground="{DynamicResource WarningCardForegroundBrush}"/>
-                            <TextBlock Text="%" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource WarningCardForegroundBrush}" VerticalAlignment="Bottom" Margin="1,0,0,4"/>
+                            <TextBlock Text="{Binding EliteRate, StringFormat={}{0:F1}}" FontSize="28" FontWeight="ExtraBold" Foreground="{DynamicResource Kpi5ForegroundBrush}"/>
+                            <TextBlock Text="%" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource Kpi5ForegroundBrush}" VerticalAlignment="Bottom" Margin="1,0,0,4"/>
                         </StackPanel>
-                        <TextBlock FontSize="10.5" Foreground="{DynamicResource WarningCardForegroundBrush}" Margin="0,2,0,0">
+                        <TextBlock FontSize="10.5" Foreground="{DynamicResource Kpi5SubtextBrush}" Margin="0,2,0,0">
                             <Run Text="{Binding ExcellentCount}"/> <Run Text="XS • "/>
                             <Run Text="{Binding GoodCount}"/> <Run Text="Khá"/>
                         </TextBlock>
@@ -390,22 +408,26 @@
                 </Border>
 
                 <!-- KPI 6: Cảnh báo học vụ & Nợ môn (Watermark Cành nguyệt quế đỏ) -->
-                <Border Grid.Column="10" Background="{DynamicResource DangerCardBackgroundBrush}" BorderBrush="{DynamicResource DangerCardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="11,8">
+                <Border Grid.Column="10" Background="{DynamicResource Kpi6BackgroundBrush}" BorderBrush="{DynamicResource Kpi6BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12,10">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="8" Color="#000000" Opacity="0.08" ShadowDepth="2" Direction="270"/>
+                    </Border.Effect>
                     <Grid>
                         <!-- Hình mờ Cành nguyệt quế đỏ -->
                         <Image Source="/Assets/Images/card_watermark_laurel.png" 
                                HorizontalAlignment="Right" VerticalAlignment="Center" 
-                               Width="50" Height="50" Opacity="0.32" IsHitTestVisible="False" Margin="0,0,4,0"/>
+                               Width="50" Height="50" Opacity="0.22" IsHitTestVisible="False" Margin="0,0,4,0"
+                               Visibility="{DynamicResource CardWatermarkVisibility}"/>
                         <StackPanel>
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="⚠️ " Foreground="{DynamicResource DangerCardForegroundBrush}" FontSize="11" FontWeight="Bold"/>
-                                <TextBlock Text="CẢNH BÁO NỢ MÔN" FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource DangerCardForegroundBrush}"/>
+                                <TextBlock Text="⚠️ " Foreground="{DynamicResource Kpi6ForegroundBrush}" FontSize="11" FontWeight="Bold"/>
+                                <TextBlock Text="CẢNH BÁO NỢ MÔN" FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource Kpi6ForegroundBrush}"/>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
-                                <TextBlock Text="{Binding WarningCount}" FontSize="28" FontWeight="ExtraBold" Foreground="{DynamicResource DangerCardForegroundBrush}"/>
-                                <TextBlock Text=" đ/c" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource DangerCardForegroundBrush}" VerticalAlignment="Bottom" Margin="2,0,0,4"/>
+                                <TextBlock Text="{Binding WarningCount}" FontSize="28" FontWeight="ExtraBold" Foreground="{DynamicResource Kpi6ForegroundBrush}"/>
+                                <TextBlock Text=" đ/c" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource Kpi6ForegroundBrush}" VerticalAlignment="Bottom" Margin="2,0,0,4"/>
                             </StackPanel>
-                            <TextBlock FontSize="10.5" Foreground="{DynamicResource DangerCardForegroundBrush}" Margin="0,2,0,0">
+                            <TextBlock FontSize="10.5" Foreground="{DynamicResource Kpi6SubtextBrush}" Margin="0,2,0,0">
                                 <Run Text="{Binding FailCount}"/> <Run Text="học viên điểm Yếu"/>
                             </TextBlock>
                         </StackPanel>

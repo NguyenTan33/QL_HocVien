@@ -136,6 +136,8 @@ namespace QL_HocVien.Services.Implementations
         public async Task<List<string>> GetDistinctClassesAsync() => await _cadetRepository.GetDistinctClassesAsync();
         public async Task<List<string>> GetDistinctRanksAsync() => await _cadetRepository.GetDistinctRanksAsync();
         public async Task<List<string>> GetDistinctPositionsAsync() => await _cadetRepository.GetDistinctPositionsAsync();
+        public async Task<List<string>> GetDistinctCohortsAsync() => await _cadetRepository.GetDistinctCohortsAsync();
+        public async Task<List<string>> GetDistinctAcademicYearsAsync() => await _cadetRepository.GetDistinctAcademicYearsAsync();
 
         public async Task<string> GenerateSuggestedCadetCodeAsync()
         {

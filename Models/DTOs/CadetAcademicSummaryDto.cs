@@ -12,6 +12,9 @@ namespace QL_HocVien.Models.DTOs
         public string Rank { get; set; } = string.Empty;
         public string Unit { get; set; } = string.Empty;
         public string ClassName { get; set; } = string.Empty;
+        public string Cohort { get; set; } = string.Empty; // Khóa học, ví dụ: K29
+        public int? EnrollmentYear { get; set; } // Năm nhập học, ví dụ: 2023
+        public string SchoolYearDisplay { get; set; } = string.Empty; // Năm học, ví dụ: 2023 - 2024
 
         // Điểm theo từng môn/thành phần tín chỉ (Key = CreditSubjectId, Value = FinalScore)
         public Dictionary<int, double?> SubjectScores { get; set; } = new();

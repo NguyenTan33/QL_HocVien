@@ -107,13 +107,101 @@
     <SolidColorBrush x:Key="TimelineKpi4BackgroundBrush" Color="#12281C"/>
     <SolidColorBrush x:Key="TimelineKpi4BorderBrush" Color="#356E49"/>
 
+    <!-- Watermark Visibility -->
+    <Visibility x:Key="CardWatermarkVisibility">Visible</Visibility>
+
+    <!-- Secondary Button Hover Brushes -->
+    <SolidColorBrush x:Key="SecondaryButtonHoverBackgroundBrush" Color="#354B38"/>
+    <SolidColorBrush x:Key="SecondaryButtonHoverBorderBrush" Color="#A28D42"/>
+    <SolidColorBrush x:Key="SecondaryButtonHoverForegroundBrush" Color="#FFE17A"/>
+    <SolidColorBrush x:Key="SecondaryButtonPressedBackgroundBrush" Color="#1E2E20"/>
+
+    <!-- Timeline Dynamic Button Brushes -->
+    <SolidColorBrush x:Key="TimelineHeaderButtonBackgroundBrush" Color="#182619"/>
+    <SolidColorBrush x:Key="TimelineHeaderButtonBorderBrush" Color="#756A3C"/>
+    <SolidColorBrush x:Key="TimelineHeaderButtonForegroundBrush" Color="#E8CE7E"/>
+    <SolidColorBrush x:Key="TimelineHeaderButtonHoverBackgroundBrush" Color="#233825"/>
+    <SolidColorBrush x:Key="TimelineHeaderButtonHoverForegroundBrush" Color="#FFF0A3"/>
+    <SolidColorBrush x:Key="TimelinePrimaryButtonBackgroundBrush" Color="#A31818"/>
+    <SolidColorBrush x:Key="TimelinePrimaryButtonBorderBrush" Color="#E55353"/>
+    <SolidColorBrush x:Key="TimelinePrimaryButtonForegroundBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="TimelinePrimaryButtonHoverBackgroundBrush" Color="#BA2020"/>
+    <SolidColorBrush x:Key="TimelineFilterButtonBackgroundBrush" Color="#8A1414"/>
+    <SolidColorBrush x:Key="TimelineFilterButtonBorderBrush" Color="#DFC57B"/>
+    <SolidColorBrush x:Key="TimelineFilterButtonForegroundBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="TimelineFilterButtonHoverBackgroundBrush" Color="#BA1E1E"/>
+    <SolidColorBrush x:Key="TimelineFilterResetBackgroundBrush" Color="#1A2619"/>
+    <SolidColorBrush x:Key="TimelineFilterResetBorderBrush" Color="#6D673B"/>
+    <SolidColorBrush x:Key="TimelineFilterResetForegroundBrush" Color="#E5DFCA"/>
+    <SolidColorBrush x:Key="TimelineFilterResetHoverBackgroundBrush" Color="#263B26"/>
+    <SolidColorBrush x:Key="TimelineItemCompleteBackgroundBrush" Color="#FBF7EE"/>
+    <SolidColorBrush x:Key="TimelineItemCompleteBorderBrush" Color="#C2B59B"/>
+    <SolidColorBrush x:Key="TimelineItemCompleteForegroundBrush" Color="#1A2216"/>
+    <SolidColorBrush x:Key="TimelineItemCompleteHoverBackgroundBrush" Color="#FFFDF8"/>
+    <SolidColorBrush x:Key="TimelineItemCompleteHoverForegroundBrush" Color="#1A2216"/>
+    <SolidColorBrush x:Key="TimelineItemEditBackgroundBrush" Color="#FBF7EE"/>
+    <SolidColorBrush x:Key="TimelineItemEditBorderBrush" Color="#C2B59B"/>
+    <SolidColorBrush x:Key="TimelineItemEditForegroundBrush" Color="#1A2216"/>
+    <SolidColorBrush x:Key="TimelineItemEditHoverBackgroundBrush" Color="#FFFDF8"/>
+    <SolidColorBrush x:Key="TimelineItemEditHoverForegroundBrush" Color="#1A2216"/>
+    <SolidColorBrush x:Key="TimelineItemDeleteBackgroundBrush" Color="#C51F1F"/>
+    <SolidColorBrush x:Key="TimelineItemDeleteBorderBrush" Color="#831010"/>
+    <SolidColorBrush x:Key="TimelineItemDeleteForegroundBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="TimelineItemDeleteHoverBackgroundBrush" Color="#D92626"/>
+    <SolidColorBrush x:Key="TimelineActionButtonBackgroundBrush" Color="#9E1616"/>
+    <SolidColorBrush x:Key="TimelineActionButtonBorderBrush" Color="#ECC867"/>
+    <SolidColorBrush x:Key="TimelineActionButtonForegroundBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="TimelineActionButtonHoverBackgroundBrush" Color="#B71C1C"/>
+
     <!-- Sidebar & Active Menu Brushes -->
     <SolidColorBrush x:Key="ActiveMenuBackgroundBrush" Color="#8F1515"/>
     <SolidColorBrush x:Key="ActiveMenuBorderBrush" Color="#ECC867"/>
     <SolidColorBrush x:Key="ActiveMenuForegroundBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="SidebarBackgroundBrush" Color="#131C14"/>
+    <SolidColorBrush x:Key="SidebarBorderBrush" Color="#18291D"/>
+    <SolidColorBrush x:Key="SidebarNavForegroundBrush" Color="#CBD5E1"/>
     <SolidColorBrush x:Key="SidebarNavHoverBackgroundBrush" Color="#1E2E20"/>
     <SolidColorBrush x:Key="SidebarNavHoverBorderBrush" Color="#35452C"/>
     <SolidColorBrush x:Key="SidebarIconBrush" Color="#F2C94C"/>
+
+    <!-- Shell TopBar & BottomBar Dynamic Brushes -->
+    <SolidColorBrush x:Key="TopBarBackgroundBrush" Color="#6B0F0F"/>
+    <SolidColorBrush x:Key="TopBarBorderBrush" Color="#625C34"/>
+    <SolidColorBrush x:Key="TopBarTitleForegroundBrush" Color="#FFE17A"/>
+    <SolidColorBrush x:Key="TopBarSubForegroundBrush" Color="#F7F1D4"/>
+    <SolidColorBrush x:Key="BottomBarBackgroundBrush" Color="#101B14"/>
+    <SolidColorBrush x:Key="BottomBarBorderBrush" Color="#625C34"/>
+
+    <!-- 6 KPI Strategic Dynamic Brushes -->
+    <SolidColorBrush x:Key="Kpi1BackgroundBrush" Color="#18251A"/>
+    <SolidColorBrush x:Key="Kpi1BorderBrush" Color="#625C34"/>
+    <SolidColorBrush x:Key="Kpi1ForegroundBrush" Color="#F2C94C"/>
+    <SolidColorBrush x:Key="Kpi1SubtextBrush" Color="#A3A899"/>
+
+    <SolidColorBrush x:Key="Kpi2BackgroundBrush" Color="#12281C"/>
+    <SolidColorBrush x:Key="Kpi2BorderBrush" Color="#356E49"/>
+    <SolidColorBrush x:Key="Kpi2ForegroundBrush" Color="#86EFAC"/>
+    <SolidColorBrush x:Key="Kpi2SubtextBrush" Color="#86EFAC"/>
+
+    <SolidColorBrush x:Key="Kpi3BackgroundBrush" Color="#12281C"/>
+    <SolidColorBrush x:Key="Kpi3BorderBrush" Color="#356E49"/>
+    <SolidColorBrush x:Key="Kpi3ForegroundBrush" Color="#86EFAC"/>
+    <SolidColorBrush x:Key="Kpi3SubtextBrush" Color="#86EFAC"/>
+
+    <SolidColorBrush x:Key="Kpi4BackgroundBrush" Color="#12281C"/>
+    <SolidColorBrush x:Key="Kpi4BorderBrush" Color="#356E49"/>
+    <SolidColorBrush x:Key="Kpi4ForegroundBrush" Color="#86EFAC"/>
+    <SolidColorBrush x:Key="Kpi4SubtextBrush" Color="#86EFAC"/>
+
+    <SolidColorBrush x:Key="Kpi5BackgroundBrush" Color="#2D240E"/>
+    <SolidColorBrush x:Key="Kpi5BorderBrush" Color="#F59E0B"/>
+    <SolidColorBrush x:Key="Kpi5ForegroundBrush" Color="#FDE047"/>
+    <SolidColorBrush x:Key="Kpi5SubtextBrush" Color="#FDE047"/>
+
+    <SolidColorBrush x:Key="Kpi6BackgroundBrush" Color="#2A1515"/>
+    <SolidColorBrush x:Key="Kpi6BorderBrush" Color="#DC2626"/>
+    <SolidColorBrush x:Key="Kpi6ForegroundBrush" Color="#F87171"/>
+    <SolidColorBrush x:Key="Kpi6SubtextBrush" Color="#F87171"/>
 
     <!-- Style cho Nút Bấm Chính (Primary Button) -->
     <Style x:Key="PrimaryButtonStyle" TargetType="Button">
@@ -205,12 +293,18 @@
                             BorderThickness="{TemplateBinding BorderThickness}"
                             CornerRadius="4"
                             Padding="{TemplateBinding Padding}">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          TextBlock.Foreground="{TemplateBinding Foreground}"/>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="#354B38"/>
-                            <Setter TargetName="border" Property="BorderBrush" Value="#A28D42"/>
+                            <Setter TargetName="border" Property="Background" Value="{DynamicResource SecondaryButtonHoverBackgroundBrush}"/>
+                            <Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource SecondaryButtonHoverBorderBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource SecondaryButtonHoverForegroundBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="{DynamicResource SecondaryButtonPressedBackgroundBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource SecondaryButtonHoverForegroundBrush}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -720,7 +814,7 @@
                 <Setter Property="Background" Value="{DynamicResource DataGridRowAltBackgroundBrush}"/>
             </Trigger>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="#354B38"/>
+                <Setter Property="Background" Value="{DynamicResource DataGridHoverBrush}"/>
             </Trigger>
             <Trigger Property="IsSelected" Value="True">
                 <Setter Property="Background" Value="{DynamicResource DataGridSelectedBackgroundBrush}"/>

@@ -27,6 +27,8 @@ namespace QL_HocVien.ViewModels
 
         public ObservableCollection<string> UnitOptions { get; } = new();
         public ObservableCollection<string> ClassOptions { get; } = new();
+        public ObservableCollection<string> SchoolYearOptions { get; } = new();
+        public ObservableCollection<string> CohortOptions { get; } = new();
         public ObservableCollection<string> StatusFilterOptions { get; } = new()
         {
             "Tất cả học viên",
@@ -45,6 +47,12 @@ namespace QL_HocVien.ViewModels
 
         [ObservableProperty]
         private string _selectedClass = "Tất cả";
+
+        [ObservableProperty]
+        private string _selectedSchoolYear = "Tất cả";
+
+        [ObservableProperty]
+        private string _selectedCohort = "Tất cả";
 
         [ObservableProperty]
         private string _selectedStatusFilter = "Tất cả học viên";
@@ -270,6 +278,35 @@ namespace QL_HocVien.ViewModels
                         ClassOptions.Add(c.ClassName);
                 }
 
+                // Nạp danh sách năm học thực tế
+                var schoolYears = await _creditService.GetDistinctSchoolYearsAsync();
+                SchoolYearOptions.Clear();
+                SchoolYearOptions.Add("Tất cả");
+                if (schoolYears.Any())
+                {
+                    foreach (var sy in schoolYears) SchoolYearOptions.Add(sy);
+                }
+                else
+                {
+                    SchoolYearOptions.Add("2023 - 2024");
+                    SchoolYearOptions.Add("2024 - 2025");
+                }
+
+                // Nạp danh sách khóa học thực tế
+                var cohorts = await _cadetService.GetDistinctCohortsAsync();
+                CohortOptions.Clear();
+                CohortOptions.Add("Tất cả");
+                if (cohorts.Any())
+                {
+                    foreach (var ch in cohorts) CohortOptions.Add(ch);
+                }
+                else
+                {
+                    CohortOptions.Add("K28");
+                    CohortOptions.Add("K29");
+                    CohortOptions.Add("K30");
+                }
+
                 // Nạp học viên
                 var cadets = await _cadetService.GetAllCadetsAsync();
                 AllCadets.Clear();
@@ -302,7 +339,7 @@ namespace QL_HocVien.ViewModels
 
                 // 2. Tải bảng điểm học viên
                 var allSummaries = await _creditService.GetCadetAcademicSummariesAsync(
-                    SelectedUnit, SelectedClass, SearchKeyword);
+                    SelectedUnit, SelectedClass, SearchKeyword, SelectedSchoolYear, SelectedCohort);
 
                 // Áp dụng bộ lọc trạng thái học tập
                 var filtered = allSummaries.AsEnumerable();
@@ -349,6 +386,8 @@ namespace QL_HocVien.ViewModels
         {
             SelectedUnit = "Tất cả";
             SelectedClass = "Tất cả";
+            SelectedSchoolYear = "Tất cả";
+            SelectedCohort = "Tất cả";
             SelectedStatusFilter = "Tất cả học viên";
             SearchKeyword = string.Empty;
             await LoadDataAsync();
@@ -816,7 +855,7 @@ namespace QL_HocVien.ViewModels
             try
             {
                 var (subj, components, rows) = await _creditService.GetSubjectGradeMatrixAsync(
-                    SelectedSubjectForGrading.Id, SelectedUnit, SelectedClass);
+                    SelectedSubjectForGrading.Id, SelectedUnit, SelectedClass, SelectedSchoolYear, SelectedCohort);
 
                 CurrentSubjectComponents.Clear();
                 foreach (var c in components) CurrentSubjectComponents.Add(c);
@@ -872,7 +911,7 @@ namespace QL_HocVien.ViewModels
             try
             {
                 var res = await _creditService.SaveSubjectGradeMatrixAsync(
-                    SelectedSubjectForGrading.Id, SubjectGradeRows.ToList());
+                    SelectedSubjectForGrading.Id, SubjectGradeRows.ToList(), SelectedSchoolYear);
                 
                 StatusMessage = res.Message;
                 if (res.Success)
@@ -969,8 +1008,14 @@ namespace QL_HocVien.ViewModels
             string? filePath = _fileDialogService.ShowOpenFileDialog("Tập tin Excel (*.xlsx)|*.xlsx|Tất cả tập tin (*.*)|*.*");
             if (string.IsNullOrWhiteSpace(filePath)) return;
 
+            string? targetSchoolYear = SelectedSchoolYear != "Tất cả" ? SelectedSchoolYear : null;
+            string? targetCohort = SelectedCohort != "Tất cả" ? SelectedCohort : null;
+
             var confirm = System.Windows.MessageBox.Show(
-                $"Hệ thống sẽ nạp/cập nhật điểm môn học và BẢO LƯU NGUYÊN VẸN mã số học viên (ID) hiện có từ file:\n{filePath}\n\nĐồng chí có chắc chắn muốn thực hiện?",
+                $"Hệ thống sẽ nạp/cập nhật điểm môn học và BẢO LƯU NGUYÊN VẸN mã số học viên từ file:\n{filePath}\n\n" +
+                $"- Năm học áp dụng: {(string.IsNullOrWhiteSpace(targetSchoolYear) ? "Tự động nhận diện từ file" : targetSchoolYear)}\n" +
+                $"- Khóa học áp dụng: {(string.IsNullOrWhiteSpace(targetCohort) ? "Tự động nhận diện từ file" : targetCohort)}\n\n" +
+                "Đồng chí có chắc chắn muốn thực hiện?",
                 "Xác Nhận Nhập Điểm Từ Excel",
                 System.Windows.MessageBoxButton.YesNo,
                 System.Windows.MessageBoxImage.Question);
@@ -981,7 +1026,7 @@ namespace QL_HocVien.ViewModels
             StatusMessage = "Đang nạp dữ liệu điểm và bảo lưu mã học viên từ Excel...";
             try
             {
-                var res = await _creditService.ImportStandardTbmExcelAsync(filePath);
+                var res = await _creditService.ImportStandardTbmExcelAsync(filePath, targetSchoolYear, targetCohort);
                 StatusMessage = res.Message;
 
                 if (res.Success)

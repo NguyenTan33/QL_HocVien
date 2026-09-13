@@ -18,17 +18,18 @@ namespace QL_HocVien.Services.Interfaces
         Task<(bool Success, string Message)> SaveScoreAsync(CreditScoreRecord score);
         Task<(bool Success, string Message)> DeleteScoreAsync(int scoreId);
 
-        Task<List<CadetAcademicSummaryDto>> GetCadetAcademicSummariesAsync(string? unit = null, string? className = null, string? keyword = null);
+        Task<List<string>> GetDistinctSchoolYearsAsync();
+        Task<List<CadetAcademicSummaryDto>> GetCadetAcademicSummariesAsync(string? unit = null, string? className = null, string? keyword = null, string? schoolYear = null, string? cohort = null);
         Task<List<UntestedCadetDto>> GetUntestedCadetsAsync(string? unit = null, string? className = null, string? keyword = null);
 
         Task<(bool Success, string Message)> ExportAcademicReportAsync(string filePath, List<CadetAcademicSummaryDto> summaries, List<CreditSubject> subjects);
-        Task<(bool Success, string Message, int ImportedCadets, int ImportedScores)> ImportStandardTbmExcelAsync(string filePath);
+        Task<(bool Success, string Message, int ImportedCadets, int ImportedScores)> ImportStandardTbmExcelAsync(string filePath, string? schoolYear = null, string? cohort = null);
         Task<(bool Success, string Message, int Cadets, int Subjects, int Scores)> ResetAndImportFreshFromExcelAsync(string filePath);
         Task<List<MajorSubjectBreakdownDto>> GetSubjectBreakdownForCadetAsync(int cadetId);
         Task<(bool Success, string Message)> SaveSubjectWithComponentsAsync(CreditSubject subject, IEnumerable<SubjectAssessmentComponent> components);
         Task<List<SubjectAssessmentComponent>> GetComponentsBySubjectIdAsync(int subjectId);
-        Task<(CreditSubject? Subject, List<SubjectAssessmentComponent> Components, List<CadetSubjectGradeRowDto> Rows)> GetSubjectGradeMatrixAsync(int subjectId, string? unit = null, string? className = null);
-        Task<(bool Success, string Message)> SaveSubjectGradeMatrixAsync(int subjectId, List<CadetSubjectGradeRowDto> rows);
+        Task<(CreditSubject? Subject, List<SubjectAssessmentComponent> Components, List<CadetSubjectGradeRowDto> Rows)> GetSubjectGradeMatrixAsync(int subjectId, string? unit = null, string? className = null, string? schoolYear = null, string? cohort = null);
+        Task<(bool Success, string Message)> SaveSubjectGradeMatrixAsync(int subjectId, List<CadetSubjectGradeRowDto> rows, string? schoolYear = null);
         Task EnsureComponentsMigratedAsync();
         Task<List<CreditSubject>> GetMajorSubjectsAsync();
         Task ConsolidateMajorSubjectsAsync();

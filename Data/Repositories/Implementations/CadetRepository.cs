@@ -130,6 +130,18 @@ namespace QL_HocVien.Data.Repositories.Implementations
                 }
             }
 
+            // 11. Khóa học (Cohort)
+            if (!string.IsNullOrWhiteSpace(criteria.Cohort) && criteria.Cohort != "Tất cả")
+            {
+                query = query.Where(c => c.Cohort == criteria.Cohort);
+            }
+
+            // 12. Niên khóa (AcademicYear)
+            if (!string.IsNullOrWhiteSpace(criteria.AcademicYear) && criteria.AcademicYear != "Tất cả")
+            {
+                query = query.Where(c => c.AcademicYear == criteria.AcademicYear);
+            }
+
             return await query.OrderByDescending(c => c.Id).ToListAsync();
         }
 
@@ -218,6 +230,26 @@ namespace QL_HocVien.Data.Repositories.Implementations
                 .Select(c => c.Position.Trim())
                 .Distinct()
                 .OrderBy(p => p)
+                .ToListAsync();
+        }
+
+        public async Task<List<string>> GetDistinctCohortsAsync()
+        {
+            return await _context.Cadets
+                .Where(c => !string.IsNullOrWhiteSpace(c.Cohort))
+                .Select(c => c.Cohort.Trim())
+                .Distinct()
+                .OrderBy(ch => ch)
+                .ToListAsync();
+        }
+
+        public async Task<List<string>> GetDistinctAcademicYearsAsync()
+        {
+            return await _context.Cadets
+                .Where(c => !string.IsNullOrWhiteSpace(c.AcademicYear))
+                .Select(c => c.AcademicYear.Trim())
+                .Distinct()
+                .OrderBy(ay => ay)
                 .ToListAsync();
         }
 

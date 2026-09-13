@@ -561,7 +561,7 @@
                         Padding="28" Effect="{DynamicResource CardShadow}">
                     <StackPanel>
                         <!-- Tiêu đề Form -->
-                        <TextBlock Text="{Binding FormTitle}" FontSize="18" FontWeight="Bold" Foreground="#FFFFFF" Margin="0,0,0,16"/>
+                        <TextBlock Text="{Binding FormTitle}" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,16"/>
 
                         <!-- Mã & Tên -->
                         <Grid Margin="0,0,0,12">
@@ -572,14 +572,14 @@
                             </Grid.ColumnDefinitions>
 
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="Mã định danh (*):" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
+                                <TextBlock Text="Mã định danh (*):" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
                                 <TextBox Text="{Binding FormCode, UpdateSourceTrigger=PropertyChanged}" 
                                          IsEnabled="{Binding IsEditing, Converter={x:Static local_cv:InvertedBooleanToVisibilityConverter.Instance}}"
                                          Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
                             </StackPanel>
 
                             <StackPanel Grid.Column="2">
-                                <TextBlock Text="Tên gọi (*):" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
+                                <TextBlock Text="Tên gọi (*):" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
                                 <TextBox Text="{Binding FormName, UpdateSourceTrigger=PropertyChanged}" 
                                          Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
                             </StackPanel>
@@ -594,13 +594,13 @@
                             </Grid.ColumnDefinitions>
 
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="Nhóm cấp bậc:" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
+                                <TextBlock Text="Nhóm cấp bậc:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
                                 <TextBox Text="{Binding FormGroup, UpdateSourceTrigger=PropertyChanged}" 
                                          Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
                             </StackPanel>
 
                             <StackPanel Grid.Column="2">
-                                <TextBlock Text="Thứ tự hiển thị:" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
+                                <TextBlock Text="Thứ tự hiển thị:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
                                 <TextBox Text="{Binding FormDisplayOrder, UpdateSourceTrigger=PropertyChanged}" 
                                          Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
                             </StackPanel>
@@ -615,13 +615,13 @@
                             </Grid.ColumnDefinitions>
 
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="Nhóm chức vụ:" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
+                                <TextBlock Text="Nhóm chức vụ:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
                                 <TextBox Text="{Binding FormGroup, UpdateSourceTrigger=PropertyChanged}" 
                                          Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
                             </StackPanel>
 
                             <StackPanel Grid.Column="2">
-                                <TextBlock Text="Thứ tự hiển thị:" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
+                                <TextBlock Text="Thứ tự hiển thị:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
                                 <TextBox Text="{Binding FormDisplayOrder, UpdateSourceTrigger=PropertyChanged}" 
                                          Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
                             </StackPanel>
@@ -637,19 +637,19 @@
                                 </Grid.ColumnDefinitions>
 
                                 <StackPanel Grid.Column="0">
-                                    <TextBlock Text="Đơn vị cấp trên:" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Đơn vị cấp trên:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
                                     <components:UnitTreeComboBox SelectedUnit="{Binding FormParentUnit, Mode=TwoWay}" Height="36" Placeholder="Chọn đơn vị cấp trên (Học viện, Tiểu đoàn 1...)..."/>
                                 </StackPanel>
 
                                 <StackPanel Grid.Column="2">
-                                    <TextBlock Text="Chỉ huy trưởng:" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Chỉ huy trưởng:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
                                     <TextBox Text="{Binding FormCommanderName, UpdateSourceTrigger=PropertyChanged}" 
                                              Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
                                 </StackPanel>
                             </Grid>
 
                             <StackPanel>
-                                <TextBlock Text="Số điện thoại liên hệ:" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
+                                <TextBlock Text="Số điện thoại liên hệ:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
                                 <TextBox Text="{Binding FormContactPhone, UpdateSourceTrigger=PropertyChanged}" 
                                          Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
                             </StackPanel>
@@ -664,13 +664,13 @@
                             </Grid.ColumnDefinitions>
 
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="Thời gian đào tạo:" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
+                                <TextBlock Text="Thời gian đào tạo:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
                                 <TextBox Text="{Binding FormTrainingDuration, UpdateSourceTrigger=PropertyChanged}" 
                                          Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
                             </StackPanel>
 
                             <StackPanel Grid.Column="2">
-                                <TextBlock Text="Khoa / Viện phụ trách:" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
+                                <TextBlock Text="Khoa / Viện phụ trách:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
                                 <TextBox Text="{Binding FormDepartment, UpdateSourceTrigger=PropertyChanged}" 
                                          Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
                             </StackPanel>
@@ -678,7 +678,7 @@
 
                         <!-- Ghi Chú / Mô Tả (Chung) -->
                         <StackPanel Margin="0,0,0,20">
-                            <TextBlock Text="Ghi chú / Mô tả chi tiết:" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
+                            <TextBlock Text="Ghi chú / Mô tả chi tiết:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
                             <TextBox Text="{Binding FormDescription, UpdateSourceTrigger=PropertyChanged}" 
                                      Style="{StaticResource ModernTextBoxStyle}" Height="64" AcceptsReturn="True" TextWrapping="Wrap"/>
                         </StackPanel>

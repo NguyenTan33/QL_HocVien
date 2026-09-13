@@ -19,6 +19,8 @@ namespace QL_HocVien.Services.Interfaces
         Task<List<string>> GetDistinctClassesAsync();
         Task<List<string>> GetDistinctRanksAsync();
         Task<List<string>> GetDistinctPositionsAsync();
+        Task<List<string>> GetDistinctCohortsAsync();
+        Task<List<string>> GetDistinctAcademicYearsAsync();
         Task<string> GenerateSuggestedCadetCodeAsync();
     }
 }
