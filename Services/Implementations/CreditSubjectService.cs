@@ -1840,12 +1840,13 @@ namespace QL_HocVien.Services.Implementations
                     }
 
                     await _context.SaveChangesAsync();
-                    return (true, $"Cáº­p nháº­t mÃ´n há»c '{existing.SubjectName}' vÃ  cÃ¡c Ä‘á»£t kiá»ƒm tra thÃ nh cÃ´ng.");
+                    return (true, $"Cáº­p nháº­t mÃ´n há» c '{existing.SubjectName}' vÃ  cÃ¡c Ä‘á»£t kiá»ƒm tra thÃ nh cÃ´ng.");
                 }
             }
             catch (Exception ex)
             {
-                return (false, $"Lá»—i lÆ°u mÃ´n há»c: {ex.Message}");
+                string detail = ex.InnerException != null ? $"{ex.Message} | Chi tiết: {ex.InnerException.Message}" : ex.Message;
+                return (false, $"Lỗi lưu môn học: {detail}");
             }
         }
 

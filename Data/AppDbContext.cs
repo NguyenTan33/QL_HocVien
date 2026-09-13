@@ -175,6 +175,7 @@ namespace QL_HocVien.Data
             modelBuilder.Entity<CreditSubject>(entity =>
             {
                 entity.HasKey(e => e.Id);
+                entity.Ignore(e => e.IsSelected);
                 entity.HasIndex(e => e.SubjectCode).IsUnique();
                 entity.Property(e => e.SubjectCode).IsRequired().HasMaxLength(30);
                 entity.Property(e => e.SubjectName).IsRequired().HasMaxLength(150);

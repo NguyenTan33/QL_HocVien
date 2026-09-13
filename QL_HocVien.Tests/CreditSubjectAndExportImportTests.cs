@@ -48,6 +48,7 @@ namespace QL_HocVien.Tests
             catch { }
         }
 
+
         [Fact]
         public async Task Test_ConsolidateMajorSubjects_IsIdempotent_And_ScoresDoNotDecreaseOnMultipleRuns()
         {

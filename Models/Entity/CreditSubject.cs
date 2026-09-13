@@ -7,9 +7,14 @@ namespace QL_HocVien.Models.Entity
 {
     public partial class CreditSubject : ObservableObject
     {
-        [NotMapped]
-        [ObservableProperty]
         private bool _isSelected;
+
+        [NotMapped]
+        public bool IsSelected
+        {
+            get => _isSelected;
+            set => SetProperty(ref _isSelected, value);
+        }
 
         public int Id { get; set; }
         public string SubjectCode { get; set; } = string.Empty;

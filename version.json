@@ -1,7 +1,7 @@
 {
-  "latestVersion": "1.4.6",
+  "latestVersion": "1.4.7",
   "minimumVersion": "1.0.0",
   "mandatory": false,
-  "downloadUrl": "https://github.com/NguyenTan33/QL_HocVien/releases/download/v1.4.6/QL_HocVien.exe",
-  "releaseNotes": "Bản cập nhật v1.4.6:\n- Cây sơ đồ đơn vị: Loại bỏ nhãn/badge cấp bậc (CẤP KHÓA HỌC, CẤP TRUNG ĐOÀN...) dư thừa trên các thẻ đơn vị.\n- Tối ưu giao diện cây phân cấp đơn vị gọn gàng, trực quan hơn."
+  "downloadUrl": "https://github.com/NguyenTan33/QL_HocVien/releases/download/v1.4.7/QL_HocVien.exe",
+  "releaseNotes": "Bản cập nhật v1.4.7:\n- Sửa lỗi khi thêm môn học mới (bỏ ánh xạ IsSelected vào database SQLite).\n- Bỏ tạo danh sách học viên mặc định (để trống dữ liệu cho người dùng tự nhập dữ liệu thực tế)."
 }
