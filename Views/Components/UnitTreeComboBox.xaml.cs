@@ -100,11 +100,13 @@ namespace QL_HocVien.Views.Components
             catch { }
 
             AllFilterOption.Visibility = IsFilterMode ? Visibility.Visible : Visibility.Collapsed;
+            HookParentWindow();
             _ = LoadTreeAsync();
         }
 
         private void OnUnloaded(object sender, RoutedEventArgs e)
         {
+            UnhookParentWindow();
             if (_hierarchyService != null)
             {
                 _hierarchyService.OnHierarchyChanged -= OnHierarchyServiceChanged;
@@ -246,7 +248,103 @@ namespace QL_HocVien.Views.Components
             }
         }
 
-        private long _lastClosedTimestamp;
+        private Window? _parentWindow;
+
+        private void HookParentWindow()
+        {
+            var window = Window.GetWindow(this);
+            if (window == _parentWindow && _parentWindow != null) return;
+
+            UnhookParentWindow();
+
+            _parentWindow = window;
+            if (_parentWindow != null)
+            {
+                _parentWindow.PreviewMouseDown += OnWindowPreviewMouseDown;
+                _parentWindow.PreviewMouseWheel += OnWindowPreviewMouseWheel;
+                _parentWindow.Deactivated += OnWindowDeactivated;
+                _parentWindow.LocationChanged += OnWindowLocationOrSizeChanged;
+                _parentWindow.SizeChanged += OnWindowLocationOrSizeChanged;
+            }
+        }
+
+        private void UnhookParentWindow()
+        {
+            if (_parentWindow != null)
+            {
+                _parentWindow.PreviewMouseDown -= OnWindowPreviewMouseDown;
+                _parentWindow.PreviewMouseWheel -= OnWindowPreviewMouseWheel;
+                _parentWindow.Deactivated -= OnWindowDeactivated;
+                _parentWindow.LocationChanged -= OnWindowLocationOrSizeChanged;
+                _parentWindow.SizeChanged -= OnWindowLocationOrSizeChanged;
+                _parentWindow = null;
+            }
+        }
+
+        private void OnWindowPreviewMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (!IsDropDownOpen) return;
+
+            // Nếu click nằm trên chính control UnitTreeComboBox (TriggerBox), bỏ qua để TriggerBox tự toggle
+            if (this.IsMouseOver) return;
+
+            // Nếu click nằm bên trong Popup, cho phép tương tác với SearchBox, TreeView, Expander
+            if (TreePopup.IsMouseOver) return;
+
+            if (e.OriginalSource is DependencyObject dep)
+            {
+                if (IsDescendantOf(dep, this) || IsDescendantOf(dep, TreePopup))
+                {
+                    return;
+                }
+            }
+
+            // Click ở bất kỳ đâu khác trong cửa sổ: Đóng dropdown
+            IsDropDownOpen = false;
+        }
+
+        private void OnWindowPreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            if (!IsDropDownOpen) return;
+
+            // Nếu cuộn chuột bên trong Popup, cho phép cuộn bình thường
+            if (TreePopup.IsMouseOver) return;
+
+            if (e.OriginalSource is DependencyObject dep && IsDescendantOf(dep, TreePopup))
+            {
+                return;
+            }
+
+            // Cuộn bên ngoài: Đóng dropdown để không bị trôi lơ lửng
+            IsDropDownOpen = false;
+        }
+
+        private void OnWindowDeactivated(object? sender, EventArgs e)
+        {
+            if (IsDropDownOpen)
+            {
+                IsDropDownOpen = false;
+            }
+        }
+
+        private void OnWindowLocationOrSizeChanged(object? sender, EventArgs e)
+        {
+            if (IsDropDownOpen)
+            {
+                IsDropDownOpen = false;
+            }
+        }
+
+        private static bool IsDescendantOf(DependencyObject? node, DependencyObject? parent)
+        {
+            if (node == null || parent == null) return false;
+            while (node != null)
+            {
+                if (node == parent) return true;
+                node = System.Windows.Media.VisualTreeHelper.GetParent(node) ?? System.Windows.LogicalTreeHelper.GetParent(node);
+            }
+            return false;
+        }
 
         private void OnPopupOpened(object? sender, EventArgs e)
         {
@@ -262,7 +360,6 @@ namespace QL_HocVien.Views.Components
 
         private void OnPopupClosed(object? sender, EventArgs e)
         {
-            _lastClosedTimestamp = Environment.TickCount64;
             if (IsDropDownOpen)
             {
                 IsDropDownOpen = false;
@@ -273,21 +370,10 @@ namespace QL_HocVien.Views.Components
         {
             if (IsClickInsideButton(e.OriginalSource)) return; // Nút Clear được xử lý riêng
 
-            // Đánh dấu Handled để sự kiện chuột không truyền lên ScrollViewer hoặc container ngoài gây mất focus/capture
+            // Đánh dấu Handled để sự kiện chuột không truyền lên ScrollViewer hoặc container ngoài
             e.Handled = true;
-
-            if (IsDropDownOpen)
-            {
-                IsDropDownOpen = false;
-            }
-            else
-            {
-                // Nếu vừa mới đóng do click ra ngoài trúng ngay TriggerBox, không mở lại tức thì
-                if (Environment.TickCount64 - _lastClosedTimestamp > 250)
-                {
-                    IsDropDownOpen = true;
-                }
-            }
+            HookParentWindow();
+            IsDropDownOpen = !IsDropDownOpen;
         }
 
         private void OnTriggerBoxPreviewMouseUp(object sender, MouseButtonEventArgs e)

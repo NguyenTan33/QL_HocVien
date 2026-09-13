@@ -246,7 +246,7 @@
                Placement="Bottom"
                PlacementTarget="{Binding ElementName=TriggerBox}"
                IsOpen="{Binding IsDropDownOpen, ElementName=RootUnitTreeBox, Mode=TwoWay}"
-               StaysOpen="False"
+               StaysOpen="True"
                AllowsTransparency="True"
                PopupAnimation="None"
                Opened="OnPopupOpened"
