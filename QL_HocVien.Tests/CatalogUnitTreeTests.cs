@@ -447,5 +447,30 @@ namespace QL_HocVien.Tests
             };
             Assert.True(virtualNode.CanDelete);
         }
+
+        [Fact]
+        public async Task Test_Same_UnitCode_Allowed_Under_Different_Parents()
+        {
+            // Kiểm tra yêu cầu: Khóa 75 có Tiểu đoàn 1 và 2, cả 2 đều có Đại đội 1 và ĐƯỢC PHÉP ĐẶT MÃ dBB1 TRÙNG NHAU
+            var c1_in_d1 = new MilitaryUnit
+            {
+                UnitCode = "dBB1",
+                UnitName = "Đại đội 1",
+                ParentUnit = "Tiểu đoàn 1"
+            };
+
+            var c1_in_d2 = new MilitaryUnit
+            {
+                UnitCode = "dBB1", // Cùng mã dBB1
+                UnitName = "Đại đội 1",
+                ParentUnit = "Tiểu đoàn 2" // Khác đơn vị cha
+            };
+
+            var res1 = await _catalogService.AddUnitAsync(c1_in_d1);
+            Assert.True(res1.Success, "Thêm Đại đội 1 (dBB1) dưới Tiểu đoàn 1 phải thành công");
+
+            var res2 = await _catalogService.AddUnitAsync(c1_in_d2);
+            Assert.True(res2.Success, "Thêm Đại đội 1 (dBB1) dưới Tiểu đoàn 2 phải thành công dù trùng mã dBB1");
+        }
     }
 }

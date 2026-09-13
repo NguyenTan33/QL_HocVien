@@ -92,7 +92,7 @@ namespace QL_HocVien.Data
             modelBuilder.Entity<MilitaryUnit>(entity =>
             {
                 entity.HasKey(e => e.Id);
-                entity.HasIndex(e => e.UnitCode).IsUnique();
+                entity.HasIndex(e => e.UnitCode);
                 entity.Property(e => e.UnitCode).IsRequired().HasMaxLength(20);
                 entity.Property(e => e.UnitName).IsRequired().HasMaxLength(100);
             });

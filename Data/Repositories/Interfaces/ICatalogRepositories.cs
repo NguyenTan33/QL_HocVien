@@ -25,7 +25,7 @@ namespace QL_HocVien.Data.Repositories.Interfaces
         Task<IEnumerable<MilitaryUnit>> SearchUnitsAsync(string? keyword, string? parentUnit);
         Task<IEnumerable<MilitaryUnit>> SearchWithCriteriaAsync(QL_HocVien.Models.Filters.CatalogFilterCriteria criteria);
         Task<MilitaryUnit?> GetByCodeAsync(string unitCode);
-        Task<bool> ExistsByCodeAsync(string unitCode);
+        Task<bool> ExistsByCodeAsync(string unitCode, string? parentUnit = null, int excludeId = 0);
         string? GetOriginalUnitName(MilitaryUnit unit);
     }
 

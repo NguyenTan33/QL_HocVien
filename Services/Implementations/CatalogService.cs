@@ -211,8 +211,8 @@ namespace QL_HocVien.Services.Implementations
             unit.UnitCode = unit.UnitCode.Trim();
             unit.UnitName = unit.UnitName.Trim();
 
-            if (await _unitRepo.ExistsByCodeAsync(unit.UnitCode))
-                return (false, $"Mã đơn vị '{unit.UnitCode}' đã tồn tại trong hệ thống.", null);
+            if (await _unitRepo.ExistsByCodeAsync(unit.UnitCode, unit.ParentUnit))
+                return (false, $"Mã đơn vị '{unit.UnitCode}' đã tồn tại trong cùng đơn vị cấp trên '{unit.ParentUnit}'.", null);
 
             unit.CreatedAt = DateTime.Now;
             await _unitRepo.AddAsync(unit);
@@ -235,11 +235,8 @@ namespace QL_HocVien.Services.Implementations
             unit.UnitCode = unit.UnitCode.Trim();
             unit.UnitName = unit.UnitName.Trim();
 
-            if (!existing.UnitCode.Equals(unit.UnitCode, StringComparison.OrdinalIgnoreCase))
-            {
-                if (await _unitRepo.ExistsByCodeAsync(unit.UnitCode))
-                    return (false, $"Mã đơn vị '{unit.UnitCode}' đã tồn tại.");
-            }
+            if (await _unitRepo.ExistsByCodeAsync(unit.UnitCode, unit.ParentUnit, unit.Id))
+                return (false, $"Mã đơn vị '{unit.UnitCode}' đã tồn tại trong cùng đơn vị cấp trên '{unit.ParentUnit}'.");
 
             string oldName = existing.UnitName;
             var trackedOriginal = _unitRepo.GetOriginalUnitName(existing);

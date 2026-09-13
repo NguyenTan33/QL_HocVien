@@ -73,7 +73,7 @@ namespace QL_HocVien.Data
                         ""Description"" TEXT NOT NULL,
                         ""CreatedAt"" TEXT NOT NULL
                     );
-                    CREATE UNIQUE INDEX IF NOT EXISTS ""IX_MilitaryUnits_UnitCode"" ON ""MilitaryUnits"" (""UnitCode"");
+                    CREATE INDEX IF NOT EXISTS ""IX_MilitaryUnits_UnitCode"" ON ""MilitaryUnits"" (""UnitCode"");
 
                     CREATE TABLE IF NOT EXISTS ""MilitaryMajors"" (
                         ""Id"" INTEGER NOT NULL CONSTRAINT ""PK_MilitaryMajors"" PRIMARY KEY AUTOINCREMENT,
@@ -279,6 +279,13 @@ namespace QL_HocVien.Data
             }
             catch { }
 
+            // Cho phép các đơn vị thuộc các đơn vị cha khác nhau được phép trùng mã (ví dụ Đại đội 1 của Tiểu đoàn 1 và Tiểu đoàn 2 đều có mã c1/dBB1)
+            try
+            {
+                context.Database.ExecuteSqlRaw(@"DROP INDEX IF EXISTS ""IX_MilitaryUnits_UnitCode"";");
+                context.Database.ExecuteSqlRaw(@"CREATE INDEX IF NOT EXISTS ""IX_MilitaryUnits_UnitCode"" ON ""MilitaryUnits"" (""UnitCode"");");
+            }
+            catch { }
             // Đảm bảo bảng AccountPasskeys và các cột bản quyền tồn tại
             try
             {

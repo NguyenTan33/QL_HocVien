@@ -154,10 +154,24 @@ namespace QL_HocVien.Data.Repositories.Implementations
             return await _context.MilitaryUnits.FirstOrDefaultAsync(u => u.UnitCode.ToLower() == unitCode.Trim().ToLower());
         }
 
-        public async Task<bool> ExistsByCodeAsync(string unitCode)
+        public async Task<bool> ExistsByCodeAsync(string unitCode, string? parentUnit = null, int excludeId = 0)
         {
             if (string.IsNullOrWhiteSpace(unitCode)) return false;
-            return await _context.MilitaryUnits.AnyAsync(u => u.UnitCode.ToLower() == unitCode.Trim().ToLower());
+            var cleanCode = unitCode.Trim().ToLower();
+            var query = _context.MilitaryUnits.Where(u => u.UnitCode.ToLower() == cleanCode);
+
+            if (excludeId > 0)
+            {
+                query = query.Where(u => u.Id != excludeId);
+            }
+
+            if (!string.IsNullOrWhiteSpace(parentUnit))
+            {
+                var cleanParent = parentUnit.Trim().ToLower();
+                query = query.Where(u => u.ParentUnit.ToLower() == cleanParent);
+            }
+
+            return await query.AnyAsync();
         }
 
         public string? GetOriginalUnitName(MilitaryUnit unit)
