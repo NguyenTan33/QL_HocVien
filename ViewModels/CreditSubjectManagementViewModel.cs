@@ -395,11 +395,25 @@ namespace QL_HocVien.ViewModels
             _isUpdatingSelection = false;
         }
 
+        [RelayCommand]
+        public void ToggleSelectAllSubjects()
+        {
+            bool newState = IsAllSubjectsSelected != true;
+            IsAllSubjectsSelected = newState;
+            _isUpdatingSubjectSelection = true;
+            foreach (var item in Subjects)
+            {
+                item.IsSelected = newState;
+            }
+            SelectedSubjectsCount = newState ? Subjects.Count : 0;
+            _isUpdatingSubjectSelection = false;
+        }
+
         partial void OnIsAllSubjectsSelectedChanged(bool? value)
         {
-            if (_isUpdatingSubjectSelection || value == null) return;
+            if (_isUpdatingSubjectSelection) return;
             _isUpdatingSubjectSelection = true;
-            bool isChecked = value.Value;
+            bool isChecked = value == true;
             foreach (var item in Subjects)
             {
                 item.IsSelected = isChecked;

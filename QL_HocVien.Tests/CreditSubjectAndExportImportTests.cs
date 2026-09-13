@@ -9,6 +9,7 @@ using QL_HocVien.Data;
 using QL_HocVien.Models.Entity;
 using QL_HocVien.Services.Calculators;
 using QL_HocVien.Services.Implementations;
+using QL_HocVien.ViewModels;
 using Xunit;
 
 namespace QL_HocVien.Tests
@@ -48,6 +49,27 @@ namespace QL_HocVien.Tests
             catch { }
         }
 
+
+        [Fact]
+        public void Test_IsAllSubjectsSelected_SelectsAllItems()
+        {
+            var vm = new CreditSubjectManagementViewModel(_creditService, null!, null!, null!, null!, null!, null, null);
+            var s1 = new CreditSubject { SubjectCode = "S1", IsSelected = false };
+            var s2 = new CreditSubject { SubjectCode = "S2", IsSelected = false };
+            s1.PropertyChanged += (sender, e) => { };
+            s2.PropertyChanged += (sender, e) => { };
+            vm.Subjects.Add(s1);
+            vm.Subjects.Add(s2);
+
+            vm.IsAllSubjectsSelected = true;
+
+            Assert.True(s1.IsSelected, "s1 should be selected");
+            Assert.True(s2.IsSelected, "s2 should be selected");
+
+            vm.ToggleSelectAllSubjects();
+            Assert.False(s1.IsSelected, "s1 should be deselected");
+            Assert.False(s2.IsSelected, "s2 should be deselected");
+        }
 
         [Fact]
         public async Task Test_ConsolidateMajorSubjects_IsIdempotent_And_ScoresDoNotDecreaseOnMultipleRuns()

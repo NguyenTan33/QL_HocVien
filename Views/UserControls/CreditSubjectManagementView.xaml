@@ -250,12 +250,12 @@
                                     <DataGrid.Columns>
                                         <!-- Cột Checkbox chọn nhiều / chọn tất cả -->
                                         <DataGridTemplateColumn Width="46" CanUserResize="False" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}">
-                                            <DataGridTemplateColumn.Header>
-                                                <CheckBox IsChecked="{Binding DataContext.IsAllSelected, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                                                          IsThreeState="True"
-                                                          HorizontalAlignment="Center" VerticalAlignment="Center" 
-                                                          ToolTip="Chọn tất cả / Bỏ chọn tất cả"/>
-                                            </DataGridTemplateColumn.Header>
+                                             <DataGridTemplateColumn.Header>
+                                                 <CheckBox IsChecked="{Binding DataContext.IsAllSelected, RelativeSource={RelativeSource AncestorType=DataGrid}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                           Command="{Binding DataContext.ToggleSelectAllCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center" 
+                                                           ToolTip="Chọn tất cả / Bỏ chọn tất cả"/>
+                                             </DataGridTemplateColumn.Header>
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
@@ -426,8 +426,8 @@
                                         <!-- Cột Checkbox chọn nhiều / chọn tất cả môn học -->
                                         <DataGridTemplateColumn Width="46" CanUserResize="False" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}">
                                             <DataGridTemplateColumn.Header>
-                                                <CheckBox IsChecked="{Binding DataContext.IsAllSubjectsSelected, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                                                          IsThreeState="True"
+                                                <CheckBox IsChecked="{Binding DataContext.IsAllSubjectsSelected, RelativeSource={RelativeSource AncestorType=DataGrid}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                           Command="{Binding DataContext.ToggleSelectAllSubjectsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                           HorizontalAlignment="Center" VerticalAlignment="Center" 
                                                           ToolTip="Chọn tất cả / Bỏ chọn tất cả"/>
                                             </DataGridTemplateColumn.Header>
