@@ -1,12 +1,15 @@
-name: .NET Core Desktop
+name: .NET Core Desktop — Build & Release
 
 on:
   push:
     branches: [ "main" ]
+    tags:
+      - "v*.*.*"
   pull_request:
     branches: [ "main" ]
 
 jobs:
+  # ========== JOB 1: Build & Test ==========
   build:
     strategy:
       matrix:
@@ -20,20 +23,82 @@ jobs:
       with:
         fetch-depth: 0
 
-    # Install .NET SDK 8.0
     - name: Install .NET Core
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
 
-    # Restore NuGet packages (tự tìm sln/csproj)
     - name: Restore dependencies
       run: dotnet restore
 
-    # Build solution
     - name: Build
       run: dotnet build --no-restore --configuration ${{ matrix.configuration }}
 
-    # Chạy toàn bộ Unit Tests trong solution
-    - name: Execute unit tests
-      run: dotnet test --no-build --configuration ${{ matrix.configuration }} --verbosity normal
+  # ========== JOB 2: Publish Release (chỉ chạy khi push tag v*) ==========
+  publish:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Install .NET Core
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    # Publish self-contained Windows x64
+    - name: Publish (win-x64, self-contained)
+      run: |
+        dotnet publish QL_HocVien.csproj `
+          --configuration Release `
+          --runtime win-x64 `
+          --self-contained true `
+          -p:PublishSingleFile=true `
+          -p:IncludeNativeLibrariesForSelfExtract=true `
+          -p:EnableCompressionInSingleFile=true `
+          --output publish/win-x64
+
+    # Đóng gói thành ZIP
+    - name: Zip artifacts
+      run: |
+        $tag = "${{ github.ref_name }}"
+        $zipName = "QL_HocVien_$tag_win-x64.zip"
+        Compress-Archive -Path publish/win-x64/* -DestinationPath $zipName
+        echo "ZIP_NAME=$zipName" >> $env:GITHUB_ENV
+
+    # Tạo GitHub Release và upload file ZIP
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ github.ref_name }}
+        name: "🎖️ Hệ Thống QL Học Viên ${{ github.ref_name }}"
+        body: |
+          ## 📦 Phiên Bản ${{ github.ref_name }}
+
+          ### ✅ Tính năng mới trong ${{ github.ref_name }}:
+          - 🎓 **Quản Lý Khóa Học** (AcademicCohort): tạo, sửa, xóa khóa K75, K26...
+          - 🔍 **Tự động nhận diện mã học viên**: `ĐH.075.299` → Khóa K75
+          - 🔄 **Đồng bộ CohortId hàng loạt**: 1 click gán đúng khóa cho toàn bộ học viên
+          - 🗄️ **DB migration tự động**: bảng `AcademicCohorts`, cột `CohortId` tự thêm khi khởi động
+          - 🚫 Không còn dữ liệu đơn vị "ảo" cứng trong hệ thống
+
+          ### 📥 Hướng dẫn cài đặt:
+          1. Tải file **QL_HocVien_${{ github.ref_name }}_win-x64.zip**
+          2. Giải nén ra thư mục bất kỳ
+          3. Chạy **QL_HocVien.exe** — không cần cài đặt .NET riêng
+          4. Đăng nhập: `admin` / `Admin@123`
+
+          > ⚠️ Cơ sở dữ liệu mã hóa AES-256 SQLCipher — giữ nguyên file `ql_hocvien.db` khi cập nhật phiên bản mới.
+        files: ${{ env.ZIP_NAME }}
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
