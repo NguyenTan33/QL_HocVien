@@ -185,10 +185,7 @@
                                 <TextBlock Text="{Binding Code, StringFormat='{}Mã: {0}'}" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}"/>
                             </Border>
 
-                            <!-- Badge Cấp bậc phân cấp bộ máy -->
-                            <Border Background="{Binding BadgeBrush}" CornerRadius="4" Padding="8,2" Margin="0,0,6,0" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding LevelName}" FontSize="11" FontWeight="Bold" Foreground="#FFFFFF"/>
-                            </Border>
+
 
                             <!-- Badge Số lượng cấp con -->
                             <Border Background="{DynamicResource PageBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="7,2" Margin="0,0,6,0" VerticalAlignment="Center"
