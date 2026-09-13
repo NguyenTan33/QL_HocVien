@@ -135,6 +135,12 @@ namespace QL_HocVien.Views.Components
                 }
 
                 MainTreeView.ItemsSource = _treeNodes;
+                if (EmptyNoticeBorder != null)
+                {
+                    EmptyNoticeBorder.Visibility = (_treeNodes == null || _treeNodes.Count == 0) && !IsFilterMode 
+                        ? Visibility.Visible 
+                        : Visibility.Collapsed;
+                }
                 UpdateDisplayFromSelectedUnit(SelectedUnit);
             }
             catch (Exception ex)
@@ -142,6 +148,10 @@ namespace QL_HocVien.Views.Components
                 System.Diagnostics.Debug.WriteLine($"[UnitTreeComboBox] LoadTreeAsync error: {ex.Message}");
                 _treeNodes = new List<UnitTreeNode>();
                 MainTreeView.ItemsSource = _treeNodes;
+                if (EmptyNoticeBorder != null)
+                {
+                    EmptyNoticeBorder.Visibility = !IsFilterMode ? Visibility.Visible : Visibility.Collapsed;
+                }
                 UpdateDisplayFromSelectedUnit(SelectedUnit);
             }
         }

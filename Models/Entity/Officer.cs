@@ -12,7 +12,7 @@ namespace QL_HocVien.Models.Entity
         public string FullName { get; set; } = string.Empty;
         public string Rank { get; set; } = "Đại úy";           // Cấp bậc: Thiếu úy, Trung úy, Thượng úy, Đại úy, Thiếu tá...
         public string Position { get; set; } = "Chính trị viên"; // Chức vụ: Đại đội trưởng, Chính trị viên, Cán bộ chủ nhiệm...
-        public string Unit { get; set; } = "Đại đội 1";        // Đơn vị công tác
+        public string Unit { get; set; } = string.Empty;        // Đơn vị công tác
         public string PhoneNumber { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string Specialty { get; set; } = "Quản lý & Huấn luyện học viên"; // Nhiệm vụ / Chuyên môn

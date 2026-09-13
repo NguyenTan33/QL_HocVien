@@ -43,10 +43,7 @@ namespace QL_HocVien.ViewModels
             "Tất cả", "Học viên / Chiến sĩ", "Cán bộ Phân đội", "Cán bộ Chỉ huy", "Cán bộ Giảng dạy"
         };
 
-        public ObservableCollection<string> ParentUnitFilters { get; } = new()
-        {
-            "Tất cả", "Đại đội 1", "Tiểu đoàn 1", "Trung đoàn 1", "Học viện"
-        };
+        public ObservableCollection<string> ParentUnitFilters { get; } = new() { "Tất cả" };
 
         public ObservableCollection<string> DepartmentFilters { get; } = new()
         {
@@ -297,7 +294,7 @@ namespace QL_HocVien.ViewModels
                     break;
                 case 2:
                     FormTitle = "Thêm Đơn Vị Quản Lý Mới";
-                    FormParentUnit = "Tiểu đoàn 1";
+                    FormParentUnit = string.Empty;
                     break;
                 case 3:
                     FormTitle = "Thêm Chuyên Ngành Đào Tạo Mới";
@@ -738,7 +735,7 @@ namespace QL_HocVien.ViewModels
             ClearForm();
 
             FormTitle = $"Thêm Đơn Vị Trực Thuộc: {parentNode?.Name ?? "Đơn vị"}";
-            FormParentUnit = parentNode?.Name ?? "Tiểu đoàn 1";
+            FormParentUnit = parentNode?.Name ?? string.Empty;
             IsFormVisible = true;
         }
 
@@ -808,22 +805,18 @@ namespace QL_HocVien.ViewModels
                 string pCode = pName.ToLower().Contains("tiểu đoàn") ? $"d_auto{autoIdx++}" :
                                pName.ToLower().Contains("trung đoàn") ? $"e_auto{autoIdx++}" :
                                $"u_auto{autoIdx++}";
-                var newUnit = new MilitaryUnit
+                var virtualUnit = new MilitaryUnit
                 {
+                    Id = 0,
                     UnitCode = pCode,
                     UnitName = pName,
                     ParentUnit = "Học viện",
                     CommanderName = $"Chỉ huy trưởng {pName}",
                     ContactPhone = "0981111000",
-                    Description = "Cơ quan chỉ huy cấp trên"
+                    Description = "Cơ quan chỉ huy cấp trên (Chưa lưu CSDL)"
                 };
-                var addRes = await _catalogService.AddUnitAsync(newUnit);
-                if (addRes.Success && addRes.Unit != null)
-                {
-                    allUnits.Add(addRes.Unit);
-                    Units.Add(addRes.Unit);
-                    existingUnitNames.Add(pName);
-                }
+                allUnits.Add(virtualUnit);
+                existingUnitNames.Add(pName);
             }
 
             var rootUnits = allUnits.Where(u =>

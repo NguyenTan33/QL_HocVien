@@ -333,6 +333,16 @@
                               ScrollViewer.VerticalScrollBarVisibility="Auto"
                               ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                               ItemContainerStyle="{StaticResource UnitTreeViewItemStyle}"/>
+
+                    <!-- 4. Thông báo khi cơ sở dữ liệu chưa có đơn vị -->
+                    <Border Grid.Row="2" x:Name="EmptyNoticeBorder" 
+                            Background="Transparent" Padding="16" 
+                            HorizontalAlignment="Center" VerticalAlignment="Center"
+                            Visibility="Collapsed">
+                        <TextBlock Text="Chưa có cơ cấu đơn vị trong hệ thống" 
+                                   FontSize="11.5" FontStyle="Italic"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    </Border>
                 </Grid>
             </Border>
         </Popup>

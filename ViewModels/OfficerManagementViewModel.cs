@@ -346,7 +346,7 @@ namespace QL_HocVien.ViewModels
             FormOfficerCode = await _officerService.GenerateNextOfficerCodeAsync();
             FormRank = FormRanks.FirstOrDefault() ?? "Đại úy";
             FormPosition = FormPositions.FirstOrDefault() ?? "Đại đội trưởng";
-            FormUnit = FormUnits.FirstOrDefault() ?? "Đại đội 1";
+            FormUnit = FormUnits.FirstOrDefault() ?? string.Empty;
             FormCreateLoginAccount = false;
             FormUsername = FormOfficerCode.ToLower();
             FormPassword = "Password123@";
@@ -661,7 +661,7 @@ namespace QL_HocVien.ViewModels
             FormFullName = string.Empty;
             FormRank = FormRanks.FirstOrDefault() ?? "Đại úy";
             FormPosition = FormPositions.FirstOrDefault() ?? "Đại đội trưởng";
-            FormUnit = FormUnits.FirstOrDefault() ?? "Đại đội 1";
+            FormUnit = FormUnits.FirstOrDefault() ?? string.Empty;
             FormPhoneNumber = string.Empty;
             FormEmail = string.Empty;
             FormSpecialty = string.Empty;

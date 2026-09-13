@@ -21,10 +21,7 @@ namespace QL_HocVien.ViewModels
 
         public ObservableCollection<MilitaryClass> Classes { get; } = new();
 
-        public ObservableCollection<string> Units { get; } = new()
-        {
-            "Tất cả", "Đại đội 1", "Đại đội 2", "Đại đội 3", "Đại đội 4", "Tiểu đoàn 1"
-        };
+        public ObservableCollection<string> Units { get; } = new() { "Tất cả" };
 
         public ObservableCollection<string> Majors { get; } = new()
         {
@@ -156,7 +153,7 @@ namespace QL_HocVien.ViewModels
         private string _formClassName = string.Empty;
 
         [ObservableProperty]
-        private string _formUnit = "Đại đội 1";
+        private string _formUnit = string.Empty;
 
         [ObservableProperty]
         private string _formMajor = "Chỉ huy Tham mưu";
@@ -215,21 +212,10 @@ namespace QL_HocVien.ViewModels
                 Units.Clear();
                 Units.Add("Tất cả");
                 AvailableUnits.Clear();
-                if (units.Any())
+                foreach (var u in units.Where(u => !string.IsNullOrWhiteSpace(u)))
                 {
-                    foreach (var u in units)
-                    {
-                        Units.Add(u);
-                        AvailableUnits.Add(u);
-                    }
-                }
-                else
-                {
-                    foreach (var u in new[] { "Đại đội 1", "Đại đội 2", "Đại đội 3", "Đại đội 4", "Tiểu đoàn 1" })
-                    {
-                        Units.Add(u);
-                        AvailableUnits.Add(u);
-                    }
+                    Units.Add(u);
+                    AvailableUnits.Add(u);
                 }
 
                 var majors = await _catalogService.GetMajorDropdownAsync();
@@ -348,7 +334,7 @@ namespace QL_HocVien.ViewModels
             IsEditing = false;
             FormClassCode = string.Empty;
             FormClassName = string.Empty;
-            FormUnit = AvailableUnits.FirstOrDefault() ?? "Đại đội 1";
+            FormUnit = AvailableUnits.FirstOrDefault() ?? string.Empty;
             FormMajor = AvailableMajors.FirstOrDefault() ?? "Chỉ huy Tham mưu";
             FormOfficerInCharge = AvailableOfficers.FirstOrDefault() ?? string.Empty;
             FormAcademicYear = AvailableAcademicYears.FirstOrDefault() ?? "2023 - 2027";

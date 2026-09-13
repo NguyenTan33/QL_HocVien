@@ -25,10 +25,7 @@ namespace QL_HocVien.ViewModels
         {
             "Tất cả", "Binh nhì", "Binh nhất", "Hạ sĩ", "Trung sĩ", "Thượng sĩ", "Chuẩn úy", "Thiếu úy", "Trung úy", "Thượng úy", "Đại úy"
         };
-        public ObservableCollection<string> UnitList { get; } = new()
-        {
-            "Tất cả", "Đại đội 1", "Đại đội 2", "Đại đội 3", "Đại đội 4", "Trung đội 1", "Trung đội 2", "Trung đội 3"
-        };
+        public ObservableCollection<string> UnitList { get; } = new() { "Tất cả" };
         public ObservableCollection<string> ClassList { get; } = new() { "Tất cả" };
         public ObservableCollection<string> PositionList { get; } = new()
         {
@@ -115,7 +112,7 @@ namespace QL_HocVien.ViewModels
         private string _editPosition = "Học viên";
 
         [ObservableProperty]
-        private string _editUnit = "Đại đội 1";
+        private string _editUnit = string.Empty;
 
         [ObservableProperty]
         private string _editClassName = string.Empty;
@@ -212,8 +209,7 @@ namespace QL_HocVien.ViewModels
                 UnitList.Clear();
                 UnitList.Add("Tất cả");
                 AvailableUnits.Clear();
-                var allUnits = units.Union(distinctUnits).Distinct().ToList();
-                if (!allUnits.Any()) allUnits = new System.Collections.Generic.List<string> { "Đại đội 1", "Đại đội 2", "Đại đội 3", "Đại đội 4", "Trung đội 1", "Trung đội 2", "Trung đội 3" };
+                var allUnits = units.Union(distinctUnits).Where(u => !string.IsNullOrWhiteSpace(u)).Distinct().ToList();
                 foreach (var u in allUnits)
                 {
                     UnitList.Add(u);

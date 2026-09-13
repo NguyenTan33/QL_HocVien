@@ -34,23 +34,23 @@ namespace QL_HocVien.Services.Implementations
 
         public async Task<List<UnitTreeNode>> GetUnitTreeAsync(bool isFilterMode = false)
         {
-            List<UnitTreeNode> masterRoots;
+            List<UnitTreeNode>? masterRoots;
             lock (_lock)
             {
-                masterRoots = _cachedTree ?? new List<UnitTreeNode>();
+                masterRoots = _cachedTree;
             }
 
-            if (masterRoots.Count == 0)
+            if (masterRoots == null)
             {
                 await _semaphore.WaitAsync();
                 try
                 {
                     lock (_lock)
                     {
-                        masterRoots = _cachedTree ?? new List<UnitTreeNode>();
+                        masterRoots = _cachedTree;
                     }
 
-                    if (masterRoots.Count == 0)
+                    if (masterRoots == null)
                     {
                         masterRoots = await BuildMasterTreeAsync();
                         lock (_lock)
@@ -92,16 +92,20 @@ namespace QL_HocVien.Services.Implementations
         {
             var unitsFromDb = (await _catalogService.GetAllUnitsAsync()).ToList();
 
-            // Đảm bảo các đơn vị phân cấp quân đội chuẩn luôn đầy đủ theo yêu cầu:
-            // Đơn vị > Tiểu đoàn > Đại đội > Trung đội > Tiểu đội > Nhóm
-            EnsureDefaultHierarchy(unitsFromDb);
+            // Nếu cơ sở dữ liệu không có đơn vị nào, trả về danh sách rỗng (không tạo cây ảo)
+            if (unitsFromDb.Count == 0)
+            {
+                return new List<UnitTreeNode>();
+            }
 
-            var existingUnitNames = new HashSet<string>(unitsFromDb.Select(u => u.UnitName.Trim()), StringComparer.OrdinalIgnoreCase);
+            var existingUnitNames = new HashSet<string>(unitsFromDb.Select(u => (u.UnitName ?? string.Empty).Trim()), StringComparer.OrdinalIgnoreCase);
+            var existingUnitCodes = new HashSet<string>(unitsFromDb.Select(u => (u.UnitCode ?? string.Empty).Trim()), StringComparer.OrdinalIgnoreCase);
 
-            // Tìm các đơn vị cấp trên (ParentUnit) chưa có node tương ứng để tạo virtual root nếu cần
+            // Tìm các đơn vị cấp trên (ParentUnit) được tham chiếu nhưng chưa có bản ghi tương ứng để tạo virtual root
             var missingParents = unitsFromDb
                 .Where(u => !string.IsNullOrWhiteSpace(u.ParentUnit) &&
                             !existingUnitNames.Contains(u.ParentUnit.Trim()) &&
+                            !existingUnitCodes.Contains(u.ParentUnit.Trim()) &&
                             !u.ParentUnit.Equals("Học viện", StringComparison.OrdinalIgnoreCase) &&
                             !u.ParentUnit.Equals("Bộ chỉ huy", StringComparison.OrdinalIgnoreCase))
                 .Select(u => u.ParentUnit.Trim())
@@ -113,17 +117,18 @@ namespace QL_HocVien.Services.Implementations
 
             foreach (var pName in missingParents)
             {
+                int pLevel = DetermineLevel(new MilitaryUnit { UnitName = pName });
                 var virtualRoot = new UnitTreeNode
                 {
                     NodeId = $"root_{pName}",
                     Name = pName,
-                    Code = "e1",
+                    Code = pName,
                     Value = pName,
-                    Level = 1,
-                    LevelName = "CẤP TRUNG ĐOÀN",
+                    Level = pLevel,
+                    LevelName = pLevel switch { 1 => "CẤP TRUNG ĐOÀN", 2 => "CẤP TIỂU ĐOÀN", _ => "CẤP TRÊN" },
                     Commander = "Chỉ huy trưởng",
-                    Icon = "🏛️",
-                    BadgeBrush = "#8B1E1E",
+                    Icon = pLevel == 1 ? "🏛️" : "🛡️",
+                    BadgeBrush = pLevel == 1 ? "#8B1E1E" : "#2E5A36",
                     IsExpanded = true
                 };
                 roots.Add(virtualRoot);
@@ -134,7 +139,7 @@ namespace QL_HocVien.Services.Implementations
                 string.IsNullOrWhiteSpace(u.ParentUnit) ||
                 u.ParentUnit.Equals("Học viện", StringComparison.OrdinalIgnoreCase) ||
                 u.ParentUnit.Equals("Bộ chỉ huy", StringComparison.OrdinalIgnoreCase) ||
-                !existingUnitNames.Contains(u.ParentUnit.Trim())
+                (!existingUnitNames.Contains(u.ParentUnit.Trim()) && !existingUnitCodes.Contains(u.ParentUnit.Trim()))
             ).ToList();
 
             foreach (var ru in rootUnits)
@@ -170,62 +175,6 @@ namespace QL_HocVien.Services.Implementations
             }
 
             return roots;
-        }
-
-        private void EnsureDefaultHierarchy(List<MilitaryUnit> list)
-        {
-            var existingCodes = new HashSet<string>(list.Select(u => (u.UnitCode ?? "").Trim().ToLowerInvariant()));
-            var existingNames = new HashSet<string>(list.Select(u => (u.UnitName ?? "").Trim().ToLowerInvariant()));
-
-            void AddIfMissing(string code, string name, string parent, string desc)
-            {
-                if (!existingCodes.Contains(code.ToLowerInvariant()) && !existingNames.Contains(name.ToLowerInvariant()))
-                {
-                    var u = new MilitaryUnit
-                    {
-                        Id = 0,
-                        UnitCode = code,
-                        UnitName = name,
-                        ParentUnit = parent,
-                        Description = desc
-                    };
-                    list.Add(u);
-                    existingCodes.Add(code.ToLowerInvariant());
-                    existingNames.Add(name.ToLowerInvariant());
-                }
-            }
-
-            // Trung đoàn
-            AddIfMissing("e1", "Trung đoàn 1", "Học viện", "Trung đoàn huấn luyện toàn diện");
-
-            // Tiểu đoàn
-            AddIfMissing("d1", "Tiểu đoàn 1", "Trung đoàn 1", "Tiểu đoàn quản lý đào tạo K26");
-            AddIfMissing("d2", "Tiểu đoàn 2", "Trung đoàn 1", "Tiểu đoàn quản lý đào tạo K27");
-
-            // Đại đội thuộc Tiểu đoàn 1
-            AddIfMissing("c1", "Đại đội 1", "Tiểu đoàn 1", "Đại đội đào tạo Chỉ huy Tham mưu");
-            AddIfMissing("c2", "Đại đội 2", "Tiểu đoàn 1", "Đại đội đào tạo Hậu cần Quân sự");
-            AddIfMissing("c3", "Đại đội 3", "Tiểu đoàn 1", "Đại đội đào tạo Kỹ thuật Quân sự");
-            AddIfMissing("c4", "Đại đội 4", "Tiểu đoàn 1", "Đại đội đào tạo Trinh sát Đặc nhiệm");
-
-            // Trung đội thuộc Đại đội 1 (b1, b2, b3 như người dùng yêu cầu)
-            AddIfMissing("b1", "Trung đội 1", "Đại đội 1", "Trung đội 1 (b1)");
-            AddIfMissing("b2", "Trung đội 2", "Đại đội 1", "Trung đội 2 (b2)");
-            AddIfMissing("b3", "Trung đội 3", "Đại đội 1", "Trung đội 3 (b3)");
-
-            // Trung đội thuộc Đại đội 2 (b4, b5, b6)
-            AddIfMissing("b4", "Trung đội 4", "Đại đội 2", "Trung đội 4 (b4)");
-            AddIfMissing("b5", "Trung đội 5", "Đại đội 2", "Trung đội 5 (b5)");
-            AddIfMissing("b6", "Trung đội 6", "Đại đội 2", "Trung đội 6 (b6)");
-
-            // Tiểu đội thuộc Trung đội 1
-            AddIfMissing("a1", "Tiểu đội 1", "Trung đội 1", "Tiểu đội 1 (a1)");
-            AddIfMissing("a2", "Tiểu đội 2", "Trung đội 1", "Tiểu đội 2 (a2)");
-            AddIfMissing("a3", "Tiểu đội 3", "Trung đội 1", "Tiểu đội 3 (a3)");
-
-            // Nhóm thuộc Tiểu đội 1
-            AddIfMissing("n1", "Nhóm 1", "Tiểu đội 1", "Tổ chiến đấu 1");
-            AddIfMissing("n2", "Nhóm 2", "Tiểu đội 1", "Tổ chiến đấu 2");
         }
 
         private void AttachChildrenRecursive(UnitTreeNode parentNode, List<MilitaryUnit> allUnits, HashSet<string>? branchKeys = null)

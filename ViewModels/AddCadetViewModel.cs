@@ -52,7 +52,7 @@ namespace QL_HocVien.ViewModels
         private string _selectedPosition = "Học viên";
 
         [ObservableProperty]
-        private string _selectedUnit = "Đại đội 1";
+        private string _selectedUnit = string.Empty;
 
         [ObservableProperty]
         private string _selectedGender = "Nam";
@@ -91,10 +91,7 @@ namespace QL_HocVien.ViewModels
             "Binh nhì", "Binh nhất", "Hạ sĩ", "Trung sĩ", "Thượng sĩ", "Chuẩn úy", "Thiếu úy", "Trung úy"
         };
 
-        public ObservableCollection<string> UnitList { get; } = new()
-        {
-            "Đại đội 1", "Đại đội 2", "Đại đội 3", "Đại đội 4", "Trung đội 1", "Trung đội 2", "Trung đội 3"
-        };
+        public ObservableCollection<string> UnitList { get; } = new();
 
         public ObservableCollection<string> PositionList { get; } = new()
         {
@@ -143,13 +140,12 @@ namespace QL_HocVien.ViewModels
                 }
 
                 var units = await _catalogService.GetUnitDropdownAsync();
-                if (units.Any())
+                UnitList.Clear();
+                foreach (var u in units.Where(u => !string.IsNullOrWhiteSpace(u)))
                 {
-                    UnitList.Clear();
-                    foreach (var u in units) UnitList.Add(u);
-                    if (string.IsNullOrWhiteSpace(SelectedUnit) || !UnitList.Contains(SelectedUnit))
-                        SelectedUnit = UnitList[0];
+                    UnitList.Add(u);
                 }
+                SelectedUnit = UnitList.FirstOrDefault() ?? string.Empty;
 
                 var positions = await _catalogService.GetPositionDropdownAsync();
                 if (positions.Any())

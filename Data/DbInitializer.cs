@@ -312,8 +312,11 @@ namespace QL_HocVien.Data
                 context.SaveChanges();
             }
 
+            // Kiểm tra xem CSDL có phải là vừa khởi tạo hoàn toàn mới hay không
+            bool isBrandNewDb = !context.Users.Any();
+
             // 1. Seed tài khoản Admin mặc định
-            if (!context.Users.Any())
+            if (isBrandNewDb)
             {
                 var adminUser = new User
                 {
@@ -535,8 +538,8 @@ namespace QL_HocVien.Data
                 context.SaveChanges();
             }
 
-            // 5. Seed Danh mục Đơn vị quân đội
-            if (!context.MilitaryUnits.Any())
+            // 5. Seed Danh mục Đơn vị quân đội (Chỉ seed mẫu khi khởi tạo CSDL hoàn toàn mới)
+            if (isBrandNewDb && !context.MilitaryUnits.Any())
             {
                 var units = new List<MilitaryUnit>
                 {
@@ -565,91 +568,6 @@ namespace QL_HocVien.Data
                 };
                 context.MilitaryUnits.AddRange(units);
                 context.SaveChanges();
-            }
-            else
-            {
-                // Bổ sung các cấp phân đội (Trung đội b1, b2, b3; Tiểu đội a1, a2, a3; Nhóm n1, n2) nếu DB cũ chưa có
-                var existingCodes = new HashSet<string>(context.MilitaryUnits.Select(u => u.UnitCode.ToLower()), StringComparer.OrdinalIgnoreCase);
-                var toAdd = new List<MilitaryUnit>();
-
-                void AddIfNotExists(string code, string name, string parent, string commander, string phone, string desc)
-                {
-                    if (!existingCodes.Contains(code.ToLower()))
-                    {
-                        toAdd.Add(new MilitaryUnit
-                        {
-                            UnitCode = code,
-                            UnitName = name,
-                            ParentUnit = parent,
-                            CommanderName = commander,
-                            ContactPhone = phone,
-                            Description = desc
-                        });
-                        existingCodes.Add(code.ToLower());
-                    }
-                }
-
-                AddIfNotExists("e1", "Trung đoàn 1", "Học viện", "Thượng tá Nguyễn Mạnh Hùng", "0981111099", "Trung đoàn quản lý & huấn luyện toàn diện");
-                AddIfNotExists("d1", "Tiểu đoàn 1", "Trung đoàn 1", "Trung tá Hoàng Minh Tuấn", "0981111010", "Tiểu đoàn quản lý khóa K26");
-                AddIfNotExists("d2", "Tiểu đoàn 2", "Trung đoàn 1", "Trung tá Vũ Đình Cường", "0981111020", "Tiểu đoàn quản lý khóa K27");
-                AddIfNotExists("c1", "Đại đội 1", "Tiểu đoàn 1", "Đại úy Nguyễn Văn Hùng", "0981111001", "Đại đội đào tạo Chỉ huy Tham mưu");
-                AddIfNotExists("c2", "Đại đội 2", "Tiểu đoàn 1", "Đại úy Trần Văn Quân", "0981111002", "Đại đội đào tạo Hậu cần Quân sự");
-                AddIfNotExists("c3", "Đại đội 3", "Tiểu đoàn 1", "Thiếu tá Lê Hồng Sơn", "0981111003", "Đại đội đào tạo Kỹ thuật Quân sự");
-                AddIfNotExists("c4", "Đại đội 4", "Tiểu đoàn 1", "Đại úy Phạm Văn Toàn", "0981111004", "Đại đội đào tạo Trinh sát Đặc nhiệm");
-                AddIfNotExists("b1", "Trung đội 1", "Đại đội 1", "Trung úy Lê Văn An", "0981111031", "Trung đội 1 (b1)");
-                AddIfNotExists("b2", "Trung đội 2", "Đại đội 1", "Trung úy Đặng Minh Tuấn", "0981111032", "Trung đội 2 (b2)");
-                AddIfNotExists("b3", "Trung đội 3", "Đại đội 1", "Thượng úy Hoàng Quốc Bảo", "0981111033", "Trung đội 3 (b3)");
-                AddIfNotExists("b4", "Trung đội 4", "Đại đội 2", "Trung úy Bùi Văn Nam", "0981111034", "Trung đội 4 (b4)");
-                AddIfNotExists("b5", "Trung đội 5", "Đại đội 2", "Thiếu úy Phan Huy Hoàng", "0981111035", "Trung đội 5 (b5)");
-                AddIfNotExists("b6", "Trung đội 6", "Đại đội 2", "Trung úy Ngô Kiến Thiết", "0981111036", "Trung đội 6 (b6)");
-                AddIfNotExists("a1", "Tiểu đội 1", "Trung đội 1", "Thượng sĩ Trần Quốc Toản", "0981111041", "Tiểu đội 1 (a1)");
-                AddIfNotExists("a2", "Tiểu đội 2", "Trung đội 1", "Trung sĩ Vũ Trọng Phụng", "0981111042", "Tiểu đội 2 (a2)");
-                AddIfNotExists("a3", "Tiểu đội 3", "Trung đội 1", "Trung sĩ Nguyễn Thái Học", "0981111043", "Tiểu đội 3 (a3)");
-                AddIfNotExists("n1", "Nhóm 1", "Tiểu đội 1", "Hạ sĩ Đinh Tiên Hoàng", "0981111051", "Nhóm 1 (Tổ chiến đấu 1)");
-                AddIfNotExists("n2", "Nhóm 2", "Tiểu đội 1", "Hạ sĩ Lê Lợi", "0981111052", "Nhóm 2 (Tổ chiến đấu 2)");
-
-                // Tự động kiểm tra và chèn bản ghi thật vào SQLite cho bất kỳ ParentUnit nào được tham chiếu mà chưa có row
-                var allDbUnits = context.MilitaryUnits.ToList();
-                var existingNames = new HashSet<string>(allDbUnits.Select(u => (u.UnitName ?? "").ToLower()), StringComparer.OrdinalIgnoreCase);
-                foreach (var item in toAdd)
-                {
-                    existingNames.Add((item.UnitName ?? "").ToLower());
-                }
-
-                var referencedParents = allDbUnits
-                    .Where(u => !string.IsNullOrWhiteSpace(u.ParentUnit) &&
-                                !u.ParentUnit.Equals("Học viện", StringComparison.OrdinalIgnoreCase) &&
-                                !u.ParentUnit.Equals("Bộ chỉ huy", StringComparison.OrdinalIgnoreCase))
-                    .Select(u => u.ParentUnit.Trim())
-                    .Distinct(StringComparer.OrdinalIgnoreCase)
-                    .ToList();
-
-                int autoCodeIndex = 1;
-                foreach (var pName in referencedParents)
-                {
-                    if (!existingNames.Contains(pName.ToLower()))
-                    {
-                        string pCode = pName.ToLower().Contains("tiểu đoàn") ? $"d_auto{autoCodeIndex++}" :
-                                       pName.ToLower().Contains("trung đoàn") ? $"e_auto{autoCodeIndex++}" :
-                                       $"u_auto{autoCodeIndex++}";
-                        toAdd.Add(new MilitaryUnit
-                        {
-                            UnitCode = pCode,
-                            UnitName = pName,
-                            ParentUnit = "Học viện",
-                            CommanderName = $"Chỉ huy trưởng {pName}",
-                            ContactPhone = "0981111000",
-                            Description = "Cơ quan chỉ huy cấp trên"
-                        });
-                        existingNames.Add(pName.ToLower());
-                    }
-                }
-
-                if (toAdd.Count > 0)
-                {
-                    context.MilitaryUnits.AddRange(toAdd);
-                    context.SaveChanges();
-                }
             }
 
             // 6. Seed Danh mục Chuyên ngành đào tạo
