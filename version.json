@@ -1,7 +1,7 @@
 {
-  "latestVersion": "1.4.0",
+  "latestVersion": "1.4.1",
   "minimumVersion": "1.0.0",
   "mandatory": false,
-  "downloadUrl": "https://github.com/NguyenTan33/QL_HocVien/releases/download/v1.4.0/QL_HocVien.exe",
-  "releaseNotes": "Bản cập nhật v1.4.0:\n- Nâng cấp Quản Lý Khóa Học (AcademicCohort): tạo, sửa, xóa khóa học K75, K26...\n- Tự động nhận diện khóa học từ mã học viên dạng ĐH.075.299 (phần 075 -> khóa K75).\n- Chức năng Đồng Bộ Mã HV: tự động quét và phân loại toàn bộ học viên vào khóa học tương ứng.\n- Đồng bộ cơ cấu tổ chức và cập nhật cho các máy trong mạng."
+  "downloadUrl": "https://github.com/NguyenTan33/QL_HocVien/releases/download/v1.4.1/QL_HocVien.exe",
+  "releaseNotes": "Bản cập nhật v1.4.1:\n- Loại bỏ hoàn toàn quản lý lớp học khỏi đồ án (tổ chức học viên theo Khóa học -> Tiểu đoàn -> Đại đội -> Trung đội chuẩn quân sự).\n- Bỏ bộ lọc Năm học trên thanh công cụ Bảng điểm tín chỉ, lọc chuẩn theo Khóa học và Đơn vị từ CSDL SQL.\n- Bổ sung nút Thùng rác 🗑️ Xóa học viên đã chọn ngay sau nút Đặt lại, kèm bảo mật tài khoản Cán bộ / Quản trị viên.\n- Cập nhật và tối ưu hóa hệ thống cho các máy trạm."
 }
