@@ -964,6 +964,42 @@ namespace QL_HocVien.Data
                 if (hasUnitChanges)
                 {
                     context.SaveChanges();
+                    allUnits = context.MilitaryUnits.ToList();
+                }
+
+                // 3. Tự động hợp nhất và dọn dẹp các tiểu đội trùng lặp mã dBB dưới Đại đội (do người dùng gõ nhầm dBB thay vì bBB)
+                var squadsWithDCode = allUnits.Where(u => u.UnitCode.StartsWith("dBB", StringComparison.OrdinalIgnoreCase) && u.ParentUnitId.HasValue).ToList();
+                bool hasCleanedDuplicates = false;
+                foreach (var dSquad in squadsWithDCode)
+                {
+                    var parent = allUnits.FirstOrDefault(p => p.Id == dSquad.ParentUnitId);
+                    if (parent != null && parent.UnitCode.StartsWith("c", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var m = System.Text.RegularExpressions.Regex.Match(dSquad.UnitCode, @"\d+");
+                        if (m.Success && int.TryParse(m.Value, out int squadNum))
+                        {
+                            var standardSquad = allUnits.FirstOrDefault(u => u.ParentUnitId == parent.Id &&
+                                (u.UnitCode.Equals($"bBB{squadNum}", StringComparison.OrdinalIgnoreCase) ||
+                                 u.UnitCode.Equals($"b{squadNum}", StringComparison.OrdinalIgnoreCase) ||
+                                 u.UnitName.Equals($"Tiểu đội {squadNum}", StringComparison.OrdinalIgnoreCase) ||
+                                 u.UnitName.Equals($"Tiểu Đội {squadNum}", StringComparison.OrdinalIgnoreCase)));
+
+                            if (standardSquad != null && standardSquad.Id != dSquad.Id)
+                            {
+                                var cadetsToUpdate = context.Cadets.Where(c => c.Unit.Contains("/" + dSquad.UnitCode)).ToList();
+                                foreach (var c in cadetsToUpdate)
+                                {
+                                    c.Unit = c.Unit.Replace("/" + dSquad.UnitCode, "/" + standardSquad.UnitCode);
+                                }
+                                context.MilitaryUnits.Remove(dSquad);
+                                hasCleanedDuplicates = true;
+                            }
+                        }
+                    }
+                }
+                if (hasCleanedDuplicates)
+                {
+                    context.SaveChanges();
                 }
             }
             catch

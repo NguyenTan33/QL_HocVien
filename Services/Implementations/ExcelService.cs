@@ -169,11 +169,11 @@ namespace QL_HocVien.Services.Implementations
 
             if (dUnit == null)
             {
-                int num = ExtractNumberFromUnitCode(dCode);
+                int dNum = ExtractNumberFromUnitCode(dCode);
                 dUnit = new MilitaryUnit
                 {
                     UnitCode = dCode,
-                    UnitName = num > 0 ? $"Tiểu đoàn {num}" : dCode,
+                    UnitName = dNum > 0 ? $"Tiểu đoàn {dNum}" : dCode,
                     ParentUnit = cleanCohort,
                     ParentUnitId = null,
                     Description = $"Tiểu đoàn thuộc {cleanCohort}",
@@ -200,11 +200,11 @@ namespace QL_HocVien.Services.Implementations
 
             if (cUnit == null)
             {
-                int num = ExtractNumberFromUnitCode(cCode);
+                int cNum = ExtractNumberFromUnitCode(cCode);
                 cUnit = new MilitaryUnit
                 {
                     UnitCode = cCode,
-                    UnitName = num > 0 ? $"Đại đội {num}" : cCode,
+                    UnitName = cNum > 0 ? $"Đại đội {cNum}" : cCode,
                     ParentUnit = dUnit.UnitName,
                     ParentUnitId = dUnit.Id,
                     Description = $"Đại đội thuộc {dUnit.UnitName}",
@@ -224,19 +224,28 @@ namespace QL_HocVien.Services.Implementations
 
             // Cấp 3: Tiểu đội (bBB1 hoặc dBB1)
             string bCode = segments[2];
+            int bNum = ExtractNumberFromUnitCode(bCode);
+
+            // Kiểm tra xem dưới cUnit đã có tiểu đội cùng mã HOẶC cùng số thứ tự (ví dụ bBB1 vs dBB1)
             var bUnit = await context.MilitaryUnits.FirstOrDefaultAsync(u =>
-                u.UnitCode == bCode &&
                 (u.ParentUnitId == cUnit.Id ||
                  u.ParentUnit == cUnit.UnitName ||
-                 u.ParentUnit == cUnit.UnitCode));
+                 u.ParentUnit == cUnit.UnitCode) &&
+                (u.UnitCode == bCode ||
+                 (bNum > 0 && (u.UnitCode == $"bBB{bNum}" || u.UnitCode == $"b{bNum}" || u.UnitCode == $"aBB{bNum}" ||
+                               u.UnitName == $"Tiểu đội {bNum}" || u.UnitName == $"Tiểu Đội {bNum}"))));
 
             if (bUnit == null)
             {
-                int num = ExtractNumberFromUnitCode(bCode);
+                // Chuẩn hóa mã: nếu người dùng gõ nhầm dBB ở cấp tiểu đội thì đổi thành bBB chuẩn
+                string normalizedCode = (bCode.StartsWith("dBB", StringComparison.OrdinalIgnoreCase) && bNum > 0)
+                    ? $"bBB{bNum}"
+                    : bCode;
+
                 bUnit = new MilitaryUnit
                 {
-                    UnitCode = bCode,
-                    UnitName = num > 0 ? $"Tiểu đội {num}" : bCode,
+                    UnitCode = normalizedCode,
+                    UnitName = bNum > 0 ? $"Tiểu đội {bNum}" : bCode,
                     ParentUnit = cUnit.UnitName,
                     ParentUnitId = cUnit.Id,
                     Description = $"Tiểu đội thuộc {cUnit.UnitName}",
