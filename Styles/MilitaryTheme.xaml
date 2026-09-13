@@ -26,8 +26,8 @@
     <SolidColorBrush x:Key="CardBorderBrush" Color="#625C34"/>
     <SolidColorBrush x:Key="KpiCardBackgroundBrush" Color="#18251A"/>
 
-    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F7F1D4"/>
-    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#B9B99E"/>
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#E5E7EB"/>
     <SolidColorBrush x:Key="TextDarkBrush" Color="#20241D"/>
 
     <SolidColorBrush x:Key="InputBackgroundBrush" Color="#EAE0BA"/>
@@ -41,7 +41,7 @@
 
     <SolidColorBrush x:Key="SecondaryButtonBackgroundBrush" Color="#253628"/>
     <SolidColorBrush x:Key="SecondaryButtonBorderBrush" Color="#8B7A3D"/>
-    <SolidColorBrush x:Key="SecondaryButtonForegroundBrush" Color="#F7F1D4"/>
+    <SolidColorBrush x:Key="SecondaryButtonForegroundBrush" Color="#FFFFFF"/>
 
     <SolidColorBrush x:Key="AccentBrush" Color="#F2C94C"/>
     <SolidColorBrush x:Key="AccentLightBrush" Color="#FFE17A"/>
@@ -436,6 +436,14 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+    </Style>
+
+    <!-- Style cho CheckBox Quân Đội & Tác Chiến -->
+    <Style TargetType="{x:Type CheckBox}">
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="FontSize" Value="12.5"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Cursor" Value="Hand"/>
     </Style>
 
     <!-- ==================== PROGRESSBAR PHẲNG QUÂN ĐỘI ==================== -->

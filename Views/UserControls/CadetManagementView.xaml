@@ -215,7 +215,7 @@
                     <DropShadowEffect BlurRadius="25" Color="#000000" Opacity="0.3" ShadowDepth="5"/>
                 </Border.Effect>
                 <StackPanel>
-                    <TextBlock Text="CẬP NHẬT THÔNG TIN HỌC VIÊN" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,18"/>
+                    <TextBlock Text="CẬP NHẬT THÔNG TIN HỌC VIÊN" FontSize="18" FontWeight="Bold" Foreground="#FFFFFF" Margin="0,0,0,18"/>
 
                     <!-- Hàng 1: Mã học viên & Họ tên -->
                     <Grid Margin="0,0,0,12">
@@ -225,11 +225,11 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="Mã học viên (ID): *" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                            <TextBlock Text="Mã học viên (ID): *" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
                             <TextBox Text="{Binding EditCadetCode, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
                         </StackPanel>
                         <StackPanel Grid.Column="2">
-                            <TextBlock Text="Họ và tên: *" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                            <TextBlock Text="Họ và tên: *" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
                             <TextBox Text="{Binding EditFullName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
                         </StackPanel>
                     </Grid>
@@ -242,11 +242,11 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="Cấp bậc (*):" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                            <TextBlock Text="Cấp bậc (*):" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
                             <ComboBox ItemsSource="{Binding AvailableRanks}" SelectedItem="{Binding EditRank}" Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
                         </StackPanel>
                         <StackPanel Grid.Column="2">
-                            <TextBlock Text="Chức vụ (*):" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                            <TextBlock Text="Chức vụ (*):" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
                             <ComboBox ItemsSource="{Binding AvailablePositions}" SelectedItem="{Binding EditPosition}" Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
                         </StackPanel>
                     </Grid>
@@ -259,11 +259,11 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="Đơn vị (*):" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                            <TextBlock Text="Đơn vị (*):" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
                             <components:UnitTreeComboBox SelectedUnit="{Binding EditUnit, Mode=TwoWay}" Height="36" Placeholder="Chọn đơn vị học viên..."/>
                         </StackPanel>
                         <StackPanel Grid.Column="2">
-                            <TextBlock Text="Lớp (*):" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                            <TextBlock Text="Lớp (*):" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
                             <ComboBox ItemsSource="{Binding AvailableClasses}" SelectedItem="{Binding EditClassName}" Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
                         </StackPanel>
                     </Grid>
@@ -276,11 +276,11 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="Số điện thoại:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                            <TextBlock Text="Số điện thoại:" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
                             <TextBox Text="{Binding EditPhone, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
                         </StackPanel>
                         <StackPanel Grid.Column="2">
-                            <TextBlock Text="Email liên hệ:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                            <TextBlock Text="Email liên hệ:" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
                             <TextBox Text="{Binding EditEmail, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
                         </StackPanel>
                     </Grid>
@@ -302,11 +302,11 @@
                     <DropShadowEffect BlurRadius="25" Color="#000000" Opacity="0.3" ShadowDepth="5"/>
                 </Border.Effect>
                 <StackPanel>
-                    <TextBlock Text="🔑 ĐẶT LẠI MẬT KHẨU HỌC VIÊN" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,12"/>
+                    <TextBlock Text="🔑 ĐẶT LẠI MẬT KHẨU HỌC VIÊN" FontSize="16" FontWeight="Bold" Foreground="#FFFFFF" Margin="0,0,0,12"/>
                     <TextBlock Text="{Binding SelectedCadet.FullName, StringFormat='Đồng chí: {0}'}" FontWeight="SemiBold" Foreground="#FFE17A" Margin="0,0,0,4"/>
-                    <TextBlock Text="{Binding SelectedCadet.CadetCode, StringFormat='Mã học viên: {0}'}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,16"/>
+                    <TextBlock Text="{Binding SelectedCadet.CadetCode, StringFormat='Mã học viên: {0}'}" FontSize="12" Foreground="#FFFFFF" Margin="0,0,0,16"/>
 
-                    <TextBlock Text="Nhập mật khẩu mới cho tài khoản:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                    <TextBlock Text="Nhập mật khẩu mới cho tài khoản:" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
                     <TextBox Text="{Binding NewCadetPassword, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="38" Margin="0,0,0,20"/>
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">

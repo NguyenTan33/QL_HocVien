@@ -13,6 +13,7 @@ namespace QL_HocVien.Services.Implementations
         private readonly ICatalogService _catalogService;
         private List<UnitTreeNode>? _cachedTree;
         private readonly object _lock = new();
+        private readonly System.Threading.SemaphoreSlim _semaphore = new(1, 1);
 
         public event Action? OnHierarchyChanged;
 
@@ -41,10 +42,26 @@ namespace QL_HocVien.Services.Implementations
 
             if (masterRoots.Count == 0)
             {
-                masterRoots = await BuildMasterTreeAsync();
-                lock (_lock)
+                await _semaphore.WaitAsync();
+                try
                 {
-                    _cachedTree = masterRoots;
+                    lock (_lock)
+                    {
+                        masterRoots = _cachedTree ?? new List<UnitTreeNode>();
+                    }
+
+                    if (masterRoots.Count == 0)
+                    {
+                        masterRoots = await BuildMasterTreeAsync();
+                        lock (_lock)
+                        {
+                            _cachedTree = masterRoots;
+                        }
+                    }
+                }
+                finally
+                {
+                    _semaphore.Release();
                 }
             }
 
@@ -211,14 +228,20 @@ namespace QL_HocVien.Services.Implementations
             AddIfMissing("n2", "Nhóm 2", "Tiểu đội 1", "Tổ chiến đấu 2");
         }
 
-        private void AttachChildrenRecursive(UnitTreeNode parentNode, List<MilitaryUnit> allUnits)
+        private void AttachChildrenRecursive(UnitTreeNode parentNode, List<MilitaryUnit> allUnits, HashSet<string>? branchKeys = null)
         {
+            branchKeys ??= new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            if (!string.IsNullOrWhiteSpace(parentNode.Code)) branchKeys.Add(parentNode.Code.Trim());
+            if (!string.IsNullOrWhiteSpace(parentNode.Name)) branchKeys.Add(parentNode.Name.Trim());
+
             var childUnits = allUnits
                 .Where(u => !string.IsNullOrWhiteSpace(u.ParentUnit) &&
                             (u.ParentUnit.Trim().Equals(parentNode.Name.Trim(), StringComparison.OrdinalIgnoreCase) ||
                              (!string.IsNullOrWhiteSpace(parentNode.Code) && u.ParentUnit.Trim().Equals(parentNode.Code.Trim(), StringComparison.OrdinalIgnoreCase))) &&
                             !string.Equals(u.UnitCode, parentNode.Code, StringComparison.OrdinalIgnoreCase) &&
-                            !ReferenceEquals(u, parentNode.Unit))
+                            !ReferenceEquals(u, parentNode.Unit) &&
+                            (string.IsNullOrWhiteSpace(u.UnitCode) || !branchKeys.Contains(u.UnitCode.Trim())) &&
+                            (string.IsNullOrWhiteSpace(u.UnitName) || !branchKeys.Contains(u.UnitName.Trim())))
                 .ToList();
 
             foreach (var cu in childUnits)
@@ -227,7 +250,8 @@ namespace QL_HocVien.Services.Implementations
                 var childNode = CreateUnitNode(cu, nextLevel);
                 childNode.ParentNode = parentNode;
                 parentNode.Children.Add(childNode);
-                AttachChildrenRecursive(childNode, allUnits);
+                var nextBranch = new HashSet<string>(branchKeys, StringComparer.OrdinalIgnoreCase);
+                AttachChildrenRecursive(childNode, allUnits, nextBranch);
             }
         }
 

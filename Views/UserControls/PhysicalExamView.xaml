@@ -195,8 +195,8 @@
                     <DropShadowEffect BlurRadius="25" Color="#000000" Opacity="0.3" ShadowDepth="5"/>
                 </Border.Effect>
                 <StackPanel>
-                    <TextBlock Text="NHẬP KẾT QUẢ KIỂM TRA THỂ LỰC" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
-                    <TextBlock Text="Hệ thống sẽ tự động đối chiếu tiêu chuẩn Thông tư 32 để xếp loại ngay lập tức" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,16"/>
+                    <TextBlock Text="NHẬP KẾT QUẢ KIỂM TRA THỂ LỰC" FontSize="18" FontWeight="Bold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
+                    <TextBlock Text="Hệ thống sẽ tự động đối chiếu tiêu chuẩn Thông tư 32 để xếp loại ngay lập tức" FontSize="12" Foreground="#FFFFFF" Margin="0,0,0,16"/>
 
                     <!-- Lỗi modal -->
                     <Border Background="#FEF2F2" BorderBrush="#FCA5A5" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,14"
@@ -206,14 +206,14 @@
 
                     <!-- Chọn Học viên -->
                     <StackPanel Margin="0,0,0,12">
-                        <TextBlock Text="Chọn Học viên kiểm tra (*):" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                        <TextBlock Text="Chọn Học viên kiểm tra (*):" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
                         <ComboBox ItemsSource="{Binding Cadets}" SelectedItem="{Binding FormSelectedCadet}" DisplayMemberPath="FullName"
                                   Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
                     </StackPanel>
 
                     <!-- Chọn Môn học -->
                     <StackPanel Margin="0,0,0,12">
-                        <TextBlock Text="Nội dung môn kiểm tra (*):" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                        <TextBlock Text="Nội dung môn kiểm tra (*):" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
                         <ComboBox ItemsSource="{Binding Subjects}" SelectedItem="{Binding FormSelectedSubject}" DisplayMemberPath="SubjectName"
                                   Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
                     </StackPanel>
@@ -227,11 +227,11 @@
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
                             <TextBlock Text="{Binding FormSelectedSubject.Unit, StringFormat='Thành tích đạt được ({0}):'}" 
-                                       FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                                       FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
                             <TextBox Text="{Binding FormScoreValue, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
                         </StackPanel>
                         <StackPanel Grid.Column="2">
-                            <TextBlock Text="Xếp loại sơ bộ tự động:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                            <TextBlock Text="Xếp loại sơ bộ tự động:" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
                             <Border Background="{DynamicResource PageBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Height="36" Padding="10,0">
                                 <TextBlock Text="{Binding FormPreviewGrade}" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
                             </Border>
@@ -246,18 +246,18 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="Đợt kiểm tra:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                            <TextBlock Text="Đợt kiểm tra:" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
                             <TextBox Text="{Binding FormExamSession, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
                         </StackPanel>
                         <StackPanel Grid.Column="2">
-                            <TextBlock Text="Ngày kiểm tra:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                            <TextBlock Text="Ngày kiểm tra:" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
                             <DatePicker SelectedDate="{Binding FormExamDate}" Height="36" VerticalContentAlignment="Center"/>
                         </StackPanel>
                     </Grid>
 
                     <!-- Ghi chú nhận xét -->
                     <StackPanel Margin="0,0,0,20">
-                        <TextBlock Text="Nhận xét kỹ thuật động tác:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                        <TextBlock Text="Nhận xét kỹ thuật động tác:" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
                         <TextBox Text="{Binding FormNotes, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="45"/>
                     </StackPanel>
 

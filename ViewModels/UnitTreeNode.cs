@@ -90,7 +90,8 @@ namespace QL_HocVien.ViewModels
         public void ExpandParents()
         {
             var p = ParentNode;
-            while (p != null)
+            var visited = new System.Collections.Generic.HashSet<UnitTreeNode>();
+            while (p != null && visited.Add(p))
             {
                 p.IsExpanded = true;
                 p = p.ParentNode;

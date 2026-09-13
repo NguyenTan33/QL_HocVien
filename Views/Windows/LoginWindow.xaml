@@ -578,7 +578,7 @@
                                     <TextBlock Text="🔑" FontSize="20" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                     <TextBlock Text="KÍCH HOẠT PASSKEY BẢN QUYỀN" FontSize="16" FontWeight="Bold" Foreground="#FFE17A" VerticalAlignment="Center"/>
                                 </StackPanel>
-                                <TextBlock Text="Mỗi Passkey chỉ kích hoạt cho 01 tài khoản duy nhất để bảo mật." FontSize="11" Foreground="#B9B99E" Margin="0,0,0,16"/>
+                                <TextBlock Text="Mỗi Passkey chỉ kích hoạt cho 01 tài khoản duy nhất để bảo mật." FontSize="11" Foreground="#FFFFFF" Margin="0,0,0,16"/>
 
                                 <!-- Thông báo trạng thái Passkey (Chỉ hiện khi có thông báo) -->
                                 <Border Background="#243424" BorderBrush="#625C34" BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,0,0,14"
@@ -588,7 +588,7 @@
                                 </Border>
 
                                 <!-- Tên tài khoản kích hoạt -->
-                                <TextBlock Text="Tên tài khoản người dùng:" FontSize="12" FontWeight="SemiBold" Foreground="#F7F1D4" Margin="0,0,0,4"/>
+                                <TextBlock Text="Tên tài khoản người dùng:" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
                                 <Border CornerRadius="6" Background="#2B3D2B" BorderBrush="#625C34" BorderThickness="1" Height="38" Padding="10,0" Margin="0,0,0,12">
                                     <TextBox Text="{Binding PasskeyUsername, UpdateSourceTrigger=PropertyChanged}"
                                              Background="Transparent" Foreground="#FFE17A" FontWeight="Bold" FontSize="14"
@@ -596,7 +596,7 @@
                                 </Border>
 
                                 <!-- Nhập mã Passkey -->
-                                <TextBlock Text="Mã Passkey bản quyền:" FontSize="12" FontWeight="SemiBold" Foreground="#F7F1D4" Margin="0,0,0,4"/>
+                                <TextBlock Text="Mã Passkey bản quyền:" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
                                 <Border CornerRadius="6" Background="#2B3D2B" BorderBrush="#D4B547" BorderThickness="1.5" Height="42" Padding="10,0" Margin="0,0,0,20">
                                     <TextBox Text="{Binding PasskeyInput, UpdateSourceTrigger=PropertyChanged}"
                                              Background="Transparent" Foreground="#36C567" FontWeight="ExtraBold" FontSize="15"
@@ -611,7 +611,7 @@
                                         <ColumnDefinition Width="10"/>
                                         <ColumnDefinition Width="1.4*"/>
                                     </Grid.ColumnDefinitions>
-                                    <Button Grid.Column="0" Content="Đóng" Height="38" Background="#2B3D2B" Foreground="#F7F1D4"
+                                    <Button Grid.Column="0" Content="Đóng" Height="38" Background="#2B3D2B" Foreground="#FFFFFF"
                                             BorderBrush="#625C34" BorderThickness="1" FontWeight="SemiBold" Cursor="Hand"
                                             Command="{Binding ClosePasskeyModalCommand}">
                                         <Button.Resources>

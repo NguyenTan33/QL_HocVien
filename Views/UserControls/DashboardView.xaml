@@ -515,7 +515,7 @@
                                     <TextBlock Text="🏆 " Foreground="{DynamicResource AccentBrush}" FontSize="13" FontWeight="Bold"/>
                                     <TextBlock Text="XẾP HẠNG THI ĐUA HỌC VỤ ĐƠN VỊ" FontSize="12.5" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
                                 </StackPanel>
-                                <TextBlock Text="Đo lường theo Điểm TB (GPA) &amp; Tỷ lệ Đạt chuẩn học phần" HorizontalAlignment="Right" FontSize="11" Foreground="#94A3B8"/>
+                                <TextBlock Text="Đo lường theo Điểm TB (GPA) &amp; Tỷ lệ Đạt chuẩn học phần" HorizontalAlignment="Right" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             </Grid>
 
                             <ItemsControl ItemsSource="{Binding UnitLeaderboard}">

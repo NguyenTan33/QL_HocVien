@@ -59,7 +59,7 @@
         <!-- Style Nút Thứ Cấp (Để sau / Thoát) -->
         <Style x:Key="UpdateSecondaryButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="#1E2B20"/>
-            <Setter Property="Foreground" Value="#E2E8F0"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="BorderBrush" Value="#4B5563"/>
@@ -126,16 +126,16 @@
                         </StackPanel>
 
                         <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                            <TextBlock Text="Phiên bản hiện tại: " FontSize="12" Foreground="#94A3B8"/>
-                            <TextBlock x:Name="txtCurrentVersion" Text="v1.0.0" FontSize="12" FontWeight="Bold" Foreground="#CBD5E1" Margin="0,0,10,0"/>
-                            <TextBlock Text="➔  Phiên bản mới: " FontSize="12" Foreground="#94A3B8"/>
+                            <TextBlock Text="Phiên bản hiện tại: " FontSize="12" Foreground="#FFFFFF"/>
+                            <TextBlock x:Name="txtCurrentVersion" Text="v1.0.0" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF" Margin="0,0,10,0"/>
+                            <TextBlock Text="➔  Phiên bản mới: " FontSize="12" Foreground="#FFFFFF"/>
                             <TextBlock x:Name="txtLatestVersion" Text="v1.3.0" FontSize="12" FontWeight="Bold" Foreground="#4ADE80"/>
                         </StackPanel>
                     </StackPanel>
 
                     <!-- Nút Đóng (Chỉ hiển thị nếu không phải mandatory) -->
                     <Button Grid.Column="2" x:Name="btnCloseHeader" Content="✕" Width="28" Height="28"
-                            Background="Transparent" Foreground="#94A3B8" BorderThickness="0" FontSize="13" FontWeight="Bold" Cursor="Hand"
+                            Background="Transparent" Foreground="#FFFFFF" BorderThickness="0" FontSize="13" FontWeight="Bold" Cursor="Hand"
                             Click="BtnClose_Click"/>
                 </Grid>
             </Border>
@@ -147,12 +147,12 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <TextBlock Grid.Row="0" Text="Nội dung cập nhật và cải tiến:" FontSize="12" FontWeight="SemiBold" Foreground="#E2E8F0" Margin="0,0,0,6"/>
+                <TextBlock Grid.Row="0" Text="Nội dung cập nhật và cải tiến:" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,6"/>
 
                 <Border Grid.Row="1" Background="#0C140E" BorderBrush="#2F4333" BorderThickness="1" CornerRadius="6" Padding="12">
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <TextBlock x:Name="txtReleaseNotes" Text="Đang tải thông tin bản phát hành..."
-                                   Foreground="#CBD5E1" FontSize="12.5" LineHeight="20" TextWrapping="Wrap" FontFamily="Segoe UI"/>
+                                   Foreground="#FFFFFF" FontSize="12.5" LineHeight="20" TextWrapping="Wrap" FontFamily="Segoe UI"/>
                     </ScrollViewer>
                 </Border>
             </Grid>
@@ -160,7 +160,7 @@
             <!-- ==================== 3. KHU VỰC TIẾN ĐỘ TẢI (PROGRESS BAR) ==================== -->
             <StackPanel Grid.Row="2" x:Name="spDownloadProgress" Margin="20,0,20,10" Visibility="Collapsed">
                 <Grid Margin="0,0,0,6">
-                    <TextBlock x:Name="txtDownloadStatus" Text="Đang tải gói cài đặt cập nhật..." FontSize="12" Foreground="#E2E8F0" FontWeight="SemiBold"/>
+                    <TextBlock x:Name="txtDownloadStatus" Text="Đang tải gói cài đặt cập nhật..." FontSize="12" Foreground="#FFFFFF" FontWeight="SemiBold"/>
                     <TextBlock x:Name="txtDownloadSpeed" Text="0.0 MB/s" HorizontalAlignment="Right" FontSize="12" Foreground="#38BDF8" FontWeight="SemiBold" FontFamily="Consolas"/>
                 </Grid>
 
@@ -190,7 +190,7 @@
                     </ProgressBar.Resources>
                 </ProgressBar>
 
-                <TextBlock x:Name="txtDownloadSize" Text="0 MB / 0 MB (0%)" FontSize="11" Foreground="#94A3B8" Margin="0,4,0,0" HorizontalAlignment="Right" FontFamily="Consolas"/>
+                <TextBlock x:Name="txtDownloadSize" Text="0 MB / 0 MB (0%)" FontSize="11" Foreground="#FFFFFF" Margin="0,4,0,0" HorizontalAlignment="Right" FontFamily="Consolas"/>
             </StackPanel>
 
             <!-- ==================== 4. CỤM NÚT ĐIỀU KHIỂN THAO TÁC ==================== -->

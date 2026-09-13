@@ -34,8 +34,8 @@ namespace QL_HocVien.Services.Implementations
                     SetBrush(res, "CardBorderBrush", "#625C34");
                     SetBrush(res, "KpiCardBackgroundBrush", "#18251A");
 
-                    SetBrush(res, "TextPrimaryBrush", "#F7F1D4");
-                    SetBrush(res, "TextSecondaryBrush", "#B9B99E");
+                    SetBrush(res, "TextPrimaryBrush", "#FFFFFF");
+                    SetBrush(res, "TextSecondaryBrush", "#E5E7EB");
                     SetBrush(res, "TextDarkBrush", "#20241D");
 
                     SetBrush(res, "AccentBrush", "#F2C94C");
@@ -52,7 +52,7 @@ namespace QL_HocVien.Services.Implementations
 
                     SetBrush(res, "SecondaryButtonBackgroundBrush", "#253628");
                     SetBrush(res, "SecondaryButtonBorderBrush", "#8B7A3D");
-                    SetBrush(res, "SecondaryButtonForegroundBrush", "#F7F1D4");
+                    SetBrush(res, "SecondaryButtonForegroundBrush", "#FFFFFF");
 
                     SetBrush(res, "WarningBrush", "#D97706");
                     SetBrush(res, "DangerBrush", "#DC2626");

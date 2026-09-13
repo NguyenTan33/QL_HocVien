@@ -10,9 +10,9 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24">
         <StackPanel MaxWidth="800" HorizontalAlignment="Left">
             <!-- Tiêu đề -->
-            <TextBlock Text="THÊM MỚI HỒ SƠ HỌC VIÊN" FontSize="22" FontWeight="Bold" Foreground="#0F172A"/>
+            <TextBlock Text="THÊM MỚI HỒ SƠ HỌC VIÊN" FontSize="22" FontWeight="Bold" Foreground="#FFFFFF"/>
             <TextBlock Text="Học viên có thể sử dụng mã gợi ý sẵn có hoặc tự điền mã định danh của mình, cùng họ tên, số điện thoại, lớp và đơn vị" 
-                       FontSize="13" Foreground="#64748B" Margin="0,4,0,24"/>
+                       FontSize="13" Foreground="#FFFFFF" Margin="0,4,0,24"/>
 
             <!-- Thông báo thành công / lỗi -->
             <Border Background="#F0FDF4" BorderBrush="#86EFAC" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,16"
@@ -28,7 +28,7 @@
             <Border Style="{StaticResource CardBorderStyle}" Padding="28">
                 <StackPanel>
                     <!-- Hàng 1: Mã học viên (Có sẵn mã gợi ý + tự viết được) -->
-                    <TextBlock Text="Mã học viên (Tự do nhập hoặc dùng mã gợi ý có sẵn):" FontSize="13" FontWeight="SemiBold" Foreground="#1E3A8A" Margin="0,0,0,6"/>
+                    <TextBlock Text="Mã học viên (Tự do nhập hoặc dùng mã gợi ý có sẵn):" FontSize="13" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,6"/>
                     <Grid Margin="0,0,0,18">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
@@ -36,7 +36,7 @@
                             <ColumnDefinition Width="180"/>
                         </Grid.ColumnDefinitions>
                         <TextBox Grid.Column="0" Text="{Binding CadetCode, UpdateSourceTrigger=PropertyChanged}" 
-                                 Style="{StaticResource ModernTextBoxStyle}" Height="40" FontSize="15" FontWeight="Bold" Foreground="#1E3A8A"/>
+                                 Style="{StaticResource ModernTextBoxStyle}" Height="40" FontSize="15" FontWeight="Bold"/>
                         <Button Grid.Column="2" Content="🔄 Đổi Mã Gợi Ý Mới" Style="{StaticResource SecondaryButtonStyle}" Height="40"
                                 Command="{Binding GenerateSuggestedCodeCommand}"/>
                     </Grid>
@@ -49,11 +49,11 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="Họ và tên học viên (*):" FontSize="13" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,6"/>
+                            <TextBlock Text="Họ và tên học viên (*):" FontSize="13" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,6"/>
                             <TextBox Text="{Binding FullName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="40"/>
                         </StackPanel>
                         <StackPanel Grid.Column="2">
-                            <TextBlock Text="Số điện thoại (*):" FontSize="13" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,6"/>
+                            <TextBlock Text="Số điện thoại (*):" FontSize="13" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,6"/>
                             <TextBox Text="{Binding PhoneNumber, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="40"/>
                         </StackPanel>
                     </Grid>
@@ -66,13 +66,13 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="Lớp học (*):" FontSize="13" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,6"/>
+                            <TextBlock Text="Lớp học (*):" FontSize="13" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,6"/>
                             <ComboBox ItemsSource="{Binding AvailableClasses}" SelectedItem="{Binding SelectedMilitaryClass}"
                                       DisplayMemberPath="ClassName" IsEditable="False"
                                       Style="{StaticResource ModernComboBoxStyle}" Height="40"/>
                         </StackPanel>
                         <StackPanel Grid.Column="2">
-                            <TextBlock Text="Đơn vị quân đội:" FontSize="13" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,6"/>
+                            <TextBlock Text="Đơn vị quân đội:" FontSize="13" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,6"/>
                             <components:UnitTreeComboBox SelectedUnit="{Binding SelectedUnit, Mode=TwoWay}" Height="40" Placeholder="Chọn đơn vị học viên..."/>
                         </StackPanel>
                     </Grid>
@@ -85,11 +85,11 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="Cấp bậc quân hàm:" FontSize="13" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,6"/>
+                            <TextBlock Text="Cấp bậc quân hàm:" FontSize="13" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,6"/>
                             <ComboBox ItemsSource="{Binding RankList}" SelectedItem="{Binding SelectedRank}" Style="{StaticResource ModernComboBoxStyle}" Height="40"/>
                         </StackPanel>
                         <StackPanel Grid.Column="2">
-                            <TextBlock Text="Chức vụ:" FontSize="13" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,6"/>
+                            <TextBlock Text="Chức vụ:" FontSize="13" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,6"/>
                             <ComboBox ItemsSource="{Binding PositionList}" SelectedItem="{Binding SelectedPosition}" Style="{StaticResource ModernComboBoxStyle}" Height="40"/>
                         </StackPanel>
                     </Grid>
@@ -104,15 +104,15 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="Giới tính:" FontSize="13" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,6"/>
+                            <TextBlock Text="Giới tính:" FontSize="13" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,6"/>
                             <ComboBox ItemsSource="{Binding GenderList}" SelectedItem="{Binding SelectedGender}" Style="{StaticResource ModernComboBoxStyle}" Height="40"/>
                         </StackPanel>
                         <StackPanel Grid.Column="2">
-                            <TextBlock Text="Ngày tháng năm sinh:" FontSize="13" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,6"/>
+                            <TextBlock Text="Ngày tháng năm sinh:" FontSize="13" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,6"/>
                             <DatePicker SelectedDate="{Binding DateOfBirth}" Height="40" VerticalContentAlignment="Center"/>
                         </StackPanel>
                         <StackPanel Grid.Column="4">
-                            <TextBlock Text="Địa chỉ Email:" FontSize="13" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,6"/>
+                            <TextBlock Text="Địa chỉ Email:" FontSize="13" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,6"/>
                             <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="40"/>
                         </StackPanel>
                     </Grid>

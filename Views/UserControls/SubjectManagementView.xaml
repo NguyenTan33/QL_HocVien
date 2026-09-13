@@ -170,8 +170,8 @@
                 </Border.Effect>
                 <StackPanel>
                     <TextBlock Text="{Binding IsEditing, StringFormat='{}CẬP NHẬT MÔN HỌC', Converter={x:Static local_cv:StringToVisibilityConverter.Instance}}" 
-                               FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
-                    <TextBlock Text="Thiết lập mã môn, tên môn và các ngưỡng xếp loại thể lực quân sự" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,16"/>
+                               FontSize="18" FontWeight="Bold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
+                    <TextBlock Text="Thiết lập mã môn, tên môn và các ngưỡng xếp loại thể lực quân sự" FontSize="12" Foreground="#FFFFFF" Margin="0,0,0,16"/>
 
                     <!-- Thông báo lỗi modal -->
                     <Border Background="#FEF2F2" BorderBrush="#FCA5A5" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,14"
@@ -187,11 +187,11 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="Mã môn (ID):" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                            <TextBlock Text="Mã môn (ID):" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
                             <TextBox Text="{Binding FormSubjectCode, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
                         </StackPanel>
                         <StackPanel Grid.Column="2">
-                            <TextBlock Text="Tên môn rèn luyện (*):" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                            <TextBlock Text="Tên môn rèn luyện (*):" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
                             <TextBox Text="{Binding FormSubjectName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
                         </StackPanel>
                     </Grid>
@@ -204,11 +204,11 @@
                             <ColumnDefinition Width="140"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="Nhóm tố chất:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                            <TextBlock Text="Nhóm tố chất:" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
                             <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding FormCategory}" Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
                         </StackPanel>
                         <StackPanel Grid.Column="2">
-                            <TextBlock Text="Đơn vị tính:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                            <TextBlock Text="Đơn vị tính:" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
                             <TextBox Text="{Binding FormUnit, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
                         </StackPanel>
                     </Grid>
@@ -227,23 +227,23 @@
                             <TextBox Text="{Binding FormExcellentThreshold, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
                         </StackPanel>
                         <StackPanel Grid.Column="2">
-                            <TextBlock Text="Chuẩn Khá:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                            <TextBlock Text="Chuẩn Khá:" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
                             <TextBox Text="{Binding FormGoodThreshold, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
                         </StackPanel>
                         <StackPanel Grid.Column="4">
-                            <TextBlock Text="Chuẩn Đạt:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                            <TextBlock Text="Chuẩn Đạt:" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
                             <TextBox Text="{Binding FormPassThreshold, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
                         </StackPanel>
                     </Grid>
 
                     <!-- Mô tả -->
                     <StackPanel Margin="0,0,0,16">
-                        <TextBlock Text="Mô tả kỹ thuật &amp; yêu cầu kiểm tra:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                        <TextBlock Text="Mô tả kỹ thuật &amp; yêu cầu kiểm tra:" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
                         <TextBox Text="{Binding FormDescription, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="60" TextWrapping="Wrap"/>
                     </StackPanel>
 
                     <CheckBox Content="Thành tích số càng cao càng tốt (ví dụ: số lần hít xà, mét bơi; bỏ chọn nếu là môn tính giây/thời gian chạy)" 
-                              IsChecked="{Binding FormIsHigherBetter}" Margin="0,0,0,20"/>
+                              IsChecked="{Binding FormIsHigherBetter}" Foreground="#FFFFFF" Margin="0,0,0,20"/>
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                         <Button Content="Hủy Bỏ" Style="{StaticResource SecondaryButtonStyle}" Width="90" Height="36" Margin="0,0,10,0"
