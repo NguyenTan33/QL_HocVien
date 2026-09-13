@@ -54,15 +54,19 @@ namespace QL_HocVien.Data.Repositories.Implementations
             // 3. Đơn vị
             if (!string.IsNullOrWhiteSpace(criteria.Unit) && criteria.Unit != "Tất cả")
             {
-                var targetUnit = criteria.Unit.Trim();
-                var altUnit = GetEquivalentUnit(targetUnit);
+                var targetUnit = criteria.Unit.Trim().ToLower();
+                var altUnit = GetEquivalentUnit(targetUnit).ToLower();
                 if (!string.IsNullOrEmpty(altUnit))
                 {
-                    query = query.Where(c => c.Unit == targetUnit || c.Unit == altUnit || c.Unit.Contains(targetUnit) || c.Unit.Contains(altUnit));
+                    query = query.Where(c => c.Unit.ToLower() == targetUnit || 
+                                             c.Unit.ToLower() == altUnit || 
+                                             c.Unit.ToLower().Contains(targetUnit) || 
+                                             c.Unit.ToLower().Contains(altUnit));
                 }
                 else
                 {
-                    query = query.Where(c => c.Unit == targetUnit || c.Unit.Contains(targetUnit));
+                    query = query.Where(c => c.Unit.ToLower() == targetUnit || 
+                                             c.Unit.ToLower().Contains(targetUnit));
                 }
             }
 

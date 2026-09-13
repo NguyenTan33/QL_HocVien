@@ -289,5 +289,122 @@ namespace QL_HocVien.Tests
 
             Assert.Null(exception);
         }
+
+        [Fact]
+        public async Task Test_ImportCadets_WithAllNineColumns_HierarchyUnitAndBirthYear()
+        {
+            string filePath = Path.Combine(_tempExcelDir, "Cadets_9Columns.xlsx");
+            using (var wb = new XLWorkbook())
+            {
+                var ws = wb.Worksheets.Add("Danh sách học viên");
+                // 9 cột chuẩn theo yêu cầu người dùng
+                ws.Cell(1, 1).Value = "Mã học viên";
+                ws.Cell(1, 2).Value = "Họ tên";
+                ws.Cell(1, 3).Value = "Cấp bậc";
+                ws.Cell(1, 4).Value = "Chức vụ";
+                ws.Cell(1, 5).Value = "Đơn vị";
+                ws.Cell(1, 6).Value = "Lớp";
+                ws.Cell(1, 7).Value = "SĐT";
+                ws.Cell(1, 8).Value = "Năm sinh";
+                ws.Cell(1, 9).Value = "Giới tính";
+
+                // Dòng 1: Năm sinh dạng số 2003, giới tính Nữ, đơn vị phân tầng d1/c2/b1/n1
+                ws.Cell(2, 1).Value = "HV-2026-901";
+                ws.Cell(2, 2).Value = "Nguyễn Thị Hoa";
+                ws.Cell(2, 3).Value = "Hạ sĩ";
+                ws.Cell(2, 4).Value = "Tiểu đội phó";
+                ws.Cell(2, 5).Value = "d1/c2/b1/n1";
+                ws.Cell(2, 6).Value = "K26A";
+                ws.Cell(2, 7).Value = "0912345678";
+                ws.Cell(2, 8).Value = 2003;
+                ws.Cell(2, 9).Value = "Nữ";
+
+                // Dòng 2: Ngày sinh dạng chuỗi dd/MM/yyyy, giới tính Nam
+                ws.Cell(3, 1).Value = "HV-2026-902";
+                ws.Cell(3, 2).Value = "Trần Văn Hùng";
+                ws.Cell(3, 3).Value = "Trung sĩ";
+                ws.Cell(3, 4).Value = "Tiểu đội trưởng";
+                ws.Cell(3, 5).Value = "d1/c2/b1/n1";
+                ws.Cell(3, 6).Value = "K26B";
+                ws.Cell(3, 7).Value = "0987654321";
+                ws.Cell(3, 8).Value = "15/08/2002";
+                ws.Cell(3, 9).Value = "Nam";
+
+                wb.SaveAs(filePath);
+            }
+
+            var (success, msg, cadets) = await _excelService.ImportCadetsFromExcelAsync(filePath);
+
+            Assert.True(success, msg);
+            Assert.Equal(2, cadets.Count);
+
+            // Kiểm tra học viên nữ 1
+            var femaleCadet = cadets.FirstOrDefault(c => c.CadetCode == "HV-2026-901");
+            Assert.NotNull(femaleCadet);
+            Assert.Equal("Nguyễn Thị Hoa", femaleCadet.FullName);
+            Assert.Equal("Hạ sĩ", femaleCadet.Rank);
+            Assert.Equal("Tiểu đội phó", femaleCadet.Position);
+            Assert.Equal("d1/c2/b1/n1", femaleCadet.Unit);
+            Assert.Contains("K26A", femaleCadet.ClassName);
+            Assert.Equal("0912345678", femaleCadet.PhoneNumber);
+            Assert.NotNull(femaleCadet.DateOfBirth);
+            Assert.Equal(2003, femaleCadet.DateOfBirth.Value.Year);
+            Assert.Equal(DateTime.Today.Year - 2003, femaleCadet.Age);
+            Assert.Equal("Nữ", femaleCadet.Gender);
+
+            // Kiểm tra học viên nam 2
+            var maleCadet = cadets.FirstOrDefault(c => c.CadetCode == "HV-2026-902");
+            Assert.NotNull(maleCadet);
+            Assert.Equal("Trần Văn Hùng", maleCadet.FullName);
+            Assert.Equal(2002, maleCadet.DateOfBirth?.Year);
+            Assert.Equal(8, maleCadet.DateOfBirth?.Month);
+            Assert.Equal(15, maleCadet.DateOfBirth?.Day);
+            Assert.Equal("Nam", maleCadet.Gender);
+
+            // Kiểm tra bộ lọc CadetRepository đa tầng đối với đơn vị "d1/c2/b1/n1"
+            var cadetRepo = new CadetRepository(_context);
+
+            var inD1 = await cadetRepo.SearchCadetsAsync(null, null, "d1", null);
+            Assert.Contains(inD1, c => c.CadetCode == "HV-2026-901");
+
+            var inC2 = await cadetRepo.SearchCadetsAsync(null, null, "c2", null);
+            Assert.Contains(inC2, c => c.CadetCode == "HV-2026-901");
+
+            var inB1 = await cadetRepo.SearchCadetsAsync(null, null, "b1", null);
+            Assert.Contains(inB1, c => c.CadetCode == "HV-2026-901");
+
+            var inN1 = await cadetRepo.SearchCadetsAsync(null, null, "n1", null);
+            Assert.Contains(inN1, c => c.CadetCode == "HV-2026-901");
+
+            var inC1 = await cadetRepo.SearchCadetsAsync(null, null, "c1", null);
+            Assert.DoesNotContain(inC1, c => c.CadetCode == "HV-2026-901");
+        }
+
+        [Fact]
+        public async Task Test_ImportCadets_FallbackUnitFromSheetOrFileName()
+        {
+            // Tệp không có cột Đơn vị nhưng tên Sheet chỉ định "d1_c2" (Excel không cho phép dấu / trong tên sheet)
+            string filePath = Path.Combine(_tempExcelDir, "HocVien_AutoUnit.xlsx");
+            using (var wb = new XLWorkbook())
+            {
+                var ws = wb.Worksheets.Add("d1_c2");
+                ws.Cell(1, 1).Value = "Mã học viên";
+                ws.Cell(1, 2).Value = "Họ tên";
+                ws.Cell(1, 3).Value = "Cấp bậc";
+
+                ws.Cell(2, 1).Value = "HV-AUTO-01";
+                ws.Cell(2, 2).Value = "Lê Văn Tự Động";
+                ws.Cell(2, 3).Value = "Binh nhất";
+
+                wb.SaveAs(filePath);
+            }
+
+            var (success, msg, cadets) = await _excelService.ImportCadetsFromExcelAsync(filePath);
+
+            Assert.True(success, msg);
+            var imported = cadets.FirstOrDefault(c => c.CadetCode == "HV-AUTO-01");
+            Assert.NotNull(imported);
+            Assert.Equal("d1_c2", imported.Unit);
+        }
     }
 }
