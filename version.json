@@ -1,7 +1,7 @@
 {
-  "latestVersion": "1.4.3",
+  "latestVersion": "1.4.4",
   "minimumVersion": "1.0.0",
   "mandatory": false,
-  "downloadUrl": "https://github.com/NguyenTan33/QL_HocVien/releases/download/v1.4.3/QL_HocVien.exe",
-  "releaseNotes": "Bản cập nhật v1.4.3:\n- Quản Lý Cán Bộ: Xóa nút 'Chọn tất cả' trên thanh công cụ, thay bằng cột ô CheckBox chọn nhiều / chọn tất cả trực tiếp trong bảng.\n- Chuẩn hóa giao diện và loại bỏ cột lớp học trong Quản lý cán bộ.\n- Tối ưu hóa hiệu năng và đồng bộ cập nhật hệ thống."
+  "downloadUrl": "https://github.com/NguyenTan33/QL_HocVien/releases/download/v1.4.4/QL_HocVien.exe",
+  "releaseNotes": "Bản cập nhật v1.4.4:\n- Quản Lý Học Viên: Xóa nút 'Chọn tất cả' và nút 'Đổi MK' trên thanh công cụ toolbar.\n- Đồng bộ thao tác chọn qua cột CheckBox trực tiếp trong bảng học viên.\n- Tối ưu hóa giao diện và nâng cao trải nghiệm người dùng."
 }
