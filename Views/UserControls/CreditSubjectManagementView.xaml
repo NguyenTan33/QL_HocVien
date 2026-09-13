@@ -59,11 +59,18 @@
                 </Grid.RowDefinitions>
 
                 <!-- 1. HEADER (PAGE HEADER) -->
-                <StackPanel Grid.Row="0" VerticalAlignment="Center" Margin="0,0,0,10">
-                    <TextBlock Text="QUẢN LÝ MÔN HỌC &amp; TÍNH ĐIỂM TBM CHUẨN QUÂN SỰ" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
-                    <TextBlock Text="Tính điểm thành phần theo số tín chỉ, tính TBM toàn khóa chuẩn quân đội và nhận diện học viên thiếu môn" 
-                               FontSize="12.5" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
-                </StackPanel>
+                <Grid Grid.Row="0" Margin="0,0,0,10" MinHeight="65">
+                    <Image Source="/Assets/Images/flag_soldier_banner.png" 
+                           HorizontalAlignment="Right" VerticalAlignment="Top" 
+                           Height="72" Stretch="Uniform" Opacity="0.88" 
+                           Visibility="{DynamicResource CardWatermarkVisibility}" 
+                           IsHitTestVisible="False" Margin="0,-6,-10,0"/>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="QUẢN LÝ MÔN HỌC &amp; TÍNH ĐIỂM TBM CHUẨN QUÂN SỰ" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Text="Tính điểm thành phần theo số tín chỉ, tính TBM toàn khóa chuẩn quân đội và nhận diện học viên thiếu môn" 
+                                   FontSize="12.5" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                    </StackPanel>
+                </Grid>
 
                 <!-- 2. THANH CÔNG CỤ THAO TÁC (PAGE TOOLBAR) -->
                 <WrapPanel Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,0,12">
@@ -225,7 +232,7 @@
                                 <!-- DATAGRID HIỂN THỊ HỌC VIÊN & ĐIỂM TB -->
                                 <DataGrid Grid.Row="1" ItemsSource="{Binding CadetSummaries}"
                                           Style="{StaticResource MilitaryDataGridStyle}"
-                                          AutoGenerateColumns="False" IsReadOnly="True"
+                                          AutoGenerateColumns="False"
                                           CanUserAddRows="False" SelectionMode="Single"
                                           GridLinesVisibility="Horizontal" HeadersVisibility="Column"
                                           RowHeaderWidth="0"
@@ -241,7 +248,23 @@
                                         </Style>
                                     </DataGrid.RowStyle>
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Mã HV" Binding="{Binding CadetCode}" Width="90">
+                                        <!-- Cột Checkbox chọn nhiều / chọn tất cả -->
+                                        <DataGridTemplateColumn Width="46" CanUserResize="False" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}">
+                                            <DataGridTemplateColumn.Header>
+                                                <CheckBox IsChecked="{Binding DataContext.IsAllSelected, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                          IsThreeState="True"
+                                                          HorizontalAlignment="Center" VerticalAlignment="Center" 
+                                                          ToolTip="Chọn tất cả / Bỏ chọn tất cả"/>
+                                            </DataGridTemplateColumn.Header>
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+
+                                        <DataGridTextColumn Header="Mã HV" Binding="{Binding CadetCode}" Width="90" IsReadOnly="True">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock">
                                                     <Setter Property="FontWeight" Value="Bold"/>
@@ -251,63 +274,63 @@
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
 
-                                        <DataGridTextColumn Header="Họ Và Tên" Binding="{Binding FullName}" Width="160">
-                                            <DataGridTextColumn.ElementStyle>
-                                                <Style TargetType="TextBlock">
-                                                    <Setter Property="FontWeight" Value="SemiBold"/>
-                                                    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
-                                                    <Setter Property="VerticalAlignment" Value="Center"/>
-                                                </Style>
-                                            </DataGridTextColumn.ElementStyle>
-                                        </DataGridTextColumn>
+                                         <DataGridTextColumn Header="Họ Và Tên" Binding="{Binding FullName}" Width="160" IsReadOnly="True">
+                                             <DataGridTextColumn.ElementStyle>
+                                                 <Style TargetType="TextBlock">
+                                                     <Setter Property="FontWeight" Value="SemiBold"/>
+                                                     <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                                                     <Setter Property="VerticalAlignment" Value="Center"/>
+                                                 </Style>
+                                             </DataGridTextColumn.ElementStyle>
+                                         </DataGridTextColumn>
 
-                                        <DataGridTextColumn Header="Cấp Bậc" Binding="{Binding Rank}" Width="80">
-                                            <DataGridTextColumn.ElementStyle>
-                                                <Style TargetType="TextBlock">
-                                                    <Setter Property="VerticalAlignment" Value="Center"/>
-                                                    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
-                                                </Style>
-                                            </DataGridTextColumn.ElementStyle>
-                                        </DataGridTextColumn>
+                                         <DataGridTextColumn Header="Cấp Bậc" Binding="{Binding Rank}" Width="80" IsReadOnly="True">
+                                             <DataGridTextColumn.ElementStyle>
+                                                 <Style TargetType="TextBlock">
+                                                     <Setter Property="VerticalAlignment" Value="Center"/>
+                                                     <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                                 </Style>
+                                             </DataGridTextColumn.ElementStyle>
+                                         </DataGridTextColumn>
 
-                                        <DataGridTextColumn Header="Đơn Vị" Binding="{Binding Unit}" Width="90">
-                                            <DataGridTextColumn.ElementStyle>
-                                                <Style TargetType="TextBlock">
-                                                    <Setter Property="VerticalAlignment" Value="Center"/>
-                                                    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
-                                                </Style>
-                                            </DataGridTextColumn.ElementStyle>
-                                        </DataGridTextColumn>
+                                         <DataGridTextColumn Header="Đơn Vị" Binding="{Binding Unit}" Width="90" IsReadOnly="True">
+                                             <DataGridTextColumn.ElementStyle>
+                                                 <Style TargetType="TextBlock">
+                                                     <Setter Property="VerticalAlignment" Value="Center"/>
+                                                     <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                                 </Style>
+                                             </DataGridTextColumn.ElementStyle>
+                                         </DataGridTextColumn>
 
-                                        <DataGridTextColumn Header="Lớp" Binding="{Binding ClassName}" Width="90">
-                                            <DataGridTextColumn.ElementStyle>
-                                                <Style TargetType="TextBlock">
-                                                    <Setter Property="VerticalAlignment" Value="Center"/>
-                                                    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
-                                                </Style>
-                                            </DataGridTextColumn.ElementStyle>
-                                        </DataGridTextColumn>
+                                         <DataGridTextColumn Header="Lớp" Binding="{Binding ClassName}" Width="90" IsReadOnly="True">
+                                             <DataGridTextColumn.ElementStyle>
+                                                 <Style TargetType="TextBlock">
+                                                     <Setter Property="VerticalAlignment" Value="Center"/>
+                                                     <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                                 </Style>
+                                             </DataGridTextColumn.ElementStyle>
+                                         </DataGridTextColumn>
 
-                                        <DataGridTextColumn Header="Khóa" Binding="{Binding Cohort}" Width="75">
-                                            <DataGridTextColumn.ElementStyle>
-                                                <Style TargetType="TextBlock">
-                                                    <Setter Property="VerticalAlignment" Value="Center"/>
-                                                    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
-                                                </Style>
-                                            </DataGridTextColumn.ElementStyle>
-                                        </DataGridTextColumn>
+                                         <DataGridTextColumn Header="Khóa" Binding="{Binding Cohort}" Width="75" IsReadOnly="True">
+                                             <DataGridTextColumn.ElementStyle>
+                                                 <Style TargetType="TextBlock">
+                                                     <Setter Property="VerticalAlignment" Value="Center"/>
+                                                     <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+                                                 </Style>
+                                             </DataGridTextColumn.ElementStyle>
+                                         </DataGridTextColumn>
 
-                                        <DataGridTextColumn Header="Môn Đã Học" Binding="{Binding TotalSubjectsCompleted, StringFormat='{}{0} môn'}" Width="100" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}">
-                                            <DataGridTextColumn.ElementStyle>
-                                                <Style TargetType="TextBlock">
-                                                    <Setter Property="VerticalAlignment" Value="Center"/>
-                                                    <Setter Property="HorizontalAlignment" Value="Center"/>
-                                                    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
-                                                </Style>
-                                            </DataGridTextColumn.ElementStyle>
-                                        </DataGridTextColumn>
+                                         <DataGridTextColumn Header="Môn Đã Học" Binding="{Binding TotalSubjectsCompleted, StringFormat='{}{0} môn'}" Width="100" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}" IsReadOnly="True">
+                                             <DataGridTextColumn.ElementStyle>
+                                                 <Style TargetType="TextBlock">
+                                                     <Setter Property="VerticalAlignment" Value="Center"/>
+                                                     <Setter Property="HorizontalAlignment" Value="Center"/>
+                                                     <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                                                 </Style>
+                                             </DataGridTextColumn.ElementStyle>
+                                         </DataGridTextColumn>
 
-                                        <DataGridTextColumn Header="Tổng Tín Chỉ" Binding="{Binding TotalCreditsEarned, StringFormat='{}{0:F2} TC'}" Width="105" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}">
+                                         <DataGridTextColumn Header="Tổng Tín Chỉ" Binding="{Binding TotalCreditsEarned, StringFormat='{}{0:F2} TC'}" Width="105" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}" IsReadOnly="True">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock">
                                                     <Setter Property="FontWeight" Value="Bold"/>

@@ -297,6 +297,12 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
+                <Image Grid.ColumnSpan="2" Source="/Assets/Images/flag_soldier_banner.png" 
+                       HorizontalAlignment="Right" VerticalAlignment="Top" 
+                       Height="78" Stretch="Uniform" Opacity="0.88" 
+                       Visibility="{DynamicResource CardWatermarkVisibility}" 
+                       IsHitTestVisible="False" Margin="0,-6,-10,0"/>
+
                 <!-- Tiêu đề & phụ đề bên trái -->
                 <StackPanel Grid.Column="0" VerticalAlignment="Center">
                     <TextBlock Text="LỊCH TRÌNH HUẤN LUYỆN, THI CỬ &amp; SỰ KIỆN QUÂN SỰ" 

@@ -1,11 +1,15 @@
 using System;
 using System.Collections.Generic;
+using CommunityToolkit.Mvvm.ComponentModel;
 using QL_HocVien.Services;
 
 namespace QL_HocVien.Models.DTOs
 {
-    public class CadetAcademicSummaryDto
+    public partial class CadetAcademicSummaryDto : ObservableObject
     {
+        [ObservableProperty]
+        private bool _isSelected;
+
         public int CadetId { get; set; }
         public string CadetCode { get; set; } = string.Empty;
         public string FullName { get; set; } = string.Empty;

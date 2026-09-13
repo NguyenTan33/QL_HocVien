@@ -82,6 +82,16 @@ namespace QL_HocVien.ViewModels
         private int _missingSubjectsStudentCount;
 
         [ObservableProperty]
+        private bool? _isAllSelected = false;
+
+        [ObservableProperty]
+        private int _selectedCadetsCount;
+
+        private bool _isUpdatingSelection;
+
+        public string SelectAllButtonText => IsAllSelected == true ? "⬜ Bỏ chọn" : "☑️ Chọn tất cả";
+
+        [ObservableProperty]
         private int _selectedTabIndex = 0; // 0: Bảng điểm học viên, 1: Danh mục môn tín chỉ
         #endregion
 
@@ -334,6 +344,49 @@ namespace QL_HocVien.ViewModels
             _ = RefreshSchoolYearOptionsAsync(value);
         }
 
+        partial void OnIsAllSelectedChanged(bool? value)
+        {
+            if (_isUpdatingSelection || value == null) return;
+            _isUpdatingSelection = true;
+            bool isChecked = value.Value;
+            foreach (var item in CadetSummaries)
+            {
+                item.IsSelected = isChecked;
+            }
+            SelectedCadetsCount = isChecked ? CadetSummaries.Count : 0;
+            OnPropertyChanged(nameof(SelectAllButtonText));
+            _isUpdatingSelection = false;
+        }
+
+        [RelayCommand]
+        public void ToggleSelectAll()
+        {
+            if (IsAllSelected == true)
+            {
+                IsAllSelected = false;
+            }
+            else
+            {
+                IsAllSelected = true;
+            }
+        }
+
+        private void UpdateSelectionState()
+        {
+            if (_isUpdatingSelection) return;
+            _isUpdatingSelection = true;
+            int count = CadetSummaries.Count(c => c.IsSelected);
+            SelectedCadetsCount = count;
+            if (count == 0)
+                IsAllSelected = false;
+            else if (count == CadetSummaries.Count && count > 0)
+                IsAllSelected = true;
+            else
+                IsAllSelected = null;
+            OnPropertyChanged(nameof(SelectAllButtonText));
+            _isUpdatingSelection = false;
+        }
+
         public async Task InitializeAsync()
         {
             IsBusy = true;
@@ -428,7 +481,18 @@ namespace QL_HocVien.ViewModels
                 }
 
                 CadetSummaries.Clear();
-                foreach (var sum in filtered) CadetSummaries.Add(sum);
+                foreach (var sum in filtered)
+                {
+                    sum.PropertyChanged += (s, e) =>
+                    {
+                        if (e.PropertyName == nameof(CadetAcademicSummaryDto.IsSelected))
+                        {
+                            UpdateSelectionState();
+                        }
+                    };
+                    CadetSummaries.Add(sum);
+                }
+                UpdateSelectionState();
 
                 TotalStudentsCount = allSummaries.Count;
                 MissingSubjectsStudentCount = allSummaries.Count(c => c.HasMissingSubjects);
@@ -464,6 +528,7 @@ namespace QL_HocVien.ViewModels
             SelectedCohort = "Tất cả";
             SelectedStatusFilter = "Tất cả học viên";
             SearchKeyword = string.Empty;
+            IsAllSelected = false;
             await RefreshSchoolYearOptionsAsync();
             await LoadDataAsync();
         }

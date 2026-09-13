@@ -10,11 +10,18 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24">
         <StackPanel MaxWidth="860" HorizontalAlignment="Left">
             <!-- HEADER TRANG CÀI ĐẶT -->
-            <StackPanel Margin="0,0,0,18">
-                <TextBlock Text="CÀI ĐẶT HỆ THỐNG &amp; BẢO MẬT DỮ LIỆU" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                <TextBlock Text="Cấu hình Khóa bảo vệ dữ liệu cấp 2 (Khóa rương), Đổi mật khẩu tài khoản người dùng và Cập nhật phiên bản hệ thống" 
-                           FontSize="12.5" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0"/>
-            </StackPanel>
+            <Grid Margin="0,0,0,18" MinHeight="65">
+                <Image Source="/Assets/Images/flag_soldier_banner.png" 
+                       HorizontalAlignment="Right" VerticalAlignment="Top" 
+                       Height="72" Stretch="Uniform" Opacity="0.88" 
+                       Visibility="{DynamicResource CardWatermarkVisibility}" 
+                       IsHitTestVisible="False" Margin="0,-6,-10,0"/>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="CÀI ĐẶT HỆ THỐNG &amp; BẢO MẬT DỮ LIỆU" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    <TextBlock Text="Cấu hình Khóa bảo vệ dữ liệu cấp 2 (Khóa rương), Đổi mật khẩu tài khoản người dùng và Cập nhật phiên bản hệ thống" 
+                               FontSize="12.5" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0"/>
+                </StackPanel>
+            </Grid>
 
             <!-- THÔNG BÁO CHUNG -->
             <Border Background="{DynamicResource SuccessCardBackgroundBrush}" BorderBrush="{DynamicResource SuccessCardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="14,10" Margin="0,0,0,18"

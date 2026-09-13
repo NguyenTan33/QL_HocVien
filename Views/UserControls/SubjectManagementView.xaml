@@ -17,11 +17,18 @@
             </Grid.RowDefinitions>
 
             <!-- 1. Tiêu đề trang (Page Header) -->
-            <StackPanel Grid.Row="0" VerticalAlignment="Center" Margin="0,0,0,10">
-                <TextBlock Text="QUẢN LÝ MÔN HỌC &amp; TIÊU CHUẨN RÈN LUYỆN THỂ LỰC" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
-                <TextBlock Text="Danh mục các môn rèn luyện, chuẩn đánh giá theo Thông tư 32/2009/TTLT-BQP-BVHTTDL" 
-                           FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
-            </StackPanel>
+            <Grid Grid.Row="0" Margin="0,0,0,10" MinHeight="65">
+                <Image Source="/Assets/Images/flag_soldier_banner.png" 
+                       HorizontalAlignment="Right" VerticalAlignment="Top" 
+                       Height="72" Stretch="Uniform" Opacity="0.88" 
+                       Visibility="{DynamicResource CardWatermarkVisibility}" 
+                       IsHitTestVisible="False" Margin="0,-6,-10,0"/>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="QUẢN LÝ MÔN HỌC &amp; TIÊU CHUẨN RÈN LUYỆN THỂ LỰC" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                    <TextBlock Text="Danh mục các môn rèn luyện, chuẩn đánh giá theo Thông tư 32/2009/TTLT-BQP-BVHTTDL" 
+                               FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                </StackPanel>
+            </Grid>
 
             <!-- 2. Thanh công cụ thao tác (Page Toolbar) -->
             <WrapPanel Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,0,12">

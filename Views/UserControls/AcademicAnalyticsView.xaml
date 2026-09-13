@@ -29,12 +29,19 @@
             </Grid.RowDefinitions>
 
             <!-- HÀNG 0: TIÊU ĐỀ TRANG -->
-            <StackPanel Grid.Row="0" VerticalAlignment="Center" Margin="0,0,0,10">
-                <TextBlock Text="PHÂN TÍCH &amp; SO SÁNH HỌC LỰC - BẢNG ĐIỂM TOÀN KHÓA" 
-                           FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
-                <TextBlock Text="Thống kê, so sánh kết quả học tập và phân tích học lực theo phân cấp từ Đại đội ➔ Lớp ➔ Cá nhân học viên" 
-                           FontSize="12.5" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
-            </StackPanel>
+            <Grid Grid.Row="0" Margin="0,0,0,10" MinHeight="65">
+                <Image Source="/Assets/Images/flag_soldier_banner.png" 
+                       HorizontalAlignment="Right" VerticalAlignment="Top" 
+                       Height="72" Stretch="Uniform" Opacity="0.88" 
+                       Visibility="{DynamicResource CardWatermarkVisibility}" 
+                       IsHitTestVisible="False" Margin="0,-6,-10,0"/>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="PHÂN TÍCH &amp; SO SÁNH HỌC LỰC - BẢNG ĐIỂM TOÀN KHÓA" 
+                               FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                    <TextBlock Text="Thống kê, so sánh kết quả học tập và phân tích học lực theo phân cấp từ Đại đội ➔ Lớp ➔ Cá nhân học viên" 
+                               FontSize="12.5" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                </StackPanel>
+            </Grid>
 
             <!-- HÀNG 1: THANH CÔNG CỤ THAO TÁC -->
             <WrapPanel Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,0,12">
