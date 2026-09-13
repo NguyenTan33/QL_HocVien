@@ -285,28 +285,38 @@ namespace QL_HocVien.Services.Implementations
 
             var allUnits = (await _unitRepo.GetAllAsync()).ToList();
             var directChildren = allUnits
-                .Where(u => !string.IsNullOrWhiteSpace(u.ParentUnit) &&
+                .Where(u => u.Id != existing.Id &&
+                            !string.IsNullOrWhiteSpace(u.ParentUnit) &&
                             (string.Equals(u.ParentUnit.Trim(), existing.UnitName.Trim(), StringComparison.OrdinalIgnoreCase) ||
-                             string.Equals(u.ParentUnit.Trim(), existing.UnitCode.Trim(), StringComparison.OrdinalIgnoreCase)))
+                             (!string.IsNullOrWhiteSpace(existing.UnitCode) && string.Equals(u.ParentUnit.Trim(), existing.UnitCode.Trim(), StringComparison.OrdinalIgnoreCase))))
                 .ToList();
 
             if (cascadeDeleteChildren)
             {
-                // Xóa đệ quy toàn bộ con, cháu...
+                // Xóa đệ quy toàn bộ con, cháu an toàn tuyệt đối với tập visited chống tràn stack (0xc00000fd)
                 var toDelete = new List<MilitaryUnit>();
+                var visitedIds = new HashSet<int> { existing.Id };
+
                 void CollectChildren(MilitaryUnit parent)
                 {
                     var children = allUnits
-                        .Where(u => !string.IsNullOrWhiteSpace(u.ParentUnit) &&
+                        .Where(u => u.Id != parent.Id &&
+                                    !visitedIds.Contains(u.Id) &&
+                                    !string.IsNullOrWhiteSpace(u.ParentUnit) &&
                                     (string.Equals(u.ParentUnit.Trim(), parent.UnitName.Trim(), StringComparison.OrdinalIgnoreCase) ||
-                                     string.Equals(u.ParentUnit.Trim(), parent.UnitCode.Trim(), StringComparison.OrdinalIgnoreCase)))
+                                     (!string.IsNullOrWhiteSpace(parent.UnitCode) && string.Equals(u.ParentUnit.Trim(), parent.UnitCode.Trim(), StringComparison.OrdinalIgnoreCase))))
                         .ToList();
+
                     foreach (var c in children)
                     {
-                        toDelete.Add(c);
-                        CollectChildren(c);
+                        if (visitedIds.Add(c.Id))
+                        {
+                            toDelete.Add(c);
+                            CollectChildren(c);
+                        }
                     }
                 }
+
                 CollectChildren(existing);
 
                 foreach (var c in toDelete)
@@ -321,7 +331,16 @@ namespace QL_HocVien.Services.Implementations
                 string newParent = existing.ParentUnit ?? string.Empty;
                 foreach (var child in directChildren)
                 {
-                    child.ParentUnit = newParent;
+                    // Chống self-loop: nếu cấp trên mới trùng với mã/tên của chính đơn vị con, đặt thành rỗng (cấp cao nhất)
+                    if (string.Equals(child.UnitCode.Trim(), newParent.Trim(), StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(child.UnitName.Trim(), newParent.Trim(), StringComparison.OrdinalIgnoreCase))
+                    {
+                        child.ParentUnit = string.Empty;
+                    }
+                    else
+                    {
+                        child.ParentUnit = newParent;
+                    }
                     _unitRepo.Update(child);
                 }
                 _unitRepo.Delete(existing);

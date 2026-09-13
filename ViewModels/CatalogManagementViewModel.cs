@@ -643,10 +643,11 @@ namespace QL_HocVien.ViewModels
             if (SelectedTabIndex == 2)
             {
                 if (SelectedUnit == null) return;
-                var allUnits = Units.ToList();
-                bool hasChildren = allUnits.Any(u => !string.IsNullOrWhiteSpace(u.ParentUnit) &&
+                var allUnits = (await _catalogService.GetAllUnitsAsync()).ToList();
+                bool hasChildren = allUnits.Any(u => u.Id != SelectedUnit.Id &&
+                    !string.IsNullOrWhiteSpace(u.ParentUnit) &&
                     (string.Equals(u.ParentUnit.Trim(), SelectedUnit.UnitName.Trim(), StringComparison.OrdinalIgnoreCase) ||
-                     string.Equals(u.ParentUnit.Trim(), SelectedUnit.UnitCode.Trim(), StringComparison.OrdinalIgnoreCase)));
+                     (!string.IsNullOrWhiteSpace(SelectedUnit.UnitCode) && string.Equals(u.ParentUnit.Trim(), SelectedUnit.UnitCode.Trim(), StringComparison.OrdinalIgnoreCase))));
                 bool cascade = false;
                 if (hasChildren)
                 {
@@ -827,14 +828,16 @@ namespace QL_HocVien.ViewModels
             SetExpandRecursive(UnitTreeNodes, false);
         }
 
-        private void SetExpandRecursive(IEnumerable<UnitTreeNode> nodes, bool expand)
+        private void SetExpandRecursive(IEnumerable<UnitTreeNode> nodes, bool expand, HashSet<UnitTreeNode>? visitedNodes = null)
         {
+            visitedNodes ??= new HashSet<UnitTreeNode>();
             foreach (var node in nodes)
             {
+                if (!visitedNodes.Add(node)) continue;
                 node.IsExpanded = expand;
                 if (node.HasChildren)
                 {
-                    SetExpandRecursive(node.Children, expand);
+                    SetExpandRecursive(node.Children, expand, visitedNodes);
                 }
             }
         }
@@ -852,12 +855,14 @@ namespace QL_HocVien.ViewModels
             }
         }
 
-        private void DeselectAllRecursive(IEnumerable<UnitTreeNode> nodes)
+        private void DeselectAllRecursive(IEnumerable<UnitTreeNode> nodes, HashSet<UnitTreeNode>? visitedNodes = null)
         {
+            visitedNodes ??= new HashSet<UnitTreeNode>();
             foreach (var n in nodes)
             {
+                if (!visitedNodes.Add(n)) continue;
                 n.IsSelected = false;
-                if (n.HasChildren) DeselectAllRecursive(n.Children);
+                if (n.HasChildren) DeselectAllRecursive(n.Children, visitedNodes);
             }
         }
 
@@ -1007,9 +1012,61 @@ namespace QL_HocVien.ViewModels
             // 3. Đơn vị quân sự thực tế có Id > 0
             if (node.Unit != null && node.Unit.Id > 0)
             {
-                SelectedTabIndex = 2;
-                SelectedUnit = node.Unit;
-                await DeleteAsync();
+                if (!await _securityGate.EnsureUnlockedAsync("Xóa đơn vị khỏi cơ cấu tổ chức")) return;
+
+                var unitToDelete = node.Unit;
+                var allUnits = (await _catalogService.GetAllUnitsAsync()).ToList();
+                bool hasChildren = allUnits.Any(u => u.Id != unitToDelete.Id &&
+                    !string.IsNullOrWhiteSpace(u.ParentUnit) &&
+                    (string.Equals(u.ParentUnit.Trim(), unitToDelete.UnitName.Trim(), StringComparison.OrdinalIgnoreCase) ||
+                     (!string.IsNullOrWhiteSpace(unitToDelete.UnitCode) && string.Equals(u.ParentUnit.Trim(), unitToDelete.UnitCode.Trim(), StringComparison.OrdinalIgnoreCase))));
+
+                bool cascade = false;
+                if (hasChildren)
+                {
+                    var confirmBranch = MessageBox.Show(
+                        $"Đơn vị '{unitToDelete.UnitName}' ({unitToDelete.UnitCode}) hiện có các đơn vị trực thuộc.\n\n" +
+                        "• Bấm 'Yes' để XÓA TOÀN BỘ đơn vị này và tất cả các đơn vị con trực thuộc.\n" +
+                        "• Bấm 'No' để CHUYỂN các đơn vị con lên đơn vị cấp trên (không xóa con).\n" +
+                        "• Bấm 'Cancel' để hủy thao tác.",
+                        "Xác nhận xóa đơn vị có cấp con",
+                        MessageBoxButton.YesNoCancel,
+                        MessageBoxImage.Warning);
+
+                    if (confirmBranch == MessageBoxResult.Cancel) return;
+                    cascade = (confirmBranch == MessageBoxResult.Yes);
+                }
+                else
+                {
+                    var confirm = MessageBox.Show(
+                        $"Bạn có chắc chắn muốn xóa Đơn vị: {unitToDelete.UnitName} ({unitToDelete.UnitCode}) không?",
+                        "Xác nhận xóa", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                    if (confirm != MessageBoxResult.Yes) return;
+                }
+
+                IsBusy = true;
+                try
+                {
+                    var res = await _catalogService.DeleteUnitCascadeAsync(unitToDelete.Id, cascade);
+                    StatusMessage = res.Message;
+                    if (!res.Success)
+                    {
+                        MessageBox.Show(res.Message, "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    }
+                    else
+                    {
+                        await LoadAllDataAsync();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Lỗi xóa đơn vị: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                finally
+                {
+                    IsBusy = false;
+                }
+                return;
             }
         }
 
@@ -1079,19 +1136,21 @@ namespace QL_HocVien.ViewModels
             foreach (var cNode in cohortNodes.Values.Distinct())
             {
                 var childUnits = allUnits
-                    .Where(u => !string.IsNullOrWhiteSpace(u.ParentUnit) &&
+                    .Where(u => u.Id > 0 &&
+                                !attachedUnitIds.Contains(u.Id) &&
+                                !string.IsNullOrWhiteSpace(u.ParentUnit) &&
                                 (string.Equals(u.ParentUnit.Trim(), cNode.Code.Trim(), StringComparison.OrdinalIgnoreCase) ||
                                  string.Equals(u.ParentUnit.Trim(), cNode.Name.Trim(), StringComparison.OrdinalIgnoreCase)))
                     .ToList();
 
                 foreach (var cu in childUnits)
                 {
+                    attachedUnitIds.Add(cu.Id);
                     int nextLevel = cNode.Level + 1;
                     var childNode = CreateUnitNode(cu, nextLevel, classes);
                     childNode.ParentNode = cNode;
                     cNode.Children.Add(childNode);
-                    attachedUnitIds.Add(cu.Id);
-                    AttachChildrenRecursive(childNode, allUnits, classes);
+                    AttachChildrenRecursive(childNode, allUnits, classes, null, attachedUnitIds, 0);
                 }
             }
 
@@ -1101,6 +1160,7 @@ namespace QL_HocVien.ViewModels
             var cohortKeys = new HashSet<string>(cohortNodes.Keys, StringComparer.OrdinalIgnoreCase);
 
             var rootUnits = allUnits.Where(u =>
+                u.Id > 0 &&
                 !attachedUnitIds.Contains(u.Id) &&
                 (string.IsNullOrWhiteSpace(u.ParentUnit) ||
                  u.ParentUnit.Equals("Học viện", StringComparison.OrdinalIgnoreCase) ||
@@ -1116,29 +1176,30 @@ namespace QL_HocVien.ViewModels
                 var node = CreateUnitNode(ru, level, classes);
                 UnitTreeNodes.Add(node);
                 attachedUnitIds.Add(ru.Id);
-                AttachChildrenRecursive(node, allUnits, classes);
+                AttachChildrenRecursive(node, allUnits, classes, null, attachedUnitIds, 0);
             }
 
             // 3. Đơn vị mồ côi còn sót lại (nếu có)
-            var addedUnitIds = new HashSet<int>();
-            CollectAddedUnitIds(UnitTreeNodes, addedUnitIds);
             foreach (var u in allUnits)
             {
-                if (!addedUnitIds.Contains(u.Id))
+                if (u.Id > 0 && !attachedUnitIds.Contains(u.Id))
                 {
                     var orphanNode = CreateUnitNode(u, DetermineLevel(u), classes);
                     UnitTreeNodes.Add(orphanNode);
-                    AttachChildrenRecursive(orphanNode, allUnits, classes);
+                    attachedUnitIds.Add(u.Id);
+                    AttachChildrenRecursive(orphanNode, allUnits, classes, null, attachedUnitIds, 0);
                 }
             }
         }
 
-        private void CollectAddedUnitIds(IEnumerable<UnitTreeNode> nodes, HashSet<int> ids)
+        private void CollectAddedUnitIds(IEnumerable<UnitTreeNode> nodes, HashSet<int> ids, HashSet<UnitTreeNode>? visitedNodes = null)
         {
+            visitedNodes ??= new HashSet<UnitTreeNode>();
             foreach (var n in nodes)
             {
-                if (n.Unit != null) ids.Add(n.Unit.Id);
-                if (n.HasChildren) CollectAddedUnitIds(n.Children, ids);
+                if (!visitedNodes.Add(n)) continue;
+                if (n.Unit != null && n.Unit.Id > 0) ids.Add(n.Unit.Id);
+                if (n.HasChildren) CollectAddedUnitIds(n.Children, ids, visitedNodes);
             }
         }
 
@@ -1214,30 +1275,45 @@ namespace QL_HocVien.ViewModels
             return node;
         }
 
-        private void AttachChildrenRecursive(UnitTreeNode parentNode, List<MilitaryUnit> allUnits, List<MilitaryClass> classes, HashSet<string>? branchKeys = null)
+        private void AttachChildrenRecursive(
+            UnitTreeNode parentNode,
+            List<MilitaryUnit> allUnits,
+            List<MilitaryClass> classes,
+            HashSet<int>? branchUnitIds = null,
+            HashSet<int>? allAttachedIds = null,
+            int depth = 0)
         {
-            branchKeys ??= new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            if (!string.IsNullOrWhiteSpace(parentNode.Code)) branchKeys.Add(parentNode.Code.Trim());
-            if (!string.IsNullOrWhiteSpace(parentNode.Name)) branchKeys.Add(parentNode.Name.Trim());
+            if (depth > 15) return; // Bảo vệ chống tràn stack tối đa 15 cấp
+
+            branchUnitIds ??= new HashSet<int>();
+            if (parentNode.Unit != null && parentNode.Unit.Id > 0)
+            {
+                branchUnitIds.Add(parentNode.Unit.Id);
+            }
+
+            allAttachedIds ??= new HashSet<int>();
 
             var childUnits = allUnits
-                .Where(u => !string.IsNullOrWhiteSpace(u.ParentUnit) &&
+                .Where(u => u.Id > 0 &&
+                            !branchUnitIds.Contains(u.Id) &&
+                            !allAttachedIds.Contains(u.Id) &&
+                            !string.IsNullOrWhiteSpace(u.ParentUnit) &&
                             (u.ParentUnit.Trim().Equals(parentNode.Name.Trim(), StringComparison.OrdinalIgnoreCase) ||
                              (!string.IsNullOrWhiteSpace(parentNode.Code) && u.ParentUnit.Trim().Equals(parentNode.Code.Trim(), StringComparison.OrdinalIgnoreCase))) &&
                             !string.Equals(u.UnitCode, parentNode.Code, StringComparison.OrdinalIgnoreCase) &&
-                            !ReferenceEquals(u, parentNode.Unit) &&
-                            (string.IsNullOrWhiteSpace(u.UnitCode) || !branchKeys.Contains(u.UnitCode.Trim())) &&
-                            (string.IsNullOrWhiteSpace(u.UnitName) || !branchKeys.Contains(u.UnitName.Trim())))
+                            !ReferenceEquals(u, parentNode.Unit))
                 .ToList();
 
             foreach (var cu in childUnits)
             {
+                allAttachedIds.Add(cu.Id);
                 int nextLevel = parentNode.Level + 1;
                 var childNode = CreateUnitNode(cu, nextLevel, classes);
                 childNode.ParentNode = parentNode;
                 parentNode.Children.Add(childNode);
-                var nextBranch = new HashSet<string>(branchKeys, StringComparer.OrdinalIgnoreCase);
-                AttachChildrenRecursive(childNode, allUnits, classes, nextBranch);
+
+                var nextBranch = new HashSet<int>(branchUnitIds) { cu.Id };
+                AttachChildrenRecursive(childNode, allUnits, classes, nextBranch, allAttachedIds, depth + 1);
             }
 
             if (!parentNode.IsClassLeaf)
@@ -1289,7 +1365,10 @@ namespace QL_HocVien.ViewModels
         }
 
         partial void OnSearchKeywordChanged(string value) => _ = SearchAsync();
-        partial void OnSelectedTabIndexChanged(int value) => _ = SearchAsync();
+        partial void OnSelectedTabIndexChanged(int value)
+        {
+            if (!IsBusy) _ = SearchAsync();
+        }
         partial void OnSelectedRankGroupChanged(string value) => _ = SearchAsync();
         partial void OnSelectedPositionGroupChanged(string value) => _ = SearchAsync();
         partial void OnSelectedParentUnitFilterChanged(string value) => _ = SearchAsync();

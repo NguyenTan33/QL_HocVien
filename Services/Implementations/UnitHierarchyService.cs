@@ -142,6 +142,7 @@ namespace QL_HocVien.Services.Implementations
                 (!existingUnitNames.Contains(u.ParentUnit.Trim()) && !existingUnitCodes.Contains(u.ParentUnit.Trim()))
             ).ToList();
 
+            var allAttachedIds = new HashSet<int>();
             foreach (var ru in rootUnits)
             {
                 if (!string.IsNullOrWhiteSpace(ru.ParentUnit) && createdRoots.TryGetValue(ru.ParentUnit.Trim(), out var parentNode))
@@ -150,66 +151,83 @@ namespace QL_HocVien.Services.Implementations
                     var node = CreateUnitNode(ru, level);
                     node.ParentNode = parentNode;
                     parentNode.Children.Add(node);
-                    AttachChildrenRecursive(node, unitsFromDb);
+                    allAttachedIds.Add(ru.Id);
+                    AttachChildrenRecursive(node, unitsFromDb, null, allAttachedIds, 0);
                 }
                 else
                 {
                     int level = DetermineLevel(ru);
                     var node = CreateUnitNode(ru, level);
                     roots.Add(node);
-                    AttachChildrenRecursive(node, unitsFromDb);
+                    allAttachedIds.Add(ru.Id);
+                    AttachChildrenRecursive(node, unitsFromDb, null, allAttachedIds, 0);
                 }
             }
 
             // Gắn các đơn vị mồ côi nếu có
-            var addedIds = new HashSet<int>();
-            CollectAddedUnitIds(roots, addedIds);
             foreach (var u in unitsFromDb)
             {
-                if (u.Id > 0 && !addedIds.Contains(u.Id))
+                if (u.Id > 0 && !allAttachedIds.Contains(u.Id))
                 {
                     var orphanNode = CreateUnitNode(u, DetermineLevel(u));
                     roots.Add(orphanNode);
-                    AttachChildrenRecursive(orphanNode, unitsFromDb);
+                    allAttachedIds.Add(u.Id);
+                    AttachChildrenRecursive(orphanNode, unitsFromDb, null, allAttachedIds, 0);
                 }
             }
 
             return roots;
         }
 
-        private void AttachChildrenRecursive(UnitTreeNode parentNode, List<MilitaryUnit> allUnits, HashSet<string>? branchKeys = null)
+        private void AttachChildrenRecursive(
+            UnitTreeNode parentNode,
+            List<MilitaryUnit> allUnits,
+            HashSet<int>? branchUnitIds = null,
+            HashSet<int>? allAttachedIds = null,
+            int depth = 0)
         {
-            branchKeys ??= new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            if (!string.IsNullOrWhiteSpace(parentNode.Code)) branchKeys.Add(parentNode.Code.Trim());
-            if (!string.IsNullOrWhiteSpace(parentNode.Name)) branchKeys.Add(parentNode.Name.Trim());
+            if (depth > 15) return; // Bảo vệ chống tràn stack tối đa 15 cấp
+
+            branchUnitIds ??= new HashSet<int>();
+            if (parentNode.Unit != null && parentNode.Unit.Id > 0)
+            {
+                branchUnitIds.Add(parentNode.Unit.Id);
+            }
+
+            allAttachedIds ??= new HashSet<int>();
 
             var childUnits = allUnits
-                .Where(u => !string.IsNullOrWhiteSpace(u.ParentUnit) &&
+                .Where(u => u.Id > 0 &&
+                            !branchUnitIds.Contains(u.Id) &&
+                            !allAttachedIds.Contains(u.Id) &&
+                            !string.IsNullOrWhiteSpace(u.ParentUnit) &&
                             (u.ParentUnit.Trim().Equals(parentNode.Name.Trim(), StringComparison.OrdinalIgnoreCase) ||
                              (!string.IsNullOrWhiteSpace(parentNode.Code) && u.ParentUnit.Trim().Equals(parentNode.Code.Trim(), StringComparison.OrdinalIgnoreCase))) &&
                             !string.Equals(u.UnitCode, parentNode.Code, StringComparison.OrdinalIgnoreCase) &&
-                            !ReferenceEquals(u, parentNode.Unit) &&
-                            (string.IsNullOrWhiteSpace(u.UnitCode) || !branchKeys.Contains(u.UnitCode.Trim())) &&
-                            (string.IsNullOrWhiteSpace(u.UnitName) || !branchKeys.Contains(u.UnitName.Trim())))
+                            !ReferenceEquals(u, parentNode.Unit))
                 .ToList();
 
             foreach (var cu in childUnits)
             {
+                allAttachedIds.Add(cu.Id);
                 int nextLevel = parentNode.Level + 1;
                 var childNode = CreateUnitNode(cu, nextLevel);
                 childNode.ParentNode = parentNode;
                 parentNode.Children.Add(childNode);
-                var nextBranch = new HashSet<string>(branchKeys, StringComparer.OrdinalIgnoreCase);
-                AttachChildrenRecursive(childNode, allUnits, nextBranch);
+
+                var nextBranch = new HashSet<int>(branchUnitIds) { cu.Id };
+                AttachChildrenRecursive(childNode, allUnits, nextBranch, allAttachedIds, depth + 1);
             }
         }
 
-        private void CollectAddedUnitIds(IEnumerable<UnitTreeNode> nodes, HashSet<int> ids)
+        private void CollectAddedUnitIds(IEnumerable<UnitTreeNode> nodes, HashSet<int> ids, HashSet<UnitTreeNode>? visitedNodes = null)
         {
+            visitedNodes ??= new HashSet<UnitTreeNode>();
             foreach (var n in nodes)
             {
+                if (!visitedNodes.Add(n)) continue;
                 if (n.Unit != null && n.Unit.Id > 0) ids.Add(n.Unit.Id);
-                if (n.HasChildren) CollectAddedUnitIds(n.Children, ids);
+                if (n.HasChildren) CollectAddedUnitIds(n.Children, ids, visitedNodes);
             }
         }
 
@@ -287,15 +305,19 @@ namespace QL_HocVien.Services.Implementations
         private List<UnitTreeNode> CloneTree(IEnumerable<UnitTreeNode> source)
         {
             var result = new List<UnitTreeNode>();
+            var visited = new HashSet<UnitTreeNode>();
             foreach (var node in source)
             {
-                result.Add(CloneNodeRecursive(node, null));
+                var cloned = CloneNodeRecursive(node, null, visited);
+                if (cloned != null) result.Add(cloned);
             }
             return result;
         }
 
-        private UnitTreeNode CloneNodeRecursive(UnitTreeNode source, UnitTreeNode? parent)
+        private UnitTreeNode? CloneNodeRecursive(UnitTreeNode source, UnitTreeNode? parent, HashSet<UnitTreeNode> visited)
         {
+            if (!visited.Add(source)) return null;
+
             var clone = new UnitTreeNode
             {
                 Unit = source.Unit,
@@ -319,7 +341,11 @@ namespace QL_HocVien.Services.Implementations
 
             foreach (var child in source.Children)
             {
-                clone.Children.Add(CloneNodeRecursive(child, clone));
+                var clonedChild = CloneNodeRecursive(child, clone, visited);
+                if (clonedChild != null)
+                {
+                    clone.Children.Add(clonedChild);
+                }
             }
 
             return clone;

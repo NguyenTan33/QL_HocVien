@@ -229,15 +229,17 @@ namespace QL_HocVien.Views.Components
             }
         }
 
-        private UnitTreeNode? FindNodeMatching(string unit, IEnumerable<UnitTreeNode> nodes)
+        private UnitTreeNode? FindNodeMatching(string unit, IEnumerable<UnitTreeNode> nodes, HashSet<UnitTreeNode>? visited = null)
         {
+            visited ??= new HashSet<UnitTreeNode>();
             foreach (var node in nodes)
             {
+                if (!visited.Add(node)) continue;
                 if (node.MatchesValue(unit))
                 {
                     return node;
                 }
-                var childMatch = FindNodeMatching(unit, node.Children);
+                var childMatch = FindNodeMatching(unit, node.Children, visited);
                 if (childMatch != null)
                 {
                     return childMatch;
@@ -246,14 +248,16 @@ namespace QL_HocVien.Views.Components
             return null;
         }
 
-        private void DeselectAllNodes(IEnumerable<UnitTreeNode> nodes)
+        private void DeselectAllNodes(IEnumerable<UnitTreeNode> nodes, HashSet<UnitTreeNode>? visited = null)
         {
+            visited ??= new HashSet<UnitTreeNode>();
             foreach (var node in nodes)
             {
+                if (!visited.Add(node)) continue;
                 node.IsSelected = false;
                 if (node.Children.Count > 0)
                 {
-                    DeselectAllNodes(node.Children);
+                    DeselectAllNodes(node.Children, visited);
                 }
             }
         }
