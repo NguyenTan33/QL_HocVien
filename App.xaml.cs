@@ -22,12 +22,13 @@ namespace QL_HocVien
     {
         public static IServiceProvider ServiceProvider { get; private set; } = null!;
 
-        protected override async void OnStartup(StartupEventArgs e)
+        protected override void OnStartup(StartupEventArgs e)
         {
             // 1. Nạp engine mã hóa SQLCipher AES-256 trước khi bất kỳ kết nối SQLite nào được mở
             Batteries_V2.Init();
 
             base.OnStartup(e);
+            ShutdownMode = ShutdownMode.OnLastWindowClose;
 
             var culture = new System.Globalization.CultureInfo("vi-VN");
             System.Globalization.CultureInfo.DefaultThreadCurrentCulture = culture;
@@ -42,13 +43,35 @@ namespace QL_HocVien
                 try
                 {
                     File.AppendAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "system_error.log"),
-                        $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] Lỗi: {args.Exception.Message}\nChi tiết:\n{args.Exception}\n-----------------------------------\n");
+                        $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [Dispatcher] Lỗi: {args.Exception.Message}\nChi tiết:\n{args.Exception}\n-----------------------------------\n");
                 }
                 catch { }
 
                 MessageBox.Show("Đã xảy ra sự cố không mong muốn trong quá trình thực thi.\nThông tin lỗi đã được ghi lại an toàn vào tệp nhật ký.",
                                 "Lỗi Hệ Thống QL_HocVien", MessageBoxButton.OK, MessageBoxImage.Error);
                 args.Handled = true;
+            };
+
+            AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
+            {
+                try
+                {
+                    var ex = args.ExceptionObject as Exception;
+                    File.AppendAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "system_error.log"),
+                        $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [AppDomain] Lỗi: {ex?.Message}\nChi tiết:\n{ex}\n-----------------------------------\n");
+                }
+                catch { }
+            };
+
+            TaskScheduler.UnobservedTaskException += (sender, args) =>
+            {
+                try
+                {
+                    File.AppendAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "system_error.log"),
+                        $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [UnobservedTask] Lỗi: {args.Exception.Message}\nChi tiết:\n{args.Exception}\n-----------------------------------\n");
+                }
+                catch { }
+                args.SetObserved();
             };
 
             try

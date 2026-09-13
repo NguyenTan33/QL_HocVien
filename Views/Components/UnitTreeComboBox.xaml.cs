@@ -121,17 +121,27 @@ namespace QL_HocVien.Views.Components
 
         private async Task LoadTreeAsync()
         {
-            if (_hierarchyService != null)
+            try
             {
-                _treeNodes = await _hierarchyService.GetUnitTreeAsync(isFilterMode: false);
-            }
-            else
-            {
-                _treeNodes = new List<UnitTreeNode>();
-            }
+                if (_hierarchyService != null)
+                {
+                    _treeNodes = await _hierarchyService.GetUnitTreeAsync(isFilterMode: false);
+                }
+                else
+                {
+                    _treeNodes = new List<UnitTreeNode>();
+                }
 
-            MainTreeView.ItemsSource = _treeNodes;
-            UpdateDisplayFromSelectedUnit(SelectedUnit);
+                MainTreeView.ItemsSource = _treeNodes;
+                UpdateDisplayFromSelectedUnit(SelectedUnit);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[UnitTreeComboBox] LoadTreeAsync error: {ex.Message}");
+                _treeNodes = new List<UnitTreeNode>();
+                MainTreeView.ItemsSource = _treeNodes;
+                UpdateDisplayFromSelectedUnit(SelectedUnit);
+            }
         }
 
         private static void OnSelectedUnitChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)

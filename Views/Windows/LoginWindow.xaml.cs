@@ -48,6 +48,7 @@ namespace QL_HocVien.Views.Windows
         private void OnLoginSuccess()
         {
             var mainWindow = App.ServiceProvider.GetRequiredService<MainWindow>();
+            Application.Current.MainWindow = mainWindow;
             mainWindow.Show();
             Close();
         }

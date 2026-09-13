@@ -1,4 +1,4 @@
-﻿global using QL_HocVien.Models;
+global using QL_HocVien.Models;
 global using QL_HocVien.Models.Entity;
 global using QL_HocVien.Services;
 global using QL_HocVien.Services.Interfaces;
