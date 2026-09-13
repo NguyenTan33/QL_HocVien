@@ -350,6 +350,12 @@ namespace QL_HocVien.ViewModels
         partial void OnSelectedCohortChanged(string value)
         {
             _ = RefreshSchoolYearOptionsAsync(value);
+            _ = LoadDataAsync();
+        }
+
+        partial void OnSelectedUnitChanged(string value)
+        {
+            _ = LoadDataAsync();
         }
 
         partial void OnIsAllSelectedChanged(bool value)

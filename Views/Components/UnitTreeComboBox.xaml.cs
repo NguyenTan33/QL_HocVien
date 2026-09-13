@@ -39,6 +39,15 @@ namespace QL_HocVien.Views.Components
                     FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
                     OnSelectedUnitIdChanged));
 
+        public static readonly DependencyProperty SelectedCohortProperty =
+            DependencyProperty.Register(
+                nameof(SelectedCohort),
+                typeof(string),
+                typeof(UnitTreeComboBox),
+                new FrameworkPropertyMetadata(
+                    string.Empty,
+                    FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
+
         public static readonly DependencyProperty IsFilterModeProperty =
             DependencyProperty.Register(
                 nameof(IsFilterMode),
@@ -70,6 +79,12 @@ namespace QL_HocVien.Views.Components
         {
             get => (int?)GetValue(SelectedUnitIdProperty);
             set => SetValue(SelectedUnitIdProperty, value);
+        }
+
+        public string SelectedCohort
+        {
+            get => (string)GetValue(SelectedCohortProperty);
+            set => SetValue(SelectedCohortProperty, value);
         }
 
         public bool IsFilterMode
@@ -252,7 +267,9 @@ namespace QL_HocVien.Views.Components
                 matchedNode.ExpandParents();
 
                 SelectedIconText.Text = matchedNode.Icon;
-                SelectedDisplayText.Text = matchedNode.DisplayText;
+                SelectedDisplayText.Text = !string.IsNullOrWhiteSpace(matchedNode.FullHierarchyPath) 
+                    ? matchedNode.FullHierarchyPath 
+                    : matchedNode.DisplayText;
                 BtnClear.Visibility = Visibility.Visible;
             }
             else
@@ -531,9 +548,26 @@ namespace QL_HocVien.Views.Components
             _isInternalSelection = true;
             try
             {
-                SelectedUnit = !string.IsNullOrWhiteSpace(node.Value) ? node.Value : node.Name;
-                // Gán ID chính xác để tránh nhầm nhánh khi nhiều đơn vị cùng tên
-                SelectedUnitId = node.Unit?.Id > 0 ? node.Unit?.Id : (int?)null;
+                if (node.Level == 0 || node.CohortItem != null)
+                {
+                    // Người dùng chọn Cấp Khóa Học (ví dụ Khóa 75 / K75)
+                    SelectedCohort = !string.IsNullOrWhiteSpace(node.Code) ? node.Code : node.Name;
+                    SelectedUnit = IsFilterMode ? "Tất cả" : (!string.IsNullOrWhiteSpace(node.Value) ? node.Value : node.Code);
+                    SelectedUnitId = null;
+                }
+                else
+                {
+                    // Người dùng chọn đơn vị (Tiểu đoàn, Đại đội, Tiểu đội...)
+                    SelectedUnit = !string.IsNullOrWhiteSpace(node.Value) ? node.Value : node.Name;
+                    // Gán ID chính xác để tránh nhầm nhánh khi nhiều đơn vị cùng tên
+                    SelectedUnitId = node.Unit?.Id > 0 ? node.Unit?.Id : (int?)null;
+
+                    // Nếu đơn vị này thuộc một Khóa học tổ tiên (ví dụ K75), tự động đồng bộ SelectedCohort
+                    if (!string.IsNullOrWhiteSpace(node.AncestorCohortCode))
+                    {
+                        SelectedCohort = node.AncestorCohortCode;
+                    }
+                }
             }
             finally
             {

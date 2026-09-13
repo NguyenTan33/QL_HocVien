@@ -400,7 +400,7 @@ namespace QL_HocVien.Services.Implementations
             if (!string.IsNullOrWhiteSpace(unit) && unit != "Tất cả")
             {
                 list = await _context.Cadets
-                    .Where(c => c.Unit == unit && !string.IsNullOrWhiteSpace(c.ClassName))
+                    .Where(c => (c.Unit == unit || c.Unit.StartsWith(unit + "/")) && !string.IsNullOrWhiteSpace(c.ClassName))
                     .Select(c => c.ClassName.Trim())
                     .Distinct()
                     .OrderBy(c => c)

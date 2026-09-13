@@ -208,6 +208,68 @@ namespace QL_HocVien.Services.Implementations
             }
         }
 
+        private static IQueryable<Cadet> ApplyCohortAndUnitFilters(
+            IQueryable<Cadet> query,
+            string? unit,
+            string? cohort)
+        {
+            if (!string.IsNullOrWhiteSpace(cohort) && !cohort.Contains("Tất cả") && !cohort.Contains("Táº¥t cáº£") && !cohort.Equals("All", StringComparison.OrdinalIgnoreCase))
+            {
+                var targetCohort = cohort.Trim();
+                int? cohortNum = null;
+                if (targetCohort.StartsWith("K", StringComparison.OrdinalIgnoreCase) && int.TryParse(targetCohort.Substring(1), out int pNum))
+                {
+                    cohortNum = pNum;
+                }
+                else if (int.TryParse(targetCohort, out int rawNum))
+                {
+                    cohortNum = rawNum;
+                }
+
+                string cohortPatternDot = cohortNum.HasValue ? $".{cohortNum.Value:D3}." : string.Empty;
+                string cohortPatternHyphen = cohortNum.HasValue ? $"-{cohortNum.Value:D3}-" : string.Empty;
+                string cohortPatternUnderscore = cohortNum.HasValue ? $"_{cohortNum.Value:D3}_" : string.Empty;
+
+                query = query.Where(c =>
+                    c.Cohort == targetCohort ||
+                    c.AcademicYear == targetCohort ||
+                    (c.AcademicCohort != null && (c.AcademicCohort.CohortCode == targetCohort || (cohortNum.HasValue && c.AcademicCohort.CohortNumber == cohortNum.Value))) ||
+                    (!string.IsNullOrEmpty(cohortPatternDot) && (c.CadetCode.Contains(cohortPatternDot) || c.CadetCode.Contains(cohortPatternHyphen) || c.CadetCode.Contains(cohortPatternUnderscore)))
+                );
+            }
+
+            if (!string.IsNullOrWhiteSpace(unit) && !unit.Contains("Tất cả") && !unit.Contains("Táº¥t cáº£") && !unit.Equals("All", StringComparison.OrdinalIgnoreCase))
+            {
+                var cleanUnit = unit.Trim().TrimEnd('/');
+
+                if (cleanUnit.StartsWith("K", StringComparison.OrdinalIgnoreCase) && int.TryParse(cleanUnit.Substring(1), out int cNumFromUnit))
+                {
+                    string dotPat = $".{cNumFromUnit:D3}.";
+                    query = query.Where(c =>
+                        c.Cohort == cleanUnit ||
+                        (c.AcademicCohort != null && (c.AcademicCohort.CohortCode == cleanUnit || c.AcademicCohort.CohortNumber == cNumFromUnit)) ||
+                        c.CadetCode.Contains(dotPat));
+                }
+                else
+                {
+                    var lastSegment = cleanUnit.Contains('/')
+                        ? cleanUnit.Split('/', StringSplitOptions.RemoveEmptyEntries).Last().Trim()
+                        : cleanUnit;
+
+                    query = query.Where(c =>
+                        c.Unit == cleanUnit ||
+                        c.Unit == cleanUnit + "/" ||
+                        c.Unit.StartsWith(cleanUnit + "/") ||
+                        c.Unit.StartsWith(cleanUnit) ||
+                        c.Unit.Contains("/" + cleanUnit + "/") ||
+                        c.Unit.EndsWith("/" + cleanUnit) ||
+                        c.Unit.Contains(lastSegment));
+                }
+            }
+
+            return query;
+        }
+
         public async Task<List<CadetAcademicSummaryDto>> GetCadetAcademicSummariesAsync(
             string? unit = null, string? className = null, string? keyword = null,
             string? schoolYear = null, string? cohort = null)
@@ -218,14 +280,10 @@ namespace QL_HocVien.Services.Implementations
                 .AsNoTracking()
                 .AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(unit) && !unit.Contains("Tất cả") && !unit.Contains("Táº¥t cáº£") && !unit.Equals("All", StringComparison.OrdinalIgnoreCase))
-                query = query.Where(c => c.Unit == unit);
+            query = ApplyCohortAndUnitFilters(query, unit, cohort);
 
             if (!string.IsNullOrWhiteSpace(className) && !className.Contains("Tất cả") && !className.Contains("Táº¥t cáº£") && !className.Equals("All", StringComparison.OrdinalIgnoreCase))
                 query = query.Where(c => c.MilitaryClass != null && c.MilitaryClass.ClassName == className);
-
-            if (!string.IsNullOrWhiteSpace(cohort) && !cohort.Contains("Tất cả") && !cohort.Contains("Táº¥t cáº£") && !cohort.Equals("All", StringComparison.OrdinalIgnoreCase))
-                query = query.Where(c => c.Cohort == cohort || (c.AcademicCohort != null && (c.AcademicCohort.CohortCode == cohort || c.AcademicCohort.AcademicYear == cohort)) || c.AcademicYear == cohort);
 
             if (!string.IsNullOrWhiteSpace(keyword))
             {
@@ -433,8 +491,7 @@ namespace QL_HocVien.Services.Implementations
                 .AsNoTracking()
                 .AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(unit) && unit != "Táº¥t cáº£")
-                query = query.Where(c => c.Unit == unit);
+            query = ApplyCohortAndUnitFilters(query, unit, null);
 
             if (!string.IsNullOrWhiteSpace(className) && className != "Táº¥t cáº£")
                 query = query.Where(c => c.MilitaryClass != null && c.MilitaryClass.ClassName == className);
@@ -1927,14 +1984,10 @@ namespace QL_HocVien.Services.Implementations
                 .AsNoTracking()
                 .AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(unit) && unit != "Tất cả")
-                cadetQuery = cadetQuery.Where(c => c.Unit == unit);
+            cadetQuery = ApplyCohortAndUnitFilters(cadetQuery, unit, cohort);
 
             if (!string.IsNullOrWhiteSpace(className) && className != "Tất cả")
                 cadetQuery = cadetQuery.Where(c => c.MilitaryClass != null && c.MilitaryClass.ClassName == className);
-
-            if (!string.IsNullOrWhiteSpace(cohort) && cohort != "Tất cả")
-                cadetQuery = cadetQuery.Where(c => c.Cohort == cohort);
 
             var cadets = await cadetQuery.OrderBy(c => c.Unit).ThenBy(c => c.FullName).ToListAsync();
             var compIds = components.Select(c => c.Id).ToList();

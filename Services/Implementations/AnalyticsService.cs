@@ -67,7 +67,7 @@ namespace QL_HocVien.Services.Implementations
 
             if (!string.IsNullOrWhiteSpace(unit) && unit != "Tất cả")
             {
-                cadetsQuery = cadetsQuery.Where(c => c.Unit == unit);
+                cadetsQuery = cadetsQuery.Where(c => c.Unit == unit || c.Unit.StartsWith(unit + "/"));
             }
 
             if (classId.HasValue && classId.Value > 0)

@@ -29,14 +29,21 @@ namespace QL_HocVien.ViewModels
         public int Level { get; set; } = 3;
         public bool IsClassLeaf { get; set; }
 
+        /// <summary>Mã Khóa học tổ tiên nếu đơn vị này thuộc một Khóa (ví dụ "K75")</summary>
+        public string? AncestorCohortCode { get; set; }
+
+        /// <summary>Đường dẫn mã đơn vị phân cấp từ cấp Tiểu đoàn trở xuống (ví dụ "dBB1/cBB1/bBB1")</summary>
+        public string? HierarchyCodePath { get; set; }
+
         private string? _value;
         public string Value
         {
             get
             {
                 if (!string.IsNullOrWhiteSpace(_value)) return _value;
-                if (!string.IsNullOrWhiteSpace(Name)) return Name;
-                return Code;
+                if (!string.IsNullOrWhiteSpace(HierarchyCodePath)) return HierarchyCodePath;
+                if (!string.IsNullOrWhiteSpace(Code)) return Code;
+                return Name;
             }
             set => _value = value;
         }
@@ -107,6 +114,7 @@ namespace QL_HocVien.ViewModels
             if (string.IsNullOrWhiteSpace(target)) return false;
             target = target.Trim();
             return string.Equals(Value, target, StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(HierarchyCodePath, target, StringComparison.OrdinalIgnoreCase) ||
                    string.Equals(Name, target, StringComparison.OrdinalIgnoreCase) ||
                    string.Equals(Code, target, StringComparison.OrdinalIgnoreCase) ||
                    string.Equals(DisplayText, target, StringComparison.OrdinalIgnoreCase);

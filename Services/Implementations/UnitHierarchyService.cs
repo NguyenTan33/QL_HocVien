@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using QL_HocVien.Models.Entity;
 using QL_HocVien.Services.Interfaces;
 using QL_HocVien.ViewModels;
@@ -11,15 +12,17 @@ namespace QL_HocVien.Services.Implementations
     public class UnitHierarchyService : IUnitHierarchyService
     {
         private readonly ICatalogService _catalogService;
+        private readonly IServiceScopeFactory? _scopeFactory;
         private List<UnitTreeNode>? _cachedTree;
         private readonly object _lock = new();
         private readonly System.Threading.SemaphoreSlim _semaphore = new(1, 1);
 
         public event Action? OnHierarchyChanged;
 
-        public UnitHierarchyService(ICatalogService catalogService)
+        public UnitHierarchyService(ICatalogService catalogService, IServiceScopeFactory? scopeFactory = null)
         {
             _catalogService = catalogService;
+            _scopeFactory = scopeFactory;
             _catalogService.OnUnitsChanged += InvalidateCache;
         }
 
@@ -98,32 +101,118 @@ namespace QL_HocVien.Services.Implementations
                 return new List<UnitTreeNode>();
             }
 
+            // 1. Nạp danh mục Khóa học thực tế trong CSDL
+            List<AcademicCohort> cohorts = new();
+            if (_scopeFactory != null)
+            {
+                try
+                {
+                    using var scope = _scopeFactory.CreateScope();
+                    var cohortService = scope.ServiceProvider.GetService<ICohortService>();
+                    if (cohortService != null)
+                    {
+                        var cList = await cohortService.GetAllCohortsAsync();
+                        cohorts = cList.ToList();
+                    }
+                }
+                catch { }
+            }
+
+            var roots = new List<UnitTreeNode>();
+            var cohortNodes = new Dictionary<string, UnitTreeNode>(StringComparer.OrdinalIgnoreCase);
+
+            // Tạo node Cấp Khóa Học cho các Khóa học thực tế trong CSDL
+            foreach (var cohort in cohorts)
+            {
+                var cNode = new UnitTreeNode
+                {
+                    CohortItem = cohort,
+                    NodeId = $"cohort_{cohort.Id}",
+                    Name = !string.IsNullOrWhiteSpace(cohort.CohortName) ? cohort.CohortName : cohort.CohortCode,
+                    Code = cohort.CohortCode,
+                    AncestorCohortCode = cohort.CohortCode,
+                    HierarchyCodePath = string.Empty,
+                    Value = cohort.CohortCode,
+                    Level = 0,
+                    LevelName = "CẤP KHÓA HỌC",
+                    Commander = "Ban Chỉ huy Khóa học",
+                    Phone = cohort.AcademicYear ?? "---",
+                    Description = $"Khóa đào tạo: {cohort.CohortCode} ({cohort.AcademicYear})",
+                    Icon = "🎓",
+                    BadgeBrush = "#1E40AF",
+                    IsExpanded = true
+                };
+
+                bool hasChildUnits = unitsFromDb.Any(u => !string.IsNullOrWhiteSpace(u.ParentUnit) &&
+                    (string.Equals(u.ParentUnit.Trim(), cohort.CohortCode.Trim(), StringComparison.OrdinalIgnoreCase) ||
+                     string.Equals(u.ParentUnit.Trim(), cohort.CohortName.Trim(), StringComparison.OrdinalIgnoreCase)));
+
+                if (hasChildUnits)
+                {
+                    cohortNodes[cohort.CohortCode] = cNode;
+                    cohortNodes[cohort.CohortName] = cNode;
+                    roots.Add(cNode);
+                }
+            }
+
+            var allAttachedIds = new HashSet<int>();
+
+            // Gắn các đơn vị con trực thuộc Khóa học (Tiểu đoàn)
+            foreach (var cNode in cohortNodes.Values.Distinct())
+            {
+                var childUnits = unitsFromDb
+                    .Where(u => u.Id > 0 &&
+                                !allAttachedIds.Contains(u.Id) &&
+                                !string.IsNullOrWhiteSpace(u.ParentUnit) &&
+                                (string.Equals(u.ParentUnit.Trim(), cNode.Code.Trim(), StringComparison.OrdinalIgnoreCase) ||
+                                 string.Equals(u.ParentUnit.Trim(), cNode.Name.Trim(), StringComparison.OrdinalIgnoreCase)))
+                    .ToList();
+
+                foreach (var cu in childUnits)
+                {
+                    allAttachedIds.Add(cu.Id);
+                    int nextLevel = DetermineLevel(cu);
+                    if (nextLevel == 0) nextLevel = 2; // Cấp Tiểu đoàn
+                    var childNode = CreateUnitNode(cu, nextLevel);
+                    childNode.ParentNode = cNode;
+                    childNode.AncestorCohortCode = cNode.AncestorCohortCode;
+                    childNode.HierarchyCodePath = cu.UnitCode;
+                    childNode.Value = cu.UnitCode;
+                    cNode.Children.Add(childNode);
+                    AttachChildrenRecursive(childNode, unitsFromDb, null, allAttachedIds, 0);
+                }
+            }
+
             var existingUnitNames = new HashSet<string>(unitsFromDb.Select(u => (u.UnitName ?? string.Empty).Trim()), StringComparer.OrdinalIgnoreCase);
             var existingUnitCodes = new HashSet<string>(unitsFromDb.Select(u => (u.UnitCode ?? string.Empty).Trim()), StringComparer.OrdinalIgnoreCase);
+            var cohortKeys = new HashSet<string>(cohortNodes.Keys, StringComparer.OrdinalIgnoreCase);
 
             // Tìm các đơn vị cấp trên (ParentUnit) được tham chiếu nhưng chưa có bản ghi tương ứng để tạo virtual root
             var missingParents = unitsFromDb
                 .Where(u => !string.IsNullOrWhiteSpace(u.ParentUnit) &&
                             !existingUnitNames.Contains(u.ParentUnit.Trim()) &&
                             !existingUnitCodes.Contains(u.ParentUnit.Trim()) &&
+                            !cohortKeys.Contains(u.ParentUnit.Trim()) &&
                             !u.ParentUnit.Equals("Học viện", StringComparison.OrdinalIgnoreCase) &&
                             !u.ParentUnit.Equals("Bộ chỉ huy", StringComparison.OrdinalIgnoreCase))
                 .Select(u => u.ParentUnit.Trim())
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
-            var roots = new List<UnitTreeNode>();
             var createdRoots = new Dictionary<string, UnitTreeNode>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var pName in missingParents)
             {
                 int pLevel = DetermineLevel(new MilitaryUnit { UnitName = pName });
+                string? ancCohort = (pLevel == 0 || pName.StartsWith("K", StringComparison.OrdinalIgnoreCase)) ? pName : null;
                 var virtualRoot = new UnitTreeNode
                 {
                     NodeId = $"root_{pName}",
                     Name = pName,
                     Code = pName,
                     Value = pName,
+                    AncestorCohortCode = ancCohort,
+                    HierarchyCodePath = string.Empty,
                     Level = pLevel,
                     LevelName = pLevel switch { 0 => "CẤP KHÓA HỌC", 1 => "CẤP TRUNG ĐOÀN", 2 => "CẤP TIỂU ĐOÀN", _ => "CẤP TRÊN" },
                     Commander = pLevel == 0 ? "Ban Chỉ huy Khóa" : "Chỉ huy trưởng",
@@ -136,13 +225,16 @@ namespace QL_HocVien.Services.Implementations
             }
 
             var rootUnits = unitsFromDb.Where(u =>
-                string.IsNullOrWhiteSpace(u.ParentUnit) ||
-                u.ParentUnit.Equals("Học viện", StringComparison.OrdinalIgnoreCase) ||
-                u.ParentUnit.Equals("Bộ chỉ huy", StringComparison.OrdinalIgnoreCase) ||
-                (!existingUnitNames.Contains(u.ParentUnit.Trim()) && !existingUnitCodes.Contains(u.ParentUnit.Trim()))
+                u.Id > 0 &&
+                !allAttachedIds.Contains(u.Id) &&
+                (string.IsNullOrWhiteSpace(u.ParentUnit) ||
+                 u.ParentUnit.Equals("Học viện", StringComparison.OrdinalIgnoreCase) ||
+                 u.ParentUnit.Equals("Bộ chỉ huy", StringComparison.OrdinalIgnoreCase) ||
+                 (!existingUnitNames.Contains(u.ParentUnit.Trim()) && 
+                  !existingUnitCodes.Contains(u.ParentUnit.Trim()) && 
+                  !cohortKeys.Contains(u.ParentUnit.Trim())))
             ).ToList();
 
-            var allAttachedIds = new HashSet<int>();
             foreach (var ru in rootUnits)
             {
                 if (!string.IsNullOrWhiteSpace(ru.ParentUnit) && createdRoots.TryGetValue(ru.ParentUnit.Trim(), out var parentNode))
@@ -150,6 +242,9 @@ namespace QL_HocVien.Services.Implementations
                     int level = DetermineLevel(ru);
                     var node = CreateUnitNode(ru, level);
                     node.ParentNode = parentNode;
+                    node.AncestorCohortCode = parentNode.AncestorCohortCode;
+                    node.HierarchyCodePath = ru.UnitCode;
+                    node.Value = ru.UnitCode;
                     parentNode.Children.Add(node);
                     allAttachedIds.Add(ru.Id);
                     AttachChildrenRecursive(node, unitsFromDb, null, allAttachedIds, 0);
@@ -158,6 +253,8 @@ namespace QL_HocVien.Services.Implementations
                 {
                     int level = DetermineLevel(ru);
                     var node = CreateUnitNode(ru, level);
+                    node.HierarchyCodePath = ru.UnitCode;
+                    node.Value = ru.UnitCode;
                     roots.Add(node);
                     allAttachedIds.Add(ru.Id);
                     AttachChildrenRecursive(node, unitsFromDb, null, allAttachedIds, 0);
@@ -170,6 +267,8 @@ namespace QL_HocVien.Services.Implementations
                 if (u.Id > 0 && !allAttachedIds.Contains(u.Id))
                 {
                     var orphanNode = CreateUnitNode(u, DetermineLevel(u));
+                    orphanNode.HierarchyCodePath = u.UnitCode;
+                    orphanNode.Value = u.UnitCode;
                     roots.Add(orphanNode);
                     allAttachedIds.Add(u.Id);
                     AttachChildrenRecursive(orphanNode, unitsFromDb, null, allAttachedIds, 0);
@@ -215,6 +314,15 @@ namespace QL_HocVien.Services.Implementations
                 int nextLevel = parentNode.Level + 1;
                 var childNode = CreateUnitNode(cu, nextLevel);
                 childNode.ParentNode = parentNode;
+                childNode.AncestorCohortCode = parentNode.AncestorCohortCode;
+
+                // Ghép HierarchyCodePath: ví dụ "dBB1/cBB1", "dBB1/cBB1/bBB1"
+                string currentPath = !string.IsNullOrWhiteSpace(parentNode.HierarchyCodePath)
+                    ? $"{parentNode.HierarchyCodePath}/{cu.UnitCode}"
+                    : cu.UnitCode;
+                childNode.HierarchyCodePath = currentPath;
+                childNode.Value = currentPath;
+
                 parentNode.Children.Add(childNode);
 
                 var nextBranch = new HashSet<int>(branchUnitIds) { cu.Id };
@@ -311,7 +419,10 @@ namespace QL_HocVien.Services.Implementations
                 NodeId = u.Id > 0 ? $"unit_{u.Id}" : $"unit_{u.UnitCode}",
                 Name = u.UnitName,
                 Code = u.UnitCode,
-                Value = !string.IsNullOrWhiteSpace(u.UnitName) ? u.UnitName : u.UnitCode,
+                // Value = UnitCode để filter khớp đúng với Cadet.Unit dạng "dBB1/cBB1/bBB1"
+                // Khi người dùng chọn "Tiểu đoàn 1" (UnitCode=dBB1), SelectedUnit="dBB1"
+                // → filter "dBB1" sẽ khớp "dBB1/cBB1/bBB1" qua StartsWith("dBB1/")
+                Value = !string.IsNullOrWhiteSpace(u.UnitCode) ? u.UnitCode : u.UnitName,
                 Level = level,
                 LevelName = levelName,
                 Commander = !string.IsNullOrWhiteSpace(u.CommanderName) ? u.CommanderName : "Chưa biên chế",
@@ -342,11 +453,14 @@ namespace QL_HocVien.Services.Implementations
             var clone = new UnitTreeNode
             {
                 Unit = source.Unit,
+                CohortItem = source.CohortItem,
                 ParentNode = parent,
                 NodeId = source.NodeId,
                 Name = source.Name,
                 Code = source.Code,
                 Value = source.Value,
+                AncestorCohortCode = source.AncestorCohortCode,
+                HierarchyCodePath = source.HierarchyCodePath,
                 Level = source.Level,
                 LevelName = source.LevelName,
                 Commander = source.Commander,

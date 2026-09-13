@@ -54,20 +54,21 @@ namespace QL_HocVien.Data.Repositories.Implementations
             // 3. Đơn vị
             if (!string.IsNullOrWhiteSpace(criteria.Unit) && criteria.Unit != "Tất cả")
             {
-                var targetUnit = criteria.Unit.Trim().ToLower();
+                var targetUnit = criteria.Unit.Trim().TrimEnd('/').ToLower();
+                var lastSegment = targetUnit.Contains('/')
+                    ? targetUnit.Split('/', StringSplitOptions.RemoveEmptyEntries).Last().Trim()
+                    : targetUnit;
                 var altUnit = GetEquivalentUnit(targetUnit).ToLower();
-                if (!string.IsNullOrEmpty(altUnit))
-                {
-                    query = query.Where(c => c.Unit.ToLower() == targetUnit || 
-                                             c.Unit.ToLower() == altUnit || 
-                                             c.Unit.ToLower().Contains(targetUnit) || 
-                                             c.Unit.ToLower().Contains(altUnit));
-                }
-                else
-                {
-                    query = query.Where(c => c.Unit.ToLower() == targetUnit || 
-                                             c.Unit.ToLower().Contains(targetUnit));
-                }
+
+                query = query.Where(c =>
+                    c.Unit.ToLower() == targetUnit ||
+                    c.Unit.ToLower() == targetUnit + "/" ||
+                    c.Unit.ToLower().StartsWith(targetUnit + "/") ||
+                    c.Unit.ToLower().StartsWith(targetUnit) ||
+                    c.Unit.ToLower().Contains("/" + targetUnit + "/") ||
+                    c.Unit.ToLower().EndsWith("/" + targetUnit) ||
+                    c.Unit.ToLower().Contains(lastSegment) ||
+                    (!string.IsNullOrEmpty(altUnit) && (c.Unit.ToLower() == altUnit || c.Unit.ToLower().Contains(altUnit))));
             }
 
             // 4. Lớp học
@@ -137,7 +138,25 @@ namespace QL_HocVien.Data.Repositories.Implementations
             // 11. Khóa học (Cohort)
             if (!string.IsNullOrWhiteSpace(criteria.Cohort) && criteria.Cohort != "Tất cả")
             {
-                query = query.Where(c => c.Cohort == criteria.Cohort);
+                var targetCohort = criteria.Cohort.Trim();
+                int? cohortNum = null;
+                if (targetCohort.StartsWith("K", StringComparison.OrdinalIgnoreCase) && int.TryParse(targetCohort.Substring(1), out int pNum))
+                {
+                    cohortNum = pNum;
+                }
+                else if (int.TryParse(targetCohort, out int rawNum))
+                {
+                    cohortNum = rawNum;
+                }
+
+                string cohortPatternDot = cohortNum.HasValue ? $".{cohortNum.Value:D3}." : string.Empty;
+                string cohortPatternHyphen = cohortNum.HasValue ? $"-{cohortNum.Value:D3}-" : string.Empty;
+                string cohortPatternUnderscore = cohortNum.HasValue ? $"_{cohortNum.Value:D3}_" : string.Empty;
+
+                query = query.Where(c =>
+                    c.Cohort == targetCohort ||
+                    (!string.IsNullOrEmpty(cohortPatternDot) && (c.CadetCode.Contains(cohortPatternDot) || c.CadetCode.Contains(cohortPatternHyphen) || c.CadetCode.Contains(cohortPatternUnderscore)))
+                );
             }
 
             // 12. Niên khóa (AcademicYear)
