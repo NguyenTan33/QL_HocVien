@@ -1,7 +1,7 @@
 {
-  "latestVersion": "1.4.8",
+  "latestVersion": "1.4.9",
   "minimumVersion": "1.0.0",
   "mandatory": false,
-  "downloadUrl": "https://github.com/NguyenTan33/QL_HocVien/releases/download/v1.4.8/QL_HocVien.exe",
-  "releaseNotes": "Bản cập nhật v1.4.8:\n- Sửa triệt để ô CheckBox chọn tất cả trong danh sách môn học tín chỉ (chuẩn hóa visual tree DataGrid và bổ sung ToggleSelectAllSubjectsCommand).\n- Đồng bộ thao tác chọn/bỏ chọn tất cả mượt mà tức thì."
+  "downloadUrl": "https://github.com/NguyenTan33/QL_HocVien/releases/download/v1.4.9/QL_HocVien.exe",
+  "releaseNotes": "Bản cập nhật v1.4.9:\n- Loại bỏ nút cứng 'Chuẩn Hóa 62.9 TC' trên thanh công cụ Quản lý Môn học Tín chỉ.\n- Chuyển sang cơ chế tính toán tổng tín chỉ hoàn toàn động theo danh mục môn học thực tế trong hệ thống.\n- Hỗ trợ linh hoạt khi thêm mới, sửa đổi hoặc loại bỏ môn học/thành phần mà không bị gò ép vào khung tín chỉ cố định."
 }

@@ -104,7 +104,7 @@ namespace QL_HocVien.Models.DTOs
         public string ClassName { get; set; } = string.Empty;
         public double Gpa { get; set; }
         public double TotalCreditsEarned { get; set; }
-        public double TotalCurriculumCredits { get; set; } = 62.90;
+        public double TotalCurriculumCredits { get; set; } = 0;
 
         public string AcademicRating
         {

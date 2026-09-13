@@ -266,30 +266,16 @@ namespace QL_HocVien.Services.Implementations
                 .GroupBy(s => s.ComponentId!.Value)
                 .ToDictionary(g => g.Key, g => g.Select(s => s.CadetId).Distinct().Count());
 
+            int activeThreshold = cadets.Count >= 20 ? 20 : Math.Max(1, (int)Math.Ceiling(cadets.Count * 0.3));
             var activeComponentIds = componentScoreCounts
-                .Where(kvp => kvp.Value >= 20)
+                .Where(kvp => kvp.Value >= activeThreshold)
                 .Select(kvp => kvp.Key)
                 .ToHashSet();
 
-            // Tự động phát hiện và dọn dẹp các đợt thi trùng lặp nếu tổng tín chỉ bị dội lên > 63.5 (ví dụ 84.6)
-            if (allComponents.Sum(c => c.Credits) > 63.5)
-            {
-                await NormalizeAndDeduplicateCurriculumAsync();
-                majorSubjects = await _context.CreditSubjects
-                    .Include(s => s.Components)
-                    .Where(s => !s.IsComponent)
-                    .AsNoTracking()
-                    .ToListAsync();
-                allComponents = majorSubjects
-                    .SelectMany(s => s.Components)
-                    .OrderBy(c => c.CreditSubjectId)
-                    .ThenBy(c => c.OrderIndex)
-                    .ToList();
-            }
-
-            // Tổng tín chỉ toàn khóa chuẩn (tính từ các đợt thi hoặc 62.90 theo file Excel chuẩn)
-            double curriculumCredits = allComponents.Sum(c => c.Credits);
-            if (curriculumCredits <= 0 || Math.Abs(curriculumCredits - 62.90) < 0.1) curriculumCredits = 62.90;
+            // Tổng tín chỉ toàn khóa tính động theo thực tế các môn và đợt thi đã cấu hình trong hệ thống
+            double curriculumCredits = allComponents.Count > 0
+                ? Math.Round(allComponents.Sum(c => c.Credits), 2)
+                : Math.Round(majorSubjects.Sum(s => s.Credits), 2);
 
             var result = new List<CadetAcademicSummaryDto>();
 
@@ -556,8 +542,9 @@ namespace QL_HocVien.Services.Implementations
                     // Dòng 1: Số tín chỉ của từng đợt kiểm tra / thi
                     int startCol = 7; // Cột 1: TT, Cột 2: Mã học viên, Cột 3: Đơn vị, Cột 4: Họ đệm, Cột 5: Tên, Cột 6: Họ và tên ghép
                     int col = startCol;
-                    double totalCurriculumCredits = components.Sum(c => c.Credits);
-                    if (totalCurriculumCredits <= 0) totalCurriculumCredits = 62.90;
+                    double totalCurriculumCredits = components.Count > 0
+                        ? Math.Round(components.Sum(c => c.Credits), 2)
+                        : Math.Round(subjects.Sum(s => s.Credits), 2);
 
                     foreach (var comp in components)
                     {
@@ -2545,12 +2532,7 @@ namespace QL_HocVien.Services.Implementations
                 await _context.SaveChangesAsync();
 
                 double totalCredits = Math.Round(remainingSubjects.SelectMany(s => s.Components).Sum(c => c.Credits), 2);
-                if (totalCredits <= 0 || Math.Abs(totalCredits - 62.90) < 0.1)
-                {
-                    totalCredits = 62.90;
-                }
-
-                return (true, $"Đã chuẩn hóa chương trình học về {totalCredits:F2} tín chỉ chuẩn thành công!", totalCredits);
+                return (true, $"Đã đồng bộ tổng tín chỉ chương trình học: {totalCredits:F2} tín chỉ thành công!", totalCredits);
             }
             catch (Exception ex)
             {

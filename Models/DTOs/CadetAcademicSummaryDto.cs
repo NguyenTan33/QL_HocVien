@@ -27,7 +27,7 @@ namespace QL_HocVien.Models.DTOs
         public Dictionary<int, double?> ComponentScores { get; set; } = new();
 
         public double TotalCreditsEarned { get; set; }
-        public double TotalCurriculumCredits { get; set; } = 62.90;
+        public double TotalCurriculumCredits { get; set; } = 0;
         public int TotalSubjectsCompleted { get; set; }
         public double Gpa { get; set; }
 
