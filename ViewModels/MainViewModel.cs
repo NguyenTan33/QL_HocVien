@@ -79,6 +79,40 @@ namespace QL_HocVien.ViewModels
 
             // Mặc định mở màn hình Tổng quan (Dashboard)
             NavigateToDashboard();
+
+            // Tự động kiểm tra bản cập nhật mới trong nền
+            CheckUpdateInBackground();
+        }
+
+        private void CheckUpdateInBackground()
+        {
+            Task.Run(async () =>
+            {
+                try
+                {
+                    await Task.Delay(2500); // Chờ giao diện chính tải xong ổn định
+                    var updateService = _serviceProvider.GetService<IUpdateService>();
+                    if (updateService == null) return;
+
+                    var result = await updateService.CheckForUpdateAsync();
+                    if (result.HasUpdate)
+                    {
+                        System.Windows.Application.Current?.Dispatcher.Invoke(() =>
+                        {
+                            var updateWindow = (Views.Windows.UpdateWindow)_serviceProvider.GetService(typeof(Views.Windows.UpdateWindow))!;
+                            if (updateWindow != null)
+                            {
+                                updateWindow.Initialize(result);
+                                updateWindow.ShowDialog();
+                            }
+                        });
+                    }
+                }
+                catch
+                {
+                    // Chạy ngầm: Bỏ qua lỗi kết nối máy chủ để người dùng không bị làm phiền khi offline
+                }
+            });
         }
 
         private void OnThemeChanged(bool isCombat)

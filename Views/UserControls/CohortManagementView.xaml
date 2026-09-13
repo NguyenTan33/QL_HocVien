@@ -33,8 +33,6 @@
 
                 <!-- 2. Thanh công cụ -->
                 <WrapPanel Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,0,12">
-                    <Button Content="{Binding SelectAllButtonText}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,8"
-                            Command="{Binding ToggleSelectAllCommand}" ToolTip="Chọn hoặc bỏ chọn tất cả khóa học"/>
                     <Button Content="➕ Thêm Khóa Mới" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,8"
                             Command="{Binding OpenAddFormCommand}"/>
                     <Button Content="✏️ Sửa" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,8"
