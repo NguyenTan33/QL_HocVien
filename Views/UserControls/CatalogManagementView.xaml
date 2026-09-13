@@ -743,7 +743,7 @@
                                     <!-- 2. Khi trực thuộc Đơn vị cấp trên: Chọn từ Cây sơ đồ -->
                                     <StackPanel Visibility="{Binding IsChildUnitForm, Converter={StaticResource BoolToVis}}">
                                         <TextBlock Text="Đơn vị cấp trên (Không bắt buộc):" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
-                                        <components:UnitTreeComboBox SelectedUnit="{Binding FormParentUnit, Mode=TwoWay}" Height="36" Placeholder="Chọn đơn vị cấp trên (hoặc bấm ✕ để bỏ trống)..."/>
+                                        <components:UnitTreeComboBox SelectedUnit="{Binding FormParentUnit, Mode=TwoWay}" SelectedUnitId="{Binding FormParentUnitId, Mode=TwoWay}" Height="36" Placeholder="Chọn đơn vị cấp trên (hoặc bấm ✕ để bỏ trống)..."/>
                                     </StackPanel>
 
                                     <!-- 3. Khi là Đơn vị cấp cao nhất / Độc lập -->

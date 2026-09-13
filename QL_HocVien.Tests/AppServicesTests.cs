@@ -963,47 +963,23 @@ namespace QL_HocVien.Tests
         [Fact]
         public void TestCadetManagementView_Instantiation()
         {
-            Exception? threadEx = null;
-            var thread = new System.Threading.Thread(() =>
+            WpfTestHelper.Run(() =>
             {
-                try
-                {
-                    var app = System.Windows.Application.Current ?? new System.Windows.Application();
-                    if (app.Resources.MergedDictionaries.Count == 0)
-                    {
-                        app.Resources.MergedDictionaries.Add(new System.Windows.ResourceDictionary
-                        {
-                            Source = new Uri("pack://application:,,,/QL_HocVien;component/Styles/MilitaryTheme.xaml")
-                        });
-                    }
-                    var view = new QL_HocVien.Views.UserControls.CadetManagementView();
-                    var vm = new CadetManagementViewModel(
-                        _cadetService,
-                        _classService,
-                        _authService,
-                        _excelService,
-                        new TestFileDialogService(),
-                        _catalogService,
-                        new QL_HocVien.Tests.TestDoubles.FakeSecurityGateService());
-                    view.DataContext = vm;
-                    view.Measure(new System.Windows.Size(1000, 800));
-                    view.Arrange(new System.Windows.Rect(0, 0, 1000, 800));
-                    view.UpdateLayout();
-                    Assert.NotNull(view);
-                }
-                catch (Exception ex)
-                {
-                    threadEx = ex;
-                }
+                var view = new QL_HocVien.Views.UserControls.CadetManagementView();
+                var vm = new CadetManagementViewModel(
+                    _cadetService,
+                    _classService,
+                    _authService,
+                    _excelService,
+                    new TestFileDialogService(),
+                    _catalogService,
+                    new QL_HocVien.Tests.TestDoubles.FakeSecurityGateService());
+                view.DataContext = vm;
+                view.Measure(new System.Windows.Size(1000, 800));
+                view.Arrange(new System.Windows.Rect(0, 0, 1000, 800));
+                view.UpdateLayout();
+                Assert.NotNull(view);
             });
-            thread.SetApartmentState(System.Threading.ApartmentState.STA);
-            thread.Start();
-            thread.Join(10000);
-
-            if (threadEx != null)
-            {
-                throw new Exception($"CadetManagementView instantiation failed: {threadEx.Message}", threadEx);
-            }
         }
 
         [Fact]

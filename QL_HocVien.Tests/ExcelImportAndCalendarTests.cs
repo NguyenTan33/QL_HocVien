@@ -236,58 +236,24 @@ namespace QL_HocVien.Tests
         [Fact]
         public void Test_TrainingTimelineView_Instantiation_And_ToggleViewMode()
         {
-            Exception? exception = null;
-            var thread = new Thread(() =>
+            WpfTestHelper.Run(() =>
             {
-                try
-                {
-                    if (System.Windows.Application.Current == null)
-                    {
-                        var app = new System.Windows.Application();
-                        app.Resources.MergedDictionaries.Add(new System.Windows.ResourceDictionary
-                        {
-                            Source = new Uri("pack://application:,,,/QL_HocVien;component/Styles/MilitaryTheme.xaml", UriKind.Absolute)
-                        });
-                    }
-                    else
-                    {
-                        bool hasTheme = System.Windows.Application.Current.Resources.MergedDictionaries.Any(d => d.Source != null && d.Source.ToString().Contains("MilitaryTheme"));
-                        if (!hasTheme)
-                        {
-                            System.Windows.Application.Current.Resources.MergedDictionaries.Add(new System.Windows.ResourceDictionary
-                            {
-                                Source = new Uri("pack://application:,,,/QL_HocVien;component/Styles/MilitaryTheme.xaml", UriKind.Absolute)
-                            });
-                        }
-                    }
+                var vm = new TrainingTimelineViewModel(_eventService, _catalogService, new QL_HocVien.Tests.TestDoubles.FakeSecurityGateService());
+                var view = new TrainingTimelineView { DataContext = vm };
+                Assert.NotNull(view);
 
-                    var vm = new TrainingTimelineViewModel(_eventService, _catalogService, new QL_HocVien.Tests.TestDoubles.FakeSecurityGateService());
-                    var view = new TrainingTimelineView { DataContext = vm };
-                    Assert.NotNull(view);
+                // Mặc định Timeline view
+                Assert.False(vm.IsCalendarViewVisible);
 
-                    // Mặc định Timeline view
-                    Assert.False(vm.IsCalendarViewVisible);
+                // Bấm nút chuyển sang Lịch tháng điện thoại
+                vm.SwitchToCalendarViewCommand.Execute(null);
+                Assert.True(vm.IsCalendarViewVisible);
+                Assert.Equal(42, vm.CalendarDays.Count);
 
-                    // Bấm nút chuyển sang Lịch tháng điện thoại
-                    vm.SwitchToCalendarViewCommand.Execute(null);
-                    Assert.True(vm.IsCalendarViewVisible);
-                    Assert.Equal(42, vm.CalendarDays.Count);
-
-                    // Bấm chuyển lại sang Timeline
-                    vm.SwitchToTimelineViewCommand.Execute(null);
-                    Assert.False(vm.IsCalendarViewVisible);
-                }
-                catch (Exception ex)
-                {
-                    exception = ex;
-                }
+                // Bấm chuyển lại sang Timeline
+                vm.SwitchToTimelineViewCommand.Execute(null);
+                Assert.False(vm.IsCalendarViewVisible);
             });
-
-            thread.SetApartmentState(ApartmentState.STA);
-            thread.Start();
-            thread.Join(5000);
-
-            Assert.Null(exception);
         }
 
         [Fact]

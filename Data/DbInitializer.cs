@@ -286,7 +286,40 @@ namespace QL_HocVien.Data
                 context.Database.ExecuteSqlRaw(@"CREATE INDEX IF NOT EXISTS ""IX_MilitaryUnits_UnitCode"" ON ""MilitaryUnits"" (""UnitCode"");");
             }
             catch { }
-            // Đảm bảo bảng AccountPasskeys và các cột bản quyền tồn tại
+
+            // ===== NÂNG CẤP: Thêm cột ParentUnitId vào MilitaryUnits (v1.5.3) =====
+            // Giải quyết bug nhầm nhánh khi nhiều đơn vị có cùng tên/mã (vd: nhiều Đại đội 1)
+            try
+            {
+                context.Database.ExecuteSqlRaw(@"ALTER TABLE ""MilitaryUnits"" ADD COLUMN ""ParentUnitId"" INTEGER NULL;");
+            }
+            catch { } // Bỏ qua nếu cột đã tồn tại
+
+            // Tự động liên kết dữ liệu cũ: nếu ParentUnit khớp duy nhất với 1 đơn vị có UnitName hoặc UnitCode thì gán ParentUnitId
+            try
+            {
+                context.Database.ExecuteSqlRaw(@"
+                    UPDATE ""MilitaryUnits""
+                    SET ""ParentUnitId"" = (
+                        SELECT p.""Id"" FROM ""MilitaryUnits"" p
+                        WHERE (p.""UnitName"" = ""MilitaryUnits"".""ParentUnit"" OR p.""UnitCode"" = ""MilitaryUnits"".""ParentUnit"")
+                        AND p.""Id"" != ""MilitaryUnits"".""Id""
+                        LIMIT 1
+                    )
+                    WHERE ""ParentUnitId"" IS NULL
+                      AND ""ParentUnit"" != ''
+                      AND ""ParentUnit"" != 'Học viện'
+                      AND ""ParentUnit"" != 'Bộ chỉ huy'
+                      AND (
+                        SELECT COUNT(*) FROM ""MilitaryUnits"" p
+                        WHERE (p.""UnitName"" = ""MilitaryUnits"".""ParentUnit"" OR p.""UnitCode"" = ""MilitaryUnits"".""ParentUnit"")
+                        AND p.""Id"" != ""MilitaryUnits"".""Id""
+                      ) = 1;
+                ");
+            }
+            catch { }
+
+
             try
             {
                 context.Database.ExecuteSqlRaw(@"
@@ -1027,25 +1060,17 @@ namespace QL_HocVien.Data
                 context.SaveChanges();
             }
 
-            // Dọn dẹp dữ liệu mẫu K26 cũ nếu không có học viên nào tham chiếu
-            try
+            if (!context.MilitaryClasses.Any())
             {
-                var sampleK26Codes = new[] { "K26A", "K26B", "K26C" };
-                var sampleClasses = context.MilitaryClasses
-                    .Where(c => sampleK26Codes.Contains(c.ClassCode))
-                    .ToList();
-
-                foreach (var sc in sampleClasses)
+                var classes = new List<MilitaryClass>
                 {
-                    bool hasCadets = context.Cadets.Any(c => c.ClassId == sc.Id);
-                    if (!hasCadets)
-                    {
-                        context.MilitaryClasses.Remove(sc);
-                    }
-                }
+                    new() { ClassCode = "K26A", ClassName = "K26A - Chỉ huy Tham mưu", Unit = "Đại đội 1", Major = "Chỉ huy Tham mưu Lục quân", AcademicYear = "2022-2026", OfficerInCharge = "Thiếu tá Nguyễn Văn Bình", Description = "Lớp đào tạo sĩ quan chỉ huy tham mưu khóa 26" },
+                    new() { ClassCode = "K26B", ClassName = "K26B - Hậu cần Quân sự", Unit = "Đại đội 2", Major = "Hậu cần Quân sự", AcademicYear = "2022-2026", OfficerInCharge = "Đại úy Trần Văn Quân", Description = "Lớp đào tạo sĩ quan hậu cần quân sự khóa 26" },
+                    new() { ClassCode = "K26C", ClassName = "K26C - Kỹ thuật Quân sự", Unit = "Đại đội 3", Major = "Kỹ thuật Vũ khí - Khí tài", AcademicYear = "2022-2026", OfficerInCharge = "Thiếu tá Lê Hồng Sơn", Description = "Lớp đào tạo kỹ sư kỹ thuật quân sự khóa 26" }
+                };
+                context.MilitaryClasses.AddRange(classes);
                 context.SaveChanges();
             }
-            catch { }
         }
 
         public static void EnsureAdminUser(AppDbContext context)

@@ -196,13 +196,15 @@ namespace QL_HocVien.Services.Implementations
 
             allAttachedIds ??= new HashSet<int>();
 
+            // Chỉ match khi parentNode thực sự là đơn vị có ID
+            if (parentNode.Unit == null || parentNode.Unit.Id <= 0) return;
+            int parentId = parentNode.Unit.Id;
+
             var childUnits = allUnits
                 .Where(u => u.Id > 0 &&
                             !branchUnitIds.Contains(u.Id) &&
                             !allAttachedIds.Contains(u.Id) &&
-                            !string.IsNullOrWhiteSpace(u.ParentUnit) &&
-                            (u.ParentUnit.Trim().Equals(parentNode.Name.Trim(), StringComparison.OrdinalIgnoreCase) ||
-                             (!string.IsNullOrWhiteSpace(parentNode.Code) && u.ParentUnit.Trim().Equals(parentNode.Code.Trim(), StringComparison.OrdinalIgnoreCase))) &&
+                            IsChildOfUnit(u, parentId, parentNode.Name, parentNode.Code) &&
                             !string.Equals(u.UnitCode, parentNode.Code, StringComparison.OrdinalIgnoreCase) &&
                             !ReferenceEquals(u, parentNode.Unit))
                 .ToList();
@@ -218,6 +220,25 @@ namespace QL_HocVien.Services.Implementations
                 var nextBranch = new HashSet<int>(branchUnitIds) { cu.Id };
                 AttachChildrenRecursive(childNode, allUnits, nextBranch, allAttachedIds, depth + 1);
             }
+        }
+
+        /// <summary>
+        /// Kiểm tra xem đơn vị u có phải là con trực tiếp của parentId không.
+        /// Ưu tiên ParentUnitId (ID chính xác). Fallback sang tên/mã cho dữ liệu cũ.
+        /// </summary>
+        private static bool IsChildOfUnit(MilitaryUnit u, int parentId, string parentName, string parentCode)
+        {
+            // Ưu tiên 1: Khớp theo ID chính xác - không nhầm nhánh
+            if (u.ParentUnitId.HasValue && u.ParentUnitId.Value > 0)
+            {
+                return u.ParentUnitId.Value == parentId;
+            }
+
+            // Fallback: Khớp theo tên/mã (dữ liệu cũ trước v1.5.3)
+            if (string.IsNullOrWhiteSpace(u.ParentUnit)) return false;
+            return u.ParentUnit.Trim().Equals(parentName.Trim(), StringComparison.OrdinalIgnoreCase) ||
+                   (!string.IsNullOrWhiteSpace(parentCode) &&
+                    u.ParentUnit.Trim().Equals(parentCode.Trim(), StringComparison.OrdinalIgnoreCase));
         }
 
         private void CollectAddedUnitIds(IEnumerable<UnitTreeNode> nodes, HashSet<int> ids, HashSet<UnitTreeNode>? visitedNodes = null)

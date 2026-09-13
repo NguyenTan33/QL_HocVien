@@ -231,271 +231,159 @@ namespace QL_HocVien.Tests
         [Fact]
         public void Test_DashboardView_Instantiation_On_STA_Thread()
         {
-            Exception? exception = null;
-            var thread = new System.Threading.Thread(() =>
+            WpfTestHelper.Run(() =>
             {
-                try
-                {
-                    if (System.Windows.Application.Current == null)
-                    {
-                        var app = new System.Windows.Application();
-                        app.Resources.MergedDictionaries.Add(new System.Windows.ResourceDictionary
-                        {
-                            Source = new Uri("pack://application:,,,/QL_HocVien;component/Styles/MilitaryTheme.xaml", UriKind.Absolute)
-                        });
-                    }
-                    else
-                    {
-                        bool hasTheme = System.Windows.Application.Current.Resources.MergedDictionaries.Any(d => d.Source != null && d.Source.ToString().Contains("MilitaryTheme"));
-                        if (!hasTheme)
-                        {
-                            System.Windows.Application.Current.Resources.MergedDictionaries.Add(new System.Windows.ResourceDictionary
-                            {
-                                Source = new Uri("pack://application:,,,/QL_HocVien;component/Styles/MilitaryTheme.xaml", UriKind.Absolute)
-                            });
-                        }
-                    }
+                var eventRepo = new TrainingEventRepository(_context);
+                var eventService = new TrainingEventService(eventRepo);
+                var fileDialogService = new FileDialogService();
 
-                    var eventRepo = new TrainingEventRepository(_context);
-                    var eventService = new TrainingEventService(eventRepo);
-                    var fileDialogService = new FileDialogService();
+                var vm = new DashboardViewModel(
+                    _dashboardService,
+                    _recommendationService,
+                    eventService,
+                    _cadetService,
+                    _excelService,
+                    fileDialogService,
+                    new QL_HocVien.Tests.TestDoubles.FakeSecurityGateService());
 
-                    var vm = new DashboardViewModel(
-                        _dashboardService,
-                        _recommendationService,
-                        eventService,
-                        _cadetService,
-                        _excelService,
-                        fileDialogService,
-                        new QL_HocVien.Tests.TestDoubles.FakeSecurityGateService());
+                var view = new QL_HocVien.Views.UserControls.DashboardView { DataContext = vm };
+                view.Measure(new System.Windows.Size(1280, 1000));
+                view.Arrange(new System.Windows.Rect(0, 0, 1280, 1000));
+                view.UpdateLayout();
 
-                    vm.InitializeDashboardAsync().GetAwaiter().GetResult();
-
-                    var view = new QL_HocVien.Views.UserControls.DashboardView { DataContext = vm };
-                    view.Measure(new System.Windows.Size(1280, 1000));
-                    view.Arrange(new System.Windows.Rect(0, 0, 1280, 1000));
-                    view.UpdateLayout();
-
-                    Assert.NotNull(view);
-                }
-                catch (Exception ex)
-                {
-                    exception = ex;
-                }
+                Assert.NotNull(view);
             });
-
-            thread.SetApartmentState(System.Threading.ApartmentState.STA);
-            thread.Start();
-            thread.Join(7000);
-
-            if (exception != null)
-            {
-                throw new Exception($"Lỗi khởi tạo DashboardView: {exception.Message}\n{exception.StackTrace}", exception);
-            }
         }
 
         [Fact]
         public void Test_CreditSubjectManagementView_Instantiation_On_STA_Thread()
         {
-            Exception? exception = null;
-            var thread = new System.Threading.Thread(() =>
+            WpfTestHelper.Run(() =>
             {
-                try
-                {
-                    if (System.Windows.Application.Current == null)
-                    {
-                        var app = new System.Windows.Application();
-                        app.Resources.MergedDictionaries.Add(new System.Windows.ResourceDictionary
-                        {
-                            Source = new Uri("pack://application:,,,/QL_HocVien;component/Styles/MilitaryTheme.xaml", UriKind.Absolute)
-                        });
-                    }
-                    else
-                    {
-                        bool hasTheme = System.Windows.Application.Current.Resources.MergedDictionaries.Any(d => d.Source != null && d.Source.ToString().Contains("MilitaryTheme"));
-                        if (!hasTheme)
-                        {
-                            System.Windows.Application.Current.Resources.MergedDictionaries.Add(new System.Windows.ResourceDictionary
-                            {
-                                Source = new Uri("pack://application:,,,/QL_HocVien;component/Styles/MilitaryTheme.xaml", UriKind.Absolute)
-                            });
-                        }
-                    }
+                var rankRepo = new RankRepository(_context);
+                var posRepo = new PositionRepository(_context);
+                var unitRepo = new UnitRepository(_context);
+                var majorRepo = new MajorRepository(_context);
+                var classRepo = new ClassRepository(_context);
+                var cadetRepo = new CadetRepository(_context);
 
-                    var rankRepo = new RankRepository(_context);
-                    var posRepo = new PositionRepository(_context);
-                    var unitRepo = new UnitRepository(_context);
-                    var majorRepo = new MajorRepository(_context);
-                    var classRepo = new ClassRepository(_context);
-                    var cadetRepo = new CadetRepository(_context);
+                var creditService = new CreditSubjectService(_context);
+                var cadetService = new CadetService(cadetRepo);
+                var catalogService = new CatalogService(rankRepo, posRepo, unitRepo, majorRepo);
+                var classService = new ClassService(classRepo);
+                var fileDialogService = new FileDialogService();
 
-                    var creditService = new CreditSubjectService(_context);
-                    var cadetService = new CadetService(cadetRepo);
-                    var catalogService = new CatalogService(rankRepo, posRepo, unitRepo, majorRepo);
-                    var classService = new ClassService(classRepo);
-                    var fileDialogService = new FileDialogService();
+                var vm = new CreditSubjectManagementViewModel(
+                    creditService,
+                    cadetService,
+                    catalogService,
+                    classService,
+                    fileDialogService,
+                    new QL_HocVien.Tests.TestDoubles.FakeSecurityGateService());
 
-                    var vm = new CreditSubjectManagementViewModel(
-                        creditService,
-                        cadetService,
-                        catalogService,
-                        classService,
-                        fileDialogService,
-                        new QL_HocVien.Tests.TestDoubles.FakeSecurityGateService());
+                var view = new QL_HocVien.Views.UserControls.CreditSubjectManagementView { DataContext = vm };
+                view.Measure(new System.Windows.Size(1280, 1000));
+                view.Arrange(new System.Windows.Rect(0, 0, 1280, 1000));
+                view.UpdateLayout();
 
-                    vm.InitializeAsync().GetAwaiter().GetResult();
-
-                    var view = new QL_HocVien.Views.UserControls.CreditSubjectManagementView { DataContext = vm };
-                    view.Measure(new System.Windows.Size(1280, 1000));
-                    view.Arrange(new System.Windows.Rect(0, 0, 1280, 1000));
-                    view.UpdateLayout();
-
-                    Assert.NotNull(view);
-                }
-                catch (Exception ex)
-                {
-                    exception = ex;
-                }
+                Assert.NotNull(view);
             });
-
-            thread.SetApartmentState(System.Threading.ApartmentState.STA);
-            thread.Start();
-            thread.Join(7000);
-
-            if (exception != null)
-            {
-                throw new Exception($"Lỗi khởi tạo CreditSubjectManagementView: {exception.Message}\n{exception.StackTrace}", exception);
-            }
         }
 
         [Fact]
         public void Test_MainWindow_Instantiation_On_STA_Thread()
         {
-            Exception? exception = null;
-            var thread = new System.Threading.Thread(() =>
+            WpfTestHelper.Run(() =>
             {
-                try
+                var services = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
+                var dbPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"test_app_{Guid.NewGuid():N}.db");
+                services.AddDbContext<AppDbContext>(options => options.UseSqlite($"Data Source={dbPath}"));
+
+                // Repositories
+                services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+                services.AddScoped<IUserRepository, UserRepository>();
+                services.AddScoped<IClassRepository, ClassRepository>();
+                services.AddScoped<ICadetRepository, CadetRepository>();
+                services.AddScoped<ISubjectRepository, SubjectRepository>();
+                services.AddScoped<IPhysicalExamRepository, PhysicalExamRepository>();
+                services.AddScoped<IOfficerRepository, OfficerRepository>();
+                services.AddScoped<IRankRepository, RankRepository>();
+                services.AddScoped<IPositionRepository, PositionRepository>();
+                services.AddScoped<IUnitRepository, UnitRepository>();
+                services.AddScoped<IMajorRepository, MajorRepository>();
+                services.AddScoped<ITrainingEventRepository, TrainingEventRepository>();
+
+                // Services
+                services.AddScoped<IAuthService, AuthService>();
+                services.AddScoped<IClassService, ClassService>();
+                services.AddScoped<ICadetService, CadetService>();
+                services.AddScoped<ISubjectService, SubjectService>();
+                services.AddScoped<IEvaluationService, EvaluationService>();
+                services.AddScoped<IPhysicalExamService, PhysicalExamService>();
+                services.AddScoped<IOfficerService, OfficerService>();
+                services.AddScoped<ICatalogService, CatalogService>();
+                services.AddSingleton<IFileDialogService, FileDialogService>();
+                services.AddScoped<IExcelService, ExcelService>();
+                services.AddScoped<ITrainingEventService, TrainingEventService>();
+                services.AddScoped<IAnalyticsService, AnalyticsService>();
+                services.AddScoped<ITrainingRecommendationService, TrainingRecommendationService>();
+                services.AddScoped<IDashboardAnalyticsService, DashboardAnalyticsService>();
+                services.AddScoped<ICreditSubjectService, CreditSubjectService>();
+                services.AddScoped<IPasskeyService, PasskeyService>();
+                services.AddScoped<ICohortService, CohortService>();
+                services.AddSingleton<IUnitHierarchyService, UnitHierarchyService>();
+                services.AddSingleton<IThemeService, ThemeService>();
+                services.AddSingleton<ILoginLockoutService, LoginLockoutService>();
+                services.AddSingleton<ISecurityGateService, QL_HocVien.Tests.TestDoubles.FakeSecurityGateService>();
+                services.AddAppInfrastructureValidation();
+
+                // ViewModels
+                services.AddTransient<LoginViewModel>();
+                services.AddTransient<RegisterViewModel>();
+                services.AddTransient<ForgotPasswordViewModel>();
+                services.AddTransient<MainViewModel>();
+                services.AddTransient<DashboardViewModel>();
+                services.AddTransient<CreditSubjectManagementViewModel>();
+                services.AddTransient<OfficerManagementViewModel>();
+                services.AddTransient<CatalogManagementViewModel>();
+                services.AddTransient<ClassManagementViewModel>();
+                services.AddTransient<CadetManagementViewModel>();
+                services.AddTransient<AddCadetViewModel>();
+                services.AddTransient<SubjectManagementViewModel>();
+                services.AddTransient<PhysicalExamViewModel>();
+                services.AddTransient<ExamAnalyticsViewModel>();
+                services.AddTransient<TrainingTimelineViewModel>();
+                services.AddTransient<SettingsViewModel>();
+
+                // Windows
+                services.AddTransient<LoginWindow>();
+                services.AddTransient<QL_HocVien.Views.Windows.MainWindow>();
+
+                var sp = services.BuildServiceProvider();
+                using (var scope = sp.CreateScope())
                 {
-                    var services = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
-                    var dbPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"test_app_{Guid.NewGuid():N}.db");
-                    services.AddDbContext<AppDbContext>(options => options.UseSqlite($"Data Source={dbPath}"));
-
-                    // Repositories
-                    services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-                    services.AddScoped<IUserRepository, UserRepository>();
-                    services.AddScoped<IClassRepository, ClassRepository>();
-                    services.AddScoped<ICadetRepository, CadetRepository>();
-                    services.AddScoped<ISubjectRepository, SubjectRepository>();
-                    services.AddScoped<IPhysicalExamRepository, PhysicalExamRepository>();
-                    services.AddScoped<IOfficerRepository, OfficerRepository>();
-                    services.AddScoped<IRankRepository, RankRepository>();
-                    services.AddScoped<IPositionRepository, PositionRepository>();
-                    services.AddScoped<IUnitRepository, UnitRepository>();
-                    services.AddScoped<IMajorRepository, MajorRepository>();
-                    services.AddScoped<ITrainingEventRepository, TrainingEventRepository>();
-
-                    // Services
-                    services.AddScoped<IAuthService, AuthService>();
-                    services.AddScoped<IClassService, ClassService>();
-                    services.AddScoped<ICadetService, CadetService>();
-                    services.AddScoped<ISubjectService, SubjectService>();
-                    services.AddScoped<IEvaluationService, EvaluationService>();
-                    services.AddScoped<IPhysicalExamService, PhysicalExamService>();
-                    services.AddScoped<IOfficerService, OfficerService>();
-                    services.AddScoped<ICatalogService, CatalogService>();
-                    services.AddSingleton<IFileDialogService, FileDialogService>();
-                    services.AddScoped<IExcelService, ExcelService>();
-                    services.AddScoped<ITrainingEventService, TrainingEventService>();
-                    services.AddScoped<IAnalyticsService, AnalyticsService>();
-                    services.AddScoped<ITrainingRecommendationService, TrainingRecommendationService>();
-                    services.AddScoped<IDashboardAnalyticsService, DashboardAnalyticsService>();
-                    services.AddScoped<ICreditSubjectService, CreditSubjectService>();
-                    services.AddScoped<IPasskeyService, PasskeyService>();
-                    services.AddSingleton<ILoginLockoutService, LoginLockoutService>();
-                    services.AddSingleton<ISecurityGateService, QL_HocVien.Tests.TestDoubles.FakeSecurityGateService>();
-                    services.AddAppInfrastructureValidation();
-
-                    // ViewModels
-                    services.AddTransient<LoginViewModel>();
-                    services.AddTransient<RegisterViewModel>();
-                    services.AddTransient<ForgotPasswordViewModel>();
-                    services.AddTransient<MainViewModel>();
-                    services.AddTransient<DashboardViewModel>();
-                    services.AddTransient<CreditSubjectManagementViewModel>();
-                    services.AddTransient<OfficerManagementViewModel>();
-                    services.AddTransient<CatalogManagementViewModel>();
-                    services.AddTransient<ClassManagementViewModel>();
-                    services.AddTransient<CadetManagementViewModel>();
-                    services.AddTransient<AddCadetViewModel>();
-                    services.AddTransient<SubjectManagementViewModel>();
-                    services.AddTransient<PhysicalExamViewModel>();
-                    services.AddTransient<ExamAnalyticsViewModel>();
-                    services.AddTransient<TrainingTimelineViewModel>();
-                    services.AddTransient<SettingsViewModel>();
-
-                    // Windows
-                    services.AddTransient<LoginWindow>();
-                    services.AddTransient<QL_HocVien.Views.Windows.MainWindow>();
-
-                    var sp = services.BuildServiceProvider();
-                    using (var scope = sp.CreateScope())
-                    {
-                        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                        DbInitializer.Initialize(db);
-                    }
-
-                    if (System.Windows.Application.Current == null)
-                    {
-                        var app = new System.Windows.Application();
-                        app.Resources.MergedDictionaries.Add(new System.Windows.ResourceDictionary
-                        {
-                            Source = new Uri("pack://application:,,,/QL_HocVien;component/Styles/MilitaryTheme.xaml", UriKind.Absolute)
-                        });
-                    }
-                    else
-                    {
-                        bool hasTheme = System.Windows.Application.Current.Resources.MergedDictionaries.Any(d => d.Source != null && d.Source.ToString().Contains("MilitaryTheme"));
-                        if (!hasTheme)
-                        {
-                            System.Windows.Application.Current.Resources.MergedDictionaries.Add(new System.Windows.ResourceDictionary
-                            {
-                                Source = new Uri("pack://application:,,,/QL_HocVien;component/Styles/MilitaryTheme.xaml", UriKind.Absolute)
-                            });
-                        }
-                    }
-
-                    // Test resolving LoginWindow
-                    var loginWindow = sp.GetRequiredService<LoginWindow>();
-                    Assert.NotNull(loginWindow);
-
-                    // Test resolving MainWindow
-                    var mainWindow = sp.GetRequiredService<QL_HocVien.Views.Windows.MainWindow>();
-                    Assert.NotNull(mainWindow);
-                    Assert.NotNull(mainWindow.DataContext);
-
-                    mainWindow.Measure(new System.Windows.Size(1280, 800));
-                    mainWindow.Arrange(new System.Windows.Rect(0, 0, 1280, 800));
-                    mainWindow.UpdateLayout();
-
-                    // Test navigating to CreditSubjectManagement
-                    var mainVm = (MainViewModel)mainWindow.DataContext;
-                    mainVm.NavigateToCreditSubjectManagementCommand.Execute(null);
-                    mainWindow.UpdateLayout();
+                    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                    DbInitializer.Initialize(db);
                 }
-                catch (Exception ex)
-                {
-                    exception = ex;
-                }
+
+                // Test resolving LoginWindow
+                var loginWindow = sp.GetRequiredService<LoginWindow>();
+                Assert.NotNull(loginWindow);
+
+                // Test resolving MainWindow
+                var mainWindow = sp.GetRequiredService<QL_HocVien.Views.Windows.MainWindow>();
+                Assert.NotNull(mainWindow);
+                Assert.NotNull(mainWindow.DataContext);
+
+                mainWindow.Measure(new System.Windows.Size(1280, 800));
+                mainWindow.Arrange(new System.Windows.Rect(0, 0, 1280, 800));
+                mainWindow.UpdateLayout();
+
+                // Test navigating to CreditSubjectManagement
+                var mainVm = (MainViewModel)mainWindow.DataContext;
+                mainVm.NavigateToCreditSubjectManagementCommand.Execute(null);
+                mainWindow.UpdateLayout();
             });
-
-            thread.SetApartmentState(System.Threading.ApartmentState.STA);
-            thread.Start();
-            thread.Join(10000);
-
-            if (exception != null)
-            {
-                throw new Exception($"Lỗi khởi tạo MainWindow: {exception.Message}\n{exception.StackTrace}", exception);
-            }
         }
 
         [Fact]

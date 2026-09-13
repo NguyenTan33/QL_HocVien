@@ -54,6 +54,28 @@ namespace QL_HocVien.ViewModels
             }
         }
 
+        /// <summary>
+        /// Đường dẫn đầy đủ từ cấp cha đến đơn vị này: "Tiểu đoàn 2 ➔ Đại đội 1 (cBB1)"
+        /// Dùng để hiển thị trong dropdown UnitTreeComboBox tránh nhầm giữa 2 đơn vị cùng tên
+        /// </summary>
+        public string FullHierarchyPath
+        {
+            get
+            {
+                var parts = new System.Collections.Generic.List<string>();
+                var p = ParentNode;
+                var visited = new System.Collections.Generic.HashSet<UnitTreeNode>();
+                while (p != null && !p.IsVirtualNode && visited.Add(p))
+                {
+                    parts.Insert(0, p.Name);
+                    p = p.ParentNode;
+                }
+                if (parts.Count > 0)
+                    return string.Join(" ➔ ", parts) + " ➔ " + DisplayText;
+                return DisplayText;
+            }
+        }
+
         [ObservableProperty]
         private bool _isExpanded = true;
 

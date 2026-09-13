@@ -117,6 +117,10 @@ namespace QL_HocVien.ViewModels
         [ObservableProperty]
         private string _formParentUnit = string.Empty;
 
+        /// <summary>ID chính xác của đơn vị cha được chọn (int?) - tránh nhầm khi trùng tên</summary>
+        [ObservableProperty]
+        private int? _formParentUnitId = null;
+
         [ObservableProperty]
         private string _formCommanderName = string.Empty;
 
@@ -460,6 +464,7 @@ namespace QL_HocVien.ViewModels
                     {
                         UnitParentType = 2; // Đơn vị cấp cao nhất độc lập
                         FormParentUnit = string.Empty;
+                        FormParentUnitId = null;
                     }
                     else
                     {
@@ -472,11 +477,14 @@ namespace QL_HocVien.ViewModels
                             UnitParentType = 0; // Trực thuộc Khóa học
                             SelectedFormCohort = matchedCohort;
                             FormParentUnit = matchedCohort.CohortCode;
+                            FormParentUnitId = null; // Khóa học không phải đơn vị quân sự
                         }
                         else
                         {
                             UnitParentType = 1; // Trực thuộc Đơn vị cấp trên
                             FormParentUnit = SelectedUnit.ParentUnit;
+                            // Nạp ID chính xác từ CSDL - điểm then chốt để dropdown chọn đúng nhánh
+                            FormParentUnitId = SelectedUnit.ParentUnitId;
                         }
                     }
                     break;
@@ -566,17 +574,22 @@ namespace QL_HocVien.ViewModels
 
                     case 2: // Đơn vị
                         string parentUnit = "";
+                        int? parentUnitId = null;
+
                         if (UnitParentType == 0) // Trực thuộc Khóa học
                         {
                             parentUnit = SelectedFormCohort?.CohortCode ?? FormParentUnit?.Trim() ?? string.Empty;
+                            parentUnitId = null; // Khóa học dùng mã string, không có Id đơn vị
                         }
                         else if (UnitParentType == 1) // Trực thuộc Đơn vị cấp trên
                         {
                             parentUnit = FormParentUnit?.Trim() ?? string.Empty;
+                            parentUnitId = FormParentUnitId; // ID chính xác của đơn vị cha
                         }
                         else // Đơn vị cấp cao nhất độc lập
                         {
                             parentUnit = string.Empty;
+                            parentUnitId = null;
                         }
 
                         var unit = new MilitaryUnit
@@ -585,6 +598,7 @@ namespace QL_HocVien.ViewModels
                             UnitCode = FormCode.Trim(),
                             UnitName = FormName.Trim(),
                             ParentUnit = parentUnit.Trim(),
+                            ParentUnitId = parentUnitId, // Lưu ID cha chính xác
                             CommanderName = FormCommanderName?.Trim() ?? string.Empty,
                             ContactPhone = FormContactPhone?.Trim() ?? string.Empty,
                             Description = FormDescription?.Trim() ?? string.Empty
@@ -882,12 +896,15 @@ namespace QL_HocVien.ViewModels
                 FormTitle = $"Thêm Đơn Vị Trực Thuộc Khóa Học: {parentNode.Name}";
                 SelectedFormCohort = AvailableCohorts.FirstOrDefault(c => c.CohortCode == parentNode.Code) ?? parentNode.CohortItem;
                 FormParentUnit = parentNode.Code;
+                FormParentUnitId = null; // Khóa học không có Id đơn vị
             }
             else
             {
                 UnitParentType = 1; // Trực thuộc Đơn vị cấp trên
                 FormTitle = $"Thêm Đơn Vị Trực Thuộc: {parentNode?.Name ?? "Đơn vị"}";
                 FormParentUnit = parentNode?.Name ?? string.Empty;
+                // Gán ID chính xác của đơn vị cha - đây là fix core cho bug nhầm nhánh
+                FormParentUnitId = parentNode?.Unit?.Id > 0 ? parentNode.Unit.Id : (int?)null;
             }
             IsFormVisible = true;
         }
@@ -1297,9 +1314,8 @@ namespace QL_HocVien.ViewModels
                 .Where(u => u.Id > 0 &&
                             !branchUnitIds.Contains(u.Id) &&
                             !allAttachedIds.Contains(u.Id) &&
-                            !string.IsNullOrWhiteSpace(u.ParentUnit) &&
-                            (u.ParentUnit.Trim().Equals(parentNode.Name.Trim(), StringComparison.OrdinalIgnoreCase) ||
-                             (!string.IsNullOrWhiteSpace(parentNode.Code) && u.ParentUnit.Trim().Equals(parentNode.Code.Trim(), StringComparison.OrdinalIgnoreCase))) &&
+                            parentNode.Unit != null && parentNode.Unit.Id > 0 &&
+                            IsChildOf(u, parentNode) &&
                             !string.Equals(u.UnitCode, parentNode.Code, StringComparison.OrdinalIgnoreCase) &&
                             !ReferenceEquals(u, parentNode.Unit))
                 .ToList();
@@ -1349,6 +1365,28 @@ namespace QL_HocVien.ViewModels
 
         #endregion
 
+        /// <summary>
+        /// Kiểm tra xem đơn vị u có phải là con trực tiếp của parentNode không.
+        /// Ưu tiên tuyệt đối theo ParentUnitId (ID chính xác) nếu có.
+        /// Fallback sang khớp tên/mã chỉ khi ParentUnitId chưa được gán (dữ liệu cũ trước v1.5.3).
+        /// </summary>
+        private static bool IsChildOf(MilitaryUnit u, UnitTreeNode parentNode)
+        {
+            if (parentNode.Unit == null || parentNode.Unit.Id <= 0) return false;
+
+            // Ưu tiên 1: Khớp theo ParentUnitId (ID chính xác - không nhầm lẫn nhánh)
+            if (u.ParentUnitId.HasValue && u.ParentUnitId.Value > 0)
+            {
+                return u.ParentUnitId.Value == parentNode.Unit.Id;
+            }
+
+            // Fallback: Khớp theo tên/mã (dữ liệu cũ trước v1.5.3 chưa có ParentUnitId)
+            if (string.IsNullOrWhiteSpace(u.ParentUnit)) return false;
+            return u.ParentUnit.Trim().Equals(parentNode.Name.Trim(), StringComparison.OrdinalIgnoreCase) ||
+                   (!string.IsNullOrWhiteSpace(parentNode.Code) &&
+                    u.ParentUnit.Trim().Equals(parentNode.Code.Trim(), StringComparison.OrdinalIgnoreCase));
+        }
+
         private void ClearForm()
         {
             FormCode = string.Empty;
@@ -1357,6 +1395,7 @@ namespace QL_HocVien.ViewModels
             FormDisplayOrder = 1;
             FormDescription = string.Empty;
             FormParentUnit = string.Empty;
+            FormParentUnitId = null;
             FormCommanderName = string.Empty;
             FormContactPhone = string.Empty;
             FormTrainingDuration = string.Empty;

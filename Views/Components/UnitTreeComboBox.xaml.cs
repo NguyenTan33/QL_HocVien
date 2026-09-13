@@ -29,6 +29,16 @@ namespace QL_HocVien.Views.Components
                     FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
                     OnSelectedUnitChanged));
 
+        public static readonly DependencyProperty SelectedUnitIdProperty =
+            DependencyProperty.Register(
+                nameof(SelectedUnitId),
+                typeof(int?),
+                typeof(UnitTreeComboBox),
+                new FrameworkPropertyMetadata(
+                    null,
+                    FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
+                    OnSelectedUnitIdChanged));
+
         public static readonly DependencyProperty IsFilterModeProperty =
             DependencyProperty.Register(
                 nameof(IsFilterMode),
@@ -54,6 +64,12 @@ namespace QL_HocVien.Views.Components
         {
             get => (string)GetValue(SelectedUnitProperty);
             set => SetValue(SelectedUnitProperty, value);
+        }
+
+        public int? SelectedUnitId
+        {
+            get => (int?)GetValue(SelectedUnitIdProperty);
+            set => SetValue(SelectedUnitIdProperty, value);
         }
 
         public bool IsFilterMode
@@ -165,6 +181,25 @@ namespace QL_HocVien.Views.Components
             }
         }
 
+        private static void OnSelectedUnitIdChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is UnitTreeComboBox control)
+            {
+                if (control._isInternalSelection) return;
+                int? newId = e.NewValue as int?;
+                if (newId.HasValue && newId.Value > 0)
+                {
+                    // Ưu tiên tìm theo ID chính xác
+                    control.UpdateDisplayFromSelectedUnitId(newId.Value);
+                }
+                else
+                {
+                    // ID null => clear
+                    control.UpdateDisplayFromSelectedUnit(control.SelectedUnit);
+                }
+            }
+        }
+
         private static void OnIsFilterModeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             if (d is UnitTreeComboBox control)
@@ -246,6 +281,38 @@ namespace QL_HocVien.Views.Components
                 }
             }
             return null;
+        }
+
+        /// <summary>Tìm node theo Unit.Id chính xác - tránh nhầm khi trùng tên</summary>
+        private UnitTreeNode? FindNodeById(int unitId, IEnumerable<UnitTreeNode> nodes, HashSet<UnitTreeNode>? visited = null)
+        {
+            visited ??= new HashSet<UnitTreeNode>();
+            foreach (var node in nodes)
+            {
+                if (!visited.Add(node)) continue;
+                if (node.Unit != null && node.Unit.Id == unitId)
+                    return node;
+                var childMatch = FindNodeById(unitId, node.Children, visited);
+                if (childMatch != null) return childMatch;
+            }
+            return null;
+        }
+
+        /// <summary>Update hiển thị theo ID chính xác</summary>
+        private void UpdateDisplayFromSelectedUnitId(int unitId)
+        {
+            var matchedNode = FindNodeById(unitId, _treeNodes);
+            if (matchedNode != null)
+            {
+                DeselectAllNodes(_treeNodes);
+                matchedNode.IsSelected = true;
+                matchedNode.ExpandParents();
+
+                SelectedIconText.Text = matchedNode.Icon;
+                // Hiển thị FullHierarchyPath nếu cần phân biệt các đơn vị cùng tên
+                SelectedDisplayText.Text = matchedNode.FullHierarchyPath;
+                BtnClear.Visibility = Visibility.Visible;
+            }
         }
 
         private void DeselectAllNodes(IEnumerable<UnitTreeNode> nodes, HashSet<UnitTreeNode>? visited = null)
@@ -426,6 +493,7 @@ namespace QL_HocVien.Views.Components
             try
             {
                 SelectedUnit = IsFilterMode ? "Tất cả" : string.Empty;
+                SelectedUnitId = null; // Xóa cả ID khi clear
             }
             finally
             {
@@ -464,13 +532,19 @@ namespace QL_HocVien.Views.Components
             try
             {
                 SelectedUnit = !string.IsNullOrWhiteSpace(node.Value) ? node.Value : node.Name;
+                // Gán ID chính xác để tránh nhầm nhánh khi nhiều đơn vị cùng tên
+                SelectedUnitId = node.Unit?.Id > 0 ? node.Unit?.Id : (int?)null;
             }
             finally
             {
                 _isInternalSelection = false;
             }
 
-            UpdateDisplayFromSelectedUnit(SelectedUnit);
+            // Nếu có ID hợp lệ, hiển thị đường dẫn đầy đủ
+            if (node.Unit?.Id > 0)
+                UpdateDisplayFromSelectedUnitId(node.Unit.Id);
+            else
+                UpdateDisplayFromSelectedUnit(SelectedUnit);
             IsDropDownOpen = false;
         }
 
