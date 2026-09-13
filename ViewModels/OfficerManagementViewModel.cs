@@ -62,32 +62,40 @@ namespace QL_HocVien.ViewModels
         private Officer? _selectedOfficer;
 
         [ObservableProperty]
-        private bool _isAllSelected;
+        private bool? _isAllSelected = false;
 
         [ObservableProperty]
         private int _selectedCount;
 
         private bool _isUpdatingSelection;
 
-        public string SelectAllButtonText => IsAllSelected ? "⬜ Bỏ chọn" : "☑️ Chọn tất cả";
+        public string SelectAllButtonText => IsAllSelected == true ? "⬜ Bỏ chọn" : "☑️ Chọn tất cả";
 
         [RelayCommand]
         public void ToggleSelectAll()
         {
-            IsAllSelected = !IsAllSelected;
+            if (IsAllSelected == true)
+            {
+                IsAllSelected = false;
+            }
+            else
+            {
+                IsAllSelected = true;
+            }
         }
 
-        partial void OnIsAllSelectedChanged(bool value)
+        partial void OnIsAllSelectedChanged(bool? value)
         {
-            if (_isUpdatingSelection) return;
+            if (_isUpdatingSelection || value == null) return;
             _isUpdatingSelection = true;
             try
             {
+                bool isChecked = value.Value;
                 foreach (var o in Officers)
                 {
-                    o.IsSelected = value;
+                    o.IsSelected = isChecked;
                 }
-                SelectedCount = value ? Officers.Count : 0;
+                SelectedCount = isChecked ? Officers.Count : 0;
             }
             finally
             {
@@ -117,7 +125,12 @@ namespace QL_HocVien.ViewModels
                     if (o.IsSelected) count++;
                 }
                 SelectedCount = count;
-                IsAllSelected = (Officers.Count > 0 && count == Officers.Count);
+                if (count == 0)
+                    IsAllSelected = false;
+                else if (count == Officers.Count && count > 0)
+                    IsAllSelected = true;
+                else
+                    IsAllSelected = null;
             }
             finally
             {

@@ -38,8 +38,6 @@
 
                 <!-- 2. Thanh công cụ thao tác (Page Toolbar) -->
                 <WrapPanel Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,0,12">
-                    <Button Content="{Binding SelectAllButtonText}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,8"
-                            Command="{Binding ToggleSelectAllCommand}" ToolTip="Chọn hoặc bỏ chọn tất cả cán bộ"/>
                     <Button Content="📥 Nhập Excel" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,8"
                             Command="{Binding ImportExcelCommand}"/>
                     <Button Content="📤 Xuất Excel" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,8"
@@ -120,14 +118,12 @@
                                     <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
 
-                                <TextBlock Grid.Row="0" Text="🎯 BỘ LỌC NÂNG CAO CÁN BỘ (Chuyên môn / Nhiệm vụ, Tài khoản &amp; Phụ trách lớp học)" 
+                                <TextBlock Grid.Row="0" Text="🎯 BỘ LỌC NÂNG CAO CÁN BỘ (Chuyên môn / Nhiệm vụ &amp; Trạng thái tài khoản)" 
                                            FontSize="12" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" Margin="0,0,0,10"/>
 
                                 <Grid Grid.Row="1">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="2*"/>
-                                        <ColumnDefinition Width="14"/>
-                                        <ColumnDefinition Width="1.5*"/>
                                         <ColumnDefinition Width="14"/>
                                         <ColumnDefinition Width="1.5*"/>
                                     </Grid.ColumnDefinitions>
@@ -145,13 +141,6 @@
                                         <ComboBox ItemsSource="{Binding HasAccountList}" SelectedItem="{Binding SelectedHasAccount}" 
                                                   Style="{StaticResource ModernComboBoxStyle}" Height="34"/>
                                     </StackPanel>
-
-                                    <!-- Lọc Phụ trách lớp -->
-                                    <StackPanel Grid.Column="4">
-                                        <TextBlock Text="Tình trạng chủ nhiệm lớp học:" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,3"/>
-                                        <ComboBox ItemsSource="{Binding HasAssignedClassesList}" SelectedItem="{Binding SelectedHasAssignedClasses}" 
-                                                  Style="{StaticResource ModernComboBoxStyle}" Height="34"/>
-                                    </StackPanel>
                                 </Grid>
                             </Grid>
                         </Border>
@@ -162,7 +151,7 @@
                 <Border Grid.Row="3" Style="{StaticResource CardBorderStyle}" Padding="0">
                     <DataGrid ItemsSource="{Binding Officers}" SelectedItem="{Binding SelectedOfficer}"
                               Style="{StaticResource MilitaryDataGridStyle}"
-                              AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
+                              AutoGenerateColumns="False" CanUserAddRows="False"
                               GridLinesVisibility="Horizontal" HeadersVisibility="Column"
                               RowHeaderWidth="0"
                               BorderThickness="0" RowHeight="42" SelectionMode="Single"
@@ -171,20 +160,24 @@
                               ScrollViewer.VerticalScrollBarVisibility="Auto"
                               ScrollViewer.CanContentScroll="True">
                         <DataGrid.Columns>
-                            <DataGridTemplateColumn Width="48" CanUserResize="False">
+                            <!-- Cột Checkbox chọn nhiều / chọn tất cả -->
+                            <DataGridTemplateColumn Width="48" CanUserResize="False" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}">
                                 <DataGridTemplateColumn.Header>
-                                    <CheckBox IsChecked="{Binding DataContext.IsAllSelected, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    <CheckBox IsChecked="{Binding DataContext.IsAllSelected, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                              IsThreeState="True"
+                                              HorizontalAlignment="Center" VerticalAlignment="Center"
+                                              ToolTip="Chọn tất cả / Bỏ chọn tất cả"/>
                                 </DataGridTemplateColumn.Header>
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <CheckBox IsChecked="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}"
+                                        <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="Mã Cán Bộ" Binding="{Binding OfficerCode}" Width="110" FontWeight="SemiBold"/>
-                            <DataGridTextColumn Header="Họ và Tên" Binding="{Binding FullName}" Width="190" FontWeight="Bold"/>
+
+                            <DataGridTextColumn Header="Mã Cán Bộ" Binding="{Binding OfficerCode}" Width="110" FontWeight="SemiBold" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Họ và Tên" Binding="{Binding FullName}" Width="190" FontWeight="Bold" IsReadOnly="True"/>
                             <DataGridTemplateColumn Header="Cấp Bậc" Width="130" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -203,22 +196,13 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="Đơn Vị" Binding="{Binding Unit}" Width="130"/>
-                            <DataGridTextColumn Header="Số Điện Thoại" Binding="{Binding PhoneNumber}" Width="120"/>
-                            <DataGridTextColumn Header="Email Liên Hệ" Binding="{Binding Email}" Width="180"/>
-                            <DataGridTextColumn Header="Chuyên Môn" Binding="{Binding Specialty}" Width="140"/>
-                            <DataGridTextColumn Header="Ngày Sinh" Binding="{Binding DateOfBirth, StringFormat='{}{0:dd/MM/yyyy}'}" Width="110"/>
-                            <DataGridTextColumn Header="Ngày Nhập Ngũ" Binding="{Binding EnlistmentDate, StringFormat='{}{0:dd/MM/yyyy}'}" Width="120"/>
-                            <DataGridTemplateColumn Header="Lớp Quản Lý" Width="110" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Border Background="{DynamicResource PageBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="8,3" HorizontalAlignment="Center">
-                                            <TextBlock Text="{Binding ManagedClasses.Count, StringFormat='{}{0} lớp'}" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" FontSize="12"/>
-                                        </Border>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="Ghi Chú" Binding="{Binding Notes}" MinWidth="160" Width="*"/>
+                            <DataGridTextColumn Header="Đơn Vị" Binding="{Binding Unit}" Width="130" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Số Điện Thoại" Binding="{Binding PhoneNumber}" Width="120" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Email Liên Hệ" Binding="{Binding Email}" Width="180" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Chuyên Môn" Binding="{Binding Specialty}" Width="140" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Ngày Sinh" Binding="{Binding DateOfBirth, StringFormat='{}{0:dd/MM/yyyy}'}" Width="110" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Ngày Nhập Ngũ" Binding="{Binding EnlistmentDate, StringFormat='{}{0:dd/MM/yyyy}'}" Width="120" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Ghi Chú" Binding="{Binding Notes}" MinWidth="160" Width="*" IsReadOnly="True"/>
                         </DataGrid.Columns>
                     </DataGrid>
                 </Border>
