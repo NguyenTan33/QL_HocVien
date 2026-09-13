@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:cv="clr-namespace:QL_HocVien.Converters"
+             xmlns:components="clr-namespace:QL_HocVien.Views.Components"
              mc:Ignorable="d" 
              d:DesignHeight="920" d:DesignWidth="1380">
 
@@ -1038,7 +1039,7 @@
                                 <!-- Đơn vị áp dụng -->
                                 <StackPanel Margin="0,0,0,10">
                                     <TextBlock Text="Đơn vị / Đối tượng áp dụng:" FontSize="11.5" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
-                                    <ComboBox ItemsSource="{Binding UnitOptions}" SelectedItem="{Binding EditTargetUnit}" Height="34" Background="{DynamicResource TimelineCardBackgroundBrush}" BorderBrush="#C5BAA0"/>
+                                    <components:UnitTreeComboBox SelectedUnit="{Binding EditTargetUnit, Mode=TwoWay}" Height="34" Placeholder="Chọn đơn vị áp dụng..."/>
                                 </StackPanel>
 
                                 <!-- Thời gian bắt đầu & kết thúc -->

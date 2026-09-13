@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local_cv="clr-namespace:QL_HocVien.Converters"
+             xmlns:components="clr-namespace:QL_HocVien.Views.Components"
              mc:Ignorable="d" 
              d:DesignHeight="700" d:DesignWidth="1000">
     <Border Padding="24">
@@ -69,8 +70,7 @@
                             <!-- Lọc theo Đơn vị -->
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="Đơn vị quản lý:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
-                                <ComboBox ItemsSource="{Binding Units}" SelectedItem="{Binding SelectedUnit}" 
-                                          Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
+                                <components:UnitTreeComboBox SelectedUnit="{Binding SelectedUnit, Mode=TwoWay}" IsFilterMode="True" Height="36" Placeholder="[ Tất cả đơn vị ]"/>
                             </StackPanel>
 
                             <!-- Lọc theo Chuyên ngành -->
@@ -237,7 +237,7 @@
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0">
                                 <TextBlock Text="Đơn vị trực thuộc (*):" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
-                                <ComboBox ItemsSource="{Binding AvailableUnits}" SelectedItem="{Binding FormUnit}" Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
+                                <components:UnitTreeComboBox SelectedUnit="{Binding FormUnit, Mode=TwoWay}" Height="36" Placeholder="Chọn đơn vị trực thuộc..."/>
                             </StackPanel>
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="Chuyên ngành (*):" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>

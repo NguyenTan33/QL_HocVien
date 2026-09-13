@@ -521,15 +521,71 @@ namespace QL_HocVien.Data
                 var units = new List<MilitaryUnit>
                 {
                     new() { UnitCode = "e1", UnitName = "Trung đoàn 1", ParentUnit = "Học viện", CommanderName = "Thượng tá Nguyễn Mạnh Hùng", ContactPhone = "0981111099", Description = "Trung đoàn quản lý & huấn luyện toàn diện" },
+                    new() { UnitCode = "d1", UnitName = "Tiểu đoàn 1", ParentUnit = "Trung đoàn 1", CommanderName = "Trung tá Hoàng Minh Tuấn", ContactPhone = "0981111010", Description = "Tiểu đoàn quản lý khóa K26" },
+                    new() { UnitCode = "d2", UnitName = "Tiểu đoàn 2", ParentUnit = "Trung đoàn 1", CommanderName = "Trung tá Vũ Đình Cường", ContactPhone = "0981111020", Description = "Tiểu đoàn quản lý khóa K27" },
                     new() { UnitCode = "c1", UnitName = "Đại đội 1", ParentUnit = "Tiểu đoàn 1", CommanderName = "Đại úy Nguyễn Văn Hùng", ContactPhone = "0981111001", Description = "Đại đội đào tạo Chỉ huy Tham mưu" },
                     new() { UnitCode = "c2", UnitName = "Đại đội 2", ParentUnit = "Tiểu đoàn 1", CommanderName = "Đại úy Trần Văn Quân", ContactPhone = "0981111002", Description = "Đại đội đào tạo Hậu cần Quân sự" },
                     new() { UnitCode = "c3", UnitName = "Đại đội 3", ParentUnit = "Tiểu đoàn 1", CommanderName = "Thiếu tá Lê Hồng Sơn", ContactPhone = "0981111003", Description = "Đại đội đào tạo Kỹ thuật Quân sự" },
                     new() { UnitCode = "c4", UnitName = "Đại đội 4", ParentUnit = "Tiểu đoàn 1", CommanderName = "Đại úy Phạm Văn Toàn", ContactPhone = "0981111004", Description = "Đại đội đào tạo Trinh sát Đặc nhiệm" },
-                    new() { UnitCode = "d1", UnitName = "Tiểu đoàn 1", ParentUnit = "Trung đoàn 1", CommanderName = "Trung tá Hoàng Minh Tuấn", ContactPhone = "0981111010", Description = "Tiểu đoàn quản lý khóa K26" },
-                    new() { UnitCode = "d2", UnitName = "Tiểu đoàn 2", ParentUnit = "Trung đoàn 1", CommanderName = "Trung tá Vũ Đình Cường", ContactPhone = "0981111020", Description = "Tiểu đoàn quản lý khóa K27" }
+                    // Cấp Trung đội trực thuộc Đại đội 1 (b1, b2, b3)
+                    new() { UnitCode = "b1", UnitName = "Trung đội 1", ParentUnit = "Đại đội 1", CommanderName = "Trung úy Lê Văn An", ContactPhone = "0981111031", Description = "Trung đội 1 (b1)" },
+                    new() { UnitCode = "b2", UnitName = "Trung đội 2", ParentUnit = "Đại đội 1", CommanderName = "Trung úy Đặng Minh Tuấn", ContactPhone = "0981111032", Description = "Trung đội 2 (b2)" },
+                    new() { UnitCode = "b3", UnitName = "Trung đội 3", ParentUnit = "Đại đội 1", CommanderName = "Thượng úy Hoàng Quốc Bảo", ContactPhone = "0981111033", Description = "Trung đội 3 (b3)" },
+                    // Cấp Trung đội trực thuộc Đại đội 2 (b4, b5, b6)
+                    new() { UnitCode = "b4", UnitName = "Trung đội 4", ParentUnit = "Đại đội 2", CommanderName = "Trung úy Bùi Văn Nam", ContactPhone = "0981111034", Description = "Trung đội 4 (b4)" },
+                    new() { UnitCode = "b5", UnitName = "Trung đội 5", ParentUnit = "Đại đội 2", CommanderName = "Thiếu úy Phan Huy Hoàng", ContactPhone = "0981111035", Description = "Trung đội 5 (b5)" },
+                    new() { UnitCode = "b6", UnitName = "Trung đội 6", ParentUnit = "Đại đội 2", CommanderName = "Trung úy Ngô Kiến Thiết", ContactPhone = "0981111036", Description = "Trung đội 6 (b6)" },
+                    // Cấp Tiểu đội trực thuộc Trung đội 1 (a1, a2, a3)
+                    new() { UnitCode = "a1", UnitName = "Tiểu đội 1", ParentUnit = "Trung đội 1", CommanderName = "Thượng sĩ Trần Quốc Toản", ContactPhone = "0981111041", Description = "Tiểu đội bộ binh 1" },
+                    new() { UnitCode = "a2", UnitName = "Tiểu đội 2", ParentUnit = "Trung đội 1", CommanderName = "Trung sĩ Vũ Trọng Phụng", ContactPhone = "0981111042", Description = "Tiểu đội bộ binh 2" },
+                    new() { UnitCode = "a3", UnitName = "Tiểu đội 3", ParentUnit = "Trung đội 1", CommanderName = "Trung sĩ Nguyễn Thái Học", ContactPhone = "0981111043", Description = "Tiểu đội hỏa lực 3" },
+                    // Cấp Nhóm trực thuộc Tiểu đội 1 (n1, n2)
+                    new() { UnitCode = "n1", UnitName = "Nhóm 1", ParentUnit = "Tiểu đội 1", CommanderName = "Hạ sĩ Đinh Tiên Hoàng", ContactPhone = "0981111051", Description = "Tổ chiến đấu 1" },
+                    new() { UnitCode = "n2", UnitName = "Nhóm 2", ParentUnit = "Tiểu đội 1", CommanderName = "Hạ sĩ Lê Lợi", ContactPhone = "0981111052", Description = "Tổ chiến đấu 2" }
                 };
                 context.MilitaryUnits.AddRange(units);
                 context.SaveChanges();
+            }
+            else
+            {
+                // Bổ sung các cấp phân đội (Trung đội b1, b2, b3; Tiểu đội a1, a2, a3; Nhóm n1, n2) nếu DB cũ chưa có
+                var existingCodes = new HashSet<string>(context.MilitaryUnits.Select(u => u.UnitCode.ToLower()), StringComparer.OrdinalIgnoreCase);
+                var toAdd = new List<MilitaryUnit>();
+
+                void AddIfNotExists(string code, string name, string parent, string commander, string phone, string desc)
+                {
+                    if (!existingCodes.Contains(code.ToLower()))
+                    {
+                        toAdd.Add(new MilitaryUnit
+                        {
+                            UnitCode = code,
+                            UnitName = name,
+                            ParentUnit = parent,
+                            CommanderName = commander,
+                            ContactPhone = phone,
+                            Description = desc
+                        });
+                        existingCodes.Add(code.ToLower());
+                    }
+                }
+
+                AddIfNotExists("b1", "Trung đội 1", "Đại đội 1", "Trung úy Lê Văn An", "0981111031", "Trung đội 1 (b1)");
+                AddIfNotExists("b2", "Trung đội 2", "Đại đội 1", "Trung úy Đặng Minh Tuấn", "0981111032", "Trung đội 2 (b2)");
+                AddIfNotExists("b3", "Trung đội 3", "Đại đội 1", "Thượng úy Hoàng Quốc Bảo", "0981111033", "Trung đội 3 (b3)");
+                AddIfNotExists("b4", "Trung đội 4", "Đại đội 2", "Trung úy Bùi Văn Nam", "0981111034", "Trung đội 4 (b4)");
+                AddIfNotExists("b5", "Trung đội 5", "Đại đội 2", "Thiếu úy Phan Huy Hoàng", "0981111035", "Trung đội 5 (b5)");
+                AddIfNotExists("b6", "Trung đội 6", "Đại đội 2", "Trung úy Ngô Kiến Thiết", "0981111036", "Trung đội 6 (b6)");
+                AddIfNotExists("a1", "Tiểu đội 1", "Trung đội 1", "Thượng sĩ Trần Quốc Toản", "0981111041", "Tiểu đội 1 (a1)");
+                AddIfNotExists("a2", "Tiểu đội 2", "Trung đội 1", "Trung sĩ Vũ Trọng Phụng", "0981111042", "Tiểu đội 2 (a2)");
+                AddIfNotExists("a3", "Tiểu đội 3", "Trung đội 1", "Trung sĩ Nguyễn Thái Học", "0981111043", "Tiểu đội 3 (a3)");
+                AddIfNotExists("n1", "Nhóm 1", "Tiểu đội 1", "Hạ sĩ Đinh Tiên Hoàng", "0981111051", "Nhóm 1 (Tổ chiến đấu 1)");
+                AddIfNotExists("n2", "Nhóm 2", "Tiểu đội 1", "Hạ sĩ Lê Lợi", "0981111052", "Nhóm 2 (Tổ chiến đấu 2)");
+
+                if (toAdd.Count > 0)
+                {
+                    context.MilitaryUnits.AddRange(toAdd);
+                    context.SaveChanges();
+                }
             }
 
             // 6. Seed Danh mục Chuyên ngành đào tạo

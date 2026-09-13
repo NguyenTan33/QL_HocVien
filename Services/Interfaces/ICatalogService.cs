@@ -38,6 +38,7 @@ namespace QL_HocVien.Services.Interfaces
         Task<(bool Success, string Message)> DeleteUnitAsync(int id);
         Task<List<string>> GetUnitNamesAsync();
         Task<List<string>> GetUnitDropdownAsync();
+        event System.Action? OnUnitsChanged;
 
         // 4. Chuyên ngành
         Task<IEnumerable<MilitaryMajor>> GetAllMajorsAsync();

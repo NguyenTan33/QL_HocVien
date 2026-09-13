@@ -1,0 +1,337 @@
+<UserControl x:Class="QL_HocVien.Views.Components.UnitTreeComboBox"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:vm="clr-namespace:QL_HocVien.ViewModels"
+             xmlns:local_cv="clr-namespace:QL_HocVien.Converters"
+             mc:Ignorable="d" 
+             d:DesignHeight="36" d:DesignWidth="240"
+             x:Name="RootUnitTreeBox">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+        <!-- ToggleButton Style cho Dấu Mở Rộng Cây [ > ] / [ v ] -->
+        <Style x:Key="TreeExpanderToggleStyle" TargetType="{x:Type ToggleButton}">
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Width" Value="20"/>
+            <Setter Property="Height" Value="20"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ToggleButton}">
+                        <Border x:Name="ExpanderBorder" Background="Transparent" 
+                                Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <!-- Dấu chevron > xoay 90 độ khi mở rộng -->
+                            <Path x:Name="ChevronPath"
+                                  Data="M 6 3 L 13 8 L 6 13" 
+                                  Stroke="{DynamicResource TextSecondaryBrush}" 
+                                  StrokeThickness="2" 
+                                  StrokeStartLineCap="Round"
+                                  StrokeEndLineCap="Round"
+                                  StrokeLineJoin="Round"
+                                  HorizontalAlignment="Center" 
+                                  VerticalAlignment="Center"
+                                  RenderTransformOrigin="0.5,0.5">
+                                <Path.RenderTransform>
+                                    <RotateTransform Angle="0"/>
+                                </Path.RenderTransform>
+                            </Path>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ChevronPath" Property="Stroke" Value="{DynamicResource AccentBrush}"/>
+                                <Setter TargetName="ExpanderBorder" Property="Background" Value="#1AFFFFFF"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="ChevronPath" Property="RenderTransform">
+                                    <Setter.Value>
+                                        <RotateTransform Angle="90"/>
+                                    </Setter.Value>
+                                </Setter>
+                                <Setter TargetName="ChevronPath" Property="Stroke" Value="{DynamicResource AccentBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Style cho TreeViewItem trong Popup -->
+        <Style x:Key="UnitTreeViewItemStyle" TargetType="{x:Type TreeViewItem}">
+            <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
+            <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}"/>
+            <Setter Property="Visibility" Value="{Binding IsVisible, Converter={StaticResource BoolToVis}}"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0,1"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type TreeViewItem}">
+                        <Grid Margin="0,1">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Hàng chứa Node Đơn vị -->
+                            <Border x:Name="Bd" Grid.Row="0"
+                                    Background="Transparent"
+                                    BorderThickness="1"
+                                    BorderBrush="Transparent"
+                                    CornerRadius="4"
+                                    Padding="4,5"
+                                    Cursor="Hand">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <!-- Cột 0: Nút [ > ] Mở rộng / Thu gọn -->
+                                        <ColumnDefinition Width="22"/>
+                                        <!-- Cột 1: Icon Huy hiệu quân sự -->
+                                        <ColumnDefinition Width="24"/>
+                                        <!-- Cột 2: Tên đơn vị -->
+                                        <ColumnDefinition Width="*"/>
+                                        <!-- Cột 3: Badge Mã / Cấp -->
+                                        <ColumnDefinition Width="Auto"/>
+                                        <!-- Cột 4: Checkmark khi được chọn -->
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Nút chevron [ > ] nếu có đơn vị con -->
+                                    <ToggleButton x:Name="Expander" Grid.Column="0"
+                                                  Style="{StaticResource TreeExpanderToggleStyle}"
+                                                  IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}}"
+                                                  ClickMode="Press"
+                                                  Visibility="{Binding HasChildren, Converter={StaticResource BoolToVis}}"/>
+
+                                    <!-- Vùng nhấp chuột chọn Node: bao trùm từ Cột 1 đến Cột 4 -->
+                                    <Button Grid.Column="1" Grid.ColumnSpan="4"
+                                            Background="Transparent" BorderThickness="0"
+                                            Padding="0" Margin="0" HorizontalContentAlignment="Stretch"
+                                            Focusable="False" Cursor="Hand"
+                                            Click="OnNodeRowClicked" Tag="{Binding}">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Grid Background="Transparent">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="24"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <!-- Icon -->
+                                                    <TextBlock Grid.Column="0" Text="{Binding Icon}" FontSize="13" 
+                                                               VerticalAlignment="Center" HorizontalAlignment="Center"/>
+
+                                                    <!-- Tên đơn vị -->
+                                                    <TextBlock Grid.Column="1" Text="{Binding DisplayText}" 
+                                                               FontSize="12.5" FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource TextPrimaryBrush}"
+                                                               VerticalAlignment="Center" Margin="4,0,6,0"
+                                                               TextTrimming="CharacterEllipsis"/>
+
+                                                    <!-- Badge Cấp / Mã -->
+                                                    <Border Grid.Column="2" CornerRadius="3" Padding="4,1" Margin="2,0,4,0"
+                                                            Background="{Binding BadgeBrush}" VerticalAlignment="Center"
+                                                            Opacity="0.85">
+                                                        <TextBlock Text="{Binding Code}" FontSize="10" FontWeight="Bold" Foreground="#FFFFFF"/>
+                                                    </Border>
+
+                                                    <!-- Checkmark -->
+                                                    <TextBlock Grid.Column="3" Text="✓" FontSize="13" FontWeight="Bold"
+                                                               Foreground="{DynamicResource AccentBrush}"
+                                                               VerticalAlignment="Center" Margin="4,0,2,0"
+                                                               Visibility="{Binding IsSelected, Converter={StaticResource BoolToVis}}"/>
+                                                </Grid>
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                    </Button>
+                                </Grid>
+                            </Border>
+
+                            <!-- Danh sách đơn vị con (thụt lề phân cấp) -->
+                            <ItemsPresenter Grid.Row="1" x:Name="ItemsHost" Margin="20,0,0,0" Visibility="Collapsed"/>
+                        </Grid>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsExpanded" Value="True">
+                                <Setter TargetName="ItemsHost" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#22FFFFFF"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#33F2C94C"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- HierarchicalDataTemplate cho UnitTreeNode -->
+        <HierarchicalDataTemplate DataType="{x:Type vm:UnitTreeNode}" ItemsSource="{Binding Children}"/>
+    </UserControl.Resources>
+
+    <Grid>
+        <!-- HỘP KÍCH HOẠT (TRIGGER BUTTON - Trông như ComboBox quân đội cao cấp) -->
+        <Border x:Name="TriggerBox"
+                Height="{Binding Height, ElementName=RootUnitTreeBox, FallbackValue=36}"
+                MinHeight="34"
+                Background="{DynamicResource InputBackgroundBrush}"
+                BorderBrush="{DynamicResource InputBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="4"
+                Cursor="Hand"
+                MouseLeftButtonDown="OnTriggerBoxClicked">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Style.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+
+            <Grid Margin="10,0,8,0">
+                <Grid.ColumnDefinitions>
+                    <!-- Cột 0: Icon cấp đơn vị đã chọn -->
+                    <ColumnDefinition Width="Auto"/>
+                    <!-- Cột 1: Tên đơn vị đã chọn hoặc Placeholder -->
+                    <ColumnDefinition Width="*"/>
+                    <!-- Cột 2: Nút Xóa nhanh (Clear) -->
+                    <ColumnDefinition Width="Auto"/>
+                    <!-- Cột 3: Mũi tên xổ xuống [ ▼ ] -->
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Icon đơn vị được chọn -->
+                <TextBlock Grid.Column="0" x:Name="SelectedIconText" Text="🚩" FontSize="13" 
+                           VerticalAlignment="Center" Margin="0,0,6,0"
+                           Visibility="Visible"/>
+
+                <!-- Nhãn đơn vị được chọn -->
+                <TextBlock Grid.Column="1" x:Name="SelectedDisplayText"
+                           Text="Chọn đơn vị..."
+                           FontSize="12.5" FontWeight="SemiBold"
+                           Foreground="{DynamicResource InputForegroundBrush}"
+                           VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis"/>
+
+                <!-- Nút Clear nhanh (✕) -->
+                <Button Grid.Column="2" x:Name="BtnClear"
+                        Content="✕" FontSize="11" FontWeight="Bold"
+                        Foreground="{DynamicResource TextSecondaryBrush}"
+                        Background="Transparent" BorderThickness="0"
+                        Width="20" Height="20" Margin="0,0,4,0"
+                        Cursor="Hand" ToolTip="Xóa lựa chọn (Về tất cả)"
+                        Click="OnClearClicked"
+                        Visibility="Collapsed"/>
+
+                <!-- Mũi tên xổ xuống [ ▼ ] -->
+                <Path Grid.Column="3" x:Name="ArrowPath"
+                      Data="M 0 0 L 4 4 L 8 0 Z"
+                      Fill="{DynamicResource TextSecondaryBrush}"
+                      HorizontalAlignment="Center" VerticalAlignment="Center"
+                      Margin="4,0,2,0"/>
+            </Grid>
+        </Border>
+
+        <!-- POPUP CHỨA CÂY PHÂN CẤP (TREEVIEW DROPDOWN) -->
+        <Popup x:Name="TreePopup"
+               Placement="Bottom"
+               PlacementTarget="{Binding ElementName=TriggerBox}"
+               IsOpen="{Binding IsDropDownOpen, ElementName=RootUnitTreeBox, Mode=TwoWay}"
+               StaysOpen="False"
+               AllowsTransparency="True"
+               PopupAnimation="Slide">
+            <Border MinWidth="{Binding ActualWidth, ElementName=TriggerBox}"
+                    Width="320"
+                    MaxHeight="380"
+                    Background="{DynamicResource CardBackgroundBrush}"
+                    BorderBrush="{DynamicResource AccentBrush}"
+                    BorderThickness="1.5"
+                    CornerRadius="6"
+                    Margin="0,4,0,0"
+                    Padding="8">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="12" ShadowDepth="4" Opacity="0.45" Direction="270" Color="#000000"/>
+                </Border.Effect>
+
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <!-- Hàng 0: Ô tìm kiếm nhanh -->
+                        <RowDefinition Height="Auto"/>
+                        <!-- Hàng 1: Nút [ Tất cả đơn vị ] (Khi IsFilterMode = true) -->
+                        <RowDefinition Height="Auto"/>
+                        <!-- Hàng 2: Cây phân cấp TreeView -->
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- 1. Ô tìm kiếm nhanh đơn vị -->
+                    <Border Grid.Row="0" Background="{DynamicResource PageBackgroundBrush}"
+                            BorderBrush="{DynamicResource CardBorderBrush}"
+                            BorderThickness="1" CornerRadius="4" Padding="6,4" Margin="0,0,0,8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="🔍" FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0" Opacity="0.7"/>
+                            <TextBox Grid.Column="1" x:Name="SearchBox"
+                                     Background="Transparent" BorderThickness="0"
+                                     Foreground="{DynamicResource TextPrimaryBrush}"
+                                     FontSize="12" VerticalAlignment="Center"
+                                     TextChanged="OnSearchTextChanged"/>
+                            <TextBlock Grid.Column="1" Text="Tìm nhanh đơn vị (b3, c1, Đại đội...)..."
+                                       Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11.5"
+                                       VerticalAlignment="Center" IsHitTestVisible="False" Margin="2,0,0,0"
+                                       Visibility="{Binding Text.IsEmpty, ElementName=SearchBox, Converter={StaticResource BoolToVis}}"/>
+                            <Button Grid.Column="2" x:Name="BtnClearSearch"
+                                    Content="✕" FontSize="10" FontWeight="Bold"
+                                    Foreground="{DynamicResource TextSecondaryBrush}"
+                                    Background="Transparent" BorderThickness="0"
+                                    Width="18" Height="18" Cursor="Hand"
+                                    Click="OnClearSearchClicked"
+                                    Visibility="{Binding Text, ElementName=SearchBox, Converter={x:Static local_cv:StringToVisibilityConverter.Instance}}"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- 2. Tùy chọn [ Tất cả đơn vị ] trong chế độ Bộ lọc -->
+                    <Border Grid.Row="1" x:Name="AllFilterOption"
+                            Background="Transparent" CornerRadius="4" Padding="8,6" Margin="0,0,0,6"
+                            Cursor="Hand" MouseLeftButtonDown="OnAllUnitsClicked"
+                            Visibility="Collapsed">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="#22FFFFFF"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🌐" FontSize="13" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="[ Tất cả đơn vị ]" FontSize="12.5" FontWeight="Bold"
+                                       Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- 3. Cây phân cấp TreeView chính -->
+                    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <TreeView x:Name="MainTreeView"
+                                  Background="Transparent"
+                                  BorderThickness="0"
+                                  Padding="0"
+                                  ItemContainerStyle="{StaticResource UnitTreeViewItemStyle}"/>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Popup>
+    </Grid>
+</UserControl>

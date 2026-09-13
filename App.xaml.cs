@@ -267,6 +267,7 @@ namespace QL_HocVien
             services.AddScoped<IPhysicalExamService, PhysicalExamService>();
             services.AddScoped<IOfficerService, OfficerService>();
             services.AddScoped<ICatalogService, CatalogService>();
+            services.AddSingleton<IUnitHierarchyService, UnitHierarchyService>();
             services.AddSingleton<IFileDialogService, FileDialogService>();
             services.AddScoped<IExcelService, ExcelService>();
             services.AddScoped<ITrainingEventService, TrainingEventService>();

@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local_cv="clr-namespace:QL_HocVien.Converters"
+             xmlns:components="clr-namespace:QL_HocVien.Views.Components"
              mc:Ignorable="d" 
              d:DesignHeight="700" d:DesignWidth="900">
     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24">
@@ -72,7 +73,7 @@
                         </StackPanel>
                         <StackPanel Grid.Column="2">
                             <TextBlock Text="Đơn vị quân đội:" FontSize="13" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,6"/>
-                            <ComboBox ItemsSource="{Binding UnitList}" SelectedItem="{Binding SelectedUnit}" Style="{StaticResource ModernComboBoxStyle}" Height="40"/>
+                            <components:UnitTreeComboBox SelectedUnit="{Binding SelectedUnit, Mode=TwoWay}" Height="40" Placeholder="Chọn đơn vị học viên..."/>
                         </StackPanel>
                     </Grid>
 

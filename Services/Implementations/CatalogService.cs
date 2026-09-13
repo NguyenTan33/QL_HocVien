@@ -199,6 +199,8 @@ namespace QL_HocVien.Services.Implementations
 
         public async Task<MilitaryUnit?> GetUnitByIdAsync(int id) => await _unitRepo.GetByIdAsync(id);
 
+        public event Action? OnUnitsChanged;
+
         public async Task<(bool Success, string Message, MilitaryUnit? Unit)> AddUnitAsync(MilitaryUnit unit)
         {
             if (string.IsNullOrWhiteSpace(unit.UnitCode))
@@ -210,11 +212,12 @@ namespace QL_HocVien.Services.Implementations
             unit.UnitName = unit.UnitName.Trim();
 
             if (await _unitRepo.ExistsByCodeAsync(unit.UnitCode))
-                return (false, $"Mã đơn vị '{unit.UnitCode}' đã tồn tại.", null);
+                return (false, $"Mã đơn vị '{unit.UnitCode}' đã tồn tại trong hệ thống.", null);
 
             unit.CreatedAt = DateTime.Now;
             await _unitRepo.AddAsync(unit);
             await _unitRepo.SaveChangesAsync();
+            OnUnitsChanged?.Invoke();
             return (true, "Thêm đơn vị thành công!", unit);
         }
 
@@ -247,6 +250,7 @@ namespace QL_HocVien.Services.Implementations
 
             _unitRepo.Update(existing);
             await _unitRepo.SaveChangesAsync();
+            OnUnitsChanged?.Invoke();
             return (true, "Cập nhật đơn vị thành công!");
         }
 
@@ -258,6 +262,7 @@ namespace QL_HocVien.Services.Implementations
 
             _unitRepo.Delete(existing);
             await _unitRepo.SaveChangesAsync();
+            OnUnitsChanged?.Invoke();
             return (true, "Đã xóa đơn vị thành công!");
         }
 
