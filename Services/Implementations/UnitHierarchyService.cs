@@ -217,7 +217,8 @@ namespace QL_HocVien.Services.Implementations
                 .Where(u => !string.IsNullOrWhiteSpace(u.ParentUnit) &&
                             (u.ParentUnit.Trim().Equals(parentNode.Name.Trim(), StringComparison.OrdinalIgnoreCase) ||
                              (!string.IsNullOrWhiteSpace(parentNode.Code) && u.ParentUnit.Trim().Equals(parentNode.Code.Trim(), StringComparison.OrdinalIgnoreCase))) &&
-                            u.Id != parentNode.Unit?.Id)
+                            !string.Equals(u.UnitCode, parentNode.Code, StringComparison.OrdinalIgnoreCase) &&
+                            !ReferenceEquals(u, parentNode.Unit))
                 .ToList();
 
             foreach (var cu in childUnits)
