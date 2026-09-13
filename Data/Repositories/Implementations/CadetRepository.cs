@@ -111,7 +111,7 @@ namespace QL_HocVien.Data.Repositories.Implementations
                         }
                         else if (segments.Length >= 3)
                         {
-                            // Cấp Tiểu đội: dBB1/cBB1/bBB1
+                            // Cấp Tiểu đội: ví dụ "dBB1/cBB1/bBB1"
                             string s0 = segments[0];
                             string s1 = segments[1];
                             string s2 = segments[2];
@@ -120,18 +120,26 @@ namespace QL_HocVien.Data.Repositories.Implementations
 
                             string patB = $"{s0}/{s1}/bBB{num}";
                             string patD = $"{s0}/{s1}/dBB{num}";
+                            string patBShort = $"{s0}/{s1}/b{num}";
                             string patRaw = $"{s0}/{s1}/{num}";
                             string patExact = cleanUnit;
+
+                            string parentPrefix = $"{s0}/{s1}/";
 
                             query = query.Where(c =>
                                 c.Unit == patExact ||
                                 c.Unit == patB ||
                                 c.Unit == patD ||
+                                c.Unit == patBShort ||
                                 c.Unit == patRaw ||
-                                c.Unit.EndsWith("/" + s2) ||
-                                c.Unit.EndsWith($"/bBB{num}") ||
-                                c.Unit.EndsWith($"/dBB{num}") ||
-                                c.Unit.EndsWith($"/b{num}"));
+                                (c.Unit.StartsWith(parentPrefix) && (
+                                    c.Unit.EndsWith("/" + s2) ||
+                                    c.Unit.EndsWith($"/bBB{num}") ||
+                                    c.Unit.EndsWith($"/dBB{num}") ||
+                                    c.Unit.EndsWith($"/b{num}") ||
+                                    c.Unit.EndsWith($"/{num}"))
+                                )
+                            );
                         }
                     }
                 }
