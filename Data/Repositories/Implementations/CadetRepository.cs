@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using QL_HocVien.Models;
@@ -54,21 +55,86 @@ namespace QL_HocVien.Data.Repositories.Implementations
             // 3. Đơn vị
             if (!string.IsNullOrWhiteSpace(criteria.Unit) && criteria.Unit != "Tất cả")
             {
-                var targetUnit = criteria.Unit.Trim().TrimEnd('/').ToLower();
-                var lastSegment = targetUnit.Contains('/')
-                    ? targetUnit.Split('/', StringSplitOptions.RemoveEmptyEntries).Last().Trim()
-                    : targetUnit;
-                var altUnit = GetEquivalentUnit(targetUnit).ToLower();
+                var cleanUnit = criteria.Unit.Trim().TrimEnd('/');
 
-                query = query.Where(c =>
-                    c.Unit.ToLower() == targetUnit ||
-                    c.Unit.ToLower() == targetUnit + "/" ||
-                    c.Unit.ToLower().StartsWith(targetUnit + "/") ||
-                    c.Unit.ToLower().StartsWith(targetUnit) ||
-                    c.Unit.ToLower().Contains("/" + targetUnit + "/") ||
-                    c.Unit.ToLower().EndsWith("/" + targetUnit) ||
-                    c.Unit.ToLower().Contains(lastSegment) ||
-                    (!string.IsNullOrEmpty(altUnit) && (c.Unit.ToLower() == altUnit || c.Unit.ToLower().Contains(altUnit))));
+                if (cleanUnit.StartsWith("K", StringComparison.OrdinalIgnoreCase) && int.TryParse(cleanUnit.Substring(1), out int cNumFromUnit))
+                {
+                    string dotPat = $".{cNumFromUnit:D3}.";
+                    query = query.Where(c =>
+                        c.Cohort == cleanUnit ||
+                        (c.AcademicCohort != null && (c.AcademicCohort.CohortCode == cleanUnit || c.AcademicCohort.CohortNumber == cNumFromUnit)) ||
+                        c.CadetCode.Contains(dotPat));
+                }
+                else
+                {
+                    // 1. Kiểm tra nếu là tên tiếng Việt đơn thuần (ví dụ "Tiểu đoàn 1" hoặc "Đại đội 1")
+                    var mD = Regex.Match(cleanUnit, @"(?i)^tiểu\s*đoàn\s*(\d+)$");
+                    var mC = Regex.Match(cleanUnit, @"(?i)^đại\s*đội\s*(\d+)$");
+                    var mB = Regex.Match(cleanUnit, @"(?i)^tiểu\s*đội\s*(\d+)$");
+
+                    if (mD.Success)
+                    {
+                        string dCode = $"dBB{mD.Groups[1].Value}";
+                        string dCodeShort = $"d{mD.Groups[1].Value}";
+                        query = query.Where(c => c.Unit.StartsWith(dCode + "/") || c.Unit == dCode || c.Unit.StartsWith(dCodeShort + "/") || c.Unit == cleanUnit || c.Unit.Contains(cleanUnit));
+                    }
+                    else if (mC.Success)
+                    {
+                        string cCode = $"cBB{mC.Groups[1].Value}";
+                        string cCodeShort = $"c{mC.Groups[1].Value}";
+                        query = query.Where(c => c.Unit.Contains("/" + cCode + "/") || c.Unit.EndsWith("/" + cCode) || c.Unit == cCode ||
+                                                 c.Unit.Contains("/" + cCodeShort + "/") || c.Unit.EndsWith("/" + cCodeShort) ||
+                                                 c.Unit == cleanUnit || c.Unit.Contains(cleanUnit));
+                    }
+                    else if (mB.Success)
+                    {
+                        string bNum = mB.Groups[1].Value;
+                        query = query.Where(c => c.Unit.EndsWith($"/bBB{bNum}") || c.Unit.EndsWith($"/dBB{bNum}") ||
+                                                 c.Unit.EndsWith($"/b{bNum}") || c.Unit.EndsWith($"/{bNum}") ||
+                                                 c.Unit == cleanUnit || c.Unit.Contains(cleanUnit));
+                    }
+                    else
+                    {
+                        // 2. Phân tích đường dẫn mã đơn vị phân cấp (ví dụ "dBB1", "dBB1/cBB1", "dBB1/cBB1/bBB1")
+                        var segments = cleanUnit.Split('/', StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToArray();
+                        if (segments.Length == 1)
+                        {
+                            // Cấp Tiểu đoàn: dBB1
+                            string s0 = segments[0];
+                            query = query.Where(c => c.Unit == s0 || c.Unit.StartsWith(s0 + "/") || c.Unit.Contains(s0));
+                        }
+                        else if (segments.Length == 2)
+                        {
+                            // Cấp Đại đội: dBB1/cBB1
+                            string prefix = $"{segments[0]}/{segments[1]}";
+                            query = query.Where(c => c.Unit == prefix || c.Unit.StartsWith(prefix + "/") || c.Unit.Contains(prefix));
+                        }
+                        else if (segments.Length >= 3)
+                        {
+                            // Cấp Tiểu đội: dBB1/cBB1/bBB1
+                            string s0 = segments[0];
+                            string s1 = segments[1];
+                            string s2 = segments[2];
+                            var mNum = Regex.Match(s2, @"\d+");
+                            string num = mNum.Success ? mNum.Value : s2;
+
+                            string patB = $"{s0}/{s1}/bBB{num}";
+                            string patD = $"{s0}/{s1}/dBB{num}";
+                            string patRaw = $"{s0}/{s1}/{num}";
+                            string patExact = cleanUnit;
+
+                            query = query.Where(c =>
+                                c.Unit == patExact ||
+                                c.Unit == patB ||
+                                c.Unit == patD ||
+                                c.Unit == patRaw ||
+                                c.Unit.EndsWith("/" + s2) ||
+                                c.Unit.EndsWith($"/bBB{num}") ||
+                                c.Unit.EndsWith($"/dBB{num}") ||
+                                c.Unit.EndsWith($"/b{num}"));
+                        }
+                    }
+                }
             }
 
             // 4. Lớp học

@@ -141,6 +141,125 @@ namespace QL_HocVien.Services.Implementations
             return null;
         }
 
+        /// <summary>
+        /// Tự động đảm bảo toàn bộ cây cơ cấu đơn vị trong MilitaryUnits được sinh ra và liên kết chính xác
+        /// (Khóa học -> Tiểu đoàn -> Đại đội -> Tiểu đội) khi quét cột đơn vị phân cấp từ Excel.
+        /// </summary>
+        public static async Task EnsureUnitHierarchyInDbAsync(AppDbContext context, string cohortCode, string unitPath)
+        {
+            if (string.IsNullOrWhiteSpace(unitPath)) return;
+
+            string cleanPath = unitPath.Trim().Trim('/');
+            if (string.IsNullOrWhiteSpace(cleanPath)) return;
+
+            var segments = cleanPath.Split('/', StringSplitOptions.RemoveEmptyEntries)
+                                    .Select(s => s.Trim())
+                                    .Where(s => !string.IsNullOrEmpty(s))
+                                    .ToArray();
+
+            if (segments.Length == 0) return;
+
+            string cleanCohort = !string.IsNullOrWhiteSpace(cohortCode) ? cohortCode.Trim() : "K75";
+
+            // Cấp 1: Tiểu đoàn (dBB1)
+            string dCode = segments[0];
+            var dUnit = await context.MilitaryUnits.FirstOrDefaultAsync(u =>
+                u.UnitCode == dCode &&
+                (u.ParentUnit == cleanCohort || u.ParentUnitId == null));
+
+            if (dUnit == null)
+            {
+                int num = ExtractNumberFromUnitCode(dCode);
+                dUnit = new MilitaryUnit
+                {
+                    UnitCode = dCode,
+                    UnitName = num > 0 ? $"Tiểu đoàn {num}" : dCode,
+                    ParentUnit = cleanCohort,
+                    ParentUnitId = null,
+                    Description = $"Tiểu đoàn thuộc {cleanCohort}",
+                    CreatedAt = DateTime.Now
+                };
+                context.MilitaryUnits.Add(dUnit);
+                await context.SaveChangesAsync();
+            }
+            else if (string.IsNullOrWhiteSpace(dUnit.ParentUnit) || !dUnit.ParentUnit.Equals(cleanCohort, StringComparison.OrdinalIgnoreCase))
+            {
+                dUnit.ParentUnit = cleanCohort;
+                await context.SaveChangesAsync();
+            }
+
+            if (segments.Length < 2) return;
+
+            // Cấp 2: Đại đội (cBB1)
+            string cCode = segments[1];
+            var cUnit = await context.MilitaryUnits.FirstOrDefaultAsync(u =>
+                u.UnitCode == cCode &&
+                (u.ParentUnitId == dUnit.Id ||
+                 u.ParentUnit == dUnit.UnitName ||
+                 u.ParentUnit == dUnit.UnitCode));
+
+            if (cUnit == null)
+            {
+                int num = ExtractNumberFromUnitCode(cCode);
+                cUnit = new MilitaryUnit
+                {
+                    UnitCode = cCode,
+                    UnitName = num > 0 ? $"Đại đội {num}" : cCode,
+                    ParentUnit = dUnit.UnitName,
+                    ParentUnitId = dUnit.Id,
+                    Description = $"Đại đội thuộc {dUnit.UnitName}",
+                    CreatedAt = DateTime.Now
+                };
+                context.MilitaryUnits.Add(cUnit);
+                await context.SaveChangesAsync();
+            }
+            else if (cUnit.ParentUnitId != dUnit.Id)
+            {
+                cUnit.ParentUnitId = dUnit.Id;
+                cUnit.ParentUnit = dUnit.UnitName;
+                await context.SaveChangesAsync();
+            }
+
+            if (segments.Length < 3) return;
+
+            // Cấp 3: Tiểu đội (bBB1 hoặc dBB1)
+            string bCode = segments[2];
+            var bUnit = await context.MilitaryUnits.FirstOrDefaultAsync(u =>
+                u.UnitCode == bCode &&
+                (u.ParentUnitId == cUnit.Id ||
+                 u.ParentUnit == cUnit.UnitName ||
+                 u.ParentUnit == cUnit.UnitCode));
+
+            if (bUnit == null)
+            {
+                int num = ExtractNumberFromUnitCode(bCode);
+                bUnit = new MilitaryUnit
+                {
+                    UnitCode = bCode,
+                    UnitName = num > 0 ? $"Tiểu đội {num}" : bCode,
+                    ParentUnit = cUnit.UnitName,
+                    ParentUnitId = cUnit.Id,
+                    Description = $"Tiểu đội thuộc {cUnit.UnitName}",
+                    CreatedAt = DateTime.Now
+                };
+                context.MilitaryUnits.Add(bUnit);
+                await context.SaveChangesAsync();
+            }
+            else if (bUnit.ParentUnitId != cUnit.Id)
+            {
+                bUnit.ParentUnitId = cUnit.Id;
+                bUnit.ParentUnit = cUnit.UnitName;
+                await context.SaveChangesAsync();
+            }
+        }
+
+        public static int ExtractNumberFromUnitCode(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return 0;
+            var match = Regex.Match(text, @"\d+");
+            return match.Success && int.TryParse(match.Value, out int n) ? n : 0;
+        }
+
         #region 1. XUẤT & NHẬP HỌC VIÊN
         public async Task<(bool Success, string Message)> ExportCadetsToExcelAsync(IEnumerable<Cadet> cadets, string filePath)
         {
@@ -489,6 +608,17 @@ namespace QL_HocVien.Services.Implementations
                         extractedCohortId = foundCohort.Id;
                     }
 
+                    // ── Chuẩn hóa chuỗi đơn vị và tự động liên kết cơ cấu tổ chức theo Khóa học ──
+                    if (!string.IsNullOrWhiteSpace(unit))
+                    {
+                        unit = unit.Trim().Trim('/');
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(unit))
+                    {
+                        await EnsureUnitHierarchyInDbAsync(_context, extractedCohort, unit);
+                    }
+
                     // ── Parse chuỗi đơn vị phân cấp "dBB1/cBB1/bBB1" ──
                     // Tìm MilitaryClass tương ứng với cấp thấp nhất (tiểu đội/đại đội)
                     // để link ClassId cho học viên nếu DB đã có cấu trúc đơn vị
@@ -497,7 +627,7 @@ namespace QL_HocVien.Services.Implementations
                         c.ClassCode.Equals(className, StringComparison.OrdinalIgnoreCase));
 
                     int? resolvedClassId = matchedClass?.Id;
-                    string displayUnit = unit; // Giữ nguyên chuỗi phân cấp đầy đủ để hiển thị
+                    string displayUnit = unit; // Giữ nguyên chuỗi phân cấp đầy đủ đã chuẩn hóa để hiển thị
 
                     if (resolvedClassId == null && unit.Contains('/'))
                     {
@@ -585,6 +715,17 @@ namespace QL_HocVien.Services.Implementations
                 }
 
                 await _cadetRepository.SaveChangesAsync();
+
+                try
+                {
+                    if (App.ServiceProvider != null)
+                    {
+                        var hierarchyService = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetService<IUnitHierarchyService>(App.ServiceProvider);
+                        hierarchyService?.InvalidateCache();
+                    }
+                }
+                catch { }
+
                 return (true, $"Nhập dữ liệu thành công: Thêm mới {addedCount} học viên, Cập nhật {updatedCount} học viên.", importedList);
             }
             catch (Exception ex)

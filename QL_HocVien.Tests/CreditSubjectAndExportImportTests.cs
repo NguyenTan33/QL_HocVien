@@ -774,5 +774,96 @@ namespace QL_HocVien.Tests
                 if (File.Exists(tempExcel)) File.Delete(tempExcel);
             }
         }
+
+        [Fact]
+        public async Task Test_UnitHierarchy_ExcelImport_AndSegmentFiltering()
+        {
+            // 1. Tạo Khóa 75
+            var cohort75 = new AcademicCohort
+            {
+                CohortCode = "K75",
+                CohortName = "Khóa 75",
+                CohortNumber = 75,
+                AcademicYear = "2020 - 2024"
+            };
+            _context.AcademicCohorts.Add(cohort75);
+            await _context.SaveChangesAsync();
+
+            // 2. Tạo học viên với mã và đơn vị phân cấp
+            var c1 = new Cadet { CadetCode = "ĐH.075.001", FullName = "Nguyễn Văn A", Unit = "dBB1/cBB1/bBB1", Cohort = "K75", CohortId = cohort75.Id };
+            var c2 = new Cadet { CadetCode = "ĐH.075.002", FullName = "Trần Văn B", Unit = "dBB1/cBB1/bBB2", Cohort = "K75", CohortId = cohort75.Id };
+            var c3 = new Cadet { CadetCode = "ĐH.075.003", FullName = "Lê Văn C", Unit = "dBB2/cBB1/bBB1", Cohort = "K75", CohortId = cohort75.Id };
+            _context.Cadets.AddRange(c1, c2, c3);
+            await _context.SaveChangesAsync();
+
+            // 3. Kiểm tra lọc cấp Tiểu đoàn (mã & tên)
+            var d1 = await _creditService.GetCadetAcademicSummariesAsync(unit: "dBB1", cohort: "K75");
+            Assert.Equal(2, d1.Count);
+
+            var d1Name = await _creditService.GetCadetAcademicSummariesAsync(unit: "Tiểu đoàn 1", cohort: "K75");
+            Assert.Equal(2, d1Name.Count);
+
+            var d2 = await _creditService.GetCadetAcademicSummariesAsync(unit: "dBB2", cohort: "K75");
+            Assert.Equal(1, d2.Count);
+
+            // 4. Kiểm tra lọc cấp Đại đội (mã & tên)
+            var c1UnderD1 = await _creditService.GetCadetAcademicSummariesAsync(unit: "dBB1/cBB1", cohort: "K75");
+            Assert.Equal(2, c1UnderD1.Count);
+
+            var c1Name = await _creditService.GetCadetAcademicSummariesAsync(unit: "Đại đội 1", cohort: "K75");
+            Assert.Equal(3, c1Name.Count); // cBB1 thuộc cả dBB1 và dBB2
+
+            // 5. Kiểm tra lọc cấp Tiểu đội
+            var b1 = await _creditService.GetCadetAcademicSummariesAsync(unit: "dBB1/cBB1/bBB1", cohort: "K75");
+            Assert.Equal(1, b1.Count);
+            Assert.Equal("ĐH.075.001", b1[0].CadetCode);
+
+            var b2 = await _creditService.GetCadetAcademicSummariesAsync(unit: "dBB1/cBB1/bBB2", cohort: "K75");
+            Assert.Equal(1, b2.Count);
+            Assert.Equal("ĐH.075.002", b2[0].CadetCode);
+
+            // 6. Kiểm tra lọc kết hợp với từ khóa tìm kiếm
+            var search = await _creditService.GetCadetAcademicSummariesAsync(unit: "dBB1", keyword: "Nguyễn", cohort: "K75");
+            Assert.Equal(1, search.Count);
+            Assert.Equal("Nguyễn Văn A", search[0].FullName);
+        }
+
+        [Fact]
+        public async Task Test_AutoHealUnitHierarchyAndCohorts()
+        {
+            // 1. Tạo Khóa 75
+            var cohort = new AcademicCohort { CohortCode = "K75", CohortName = "Khóa 75", CohortNumber = 75 };
+            _context.AcademicCohorts.Add(cohort);
+
+            // Đơn vị cha
+            var uD = new MilitaryUnit { UnitCode = "dBB1", UnitName = "Tiểu đoàn 1", ParentUnit = "K75" };
+            _context.MilitaryUnits.Add(uD);
+            await _context.SaveChangesAsync();
+
+            var uC = new MilitaryUnit { UnitCode = "cBB1", UnitName = "Đại đội 1", ParentUnit = "Tiểu đoàn 1", ParentUnitId = uD.Id };
+            _context.MilitaryUnits.Add(uC);
+            await _context.SaveChangesAsync();
+
+            // Đơn vị con bị thiếu ParentUnitId và có ParentUnit dạng "dBB1/cBB1"
+            var uB = new MilitaryUnit { UnitCode = "bBB1", UnitName = "Tiểu đội 1", ParentUnit = "dBB1/cBB1", ParentUnitId = null };
+            _context.MilitaryUnits.Add(uB);
+
+            // Học viên có Cohort = "K75" nhưng CohortId = null
+            var cadet = new Cadet { CadetCode = "HV-HEAL-01", FullName = "Test Heal", Cohort = "K75", CohortId = null, Unit = "dBB1/cBB1/bBB1" };
+            _context.Cadets.Add(cadet);
+            await _context.SaveChangesAsync();
+
+            // Chạy auto-heal
+            DbInitializer.AutoHealUnitHierarchyAndCohorts(_context);
+
+            // Kiểm tra kết quả
+            var healedUnit = await _context.MilitaryUnits.FirstOrDefaultAsync(u => u.UnitCode == "bBB1");
+            Assert.NotNull(healedUnit);
+            Assert.Equal(uC.Id, healedUnit.ParentUnitId);
+
+            var healedCadet = await _context.Cadets.FirstOrDefaultAsync(c => c.CadetCode == "HV-HEAL-01");
+            Assert.NotNull(healedCadet);
+            Assert.Equal(cohort.Id, healedCadet.CohortId);
+        }
     }
 }

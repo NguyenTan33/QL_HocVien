@@ -914,6 +914,62 @@ namespace QL_HocVien.Data
                 context.SaveChanges();
             }
             }
+
+            AutoHealUnitHierarchyAndCohorts(context);
+        }
+
+        public static void AutoHealUnitHierarchyAndCohorts(AppDbContext context)
+        {
+            try
+            {
+                // 1. Tự động liên kết CohortId cho các học viên có Cohort nhưng CohortId chưa được gán
+                var cohorts = context.AcademicCohorts.ToList();
+                var cadetsWithoutCohortId = context.Cadets.Where(c => !c.CohortId.HasValue && !string.IsNullOrEmpty(c.Cohort)).ToList();
+                bool hasCadetChanges = false;
+                foreach (var cadet in cadetsWithoutCohortId)
+                {
+                    var ch = cohorts.FirstOrDefault(c => string.Equals(c.CohortCode, cadet.Cohort, StringComparison.OrdinalIgnoreCase) ||
+                                                         string.Equals(c.CohortName, cadet.Cohort, StringComparison.OrdinalIgnoreCase));
+                    if (ch != null)
+                    {
+                        cadet.CohortId = ch.Id;
+                        hasCadetChanges = true;
+                    }
+                }
+                if (hasCadetChanges)
+                {
+                    context.SaveChanges();
+                }
+
+                // 2. Tự động liên kết ParentUnitId cho các đơn vị có ParentUnitId còn trống
+                var allUnits = context.MilitaryUnits.ToList();
+                bool hasUnitChanges = false;
+                foreach (var u in allUnits.Where(u => !u.ParentUnitId.HasValue && !string.IsNullOrWhiteSpace(u.ParentUnit)))
+                {
+                    var pStr = u.ParentUnit.Trim();
+                    string targetParentCode = pStr.Contains('/') 
+                        ? pStr.Split('/', StringSplitOptions.RemoveEmptyEntries).Last().Trim() 
+                        : pStr;
+
+                    var parent = allUnits.FirstOrDefault(p => p.Id != u.Id && 
+                        (string.Equals(p.UnitCode, targetParentCode, StringComparison.OrdinalIgnoreCase) ||
+                         string.Equals(p.UnitName, targetParentCode, StringComparison.OrdinalIgnoreCase)));
+
+                    if (parent != null)
+                    {
+                        u.ParentUnitId = parent.Id;
+                        hasUnitChanges = true;
+                    }
+                }
+                if (hasUnitChanges)
+                {
+                    context.SaveChanges();
+                }
+            }
+            catch
+            {
+                // Bỏ qua nếu có lỗi
+            }
         }
         public static void SeedSampleCatalogs(AppDbContext context)
         {

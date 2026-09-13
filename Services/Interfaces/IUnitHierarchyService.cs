@@ -23,5 +23,11 @@ namespace QL_HocVien.Services.Interfaces
         /// Sự kiện phát ra khi cây đơn vị có sự cập nhật trong cơ sở dữ liệu
         /// </summary>
         event Action? OnHierarchyChanged;
+
+        /// <summary>
+        /// Đảm bảo toàn bộ cơ cấu phân cấp đơn vị (Tiểu đoàn > Đại đội > Tiểu đội) của Khóa học
+        /// tồn tại và được liên kết chính xác (ParentUnitId, ParentUnit) trong CSDL MilitaryUnits khi nhập Excel.
+        /// </summary>
+        Task EnsureUnitHierarchyStructureAsync(string cohortCode, string unitPath);
     }
 }

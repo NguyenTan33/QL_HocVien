@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using ClosedXML.Excel;
 using Microsoft.EntityFrameworkCore;
@@ -252,18 +253,73 @@ namespace QL_HocVien.Services.Implementations
                 }
                 else
                 {
-                    var lastSegment = cleanUnit.Contains('/')
-                        ? cleanUnit.Split('/', StringSplitOptions.RemoveEmptyEntries).Last().Trim()
-                        : cleanUnit;
+                    // 1. Kiểm tra nếu là tên tiếng Việt đơn thuần (ví dụ "Tiểu đoàn 1" hoặc "Đại đội 1")
+                    var mD = Regex.Match(cleanUnit, @"(?i)^tiểu\s*đoàn\s*(\d+)$");
+                    var mC = Regex.Match(cleanUnit, @"(?i)^đại\s*đội\s*(\d+)$");
+                    var mB = Regex.Match(cleanUnit, @"(?i)^tiểu\s*đội\s*(\d+)$");
 
-                    query = query.Where(c =>
-                        c.Unit == cleanUnit ||
-                        c.Unit == cleanUnit + "/" ||
-                        c.Unit.StartsWith(cleanUnit + "/") ||
-                        c.Unit.StartsWith(cleanUnit) ||
-                        c.Unit.Contains("/" + cleanUnit + "/") ||
-                        c.Unit.EndsWith("/" + cleanUnit) ||
-                        c.Unit.Contains(lastSegment));
+                    if (mD.Success)
+                    {
+                        string dCode = $"dBB{mD.Groups[1].Value}";
+                        string dCodeShort = $"d{mD.Groups[1].Value}";
+                        query = query.Where(c => c.Unit.StartsWith(dCode + "/") || c.Unit == dCode || c.Unit.StartsWith(dCodeShort + "/") || c.Unit == cleanUnit || c.Unit.Contains(cleanUnit));
+                    }
+                    else if (mC.Success)
+                    {
+                        string cCode = $"cBB{mC.Groups[1].Value}";
+                        string cCodeShort = $"c{mC.Groups[1].Value}";
+                        query = query.Where(c => c.Unit.Contains("/" + cCode + "/") || c.Unit.EndsWith("/" + cCode) || c.Unit == cCode ||
+                                                 c.Unit.Contains("/" + cCodeShort + "/") || c.Unit.EndsWith("/" + cCodeShort) ||
+                                                 c.Unit == cleanUnit || c.Unit.Contains(cleanUnit));
+                    }
+                    else if (mB.Success)
+                    {
+                        string bNum = mB.Groups[1].Value;
+                        query = query.Where(c => c.Unit.EndsWith($"/bBB{bNum}") || c.Unit.EndsWith($"/dBB{bNum}") ||
+                                                 c.Unit.EndsWith($"/b{bNum}") || c.Unit.EndsWith($"/{bNum}") ||
+                                                 c.Unit == cleanUnit || c.Unit.Contains(cleanUnit));
+                    }
+                    else
+                    {
+                        // 2. Phân tích đường dẫn mã đơn vị phân cấp (ví dụ "dBB1", "dBB1/cBB1", "dBB1/cBB1/bBB1")
+                        var segments = cleanUnit.Split('/', StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToArray();
+                        if (segments.Length == 1)
+                        {
+                            // Cấp Tiểu đoàn: dBB1
+                            string s0 = segments[0];
+                            query = query.Where(c => c.Unit == s0 || c.Unit.StartsWith(s0 + "/") || c.Unit.Contains(s0));
+                        }
+                        else if (segments.Length == 2)
+                        {
+                            // Cấp Đại đội: dBB1/cBB1
+                            string prefix = $"{segments[0]}/{segments[1]}";
+                            query = query.Where(c => c.Unit == prefix || c.Unit.StartsWith(prefix + "/") || c.Unit.Contains(prefix));
+                        }
+                        else if (segments.Length >= 3)
+                        {
+                            // Cấp Tiểu đội: dBB1/cBB1/bBB1
+                            string s0 = segments[0];
+                            string s1 = segments[1];
+                            string s2 = segments[2];
+                            var mNum = Regex.Match(s2, @"\d+");
+                            string num = mNum.Success ? mNum.Value : s2;
+
+                            string patB = $"{s0}/{s1}/bBB{num}";
+                            string patD = $"{s0}/{s1}/dBB{num}";
+                            string patRaw = $"{s0}/{s1}/{num}";
+                            string patExact = cleanUnit;
+
+                            query = query.Where(c =>
+                                c.Unit == patExact ||
+                                c.Unit == patB ||
+                                c.Unit == patD ||
+                                c.Unit == patRaw ||
+                                c.Unit.EndsWith("/" + s2) ||
+                                c.Unit.EndsWith($"/bBB{num}") ||
+                                c.Unit.EndsWith($"/dBB{num}") ||
+                                c.Unit.EndsWith($"/b{num}"));
+                        }
+                    }
                 }
             }
 
@@ -1559,6 +1615,7 @@ namespace QL_HocVien.Services.Implementations
 
                 string unit = meta.ColUnit > 0 ? ws.Cell(r, meta.ColUnit).GetString().Trim() : "b1";
                 if (string.IsNullOrWhiteSpace(unit)) unit = "b1";
+                unit = unit.Trim().Trim('/');
 
                 // Parse chuỗi phân cấp đơn vị "dBB1/cBB1/bBB1" thành danh sách cấp
                 // Giữ nguyên chuỗi đầy đủ để lưu vào Cadet.Unit (hiển thị đầy đủ phân cấp)
@@ -1628,6 +1685,26 @@ namespace QL_HocVien.Services.Implementations
                         }
                         resolvedCohortId = foundCohortObj.Id;
                         resolvedCohortCode = cohortCode;
+                    }
+                }
+
+                // Tự động đảm bảo toàn bộ cơ cấu phân cấp đơn vị tồn tại và liên kết đúng với khóa học
+                if (!string.IsNullOrWhiteSpace(unit))
+                {
+                    await ExcelService.EnsureUnitHierarchyInDbAsync(_context, resolvedCohortCode, unit);
+                }
+
+                // Cập nhật thông tin đơn vị và khóa học cho học viên đã có nếu còn trống hoặc chưa đồng bộ
+                if (cadet != null)
+                {
+                    if (string.IsNullOrWhiteSpace(cadet.Cohort) || cadet.Cohort != resolvedCohortCode)
+                    {
+                        cadet.Cohort = resolvedCohortCode;
+                        cadet.CohortId = resolvedCohortId;
+                    }
+                    if (!string.IsNullOrWhiteSpace(unit))
+                    {
+                        cadet.Unit = unit;
                     }
                 }
 
@@ -1744,6 +1821,17 @@ namespace QL_HocVien.Services.Implementations
             }
 
             await _context.SaveChangesAsync();
+
+            try
+            {
+                if (App.ServiceProvider != null)
+                {
+                    var hierarchyService = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetService<IUnitHierarchyService>(App.ServiceProvider);
+                    hierarchyService?.InvalidateCache();
+                }
+            }
+            catch { }
+
             int majorSubjsCount = await _context.CreditSubjects.CountAsync(s => !s.IsComponent);
 
             return (true, $"Đã nhập thành công từ file Excel: {majorSubjsCount} môn lớn ({colToCompMap.Count} đợt kiểm tra / thi), {importedCadetsCount} học viên mới (bảo lưu nguyên vẹn mã số học viên hiện có), cập nhật {importedScoresCount} đầu điểm!", importedCadetsCount, importedScoresCount, majorSubjsCount);

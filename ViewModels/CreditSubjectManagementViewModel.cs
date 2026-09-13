@@ -25,6 +25,8 @@ namespace QL_HocVien.ViewModels
         private readonly ICohortService? _cohortService;
         private readonly IAuthService? _authService;
         private List<AcademicCohort> _cachedCohorts = new();
+        private readonly System.Threading.SemaphoreSlim _loadLock = new(1, 1);
+        private System.Threading.CancellationTokenSource? _filterDebounceCts;
 
         #region PROPERTIES & COLLECTIONS
         public ObservableCollection<CreditSubject> Subjects { get; } = new();
@@ -347,15 +349,66 @@ namespace QL_HocVien.ViewModels
             }
         }
 
+        private void TriggerLoadDataDebounced()
+        {
+            _filterDebounceCts?.Cancel();
+            _filterDebounceCts?.Dispose();
+            _filterDebounceCts = new System.Threading.CancellationTokenSource();
+            var token = _filterDebounceCts.Token;
+
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await Task.Delay(150, token);
+                    if (token.IsCancellationRequested) return;
+
+                    if (System.Windows.Application.Current?.Dispatcher != null && !System.Windows.Application.Current.Dispatcher.CheckAccess())
+                    {
+                        await System.Windows.Application.Current.Dispatcher.InvokeAsync(async () =>
+                        {
+                            if (!token.IsCancellationRequested)
+                            {
+                                await LoadDataAsync();
+                            }
+                        });
+                    }
+                    else
+                    {
+                        await LoadDataAsync();
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    // Debounce cancelled, ignore
+                }
+            });
+        }
+
         partial void OnSelectedCohortChanged(string value)
         {
             _ = RefreshSchoolYearOptionsAsync(value);
-            _ = LoadDataAsync();
+            TriggerLoadDataDebounced();
         }
 
         partial void OnSelectedUnitChanged(string value)
         {
-            _ = LoadDataAsync();
+            TriggerLoadDataDebounced();
+        }
+
+        partial void OnSelectedSchoolYearChanged(string value)
+        {
+            TriggerLoadDataDebounced();
+        }
+
+        partial void OnSelectedStatusFilterChanged(string value)
+        {
+            TriggerLoadDataDebounced();
+        }
+
+        partial void OnSearchKeywordChanged(string value)
+        {
+            TriggerLoadDataDebounced();
         }
 
         partial void OnIsAllSelectedChanged(bool value)
@@ -519,6 +572,11 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         public async Task LoadDataAsync()
         {
+            if (!await _loadLock.WaitAsync(3000))
+            {
+                return; // Another load is in progress, avoid EF Core concurrency conflict
+            }
+
             IsBusy = true;
             try
             {
@@ -585,6 +643,7 @@ namespace QL_HocVien.ViewModels
             finally
             {
                 IsBusy = false;
+                _loadLock.Release();
             }
         }
 

@@ -189,10 +189,13 @@ namespace QL_HocVien.Services.Implementations
 
             // Tìm các đơn vị cấp trên (ParentUnit) được tham chiếu nhưng chưa có bản ghi tương ứng để tạo virtual root
             var missingParents = unitsFromDb
-                .Where(u => !string.IsNullOrWhiteSpace(u.ParentUnit) &&
+                .Where(u => (!u.ParentUnitId.HasValue || u.ParentUnitId.Value <= 0) &&
+                            !string.IsNullOrWhiteSpace(u.ParentUnit) &&
                             !existingUnitNames.Contains(u.ParentUnit.Trim()) &&
                             !existingUnitCodes.Contains(u.ParentUnit.Trim()) &&
                             !cohortKeys.Contains(u.ParentUnit.Trim()) &&
+                            !(u.ParentUnit.Contains('/') && (existingUnitCodes.Contains(u.ParentUnit.Split('/', StringSplitOptions.RemoveEmptyEntries).Last().Trim()) ||
+                                                             existingUnitNames.Contains(u.ParentUnit.Split('/', StringSplitOptions.RemoveEmptyEntries).Last().Trim()))) &&
                             !u.ParentUnit.Equals("Học viện", StringComparison.OrdinalIgnoreCase) &&
                             !u.ParentUnit.Equals("Bộ chỉ huy", StringComparison.OrdinalIgnoreCase))
                 .Select(u => u.ParentUnit.Trim())
@@ -344,9 +347,24 @@ namespace QL_HocVien.Services.Implementations
 
             // Fallback: Khớp theo tên/mã (dữ liệu cũ trước v1.5.3)
             if (string.IsNullOrWhiteSpace(u.ParentUnit)) return false;
-            return u.ParentUnit.Trim().Equals(parentName.Trim(), StringComparison.OrdinalIgnoreCase) ||
-                   (!string.IsNullOrWhiteSpace(parentCode) &&
-                    u.ParentUnit.Trim().Equals(parentCode.Trim(), StringComparison.OrdinalIgnoreCase));
+            var pUnit = u.ParentUnit.Trim();
+            if (pUnit.Equals(parentName.Trim(), StringComparison.OrdinalIgnoreCase) ||
+                (!string.IsNullOrWhiteSpace(parentCode) && pUnit.Equals(parentCode.Trim(), StringComparison.OrdinalIgnoreCase)))
+            {
+                return true;
+            }
+
+            if (pUnit.Contains('/'))
+            {
+                var lastSeg = pUnit.Split('/', StringSplitOptions.RemoveEmptyEntries).Last().Trim();
+                if (lastSeg.Equals(parentName.Trim(), StringComparison.OrdinalIgnoreCase) ||
+                    (!string.IsNullOrWhiteSpace(parentCode) && lastSeg.Equals(parentCode.Trim(), StringComparison.OrdinalIgnoreCase)))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private void CollectAddedUnitIds(IEnumerable<UnitTreeNode> nodes, HashSet<int> ids, HashSet<UnitTreeNode>? visitedNodes = null)
@@ -484,6 +502,153 @@ namespace QL_HocVien.Services.Implementations
             }
 
             return clone;
+        }
+
+        public async Task EnsureUnitHierarchyStructureAsync(string cohortCode, string unitPath)
+        {
+            if (string.IsNullOrWhiteSpace(unitPath)) return;
+
+            string cleanPath = unitPath.Trim().Trim('/');
+            if (string.IsNullOrWhiteSpace(cleanPath)) return;
+
+            var segments = cleanPath.Split('/', StringSplitOptions.RemoveEmptyEntries)
+                                    .Select(s => s.Trim())
+                                    .Where(s => !string.IsNullOrEmpty(s))
+                                    .ToArray();
+
+            if (segments.Length == 0) return;
+
+            // Nạp danh sách đơn vị hiện có từ CatalogService
+            var allUnits = (await _catalogService.GetAllUnitsAsync()).ToList();
+
+            string cleanCohort = !string.IsNullOrWhiteSpace(cohortCode) ? cohortCode.Trim() : "K75";
+
+            // Cấp 1: Tiểu đoàn (ví dụ dBB1, d1)
+            string dCode = segments[0];
+            var dUnit = allUnits.FirstOrDefault(u =>
+                u.UnitCode.Equals(dCode, StringComparison.OrdinalIgnoreCase) &&
+                !string.IsNullOrWhiteSpace(u.ParentUnit) &&
+                u.ParentUnit.Equals(cleanCohort, StringComparison.OrdinalIgnoreCase));
+
+            if (dUnit == null)
+            {
+                // Thử tìm bất kỳ đơn vị nào có mã dCode và ParentUnitId == null
+                dUnit = allUnits.FirstOrDefault(u =>
+                    u.UnitCode.Equals(dCode, StringComparison.OrdinalIgnoreCase) &&
+                    (!u.ParentUnitId.HasValue || u.ParentUnitId.Value <= 0));
+            }
+
+            if (dUnit == null)
+            {
+                int num = ExtractNumber(dCode);
+                var newD = new MilitaryUnit
+                {
+                    UnitCode = dCode,
+                    UnitName = num > 0 ? $"Tiểu đoàn {num}" : dCode,
+                    ParentUnit = cleanCohort,
+                    ParentUnitId = null,
+                    Description = $"Tiểu đoàn thuộc {cleanCohort}",
+                    CreatedAt = DateTime.Now
+                };
+                var addRes = await _catalogService.AddUnitAsync(newD);
+                if (addRes.Success && addRes.Unit != null)
+                {
+                    dUnit = addRes.Unit;
+                    allUnits.Add(dUnit);
+                }
+            }
+            else if (string.IsNullOrWhiteSpace(dUnit.ParentUnit) || !dUnit.ParentUnit.Equals(cleanCohort, StringComparison.OrdinalIgnoreCase))
+            {
+                dUnit.ParentUnit = cleanCohort;
+                await _catalogService.UpdateUnitAsync(dUnit);
+            }
+
+            if (dUnit == null || segments.Length < 2)
+            {
+                InvalidateCache();
+                return;
+            }
+
+            // Cấp 2: Đại đội (ví dụ cBB1, c1)
+            string cCode = segments[1];
+            var cUnit = allUnits.FirstOrDefault(u =>
+                u.UnitCode.Equals(cCode, StringComparison.OrdinalIgnoreCase) &&
+                (u.ParentUnitId == dUnit.Id ||
+                 (!string.IsNullOrWhiteSpace(u.ParentUnit) && (u.ParentUnit.Equals(dUnit.UnitName, StringComparison.OrdinalIgnoreCase) || u.ParentUnit.Equals(dUnit.UnitCode, StringComparison.OrdinalIgnoreCase)))));
+
+            if (cUnit == null)
+            {
+                int num = ExtractNumber(cCode);
+                var newC = new MilitaryUnit
+                {
+                    UnitCode = cCode,
+                    UnitName = num > 0 ? $"Đại đội {num}" : cCode,
+                    ParentUnit = dUnit.UnitName,
+                    ParentUnitId = dUnit.Id,
+                    Description = $"Đại đội thuộc {dUnit.UnitName}",
+                    CreatedAt = DateTime.Now
+                };
+                var addRes = await _catalogService.AddUnitAsync(newC);
+                if (addRes.Success && addRes.Unit != null)
+                {
+                    cUnit = addRes.Unit;
+                    allUnits.Add(cUnit);
+                }
+            }
+            else if (cUnit.ParentUnitId != dUnit.Id)
+            {
+                cUnit.ParentUnitId = dUnit.Id;
+                cUnit.ParentUnit = dUnit.UnitName;
+                await _catalogService.UpdateUnitAsync(cUnit);
+            }
+
+            if (cUnit == null || segments.Length < 3)
+            {
+                InvalidateCache();
+                return;
+            }
+
+            // Cấp 3: Tiểu đội / Phân đội (ví dụ bBB1, dBB1, b1)
+            string bCode = segments[2];
+            var bUnit = allUnits.FirstOrDefault(u =>
+                u.UnitCode.Equals(bCode, StringComparison.OrdinalIgnoreCase) &&
+                (u.ParentUnitId == cUnit.Id ||
+                 (!string.IsNullOrWhiteSpace(u.ParentUnit) && (u.ParentUnit.Equals(cUnit.UnitName, StringComparison.OrdinalIgnoreCase) || u.ParentUnit.Equals(cUnit.UnitCode, StringComparison.OrdinalIgnoreCase)))));
+
+            if (bUnit == null)
+            {
+                int num = ExtractNumber(bCode);
+                var newB = new MilitaryUnit
+                {
+                    UnitCode = bCode,
+                    UnitName = num > 0 ? $"Tiểu đội {num}" : bCode,
+                    ParentUnit = cUnit.UnitName,
+                    ParentUnitId = cUnit.Id,
+                    Description = $"Tiểu đội thuộc {cUnit.UnitName}",
+                    CreatedAt = DateTime.Now
+                };
+                var addRes = await _catalogService.AddUnitAsync(newB);
+                if (addRes.Success && addRes.Unit != null)
+                {
+                    bUnit = addRes.Unit;
+                    allUnits.Add(bUnit);
+                }
+            }
+            else if (bUnit.ParentUnitId != cUnit.Id)
+            {
+                bUnit.ParentUnitId = cUnit.Id;
+                bUnit.ParentUnit = cUnit.UnitName;
+                await _catalogService.UpdateUnitAsync(bUnit);
+            }
+
+            InvalidateCache();
+        }
+
+        private static int ExtractNumber(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return 0;
+            var match = System.Text.RegularExpressions.Regex.Match(text, @"\d+");
+            return match.Success && int.TryParse(match.Value, out int n) ? n : 0;
         }
     }
 }
