@@ -196,6 +196,13 @@ namespace QL_HocVien.ViewModels
         }
 
         [RelayCommand]
+        public void NavigateToCohortManagement()
+        {
+            ActiveMenu = "CohortManagement";
+            CurrentView = _serviceProvider.GetRequiredService<CohortManagementViewModel>();
+        }
+
+        [RelayCommand]
         public void NavigateToPhysicalExam()
         {
             ActiveMenu = "PhysicalExam";

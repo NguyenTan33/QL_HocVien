@@ -300,6 +300,7 @@ namespace QL_HocVien
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IPasskeyService, PasskeyService>();
             services.AddScoped<IClassService, ClassService>();
+            services.AddScoped<ICohortService, CohortService>();
             services.AddScoped<ICadetService, CadetService>();
             services.AddScoped<ISubjectService, SubjectService>();
             services.AddScoped<IEvaluationService, EvaluationService>();
@@ -338,6 +339,7 @@ namespace QL_HocVien
             services.AddTransient<OfficerManagementViewModel>();
             services.AddTransient<CatalogManagementViewModel>();
             services.AddTransient<ClassManagementViewModel>();
+            services.AddTransient<CohortManagementViewModel>();
             services.AddTransient<CadetManagementViewModel>();
             services.AddTransient<AddCadetViewModel>();
             services.AddTransient<SubjectManagementViewModel>();

@@ -18,6 +18,10 @@ namespace QL_HocVien.Models.Entity
 
         public string AcademicYear { get; set; } = "2023 - 2027";   // Niên khóa / Khóa học
         public string Description { get; set; } = string.Empty;
+
+        // Liên kết Khóa học (AcademicCohort)
+        public int? CohortId { get; set; }
+        public AcademicCohort? AcademicCohort { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
         // Quan hệ 1-N: Một lớp học có nhiều học viên

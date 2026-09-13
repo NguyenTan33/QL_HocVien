@@ -24,6 +24,10 @@ namespace QL_HocVien.Models.Entity
         public string Cohort { get; set; } = string.Empty; // Ví dụ: K29, K30
         public int? EnrollmentYear { get; set; } // Năm nhập học, ví dụ: 2023
         public string AcademicYear { get; set; } = string.Empty; // Niên khóa đào tạo, ví dụ: 2023 - 2027
+
+        // Liên kết khóa học (AcademicCohort)
+        public int? CohortId { get; set; }
+        public AcademicCohort? AcademicCohort { get; set; }
         
         // Liên kết tài khoản đăng nhập (nếu có)
         public int? UserId { get; set; }

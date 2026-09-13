@@ -1,0 +1,256 @@
+<UserControl x:Class="QL_HocVien.Views.UserControls.CohortManagementView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local_cv="clr-namespace:QL_HocVien.Converters"
+             mc:Ignorable="d" 
+             d:DesignHeight="700" d:DesignWidth="1000">
+    <Border Padding="24">
+        <Grid>
+            <!-- Giao diện chính -->
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- 1. Tiêu đề trang -->
+                <StackPanel Grid.Row="0" VerticalAlignment="Center" Margin="0,0,0,10">
+                    <TextBlock Text="QUẢN LÝ KHÓA HỌC" FontSize="20" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                    <TextBlock Text="Quản lý cơ cấu Khóa học (K75, K26...) — Học viên tự động phân loại qua mã ĐH.075.299" 
+                               FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                </StackPanel>
+
+                <!-- 2. Thanh công cụ -->
+                <WrapPanel Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,0,12">
+                    <Button Content="{Binding SelectAllButtonText}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,8"
+                            Command="{Binding ToggleSelectAllCommand}" ToolTip="Chọn hoặc bỏ chọn tất cả khóa học"/>
+                    <Button Content="➕ Thêm Khóa Mới" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,8"
+                            Command="{Binding OpenAddFormCommand}"/>
+                    <Button Content="✏️ Sửa" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,8"
+                            Command="{Binding OpenEditFormCommand}"/>
+                    <Button Content="🗑️ Xóa" Style="{StaticResource DangerButtonStyle}" Margin="0,0,8,8"
+                            Command="{Binding DeleteCohortCommand}"/>
+                    <Button Content="🔄 Đồng Bộ Mã HV" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,0,8"
+                            Command="{Binding SyncCohortIdsCommand}"
+                            ToolTip="Tự động đọc mã học viên (ví dụ ĐH.075.299) và gán vào đúng khóa học tương ứng (K75)"/>
+                </WrapPanel>
+
+                <!-- 3. Thanh Tìm Kiếm và thông báo đồng bộ -->
+                <Border Grid.Row="2" Style="{StaticResource CardBorderStyle}" Margin="0,0,0,16" Padding="14">
+                    <StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Tìm kiếm theo mã, tên khóa học, niên khóa:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                                <TextBox Text="{Binding SearchKeyword, UpdateSourceTrigger=PropertyChanged}" 
+                                         Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                            </StackPanel>
+
+                            <!-- Hướng dẫn nhanh mã học viên -->
+                            <Border Grid.Column="2" Background="#1E3A5F" CornerRadius="8" Padding="12,8" VerticalAlignment="Bottom">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="💡 " FontSize="13"/>
+                                    <TextBlock FontSize="12" Foreground="#90CAF9">
+                                        <Run Text="Mã HV: "/>
+                                        <Run Text="ĐH.075.299" FontWeight="Bold" Foreground="#64B5F6"/>
+                                        <Run Text=" → Khóa "/>
+                                        <Run Text="K75" FontWeight="Bold" Foreground="#4FC3F7"/>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <!-- Thông báo kết quả đồng bộ -->
+                        <TextBlock Text="{Binding SyncStatusMessage}" FontSize="12" Foreground="{DynamicResource AccentBrush}" 
+                                   Margin="0,8,0,0"
+                                   Visibility="{Binding SyncStatusMessage, Converter={x:Static local_cv:StringToVisibilityConverter.Instance}}"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- 4. Bảng Dữ Liệu Khóa Học -->
+                <Border Grid.Row="3" Style="{StaticResource CardBorderStyle}" Padding="0">
+                    <DataGrid ItemsSource="{Binding Cohorts}" SelectedItem="{Binding SelectedCohort}"
+                              Style="{StaticResource MilitaryDataGridStyle}"
+                              AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
+                              GridLinesVisibility="Horizontal" HeadersVisibility="Column"
+                              RowHeaderWidth="0"
+                              BorderThickness="0" RowHeight="46" SelectionMode="Single"
+                              AlternationCount="2"
+                              ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                              ScrollViewer.VerticalScrollBarVisibility="Auto"
+                              ScrollViewer.CanContentScroll="True">
+                        <DataGrid.Columns>
+                            <!-- Checkbox chọn -->
+                            <DataGridTemplateColumn Width="48" CanUserResize="False">
+                                <DataGridTemplateColumn.Header>
+                                    <CheckBox IsChecked="{Binding DataContext.IsAllSelected, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </DataGridTemplateColumn.Header>
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsChecked="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Mã Khóa -->
+                            <DataGridTemplateColumn Header="Mã Khóa" Width="100" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{DynamicResource AccentBrush}" CornerRadius="8" Padding="8,3" HorizontalAlignment="Center">
+                                            <TextBlock Text="{Binding CohortCode}" FontWeight="Bold" Foreground="White" FontSize="13"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTextColumn Header="Tên Khóa Học" Binding="{Binding CohortName}" Width="240"/>
+                            <DataGridTextColumn Header="Số Khóa" Binding="{Binding CohortNumber}" Width="80"/>
+                            <DataGridTextColumn Header="Niên Khóa" Binding="{Binding AcademicYear}" Width="140"/>
+                            <DataGridTextColumn Header="Năm Nhập Học" Binding="{Binding EnrollmentYear}" Width="110"/>
+                            <DataGridTextColumn Header="Năm Tốt Nghiệp" Binding="{Binding GraduationYear}" Width="120"/>
+
+                            <!-- Quân số -->
+                            <DataGridTemplateColumn Header="Quân Số" Width="100" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{DynamicResource PageBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Padding="8,3" HorizontalAlignment="Center">
+                                            <TextBlock Text="{Binding CadetCount, StringFormat='{}{0} HV'}" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" FontSize="12"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTextColumn Header="Ghi Chú / Mô Tả" Binding="{Binding Description}" MinWidth="180" Width="*"/>
+
+                            <!-- Nút thao tác nhanh -->
+                            <DataGridTemplateColumn Header="Thao Tác" Width="160" CanUserSort="False" CanUserResize="False">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                            <Button Content="✏️" Width="32" Height="28" Margin="2,0"
+                                                    Style="{StaticResource SecondaryButtonStyle}" FontSize="13"
+                                                    Command="{Binding DataContext.OpenEditFormCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}"
+                                                    ToolTip="Chỉnh sửa khóa học này"/>
+                                            <Button Content="🗑️" Width="32" Height="28" Margin="2,0"
+                                                    Style="{StaticResource DangerButtonStyle}" FontSize="13"
+                                                    Command="{Binding DataContext.DeleteCohortCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}"
+                                                    ToolTip="Xóa khóa học này"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Border>
+            </Grid>
+
+            <!-- ==================== MODAL THÊM / SỬA KHÓA HỌC ==================== -->
+            <Grid Background="#7F000000" Visibility="{Binding IsFormVisible, Converter={x:Static local_cv:BooleanToVisibilityConverter.Instance}}">
+                <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="12" Width="560" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="28">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="25" Color="#000000" Opacity="0.3" ShadowDepth="5"/>
+                    </Border.Effect>
+                    <StackPanel>
+                        <TextBlock Text="THÔNG TIN KHÓA HỌC" 
+                                   FontSize="18" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                        <TextBlock Text="Cấu hình mã khóa (K75), tên đầy đủ, niên khóa và mô tả" 
+                                   FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,16"/>
+
+                        <!-- Thông báo lỗi -->
+                        <Border Background="#FEF2F2" BorderBrush="#FCA5A5" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,14"
+                                Visibility="{Binding FormErrorMessage, Converter={x:Static local_cv:StringToVisibilityConverter.Instance}}">
+                            <TextBlock Text="{Binding FormErrorMessage}" Foreground="#DC2626" FontSize="12"/>
+                        </Border>
+
+                        <!-- Hàng 1: Mã khóa & Số khóa -->
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="150"/>
+                                <ColumnDefinition Width="12"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Mã khóa (*) — ví dụ K75:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                                <TextBox Text="{Binding FormCohortCode, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Tên đầy đủ khóa học (*):" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                                <TextBox Text="{Binding FormCohortName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Hàng 2: Năm nhập học & Năm tốt nghiệp -->
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="12"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="12"/>
+                                <ColumnDefinition Width="160"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Năm nhập học:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                                <TextBox Text="{Binding FormEnrollmentYear, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Năm tốt nghiệp:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                                <TextBox Text="{Binding FormGraduationYear, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="4">
+                                <TextBlock Text="Niên khóa:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                                <TextBox Text="{Binding FormAcademicYear, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Mô tả -->
+                        <StackPanel Margin="0,0,0,20">
+                            <TextBlock Text="Mô tả / Ghi chú:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding FormDescription, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="60" TextWrapping="Wrap"/>
+                        </StackPanel>
+
+                        <!-- Hướng dẫn về mã học viên -->
+                        <Border Background="#0D1B2A" BorderBrush="#1E3A5F" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,20">
+                            <StackPanel>
+                                <TextBlock Text="💡 Cách phân loại học viên tự động:" FontSize="12" FontWeight="Bold" Foreground="#64B5F6" Margin="0,0,0,6"/>
+                                <TextBlock FontSize="11" Foreground="#90CAF9" TextWrapping="Wrap">
+                                    <Run Text="Mã học viên: "/>
+                                    <Run Text="ĐH.075.299" FontWeight="Bold" Foreground="White"/>
+                                    <Run Text=" → "/>
+                                    <Run Text="ĐH" Foreground="#4FC3F7"/>
+                                    <Run Text=" (bỏ qua) · "/>
+                                    <Run Text=".075" Foreground="#4FC3F7"/>
+                                    <Run Text=" = Khóa "/>
+                                    <Run Text="K75" FontWeight="Bold" Foreground="White"/>
+                                    <Run Text=" · .299 = Số thứ tự"/>
+                                </TextBlock>
+                                <TextBlock Text="Sau khi tạo khóa K75, nhấn 🔄 Đồng Bộ Mã HV để tự động gán toàn bộ học viên vào đúng khóa." 
+                                           FontSize="11" Foreground="#90CAF9" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="Hủy Bỏ" Style="{StaticResource SecondaryButtonStyle}" Width="90" Height="36" Margin="0,0,10,0"
+                                    Command="{Binding CloseFormCommand}"/>
+                            <Button Content="Lưu Khóa Học" Style="{StaticResource PrimaryButtonStyle}" Width="130" Height="36"
+                                    Command="{Binding SaveFormCommand}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+        </Grid>
+    </Border>
+</UserControl>

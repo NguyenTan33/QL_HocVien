@@ -25,6 +25,7 @@ namespace QL_HocVien.Data
         public DbSet<SubjectAssessmentComponent> SubjectAssessmentComponents => Set<SubjectAssessmentComponent>();
         public DbSet<CreditScoreRecord> CreditScoreRecords => Set<CreditScoreRecord>();
         public DbSet<AccountPasskey> AccountPasskeys => Set<AccountPasskey>();
+        public DbSet<AcademicCohort> AcademicCohorts => Set<AcademicCohort>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -226,6 +227,36 @@ namespace QL_HocVien.Data
                 entity.HasIndex(e => e.Passkey).IsUnique();
                 entity.Property(e => e.Passkey).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.UsedByUsername).HasMaxLength(50);
+            });
+
+            // Cấu hình AcademicCohort (Khóa học)
+            modelBuilder.Entity<AcademicCohort>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.CohortCode).IsUnique();
+                entity.Property(e => e.CohortCode).IsRequired().HasMaxLength(20);
+                entity.Property(e => e.CohortName).IsRequired().HasMaxLength(150);
+                entity.Ignore(e => e.CadetCount);
+                entity.Ignore(e => e.DisplayLabel);
+                entity.Ignore(e => e.IsSelected);
+            });
+
+            // Cấu hình Cadet - AcademicCohort
+            modelBuilder.Entity<Cadet>(entity =>
+            {
+                entity.HasOne(e => e.AcademicCohort)
+                      .WithMany(c => c.Cadets)
+                      .HasForeignKey(e => e.CohortId)
+                      .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            // Cấu hình MilitaryClass - AcademicCohort
+            modelBuilder.Entity<MilitaryClass>(entity =>
+            {
+                entity.HasOne(e => e.AcademicCohort)
+                      .WithMany(c => c.Classes)
+                      .HasForeignKey(e => e.CohortId)
+                      .OnDelete(DeleteBehavior.SetNull);
             });
         }
     }

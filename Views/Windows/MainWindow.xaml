@@ -27,6 +27,9 @@
         <DataTemplate DataType="{x:Type vm:ClassManagementViewModel}">
             <views:ClassManagementView/>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:CohortManagementViewModel}">
+            <views:CohortManagementView/>
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:AddCadetViewModel}">
             <views:AddCadetView/>
         </DataTemplate>
@@ -337,6 +340,15 @@
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                     <TextBlock Text="👥" FontSize="14" Foreground="{DynamicResource SidebarIconBrush}" Width="22" TextAlignment="Center" Margin="0,0,8,0"/>
                                     <TextBlock Text="Quản Lý Lớp Học" FontSize="12.5"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- 4b. Quản Lý Khóa Học (K75, K26...) -->
+                            <Button Style="{StaticResource SidebarNavButtonStyle}" Tag="CohortManagement"
+                                    Command="{Binding NavigateToCohortManagementCommand}">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="🎓" FontSize="14" Foreground="{DynamicResource SidebarIconBrush}" Width="22" TextAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Quản Lý Khóa Học" FontSize="12.5"/>
                                 </StackPanel>
                             </Button>
 

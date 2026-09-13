@@ -244,6 +244,41 @@ namespace QL_HocVien.Data
                 // Bỏ qua nếu cột đã tồn tại
             }
 
+            // ===== NÂNG CẤP KHÓA HỌC (AcademicCohorts) =====
+            // Tạo bảng AcademicCohorts (Quản lý Khóa học K75, K26...) nếu chưa có
+            try
+            {
+                context.Database.ExecuteSqlRaw(@"
+                    CREATE TABLE IF NOT EXISTS ""AcademicCohorts"" (
+                        ""Id"" INTEGER NOT NULL CONSTRAINT ""PK_AcademicCohorts"" PRIMARY KEY AUTOINCREMENT,
+                        ""CohortCode"" TEXT NOT NULL,
+                        ""CohortName"" TEXT NOT NULL,
+                        ""CohortNumber"" INTEGER NOT NULL DEFAULT 0,
+                        ""EnrollmentYear"" INTEGER NULL,
+                        ""GraduationYear"" INTEGER NULL,
+                        ""AcademicYear"" TEXT NOT NULL DEFAULT '',
+                        ""Description"" TEXT NOT NULL DEFAULT '',
+                        ""CreatedAt"" TEXT NOT NULL
+                    );
+                    CREATE UNIQUE INDEX IF NOT EXISTS ""IX_AcademicCohorts_CohortCode"" ON ""AcademicCohorts"" (""CohortCode"");
+                ");
+            }
+            catch { }
+
+            // Thêm cột CohortId vào bảng Cadets (liên kết học viên với Khóa học)
+            try
+            {
+                context.Database.ExecuteSqlRaw(@"ALTER TABLE ""Cadets"" ADD COLUMN ""CohortId"" INTEGER NULL REFERENCES ""AcademicCohorts""(""Id"") ON DELETE SET NULL;");
+            }
+            catch { }
+
+            // Thêm cột CohortId vào bảng MilitaryClasses (liên kết lớp học với Khóa học)
+            try
+            {
+                context.Database.ExecuteSqlRaw(@"ALTER TABLE ""MilitaryClasses"" ADD COLUMN ""CohortId"" INTEGER NULL REFERENCES ""AcademicCohorts""(""Id"") ON DELETE SET NULL;");
+            }
+            catch { }
+
             // Đảm bảo bảng AccountPasskeys và các cột bản quyền tồn tại
             try
             {
