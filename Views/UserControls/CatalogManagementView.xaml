@@ -10,6 +10,7 @@
              d:DesignHeight="750" d:DesignWidth="1100">
     <UserControl.Resources>
         <local_cv:BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <local_cv:InvertedBooleanToVisibilityConverter x:Key="InvertedBoolToVis"/>
         <local_cv:IntEqualsToVisibilityConverter x:Key="IntEqualsToVis"/>
 
         <Style x:Key="TabHeaderStyle" TargetType="TabItem">
@@ -692,6 +693,20 @@
 
                         <!-- Fields cho Đơn Vị (Tab 2) -->
                         <StackPanel Margin="0,0,0,12" Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntEqualsToVis}, ConverterParameter=2}">
+                            <!-- Lựa chọn Cấp trực thuộc: Khóa học hay Đơn vị cấp trên -->
+                            <Border Background="{DynamicResource PageBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,0,0,10">
+                                <StackPanel Orientation="Horizontal">
+                                    <RadioButton Content="🎓 Trực thuộc Khóa học (Đơn vị gốc: Tiểu đoàn 1, 2...)" 
+                                                 IsChecked="{Binding IsRootUnitForm, Mode=TwoWay}" 
+                                                 Margin="0,0,18,0" FontSize="12" FontWeight="SemiBold"
+                                                 Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                    <RadioButton Content="🚩 Trực thuộc Đơn vị cấp trên (Đại đội, Trung đội...)" 
+                                                 IsChecked="{Binding IsRootUnitForm, Converter={x:Static local_cv:InvertedBooleanConverter.Instance}, Mode=TwoWay}" 
+                                                 FontSize="12" FontWeight="SemiBold"
+                                                 Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                </StackPanel>
+                            </Border>
+
                             <Grid Margin="0,0,0,8">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="1*"/>
@@ -699,9 +714,29 @@
                                     <ColumnDefinition Width="1*"/>
                                 </Grid.ColumnDefinitions>
 
+                                <!-- Cột Trái: Chọn Khóa học (từ CSDL SQL) HOẶC Chọn Đơn vị cấp trên -->
                                 <StackPanel Grid.Column="0">
-                                    <TextBlock Text="Đơn vị cấp trên:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
-                                    <components:UnitTreeComboBox SelectedUnit="{Binding FormParentUnit, Mode=TwoWay}" Height="36" Placeholder="Chọn đơn vị cấp trên (Học viện, Tiểu đoàn 1...)..."/>
+                                    <!-- 1. Khi trực thuộc Khóa học: Chọn từ CSDL SQL -->
+                                    <StackPanel Visibility="{Binding IsRootUnitForm, Converter={StaticResource BoolToVis}}">
+                                        <TextBlock Text="Khóa học trực thuộc (*) [CSDL SQL]:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" Margin="0,0,0,4"/>
+                                        <ComboBox ItemsSource="{Binding AvailableCohorts}"
+                                                  SelectedItem="{Binding SelectedFormCohort, Mode=TwoWay}"
+                                                  DisplayMemberPath="DisplayLabel"
+                                                  SelectedValuePath="CohortCode"
+                                                  Height="36"
+                                                  FontSize="12.5"
+                                                  Style="{StaticResource ModernComboBoxStyle}"/>
+                                        <!-- Thông báo nếu CSDL chưa có khóa nào -->
+                                        <TextBlock Text="⚠️ Chưa có khóa học trong CSDL. Vào 'Quản Lý Khóa Học' để tạo trước!"
+                                                   FontSize="10.5" Foreground="#EF4444" FontStyle="Italic" Margin="0,3,0,0"
+                                                   Visibility="{Binding AvailableCohorts.Count, Converter={x:Static local_cv:IntEqualsToVisibilityConverter.Instance}, ConverterParameter=0}"/>
+                                    </StackPanel>
+
+                                    <!-- 2. Khi trực thuộc Đơn vị cấp trên: Chọn từ Cây sơ đồ -->
+                                    <StackPanel Visibility="{Binding IsRootUnitForm, Converter={StaticResource InvertedBoolToVis}}">
+                                        <TextBlock Text="Đơn vị cấp trên (*):" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                                        <components:UnitTreeComboBox SelectedUnit="{Binding FormParentUnit, Mode=TwoWay}" Height="36" Placeholder="Chọn đơn vị cấp trên (Tiểu đoàn, Đại đội...)..."/>
+                                    </StackPanel>
                                 </StackPanel>
 
                                 <StackPanel Grid.Column="2">

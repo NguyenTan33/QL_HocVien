@@ -19,6 +19,7 @@ namespace QL_HocVien.ViewModels
         private readonly IExcelService _excelService;
         private readonly IFileDialogService _fileDialogService;
         private readonly ISecurityGateService _securityGate;
+        private readonly ICohortService _cohortService;
         private readonly IClassService? _classService;
 
         public ObservableCollection<MilitaryRank> Ranks { get; } = new();
@@ -129,21 +130,70 @@ namespace QL_HocVien.ViewModels
         [ObservableProperty]
         private string _formDepartment = string.Empty;
 
+        // Cohort Integration (Từ CSDL SQL)
+        public ObservableCollection<AcademicCohort> AvailableCohorts { get; } = new();
+
+        [ObservableProperty]
+        private AcademicCohort? _selectedFormCohort;
+
+        [ObservableProperty]
+        private bool _isRootUnitForm;
+
+        partial void OnSelectedFormCohortChanged(AcademicCohort? value)
+        {
+            if (value != null && IsRootUnitForm)
+            {
+                FormParentUnit = value.CohortCode;
+            }
+        }
+
+        partial void OnIsRootUnitFormChanged(bool value)
+        {
+            if (value)
+            {
+                if (SelectedFormCohort != null)
+                {
+                    FormParentUnit = SelectedFormCohort.CohortCode;
+                }
+                else if (AvailableCohorts.Count > 0)
+                {
+                    SelectedFormCohort = AvailableCohorts.FirstOrDefault();
+                    FormParentUnit = SelectedFormCohort?.CohortCode ?? string.Empty;
+                }
+            }
+        }
+
         public CatalogManagementViewModel(
             ICatalogService catalogService,
             IExcelService excelService,
             IFileDialogService fileDialogService,
             ISecurityGateService securityGate,
+            ICohortService cohortService,
             IClassService? classService = null)
         {
             _catalogService = catalogService;
             _excelService = excelService;
             _fileDialogService = fileDialogService;
             _securityGate = securityGate;
+            _cohortService = cohortService;
             _classService = classService;
             Title = "Danh Mục Tổ Chức Quân Sự";
 
             _ = LoadAllDataAsync();
+        }
+
+        public async Task LoadCohortsAsync()
+        {
+            try
+            {
+                var cohorts = await _cohortService.GetAllCohortsAsync();
+                AvailableCohorts.Clear();
+                foreach (var c in cohorts)
+                {
+                    AvailableCohorts.Add(c);
+                }
+            }
+            catch { }
         }
 
         [RelayCommand]
@@ -152,6 +202,8 @@ namespace QL_HocVien.ViewModels
             IsBusy = true;
             try
             {
+                await LoadCohortsAsync();
+
                 var ranks = await _catalogService.GetAllRanksAsync();
                 Ranks.Clear();
                 foreach (var r in ranks) Ranks.Add(r);
@@ -293,8 +345,18 @@ namespace QL_HocVien.ViewModels
                     FormDisplayOrder = Positions.Count > 0 ? Positions.Max(p => p.DisplayOrder) + 1 : 1;
                     break;
                 case 2:
+                    await LoadCohortsAsync();
                     FormTitle = "Thêm Đơn Vị Quản Lý Mới";
-                    FormParentUnit = string.Empty;
+                    IsRootUnitForm = AvailableCohorts.Count > 0 && Units.Count == 0;
+                    if (IsRootUnitForm)
+                    {
+                        SelectedFormCohort = AvailableCohorts.FirstOrDefault();
+                        FormParentUnit = SelectedFormCohort?.CohortCode ?? string.Empty;
+                    }
+                    else
+                    {
+                        FormParentUnit = string.Empty;
+                    }
                     break;
                 case 3:
                     FormTitle = "Thêm Chuyên Ngành Đào Tạo Mới";
@@ -350,13 +412,29 @@ namespace QL_HocVien.ViewModels
                         MessageBox.Show("Vui lòng chọn một đơn vị để chỉnh sửa.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
                         return;
                     }
+                    await LoadCohortsAsync();
                     FormTitle = $"Chỉnh Sửa Đơn Vị: {SelectedUnit.UnitName}";
                     FormCode = SelectedUnit.UnitCode;
                     FormName = SelectedUnit.UnitName;
-                    FormParentUnit = SelectedUnit.ParentUnit ?? string.Empty;
                     FormCommanderName = SelectedUnit.CommanderName ?? string.Empty;
                     FormContactPhone = SelectedUnit.ContactPhone ?? string.Empty;
                     FormDescription = SelectedUnit.Description ?? string.Empty;
+
+                    var matchedCohort = AvailableCohorts.FirstOrDefault(c =>
+                        c.CohortCode.Equals(SelectedUnit.ParentUnit, StringComparison.OrdinalIgnoreCase) ||
+                        c.CohortName.Equals(SelectedUnit.ParentUnit, StringComparison.OrdinalIgnoreCase));
+
+                    if (matchedCohort != null)
+                    {
+                        IsRootUnitForm = true;
+                        SelectedFormCohort = matchedCohort;
+                        FormParentUnit = matchedCohort.CohortCode;
+                    }
+                    else
+                    {
+                        IsRootUnitForm = false;
+                        FormParentUnit = SelectedUnit.ParentUnit ?? string.Empty;
+                    }
                     break;
 
                 case 3:
@@ -443,15 +521,34 @@ namespace QL_HocVien.ViewModels
                         break;
 
                     case 2: // Đơn vị
+                        string parentUnit = FormParentUnit?.Trim() ?? string.Empty;
+                        if (IsRootUnitForm)
+                        {
+                            if (SelectedFormCohort == null)
+                            {
+                                MessageBox.Show("Vui lòng chọn Khóa học trực thuộc từ danh sách CSDL SQL.", "Cảnh báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                                return;
+                            }
+                            parentUnit = SelectedFormCohort.CohortCode;
+                        }
+                        else
+                        {
+                            if (string.IsNullOrWhiteSpace(parentUnit))
+                            {
+                                MessageBox.Show("Vui lòng chọn Đơn vị cấp trên hoặc chuyển sang trực thuộc Khóa học.", "Cảnh báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                                return;
+                            }
+                        }
+
                         var unit = new MilitaryUnit
                         {
                             Id = IsEditing && SelectedUnit != null ? SelectedUnit.Id : 0,
                             UnitCode = FormCode.Trim(),
                             UnitName = FormName.Trim(),
-                            ParentUnit = FormParentUnit?.Trim(),
-                            CommanderName = FormCommanderName?.Trim(),
-                            ContactPhone = FormContactPhone?.Trim(),
-                            Description = FormDescription?.Trim()
+                            ParentUnit = parentUnit.Trim(),
+                            CommanderName = FormCommanderName?.Trim() ?? string.Empty,
+                            ContactPhone = FormContactPhone?.Trim() ?? string.Empty,
+                            Description = FormDescription?.Trim() ?? string.Empty
                         };
                         (bool Success, string Message) uRes = IsEditing 
                             ? await _catalogService.UpdateUnitAsync(unit)
@@ -730,8 +827,10 @@ namespace QL_HocVien.ViewModels
         {
             if (!await _securityGate.EnsureUnlockedAsync("Thêm mới đơn vị quân sự")) return;
 
+            await LoadCohortsAsync();
             SelectedTabIndex = 2;
             IsEditing = false;
+            IsRootUnitForm = false;
             ClearForm();
 
             FormTitle = $"Thêm Đơn Vị Trực Thuộc: {parentNode?.Name ?? "Đơn vị"}";
@@ -744,12 +843,25 @@ namespace QL_HocVien.ViewModels
         {
             if (!await _securityGate.EnsureUnlockedAsync("Thêm mới đơn vị quân sự")) return;
 
+            await LoadCohortsAsync();
+            if (AvailableCohorts.Count == 0)
+            {
+                MessageBox.Show(
+                    "CẢNH BÁO: Chưa có Khóa học nào được tạo trong cơ sở dữ liệu SQL!\n\n" +
+                    "Đơn vị gốc (như Tiểu đoàn 1, Tiểu đoàn 2...) bắt buộc phải trực thuộc một Khóa học cụ thể.\n" +
+                    "Vui lòng vào mục 'Quản Lý Khóa Học' trên thanh menu để tạo Khóa học (ví dụ: K75, K26...) trước khi thêm đơn vị.",
+                    "Yêu cầu tạo Khóa học trước", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             SelectedTabIndex = 2;
             IsEditing = false;
+            IsRootUnitForm = true;
             ClearForm();
 
-            FormTitle = "Thêm Đơn Vị Gốc Mới (Cấp Cao Nhất / Độc Lập)";
-            FormParentUnit = "Học viện";
+            FormTitle = "Thêm Đơn Vị Gốc Mới (Trực thuộc Khóa học)";
+            SelectedFormCohort = AvailableCohorts.FirstOrDefault();
+            FormParentUnit = SelectedFormCohort?.CohortCode ?? string.Empty;
             IsFormVisible = true;
         }
 
@@ -860,6 +972,7 @@ namespace QL_HocVien.ViewModels
         {
             string name = (u.UnitName ?? "").ToLowerInvariant();
             string code = (u.UnitCode ?? "").ToLowerInvariant();
+            if (name.Contains("khóa") || code.StartsWith("k") || name.StartsWith("k")) return 0;
             if (name.Contains("trung đoàn") || name.Contains("học viện") || name.Contains("sư đoàn") || code.StartsWith("e")) return 1;
             if (name.Contains("tiểu đoàn") || code.StartsWith("d")) return 2;
             if (name.Contains("đại đội") || code.StartsWith("c")) return 3;
@@ -873,6 +986,7 @@ namespace QL_HocVien.ViewModels
         {
             string levelName = level switch
             {
+                0 => "CẤP KHÓA HỌC",
                 1 => "CẤP TRUNG ĐOÀN",
                 2 => "CẤP TIỂU ĐOÀN",
                 3 => "CẤP ĐẠI ĐỘI",
@@ -884,6 +998,7 @@ namespace QL_HocVien.ViewModels
 
             string icon = level switch
             {
+                0 => "🎓",
                 1 => "🏛️",
                 2 => "🛡️",
                 3 => "🚩",
@@ -895,6 +1010,7 @@ namespace QL_HocVien.ViewModels
 
             string badgeBrush = level switch
             {
+                0 => "#1E40AF",
                 1 => "#8B1E1E",
                 2 => "#2E5A36",
                 3 => "#9C4116",
@@ -994,6 +1110,7 @@ namespace QL_HocVien.ViewModels
             FormContactPhone = string.Empty;
             FormTrainingDuration = string.Empty;
             FormDepartment = string.Empty;
+            SelectedFormCohort = null;
         }
 
         partial void OnSearchKeywordChanged(string value) => _ = SearchAsync();

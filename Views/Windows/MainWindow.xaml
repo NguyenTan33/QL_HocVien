@@ -334,16 +334,7 @@
                                 </StackPanel>
                             </Button>
 
-                            <!-- 4. Quản Lý Lớp Học -->
-                            <Button Style="{StaticResource SidebarNavButtonStyle}" Tag="ClassManagement"
-                                    Command="{Binding NavigateToClassManagementCommand}">
-                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="👥" FontSize="14" Foreground="{DynamicResource SidebarIconBrush}" Width="22" TextAlignment="Center" Margin="0,0,8,0"/>
-                                    <TextBlock Text="Quản Lý Lớp Học" FontSize="12.5"/>
-                                </StackPanel>
-                            </Button>
-
-                            <!-- 4b. Quản Lý Khóa Học (K75, K26...) -->
+                            <!-- 4. Quản Lý Khóa Học (K75, K26...) -->
                             <Button Style="{StaticResource SidebarNavButtonStyle}" Tag="CohortManagement"
                                     Command="{Binding NavigateToCohortManagementCommand}">
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">

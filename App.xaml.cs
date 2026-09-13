@@ -169,6 +169,7 @@ namespace QL_HocVien
                                 else if (target.Contains("setting")) mainVm.NavigateToSettings();
                                 else if (target.Contains("cadet")) mainVm.NavigateToCadetManagement();
                                 else if (target.Contains("class")) mainVm.NavigateToClassManagement();
+                                else if (target.Contains("cohort") || target.Contains("khoa")) mainVm.NavigateToCohortManagement();
                                 else if (target.Contains("catalog") || target.Contains("unit") || target.Contains("tree"))
                                 {
                                     mainVm.NavigateToCatalogManagement();
