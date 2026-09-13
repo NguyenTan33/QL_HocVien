@@ -1,10 +1,13 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QL_HocVien.Models;
+using QL_HocVien.Models.Entity;
 using QL_HocVien.Services;
+using QL_HocVien.Services.Interfaces;
 
 namespace QL_HocVien.ViewModels
 {
@@ -14,9 +17,30 @@ namespace QL_HocVien.ViewModels
         private readonly IClassService _classService;
         private readonly ICatalogService _catalogService;
         private readonly ISecurityGateService _securityGate;
+        private readonly ICohortService? _cohortService;
         private readonly IAuthService? _authService;
 
         public ObservableCollection<MilitaryClass> AvailableClasses { get; } = new();
+        public ObservableCollection<AcademicCohort> AvailableCohorts { get; } = new();
+
+        [ObservableProperty]
+        private AcademicCohort? _selectedCohort;
+
+        partial void OnSelectedCohortChanged(AcademicCohort? value)
+        {
+            if (value != null)
+            {
+                Cohort = value.CohortCode;
+                if (value.EnrollmentYear.HasValue)
+                {
+                    EnrollmentYear = value.EnrollmentYear.Value;
+                }
+                if (!string.IsNullOrWhiteSpace(value.AcademicYear))
+                {
+                    AcademicYear = value.AcademicYear;
+                }
+            }
+        }
 
         [ObservableProperty]
         private MilitaryClass? _selectedMilitaryClass;
@@ -43,7 +67,7 @@ namespace QL_HocVien.ViewModels
         private string _phoneNumber = string.Empty;
 
         [ObservableProperty]
-        private string _className = "K26A - Chỉ huy Tham mưu";
+        private string _className = string.Empty;
 
         [ObservableProperty]
         private string _selectedRank = "Binh nhì";
@@ -61,10 +85,10 @@ namespace QL_HocVien.ViewModels
         private DateTime? _dateOfBirth = new DateTime(2004, 1, 1);
 
         [ObservableProperty]
-        private string _cohort = "K29";
+        private string _cohort = string.Empty;
 
         [ObservableProperty]
-        private int? _enrollmentYear = 2023;
+        private int? _enrollmentYear;
 
         partial void OnEnrollmentYearChanged(int? value)
         {
@@ -75,7 +99,7 @@ namespace QL_HocVien.ViewModels
         }
 
         [ObservableProperty]
-        private string _academicYear = "2023 - 2027";
+        private string _academicYear = string.Empty;
 
         [ObservableProperty]
         private string _email = string.Empty;
@@ -107,12 +131,14 @@ namespace QL_HocVien.ViewModels
             IClassService classService,
             ICatalogService catalogService,
             ISecurityGateService securityGate,
+            ICohortService? cohortService = null,
             IAuthService? authService = null)
         {
             _cadetService = cadetService;
             _classService = classService;
             _catalogService = catalogService;
             _securityGate = securityGate;
+            _cohortService = cohortService;
             _authService = authService;
             Title = "Thêm Mới Học Viên";
 
@@ -122,6 +148,7 @@ namespace QL_HocVien.ViewModels
         private async Task InitializeAsync()
         {
             await LoadCatalogDropdownsAsync();
+            await LoadAvailableCohortsAsync();
             await LoadAvailableClassesAsync();
             await GenerateSuggestedCodeAsync();
         }
@@ -159,6 +186,30 @@ namespace QL_HocVien.ViewModels
             catch
             {
                 // Giữ giá trị mặc định nếu có ngoại lệ
+            }
+        }
+
+        public async Task LoadAvailableCohortsAsync()
+        {
+            try
+            {
+                AvailableCohorts.Clear();
+                if (_cohortService != null)
+                {
+                    var cohorts = await _cohortService.GetAllCohortsAsync();
+                    foreach (var c in cohorts.OrderBy(x => x.CohortNumber).ThenBy(x => x.CohortCode))
+                    {
+                        AvailableCohorts.Add(c);
+                    }
+                }
+                if (AvailableCohorts.Count > 0)
+                {
+                    SelectedCohort = AvailableCohorts[0];
+                }
+            }
+            catch
+            {
+                // Fallback nếu có lỗi
             }
         }
 
@@ -252,6 +303,17 @@ namespace QL_HocVien.ViewModels
                 return false;
             }
 
+            if (SelectedCohort == null && !string.IsNullOrWhiteSpace(Cohort))
+            {
+                SelectedCohort = AvailableCohorts.FirstOrDefault(c => c.CohortCode.Equals(Cohort.Trim(), StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (SelectedCohort == null)
+            {
+                ErrorMessage = "Vui lòng chọn Khóa học hợp lệ từ danh mục được tạo trong hệ thống.";
+                return false;
+            }
+
             if (string.IsNullOrWhiteSpace(ClassName))
             {
                 ErrorMessage = "Vui lòng nhập Lớp học viên.";
@@ -271,9 +333,10 @@ namespace QL_HocVien.ViewModels
                 PhoneNumber = PhoneNumber.Trim(),
                 ClassId = SelectedMilitaryClass?.Id,
                 ClassName = !string.IsNullOrWhiteSpace(ClassName) ? ClassName.Trim() : (SelectedMilitaryClass?.ClassName ?? string.Empty),
-                Cohort = Cohort.Trim(),
-                EnrollmentYear = EnrollmentYear,
-                AcademicYear = !string.IsNullOrWhiteSpace(AcademicYear) ? AcademicYear.Trim() : (EnrollmentYear.HasValue ? $"{EnrollmentYear} - {EnrollmentYear + 4}" : string.Empty),
+                Cohort = SelectedCohort.CohortCode,
+                CohortId = SelectedCohort.Id,
+                EnrollmentYear = EnrollmentYear ?? SelectedCohort.EnrollmentYear,
+                AcademicYear = !string.IsNullOrWhiteSpace(AcademicYear) ? AcademicYear.Trim() : (SelectedCohort.AcademicYear ?? string.Empty),
                 Rank = SelectedRank,
                 Position = SelectedPosition,
                 Unit = SelectedUnit,

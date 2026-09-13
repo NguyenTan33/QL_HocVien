@@ -293,8 +293,14 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="Khóa đào tạo (VD: K29):" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
-                            <TextBox Text="{Binding EditCohort, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBoxStyle}" Height="36"/>
+                            <TextBlock Text="Khóa đào tạo (*) [CSDL SQL]:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                            <ComboBox ItemsSource="{Binding AvailableCohorts}" 
+                                      SelectedItem="{Binding SelectedEditCohort, Mode=TwoWay}"
+                                      DisplayMemberPath="DisplayLabel"
+                                      Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
+                            <TextBlock Text="⚠️ Chưa có khóa học trong CSDL. Vào 'Quản Lý Khóa Học' để tạo trước!"
+                                       FontSize="11" Foreground="#EF4444" FontStyle="Italic" Margin="0,2,0,0"
+                                       Visibility="{Binding AvailableCohorts.Count, Converter={x:Static local_cv:IntEqualsToVisibilityConverter.Instance}, ConverterParameter=0}"/>
                         </StackPanel>
                         <StackPanel Grid.Column="2">
                             <TextBlock Text="Năm nhập học (VD: 2023):" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>

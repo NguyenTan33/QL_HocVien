@@ -30,6 +30,7 @@ namespace QL_HocVien.Tests
 
             _context = new AppDbContext(options);
             _context.Database.EnsureCreated();
+            DbInitializer.SeedSampleCatalogs(_context);
 
             var rankRepo = new RankRepository(_context);
             var posRepo = new PositionRepository(_context);

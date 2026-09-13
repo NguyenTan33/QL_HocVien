@@ -168,7 +168,17 @@ namespace QL_HocVien.ViewModels
             IExcelService excelService,
             IFileDialogService fileDialogService,
             ISecurityGateService securityGate,
-            ICohortService cohortService,
+            IClassService classService)
+            : this(catalogService, excelService, fileDialogService, securityGate, null, classService)
+        {
+        }
+
+        public CatalogManagementViewModel(
+            ICatalogService catalogService,
+            IExcelService excelService,
+            IFileDialogService fileDialogService,
+            ISecurityGateService securityGate,
+            ICohortService? cohortService = null,
             IClassService? classService = null)
         {
             _catalogService = catalogService;
@@ -184,6 +194,7 @@ namespace QL_HocVien.ViewModels
 
         public async Task LoadCohortsAsync()
         {
+            if (_cohortService == null) return;
             try
             {
                 var cohorts = await _cohortService.GetAllCohortsAsync();

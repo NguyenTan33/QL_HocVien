@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QL_HocVien.Models;
+using QL_HocVien.Models.Entity;
 using QL_HocVien.Services;
+using QL_HocVien.Services.Interfaces;
 
 namespace QL_HocVien.ViewModels
 {
@@ -19,6 +21,9 @@ namespace QL_HocVien.ViewModels
         private readonly IFileDialogService _fileDialogService;
         private readonly ICatalogService _catalogService;
         private readonly ISecurityGateService _securityGate;
+        private readonly ICohortService? _cohortService;
+
+        public ObservableCollection<AcademicCohort> AvailableCohorts { get; } = new();
 
         public ObservableCollection<Cadet> Cadets { get; } = new();
         public ObservableCollection<string> RankList { get; } = new()
@@ -100,6 +105,25 @@ namespace QL_HocVien.ViewModels
         private string _editCohort = string.Empty;
 
         [ObservableProperty]
+        private AcademicCohort? _selectedEditCohort;
+
+        partial void OnSelectedEditCohortChanged(AcademicCohort? value)
+        {
+            if (value != null)
+            {
+                EditCohort = value.CohortCode;
+                if (value.EnrollmentYear.HasValue)
+                {
+                    EditEnrollmentYear = value.EnrollmentYear.Value;
+                }
+                if (!string.IsNullOrWhiteSpace(value.AcademicYear))
+                {
+                    EditAcademicYear = value.AcademicYear;
+                }
+            }
+        }
+
+        [ObservableProperty]
         private int? _editEnrollmentYear;
 
         [ObservableProperty]
@@ -155,7 +179,8 @@ namespace QL_HocVien.ViewModels
             IExcelService excelService,
             IFileDialogService fileDialogService,
             ICatalogService catalogService,
-            ISecurityGateService securityGate)
+            ISecurityGateService securityGate,
+            ICohortService? cohortService = null)
         {
             _cadetService = cadetService;
             _classService = classService;
@@ -164,6 +189,7 @@ namespace QL_HocVien.ViewModels
             _fileDialogService = fileDialogService;
             _catalogService = catalogService;
             _securityGate = securityGate;
+            _cohortService = cohortService;
             Title = "Quản Lý Danh Sách Học Viên";
 
             _ = InitializeAsync();
@@ -242,12 +268,28 @@ namespace QL_HocVien.ViewModels
                     AvailablePositions.Add(p);
                 }
 
+                AvailableCohorts.Clear();
+                if (_cohortService != null)
+                {
+                    var cohortsFromDb = await _cohortService.GetAllCohortsAsync();
+                    foreach (var c in cohortsFromDb.OrderBy(x => x.CohortNumber).ThenBy(x => x.CohortCode))
+                    {
+                        AvailableCohorts.Add(c);
+                    }
+                }
+
                 var distinctCohorts = await _cadetService.GetDistinctCohortsAsync();
                 CohortList.Clear();
                 CohortList.Add("Tất cả");
+                foreach (var ch in AvailableCohorts)
+                {
+                    if (!string.IsNullOrWhiteSpace(ch.CohortCode) && !CohortList.Contains(ch.CohortCode))
+                        CohortList.Add(ch.CohortCode);
+                }
                 foreach (var ch in distinctCohorts)
                 {
-                    if (!string.IsNullOrWhiteSpace(ch)) CohortList.Add(ch);
+                    if (!string.IsNullOrWhiteSpace(ch) && !CohortList.Contains(ch))
+                        CohortList.Add(ch);
                 }
             }
             catch
@@ -532,6 +574,9 @@ namespace QL_HocVien.ViewModels
             EditCadetCode = SelectedCadet.CadetCode;
             EditFullName = SelectedCadet.FullName;
             EditCohort = SelectedCadet.Cohort;
+            SelectedEditCohort = AvailableCohorts.FirstOrDefault(c => 
+                (!string.IsNullOrWhiteSpace(EditCohort) && c.CohortCode.Equals(EditCohort, StringComparison.OrdinalIgnoreCase)) ||
+                (SelectedCadet.CohortId.HasValue && c.Id == SelectedCadet.CohortId.Value));
             EditEnrollmentYear = SelectedCadet.EnrollmentYear;
             EditAcademicYear = SelectedCadet.AcademicYear;
             EditRank = SelectedCadet.Rank;
@@ -558,7 +603,24 @@ namespace QL_HocVien.ViewModels
 
             SelectedCadet.CadetCode = EditCadetCode.Trim();
             SelectedCadet.FullName = EditFullName;
-            SelectedCadet.Cohort = EditCohort?.Trim() ?? string.Empty;
+            if (SelectedEditCohort != null)
+            {
+                SelectedCadet.Cohort = SelectedEditCohort.CohortCode;
+                SelectedCadet.CohortId = SelectedEditCohort.Id;
+            }
+            else
+            {
+                var matched = AvailableCohorts.FirstOrDefault(c => !string.IsNullOrWhiteSpace(EditCohort) && c.CohortCode.Equals(EditCohort.Trim(), StringComparison.OrdinalIgnoreCase));
+                if (matched != null)
+                {
+                    SelectedCadet.Cohort = matched.CohortCode;
+                    SelectedCadet.CohortId = matched.Id;
+                }
+                else
+                {
+                    SelectedCadet.Cohort = EditCohort?.Trim() ?? string.Empty;
+                }
+            }
             SelectedCadet.EnrollmentYear = EditEnrollmentYear;
             SelectedCadet.AcademicYear = EditAcademicYear?.Trim() ?? string.Empty;
             SelectedCadet.Rank = EditRank;
