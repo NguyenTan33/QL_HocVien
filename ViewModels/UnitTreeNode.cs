@@ -13,6 +13,9 @@ namespace QL_HocVien.ViewModels
     public partial class UnitTreeNode : ObservableObject
     {
         public MilitaryUnit? Unit { get; set; }
+        public MilitaryClass? ClassItem { get; set; }
+        public AcademicCohort? CohortItem { get; set; }
+        public bool IsVirtualNode { get; set; }
         public UnitTreeNode? ParentNode { get; set; }
         public string NodeId { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
@@ -68,8 +71,8 @@ namespace QL_HocVien.ViewModels
             : (IsClassLeaf ? "Lớp đào tạo" : "Đơn vị cơ sở");
 
         public bool CanAddChild => !IsClassLeaf;
-        public bool CanEdit => Unit != null;
-        public bool CanDelete => Unit != null;
+        public bool CanEdit => Unit != null && !IsVirtualNode && CohortItem == null;
+        public bool CanDelete => Unit != null || ClassItem != null || CohortItem != null || IsVirtualNode;
 
         [RelayCommand]
         public void ToggleExpand()

@@ -381,5 +381,71 @@ namespace QL_HocVien.Tests
             Assert.NotNull(cUpdated);
             Assert.Equal("Tiểu đoàn Mới", cUpdated.ParentUnit);
         }
+
+        [Fact]
+        public async Task Test_UnitCode_Keeps_Original_Casing_Without_ToUpper()
+        {
+            // Kiểm tra Bug 4: Mã cho phép ký tự thường lẫn hoa tùy ý, không tự động ép in hoa
+            var unitLower = new MilitaryUnit
+            {
+                UnitCode = "c1_thuong",
+                UnitName = "Đại đội Chữ Thường",
+                ParentUnit = ""
+            };
+
+            var res = await _catalogService.AddUnitAsync(unitLower);
+            Assert.True(res.Success);
+            Assert.Equal("c1_thuong", res.Unit!.UnitCode); // Giữ nguyên chữ thường, không bị biến thành C1_THUONG
+        }
+
+        [Fact]
+        public async Task Test_DeleteUnit_No_Crash_When_ParentUnit_Is_Null_Or_Empty()
+        {
+            // Kiểm tra Bug 3: Đơn vị có ParentUnit rỗng không làm crash DeleteUnitCascadeAsync
+            var rootUnit = new MilitaryUnit
+            {
+                UnitCode = "root_no_crash",
+                UnitName = "Đơn vị gốc không cha",
+                ParentUnit = string.Empty
+            };
+            var childUnit = new MilitaryUnit
+            {
+                UnitCode = "child_unit",
+                UnitName = "Đơn vị con",
+                ParentUnit = "Đơn vị gốc không cha"
+            };
+
+            _context.MilitaryUnits.Add(rootUnit);
+            _context.MilitaryUnits.Add(childUnit);
+            await _context.SaveChangesAsync();
+
+            // Thực hiện xóa rootUnit - trước đây bị NullReferenceException văng app
+            var delRes = await _catalogService.DeleteUnitCascadeAsync(rootUnit.Id, cascadeDeleteChildren: false);
+            Assert.True(delRes.Success);
+
+            // Kiểm tra đơn vị con được nâng lên cấp trên (rỗng) mà không crash
+            var childAfter = await _catalogService.GetUnitByIdAsync(childUnit.Id);
+            Assert.NotNull(childAfter);
+            Assert.Equal(string.Empty, childAfter.ParentUnit);
+        }
+
+        [Fact]
+        public void Test_UnitTreeNode_CanDelete_For_ClassNode_And_VirtualNode()
+        {
+            // Kiểm tra Bug 1 & 3: Node Lớp và Node ảo đều có quyền CanDelete = true
+            var classNode = new UnitTreeNode
+            {
+                IsClassLeaf = true,
+                ClassItem = new MilitaryClass { Id = 99, ClassCode = "K26A", ClassName = "K26A - Chỉ huy" }
+            };
+            Assert.True(classNode.CanDelete);
+
+            var virtualNode = new UnitTreeNode
+            {
+                IsVirtualNode = true,
+                Name = "K75"
+            };
+            Assert.True(virtualNode.CanDelete);
+        }
     }
 }

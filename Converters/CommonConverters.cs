@@ -213,4 +213,33 @@ namespace QL_HocVien.Converters
 
         public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture) => throw new NotImplementedException();
     }
+
+    public class IntEqualsToBooleanConverter : IValueConverter
+    {
+        public static readonly IntEqualsToBooleanConverter Instance = new();
+
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is int intVal && parameter != null)
+            {
+                if (int.TryParse(parameter.ToString(), out int targetVal))
+                {
+                    return intVal == targetVal;
+                }
+            }
+            return false;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is bool b && b && parameter != null)
+            {
+                if (int.TryParse(parameter.ToString(), out int targetVal))
+                {
+                    return targetVal;
+                }
+            }
+            return Binding.DoNothing;
+        }
+    }
 }

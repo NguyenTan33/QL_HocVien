@@ -48,7 +48,7 @@ namespace QL_HocVien.Services.Implementations
             if (string.IsNullOrWhiteSpace(militaryClass.ClassName))
                 return (false, "Tên lớp học không được để trống.", null);
 
-            militaryClass.ClassCode = militaryClass.ClassCode.Trim().ToUpper();
+            militaryClass.ClassCode = militaryClass.ClassCode.Trim();
             militaryClass.ClassName = militaryClass.ClassName.Trim();
 
             if (await _classRepository.ExistsByCodeAsync(militaryClass.ClassCode))
@@ -73,7 +73,7 @@ namespace QL_HocVien.Services.Implementations
             if (existing == null)
                 return (false, "Không tìm thấy lớp học cần cập nhật.");
 
-            militaryClass.ClassCode = militaryClass.ClassCode.Trim().ToUpper();
+            militaryClass.ClassCode = militaryClass.ClassCode.Trim();
             militaryClass.ClassName = militaryClass.ClassName.Trim();
 
             if (!existing.ClassCode.Equals(militaryClass.ClassCode, StringComparison.OrdinalIgnoreCase))

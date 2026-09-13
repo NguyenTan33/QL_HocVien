@@ -69,11 +69,11 @@ namespace QL_HocVien.Services.Implementations
                 if (string.IsNullOrWhiteSpace(cohort.CohortName))
                     return (false, "Tên khóa học không được để trống.", null);
 
-                // Chuẩn hóa mã khóa học
-                cohort.CohortCode = cohort.CohortCode.Trim().ToUpper();
+                // Chuẩn hóa mã khóa học (cho phép chữ thường/chữ in tùy ý)
+                cohort.CohortCode = cohort.CohortCode.Trim();
 
                 var existing = await _context.AcademicCohorts
-                    .FirstOrDefaultAsync(c => c.CohortCode == cohort.CohortCode);
+                    .FirstOrDefaultAsync(c => c.CohortCode.ToLower() == cohort.CohortCode.ToLower());
                 if (existing != null)
                     return (false, $"Mã khóa học '{cohort.CohortCode}' đã tồn tại trong hệ thống.", null);
 
@@ -106,9 +106,9 @@ namespace QL_HocVien.Services.Implementations
                     return (false, "Không tìm thấy khóa học cần cập nhật.");
 
                 // Kiểm tra mã khóa học trùng (nếu đổi mã)
-                cohort.CohortCode = cohort.CohortCode.Trim().ToUpper();
+                cohort.CohortCode = cohort.CohortCode.Trim();
                 var duplicate = await _context.AcademicCohorts
-                    .FirstOrDefaultAsync(c => c.CohortCode == cohort.CohortCode && c.Id != cohort.Id);
+                    .FirstOrDefaultAsync(c => c.CohortCode.ToLower() == cohort.CohortCode.ToLower() && c.Id != cohort.Id);
                 if (duplicate != null)
                     return (false, $"Mã khóa học '{cohort.CohortCode}' đã được sử dụng bởi khóa khác.");
 

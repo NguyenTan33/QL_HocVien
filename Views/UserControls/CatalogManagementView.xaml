@@ -697,15 +697,19 @@
 
                         <!-- Fields cho Đơn Vị (Tab 2) -->
                         <StackPanel Margin="0,0,0,12" Visibility="{Binding SelectedTabIndex, Converter={StaticResource IntEqualsToVis}, ConverterParameter=2}">
-                            <!-- Lựa chọn Cấp trực thuộc: Khóa học hay Đơn vị cấp trên -->
+                            <!-- Lựa chọn Cấp trực thuộc: Khóa học, Đơn vị cấp trên, hoặc Đơn vị cấp cao nhất độc lập -->
                             <Border Background="{DynamicResource PageBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,0,0,10">
                                 <StackPanel Orientation="Horizontal">
-                                    <RadioButton Content="🎓 Trực thuộc Khóa học (Đơn vị gốc: Tiểu đoàn 1, 2...)" 
-                                                 IsChecked="{Binding IsRootUnitForm, Mode=TwoWay}" 
-                                                 Margin="0,0,18,0" FontSize="12" FontWeight="SemiBold"
+                                    <RadioButton Content="🎓 Trực thuộc Khóa học (K75, K26...)" 
+                                                 IsChecked="{Binding UnitParentType, Converter={x:Static local_cv:IntEqualsToBooleanConverter.Instance}, ConverterParameter=0, Mode=TwoWay}" 
+                                                 Margin="0,0,16,0" FontSize="12" FontWeight="SemiBold"
                                                  Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                    <RadioButton Content="🚩 Trực thuộc Đơn vị cấp trên (Đại đội, Trung đội...)" 
-                                                 IsChecked="{Binding IsRootUnitForm, Converter={x:Static local_cv:InvertedBooleanConverter.Instance}, Mode=TwoWay}" 
+                                    <RadioButton Content="🚩 Trực thuộc Đơn vị cấp trên (Tiểu đoàn, Đại đội...)" 
+                                                 IsChecked="{Binding UnitParentType, Converter={x:Static local_cv:IntEqualsToBooleanConverter.Instance}, ConverterParameter=1, Mode=TwoWay}" 
+                                                 Margin="0,0,16,0" FontSize="12" FontWeight="SemiBold"
+                                                 Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                    <RadioButton Content="🏛️ Đơn vị cấp cao nhất (Không có cấp trên)" 
+                                                 IsChecked="{Binding UnitParentType, Converter={x:Static local_cv:IntEqualsToBooleanConverter.Instance}, ConverterParameter=2, Mode=TwoWay}" 
                                                  FontSize="12" FontWeight="SemiBold"
                                                  Foreground="{DynamicResource TextPrimaryBrush}"/>
                                 </StackPanel>
@@ -718,11 +722,11 @@
                                     <ColumnDefinition Width="1*"/>
                                 </Grid.ColumnDefinitions>
 
-                                <!-- Cột Trái: Chọn Khóa học (từ CSDL SQL) HOẶC Chọn Đơn vị cấp trên -->
+                                <!-- Cột Trái: Chọn Khóa học HOẶC Chọn Đơn vị cấp trên HOẶC Thông báo Đơn vị gốc -->
                                 <StackPanel Grid.Column="0">
                                     <!-- 1. Khi trực thuộc Khóa học: Chọn từ CSDL SQL -->
                                     <StackPanel Visibility="{Binding IsRootUnitForm, Converter={StaticResource BoolToVis}}">
-                                        <TextBlock Text="Khóa học trực thuộc (*) [CSDL SQL]:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" Margin="0,0,0,4"/>
+                                        <TextBlock Text="Khóa học trực thuộc [CSDL SQL]:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" Margin="0,0,0,4"/>
                                         <ComboBox ItemsSource="{Binding AvailableCohorts}"
                                                   SelectedItem="{Binding SelectedFormCohort, Mode=TwoWay}"
                                                   DisplayMemberPath="DisplayLabel"
@@ -737,9 +741,17 @@
                                     </StackPanel>
 
                                     <!-- 2. Khi trực thuộc Đơn vị cấp trên: Chọn từ Cây sơ đồ -->
-                                    <StackPanel Visibility="{Binding IsRootUnitForm, Converter={StaticResource InvertedBoolToVis}}">
-                                        <TextBlock Text="Đơn vị cấp trên (*):" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
-                                        <components:UnitTreeComboBox SelectedUnit="{Binding FormParentUnit, Mode=TwoWay}" Height="36" Placeholder="Chọn đơn vị cấp trên (Tiểu đoàn, Đại đội...)..."/>
+                                    <StackPanel Visibility="{Binding IsChildUnitForm, Converter={StaticResource BoolToVis}}">
+                                        <TextBlock Text="Đơn vị cấp trên (Không bắt buộc):" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                                        <components:UnitTreeComboBox SelectedUnit="{Binding FormParentUnit, Mode=TwoWay}" Height="36" Placeholder="Chọn đơn vị cấp trên (hoặc bấm ✕ để bỏ trống)..."/>
+                                    </StackPanel>
+
+                                    <!-- 3. Khi là Đơn vị cấp cao nhất / Độc lập -->
+                                    <StackPanel Visibility="{Binding IsIndependentUnitForm, Converter={StaticResource BoolToVis}}">
+                                        <TextBlock Text="Cấp bậc bộ máy:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                                        <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="10,8" Height="36">
+                                            <TextBlock Text="🏛️ Đơn vị độc lập cấp cao nhất (Không có cấp trên)" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
+                                        </Border>
                                     </StackPanel>
                                 </StackPanel>
 

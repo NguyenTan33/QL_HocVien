@@ -347,11 +347,9 @@ namespace QL_HocVien.Data
                 context.SaveChanges();
             }
 
-            // Kiểm tra xem CSDL có phải là vừa khởi tạo hoàn toàn mới hay không
-            bool isBrandNewDb = !context.Users.Any();
-
-            // 1. Seed tài khoản Admin mặc định
-            if (isBrandNewDb)
+            // 1. Đảm bảo tài khoản Admin mặc định luôn tồn tại
+            var existingAdmin = context.Users.FirstOrDefault(u => u.Username == "admin");
+            if (existingAdmin == null)
             {
                 var adminUser = new User
                 {
@@ -367,56 +365,42 @@ namespace QL_HocVien.Data
                     SecurityAnswerHash = AuthSecurityHelper.HashSecurityAnswer("quanlyhocvien"),
                     PasswordHint = "Mật khẩu mặc định do đơn vị chỉ huy bàn giao"
                 };
-
-                var officerUser = new User
-                {
-                    Username = "canbo01",
-                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("Canbo@123"),
-                    FullName = "Đại úy Trần Văn Quân",
-                    PhoneNumber = "0912345678",
-                    Email = "quan.tv@mod.gov.vn",
-                    Role = "CanBo",
-                    CreatedAt = DateTime.Now,
-                    IsActive = true,
-                    SecurityQuestion = "Tên đơn vị công tác hiện tại của đồng chí?",
-                    SecurityAnswerHash = AuthSecurityHelper.HashSecurityAnswer("hocvien"),
-                    PasswordHint = "Mật khẩu viết hoa chữ cái đầu và có ký tự đặc biệt"
-                };
-
-                context.Users.AddRange(adminUser, officerUser);
+                context.Users.Add(adminUser);
                 context.SaveChanges();
+            }
+
+            if (seedSampleCatalogs)
+            {
+                var existingOfficer = context.Users.FirstOrDefault(u => u.Username == "canbo01");
+                if (existingOfficer == null)
+                {
+                    var officerUser = new User
+                    {
+                        Username = "canbo01",
+                        PasswordHash = BCrypt.Net.BCrypt.HashPassword("Canbo@123"),
+                        FullName = "Đại úy Trần Văn Quân",
+                        PhoneNumber = "0912345678",
+                        Email = "quan.tv@mod.gov.vn",
+                        Role = "CanBo",
+                        CreatedAt = DateTime.Now,
+                        IsActive = true,
+                        SecurityQuestion = "Tên đơn vị công tác hiện tại của đồng chí?",
+                        SecurityAnswerHash = AuthSecurityHelper.HashSecurityAnswer("hocvien"),
+                        PasswordHint = "Mật khẩu viết hoa chữ cái đầu và có ký tự đặc biệt"
+                    };
+                    context.Users.Add(officerUser);
+                    context.SaveChanges();
+                }
             }
             else
             {
-                // Cập nhật câu hỏi bảo mật mặc định cho tài khoản admin/canbo nếu chưa có
-                var existingAdmin = context.Users.FirstOrDefault(u => u.Username == "admin");
-                if (existingAdmin != null)
+                // Khi chạy thực tế (Production): Không dùng tài khoản cán bộ mẫu canbo01
+                var sampleOfficer = context.Users.FirstOrDefault(u => u.Username == "canbo01");
+                if (sampleOfficer != null)
                 {
-                    if (string.IsNullOrEmpty(existingAdmin.SecurityQuestion))
-                    {
-                        existingAdmin.SecurityQuestion = "Mã xác minh bí mật của đơn vị chỉ huy là gì?";
-                        existingAdmin.SecurityAnswerHash = AuthSecurityHelper.HashSecurityAnswer("quanlyhocvien");
-                    }
-                    if (string.IsNullOrEmpty(existingAdmin.PasswordHint) || existingAdmin.PasswordHint.Contains("Admin@123"))
-                    {
-                        existingAdmin.PasswordHint = "Mật khẩu mặc định do đơn vị chỉ huy bàn giao";
-                    }
+                    context.Users.Remove(sampleOfficer);
+                    context.SaveChanges();
                 }
-
-                var existingOfficer = context.Users.FirstOrDefault(u => u.Username == "canbo01");
-                if (existingOfficer != null)
-                {
-                    if (string.IsNullOrEmpty(existingOfficer.SecurityQuestion))
-                    {
-                        existingOfficer.SecurityQuestion = "Tên đơn vị công tác hiện tại của đồng chí?";
-                        existingOfficer.SecurityAnswerHash = AuthSecurityHelper.HashSecurityAnswer("hocvien");
-                    }
-                    if (string.IsNullOrEmpty(existingOfficer.PasswordHint) || existingOfficer.PasswordHint.Contains("Canbo@123"))
-                    {
-                        existingOfficer.PasswordHint = "Mật khẩu viết hoa chữ cái đầu và có ký tự đặc biệt";
-                    }
-                }
-                context.SaveChanges();
             }
 
             // 2. Seed danh mục môn rèn luyện thể lực theo Thông tư 32/2009/TTLT-BQP-BVHTTDL
@@ -634,10 +618,12 @@ namespace QL_HocVien.Data
                 context.SaveChanges();
             }
 
-            // Seed kết quả kiểm tra 2 đợt (Quý 3/2026 và Quý 4/2026) để phục vụ so sánh và phân tích
-            var xdSub = context.Subjects.FirstOrDefault(s => s.SubjectCode == "XD");
-            var c100Sub = context.Subjects.FirstOrDefault(s => s.SubjectCode == "C100");
-            var cv3000Sub = context.Subjects.FirstOrDefault(s => s.SubjectCode == "CV3000");
+            if (seedSampleCatalogs)
+            {
+                // Seed kết quả kiểm tra 2 đợt (Quý 3/2026 và Quý 4/2026) để phục vụ so sánh và phân tích
+                var xdSub = context.Subjects.FirstOrDefault(s => s.SubjectCode == "XD");
+                var c100Sub = context.Subjects.FirstOrDefault(s => s.SubjectCode == "C100");
+                var cv3000Sub = context.Subjects.FirstOrDefault(s => s.SubjectCode == "CV3000");
 
             if (xdSub != null && c100Sub != null && cv3000Sub != null)
             {
@@ -887,6 +873,7 @@ namespace QL_HocVien.Data
                 context.CreditScoreRecords.AddRange(scores);
                 context.SaveChanges();
             }
+            }
         }
         public static void SeedSampleCatalogs(AppDbContext context)
         {
@@ -1033,52 +1020,164 @@ namespace QL_HocVien.Data
                 context.SaveChanges();
             }
 
-            if (!context.MilitaryClasses.Any())
+            // Dọn dẹp dữ liệu mẫu K26 cũ nếu không có học viên nào tham chiếu
+            try
             {
-                var offBinh = context.Officers.FirstOrDefault(o => o.OfficerCode == "CB-001");
-                var offQuan = context.Officers.FirstOrDefault(o => o.OfficerCode == "CB-002");
-                var offSon = context.Officers.FirstOrDefault(o => o.OfficerCode == "CB-003");
+                var sampleK26Codes = new[] { "K26A", "K26B", "K26C" };
+                var sampleClasses = context.MilitaryClasses
+                    .Where(c => sampleK26Codes.Contains(c.ClassCode))
+                    .ToList();
 
-                var classes = new List<MilitaryClass>
+                foreach (var sc in sampleClasses)
                 {
-                    new MilitaryClass
+                    bool hasCadets = context.Cadets.Any(c => c.ClassId == sc.Id);
+                    if (!hasCadets)
                     {
-                        ClassCode = "K26A",
-                        ClassName = "K26A - Chỉ huy Tham mưu",
-                        Unit = "Đại đội 1",
-                        Major = "Chỉ huy Tham mưu Lục quân",
-                        OfficerInCharge = "Thiếu tá Nguyễn Văn Bình",
-                        OfficerId = offBinh?.Id,
-                        AcademicYear = "2023 - 2027",
-                        Description = "Đào tạo sĩ quan chỉ huy tham mưu cấp phân đội"
-                    },
-                    new MilitaryClass
-                    {
-                        ClassCode = "K26B",
-                        ClassName = "K26B - Hậu cần Quân sự",
-                        Unit = "Đại đội 2",
-                        Major = "Hậu cần Quân sự",
-                        OfficerInCharge = "Đại úy Trần Văn Quân",
-                        OfficerId = offQuan?.Id,
-                        AcademicYear = "2023 - 2027",
-                        Description = "Đào tạo chuyên môn đảm bảo hậu cần, quân nhu, xăng dầu"
-                    },
-                    new MilitaryClass
-                    {
-                        ClassCode = "K26C",
-                        ClassName = "K26C - Kỹ thuật Quân sự",
-                        Unit = "Đại đội 3",
-                        Major = "Kỹ thuật Vũ khí - Khí tài",
-                        OfficerInCharge = "Thiếu tá Lê Hồng Sơn",
-                        OfficerId = offSon?.Id,
-                        AcademicYear = "2023 - 2027",
-                        Description = "Đào tạo kỹ sư chỉ huy kỹ thuật khai thác bảo đảm vũ khí"
+                        context.MilitaryClasses.Remove(sc);
                     }
-                };
-
-                context.MilitaryClasses.AddRange(classes);
+                }
                 context.SaveChanges();
             }
+            catch { }
+        }
+
+        public static void EnsureAdminUser(AppDbContext context)
+        {
+            var adminUser = context.Users.FirstOrDefault(u => u.Username == "admin");
+            if (adminUser == null)
+            {
+                adminUser = new User
+                {
+                    Username = "admin",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"),
+                    FullName = "Quản Trị Viên Hệ Thống",
+                    PhoneNumber = "0988888888",
+                    Email = "admin@mod.gov.vn",
+                    Role = "Admin",
+                    CreatedAt = DateTime.Now,
+                    IsActive = true,
+                    SecurityQuestion = "Mã xác minh bí mật của đơn vị chỉ huy là gì?",
+                    SecurityAnswerHash = AuthSecurityHelper.HashSecurityAnswer("quanlyhocvien"),
+                    PasswordHint = "Mật khẩu mặc định do đơn vị chỉ huy bàn giao"
+                };
+                context.Users.Add(adminUser);
+                context.SaveChanges();
+            }
+            else
+            {
+                if (string.IsNullOrEmpty(adminUser.SecurityQuestion))
+                {
+                    adminUser.SecurityQuestion = "Mã xác minh bí mật của đơn vị chỉ huy là gì?";
+                    adminUser.SecurityAnswerHash = AuthSecurityHelper.HashSecurityAnswer("quanlyhocvien");
+                }
+                if (string.IsNullOrEmpty(adminUser.PasswordHint) || adminUser.PasswordHint.Contains("Admin@123"))
+                {
+                    adminUser.PasswordHint = "Mật khẩu mặc định do đơn vị chỉ huy bàn giao";
+                }
+                adminUser.IsActive = true;
+                context.SaveChanges();
+            }
+        }
+
+        public static void PurgeAllSampleDataExceptAdmin(AppDbContext context)
+        {
+            // 1. Xóa toàn bộ dữ liệu giao dịch học tập & thể lực
+            if (context.CreditScoreRecords.Any())
+            {
+                context.CreditScoreRecords.RemoveRange(context.CreditScoreRecords);
+                context.SaveChanges();
+            }
+
+            if (context.SubjectAssessmentComponents.Any())
+            {
+                context.SubjectAssessmentComponents.RemoveRange(context.SubjectAssessmentComponents);
+                context.SaveChanges();
+            }
+
+            if (context.CreditSubjects.Any())
+            {
+                context.CreditSubjects.RemoveRange(context.CreditSubjects);
+                context.SaveChanges();
+            }
+
+            if (context.PhysicalExamRecords.Any())
+            {
+                context.PhysicalExamRecords.RemoveRange(context.PhysicalExamRecords);
+                context.SaveChanges();
+            }
+
+            if (context.TrainingEvents.Any())
+            {
+                context.TrainingEvents.RemoveRange(context.TrainingEvents);
+                context.SaveChanges();
+            }
+
+            if (context.PasswordResetTokens.Any())
+            {
+                context.PasswordResetTokens.RemoveRange(context.PasswordResetTokens);
+                context.SaveChanges();
+            }
+
+            // 2. Xóa học viên và lớp học
+            if (context.Cadets.Any())
+            {
+                context.Cadets.RemoveRange(context.Cadets);
+                context.SaveChanges();
+            }
+
+            if (context.MilitaryClasses.Any())
+            {
+                context.MilitaryClasses.RemoveRange(context.MilitaryClasses);
+                context.SaveChanges();
+            }
+
+            // 3. Xóa cán bộ sĩ quan và danh mục mẫu
+            if (context.Officers.Any())
+            {
+                context.Officers.RemoveRange(context.Officers);
+                context.SaveChanges();
+            }
+
+            if (context.AcademicCohorts.Any())
+            {
+                context.AcademicCohorts.RemoveRange(context.AcademicCohorts);
+                context.SaveChanges();
+            }
+
+            if (context.MilitaryRanks.Any())
+            {
+                context.MilitaryRanks.RemoveRange(context.MilitaryRanks);
+                context.SaveChanges();
+            }
+
+            if (context.MilitaryPositions.Any())
+            {
+                context.MilitaryPositions.RemoveRange(context.MilitaryPositions);
+                context.SaveChanges();
+            }
+
+            if (context.MilitaryUnits.Any())
+            {
+                context.MilitaryUnits.RemoveRange(context.MilitaryUnits);
+                context.SaveChanges();
+            }
+
+            if (context.MilitaryMajors.Any())
+            {
+                context.MilitaryMajors.RemoveRange(context.MilitaryMajors);
+                context.SaveChanges();
+            }
+
+            // 4. Xóa tất cả tài khoản người dùng khác, chỉ chừa duy nhất admin
+            var nonAdminUsers = context.Users.Where(u => u.Username != "admin").ToList();
+            if (nonAdminUsers.Any())
+            {
+                context.Users.RemoveRange(nonAdminUsers);
+                context.SaveChanges();
+            }
+
+            // 5. Đảm bảo tài khoản admin luôn tồn tại và sẵn sàng hoạt động
+            EnsureAdminUser(context);
         }
     }
 }

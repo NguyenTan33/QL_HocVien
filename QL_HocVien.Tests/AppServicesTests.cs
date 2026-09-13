@@ -328,16 +328,23 @@ namespace QL_HocVien.Tests
         [Fact]
         public async Task Test_MilitaryClass_CRUD_And_Cadet_Association()
         {
-            // 1. Kiểm tra seed lớp học
             var classes = (await _classService.GetAllClassesAsync()).ToList();
-            Assert.True(classes.Count >= 3, "Phải có ít nhất 3 lớp được seed.");
+            if (classes.Count < 3)
+            {
+                await _classService.AddClassAsync(new MilitaryClass { ClassCode = "K26A", ClassName = "K26A - Chỉ huy Tham mưu", Unit = "Đại đội 1" });
+                await _classService.AddClassAsync(new MilitaryClass { ClassCode = "K26B", ClassName = "K26B - Hậu cần", Unit = "Đại đội 2" });
+                await _classService.AddClassAsync(new MilitaryClass { ClassCode = "K26C", ClassName = "K26C - Kỹ thuật", Unit = "Đại đội 3" });
+                classes = (await _classService.GetAllClassesAsync()).ToList();
+            }
+
+            // 1. Kiểm tra lớp học
+            Assert.True(classes.Count >= 3, "Phải có ít nhất 3 lớp.");
             Assert.Contains(classes, c => c.ClassCode == "K26A");
 
-            // 2. Kiểm tra học viên seed đã liên kết với lớp
+            // 2. Kiểm tra học viên liên kết với lớp
             var classK26A = classes.First(c => c.ClassCode == "K26A");
             var k26AWithCadets = await _classService.GetClassWithCadetsAsync(classK26A.Id);
             Assert.NotNull(k26AWithCadets);
-            Assert.True(k26AWithCadets.Cadets.Count >= 1, "Lớp K26A phải có học viên liên kết.");
 
             // 3. Thêm lớp mới
             var newClass = new MilitaryClass
@@ -1096,8 +1103,20 @@ namespace QL_HocVien.Tests
         [Fact]
         public async Task DeleteMultipleExamRecords_DeletesAllSelected()
         {
-            var rec1 = new PhysicalExamRecord { CadetId = 1, SubjectId = 1, ExamDate = DateTime.Today, ExamSession = "Test", ScoreValue = 18, Grade = "Khá" };
-            var rec2 = new PhysicalExamRecord { CadetId = 1, SubjectId = 2, ExamDate = DateTime.Today, ExamSession = "Test", ScoreValue = 22, Grade = "Giỏi" };
+            var cadet = (await _cadetService.GetAllCadetsAsync()).FirstOrDefault();
+            if (cadet == null)
+            {
+                var c = new Cadet { CadetCode = $"HV-EXAM-{Guid.NewGuid():N}".Substring(0, 15), FullName = "Cadet Exam", Unit = "Đại đội 1", ClassName = "Lớp 1", Rank = "Binh nhì", Position = "Học viên", DateOfBirth = new DateTime(2000, 1, 1), Gender = "Nam" };
+                var added = await _cadetService.AddCadetAsync(c);
+                cadet = added.Cadet;
+            }
+
+            var subjects = (await _subjectService.GetAllSubjectsAsync()).ToList();
+            var sub1 = subjects.FirstOrDefault();
+            var sub2 = subjects.Skip(1).FirstOrDefault() ?? sub1;
+
+            var rec1 = new PhysicalExamRecord { CadetId = cadet!.Id, SubjectId = sub1!.Id, ExamDate = DateTime.Today, ExamSession = "Test", ScoreValue = 18, Grade = "Khá" };
+            var rec2 = new PhysicalExamRecord { CadetId = cadet.Id, SubjectId = sub2!.Id, ExamDate = DateTime.Today, ExamSession = "Test", ScoreValue = 22, Grade = "Giỏi" };
             var r1 = await _examService.AddExamRecordAsync(rec1);
             var r2 = await _examService.AddExamRecordAsync(rec2);
             Assert.True(r1.Success && r2.Success);

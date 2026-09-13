@@ -136,20 +136,25 @@ namespace QL_HocVien.ViewModels
         [ObservableProperty]
         private AcademicCohort? _selectedFormCohort;
 
+        /// <summary>
+        /// 0 = Trực thuộc Khóa học (K75, K26...)
+        /// 1 = Trực thuộc Đơn vị cấp trên (Tiểu đoàn, Đại đội...)
+        /// 2 = Đơn vị cấp cao nhất độc lập (Không có cấp trên)
+        /// </summary>
         [ObservableProperty]
-        private bool _isRootUnitForm;
+        private int _unitParentType;
 
-        partial void OnSelectedFormCohortChanged(AcademicCohort? value)
-        {
-            if (value != null && IsRootUnitForm)
-            {
-                FormParentUnit = value.CohortCode;
-            }
-        }
+        public bool IsRootUnitForm => UnitParentType == 0;
+        public bool IsChildUnitForm => UnitParentType == 1;
+        public bool IsIndependentUnitForm => UnitParentType == 2;
 
-        partial void OnIsRootUnitFormChanged(bool value)
+        partial void OnUnitParentTypeChanged(int value)
         {
-            if (value)
+            OnPropertyChanged(nameof(IsRootUnitForm));
+            OnPropertyChanged(nameof(IsChildUnitForm));
+            OnPropertyChanged(nameof(IsIndependentUnitForm));
+
+            if (value == 0)
             {
                 if (SelectedFormCohort != null)
                 {
@@ -160,6 +165,18 @@ namespace QL_HocVien.ViewModels
                     SelectedFormCohort = AvailableCohorts.FirstOrDefault();
                     FormParentUnit = SelectedFormCohort?.CohortCode ?? string.Empty;
                 }
+            }
+            else if (value == 2)
+            {
+                FormParentUnit = string.Empty;
+            }
+        }
+
+        partial void OnSelectedFormCohortChanged(AcademicCohort? value)
+        {
+            if (value != null && UnitParentType == 0)
+            {
+                FormParentUnit = value.CohortCode;
             }
         }
 
@@ -358,14 +375,20 @@ namespace QL_HocVien.ViewModels
                 case 2:
                     await LoadCohortsAsync();
                     FormTitle = "Thêm Đơn Vị Quản Lý Mới";
-                    IsRootUnitForm = AvailableCohorts.Count > 0 && Units.Count == 0;
-                    if (IsRootUnitForm)
+                    if (AvailableCohorts.Count > 0 && Units.Count == 0)
                     {
+                        UnitParentType = 0;
                         SelectedFormCohort = AvailableCohorts.FirstOrDefault();
                         FormParentUnit = SelectedFormCohort?.CohortCode ?? string.Empty;
                     }
+                    else if (Units.Count > 0)
+                    {
+                        UnitParentType = 1;
+                        FormParentUnit = string.Empty;
+                    }
                     else
                     {
+                        UnitParentType = 2;
                         FormParentUnit = string.Empty;
                     }
                     break;
@@ -431,20 +454,30 @@ namespace QL_HocVien.ViewModels
                     FormContactPhone = SelectedUnit.ContactPhone ?? string.Empty;
                     FormDescription = SelectedUnit.Description ?? string.Empty;
 
-                    var matchedCohort = AvailableCohorts.FirstOrDefault(c =>
-                        c.CohortCode.Equals(SelectedUnit.ParentUnit, StringComparison.OrdinalIgnoreCase) ||
-                        c.CohortName.Equals(SelectedUnit.ParentUnit, StringComparison.OrdinalIgnoreCase));
-
-                    if (matchedCohort != null)
+                    if (string.IsNullOrWhiteSpace(SelectedUnit.ParentUnit) ||
+                        SelectedUnit.ParentUnit.Equals("Học viện", StringComparison.OrdinalIgnoreCase) ||
+                        SelectedUnit.ParentUnit.Equals("Bộ chỉ huy", StringComparison.OrdinalIgnoreCase))
                     {
-                        IsRootUnitForm = true;
-                        SelectedFormCohort = matchedCohort;
-                        FormParentUnit = matchedCohort.CohortCode;
+                        UnitParentType = 2; // Đơn vị cấp cao nhất độc lập
+                        FormParentUnit = string.Empty;
                     }
                     else
                     {
-                        IsRootUnitForm = false;
-                        FormParentUnit = SelectedUnit.ParentUnit ?? string.Empty;
+                        var matchedCohort = AvailableCohorts.FirstOrDefault(c =>
+                            c.CohortCode.Equals(SelectedUnit.ParentUnit, StringComparison.OrdinalIgnoreCase) ||
+                            c.CohortName.Equals(SelectedUnit.ParentUnit, StringComparison.OrdinalIgnoreCase));
+
+                        if (matchedCohort != null)
+                        {
+                            UnitParentType = 0; // Trực thuộc Khóa học
+                            SelectedFormCohort = matchedCohort;
+                            FormParentUnit = matchedCohort.CohortCode;
+                        }
+                        else
+                        {
+                            UnitParentType = 1; // Trực thuộc Đơn vị cấp trên
+                            FormParentUnit = SelectedUnit.ParentUnit;
+                        }
                     }
                     break;
 
@@ -532,23 +565,18 @@ namespace QL_HocVien.ViewModels
                         break;
 
                     case 2: // Đơn vị
-                        string parentUnit = FormParentUnit?.Trim() ?? string.Empty;
-                        if (IsRootUnitForm)
+                        string parentUnit = "";
+                        if (UnitParentType == 0) // Trực thuộc Khóa học
                         {
-                            if (SelectedFormCohort == null)
-                            {
-                                MessageBox.Show("Vui lòng chọn Khóa học trực thuộc từ danh sách CSDL SQL.", "Cảnh báo", MessageBoxButton.OK, MessageBoxImage.Warning);
-                                return;
-                            }
-                            parentUnit = SelectedFormCohort.CohortCode;
+                            parentUnit = SelectedFormCohort?.CohortCode ?? FormParentUnit?.Trim() ?? string.Empty;
                         }
-                        else
+                        else if (UnitParentType == 1) // Trực thuộc Đơn vị cấp trên
                         {
-                            if (string.IsNullOrWhiteSpace(parentUnit))
-                            {
-                                MessageBox.Show("Vui lòng chọn Đơn vị cấp trên hoặc chuyển sang trực thuộc Khóa học.", "Cảnh báo", MessageBoxButton.OK, MessageBoxImage.Warning);
-                                return;
-                            }
+                            parentUnit = FormParentUnit?.Trim() ?? string.Empty;
+                        }
+                        else // Đơn vị cấp cao nhất độc lập
+                        {
+                            parentUnit = string.Empty;
                         }
 
                         var unit = new MilitaryUnit
@@ -617,8 +645,8 @@ namespace QL_HocVien.ViewModels
                 if (SelectedUnit == null) return;
                 var allUnits = Units.ToList();
                 bool hasChildren = allUnits.Any(u => !string.IsNullOrWhiteSpace(u.ParentUnit) &&
-                    (u.ParentUnit.Equals(SelectedUnit.UnitName, StringComparison.OrdinalIgnoreCase) ||
-                     u.ParentUnit.Equals(SelectedUnit.UnitCode, StringComparison.OrdinalIgnoreCase)));
+                    (string.Equals(u.ParentUnit.Trim(), SelectedUnit.UnitName.Trim(), StringComparison.OrdinalIgnoreCase) ||
+                     string.Equals(u.ParentUnit.Trim(), SelectedUnit.UnitCode.Trim(), StringComparison.OrdinalIgnoreCase)));
                 bool cascade = false;
                 if (hasChildren)
                 {
@@ -841,11 +869,21 @@ namespace QL_HocVien.ViewModels
             await LoadCohortsAsync();
             SelectedTabIndex = 2;
             IsEditing = false;
-            IsRootUnitForm = false;
             ClearForm();
 
-            FormTitle = $"Thêm Đơn Vị Trực Thuộc: {parentNode?.Name ?? "Đơn vị"}";
-            FormParentUnit = parentNode?.Name ?? string.Empty;
+            if (parentNode?.CohortItem != null)
+            {
+                UnitParentType = 0; // Trực thuộc Khóa học
+                FormTitle = $"Thêm Đơn Vị Trực Thuộc Khóa Học: {parentNode.Name}";
+                SelectedFormCohort = AvailableCohorts.FirstOrDefault(c => c.CohortCode == parentNode.Code) ?? parentNode.CohortItem;
+                FormParentUnit = parentNode.Code;
+            }
+            else
+            {
+                UnitParentType = 1; // Trực thuộc Đơn vị cấp trên
+                FormTitle = $"Thêm Đơn Vị Trực Thuộc: {parentNode?.Name ?? "Đơn vị"}";
+                FormParentUnit = parentNode?.Name ?? string.Empty;
+            }
             IsFormVisible = true;
         }
 
@@ -855,24 +893,23 @@ namespace QL_HocVien.ViewModels
             if (!await _securityGate.EnsureUnlockedAsync("Thêm mới đơn vị quân sự")) return;
 
             await LoadCohortsAsync();
-            if (AvailableCohorts.Count == 0)
-            {
-                MessageBox.Show(
-                    "CẢNH BÁO: Chưa có Khóa học nào được tạo trong cơ sở dữ liệu SQL!\n\n" +
-                    "Đơn vị gốc (như Tiểu đoàn 1, Tiểu đoàn 2...) bắt buộc phải trực thuộc một Khóa học cụ thể.\n" +
-                    "Vui lòng vào mục 'Quản Lý Khóa Học' trên thanh menu để tạo Khóa học (ví dụ: K75, K26...) trước khi thêm đơn vị.",
-                    "Yêu cầu tạo Khóa học trước", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
             SelectedTabIndex = 2;
             IsEditing = false;
-            IsRootUnitForm = true;
             ClearForm();
 
-            FormTitle = "Thêm Đơn Vị Gốc Mới (Trực thuộc Khóa học)";
-            SelectedFormCohort = AvailableCohorts.FirstOrDefault();
-            FormParentUnit = SelectedFormCohort?.CohortCode ?? string.Empty;
+            if (AvailableCohorts.Count > 0)
+            {
+                UnitParentType = 0;
+                FormTitle = "Thêm Đơn Vị Gốc (Trực thuộc Khóa học)";
+                SelectedFormCohort = AvailableCohorts.FirstOrDefault();
+                FormParentUnit = SelectedFormCohort?.CohortCode ?? string.Empty;
+            }
+            else
+            {
+                UnitParentType = 2;
+                FormTitle = "Thêm Đơn Vị Cấp Cao Nhất (Độc Lập)";
+                FormParentUnit = string.Empty;
+            }
             IsFormVisible = true;
         }
 
@@ -888,17 +925,98 @@ namespace QL_HocVien.ViewModels
         [RelayCommand]
         public async Task DeleteUnitNodeAsync(UnitTreeNode? node)
         {
-            if (node?.Unit == null) return;
-            SelectedTabIndex = 2;
-            SelectedUnit = node.Unit;
-            await DeleteAsync();
+            if (node == null) return;
+
+            // 1. Nếu là Lớp đào tạo học viên (ClassNode)
+            if (node.ClassItem != null && _classService != null)
+            {
+                if (!await _securityGate.EnsureUnlockedAsync("Xóa lớp học viên khỏi cơ cấu")) return;
+
+                var confirm = MessageBox.Show(
+                    $"Bạn có chắc chắn muốn xóa Lớp đào tạo:\n• {node.ClassItem.ClassName} (Mã: {node.ClassItem.ClassCode})\nkhỏi cơ cấu không?",
+                    "Xác nhận xóa lớp học viên",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
+
+                if (confirm != MessageBoxResult.Yes) return;
+
+                IsBusy = true;
+                try
+                {
+                    var res = await _classService.DeleteClassAsync(node.ClassItem.Id);
+                    StatusMessage = res.Message;
+                    if (!res.Success)
+                    {
+                        MessageBox.Show(res.Message, "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    }
+                    else
+                    {
+                        await BuildUnitTreeAsync();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Lỗi xóa lớp: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                finally
+                {
+                    IsBusy = false;
+                }
+                return;
+            }
+
+            // 2. Nếu là Node Khóa học hoặc Node Nhóm ảo (Id == 0)
+            if (node.CohortItem != null || node.IsVirtualNode || (node.Unit != null && node.Unit.Id == 0))
+            {
+                if (!await _securityGate.EnsureUnlockedAsync("Xóa liên kết cấp trên")) return;
+
+                var confirm = MessageBox.Show(
+                    $"Bạn có muốn giải phóng các đơn vị con trực thuộc '{node.Name}' để chuyển các đơn vị này thành đơn vị cấp cao nhất độc lập không?",
+                    "Xác nhận giải phóng cấp trên",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
+
+                if (confirm != MessageBoxResult.Yes) return;
+
+                IsBusy = true;
+                try
+                {
+                    var allUnits = (await _catalogService.GetAllUnitsAsync()).ToList();
+                    var childUnits = allUnits.Where(u => !string.IsNullOrWhiteSpace(u.ParentUnit) &&
+                        (string.Equals(u.ParentUnit.Trim(), node.Name.Trim(), StringComparison.OrdinalIgnoreCase) ||
+                         string.Equals(u.ParentUnit.Trim(), node.Code.Trim(), StringComparison.OrdinalIgnoreCase))).ToList();
+
+                    foreach (var cu in childUnits)
+                    {
+                        cu.ParentUnit = string.Empty;
+                        await _catalogService.UpdateUnitAsync(cu);
+                    }
+                    await LoadAllDataAsync();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Lỗi giải phóng đơn vị: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                finally
+                {
+                    IsBusy = false;
+                }
+                return;
+            }
+
+            // 3. Đơn vị quân sự thực tế có Id > 0
+            if (node.Unit != null && node.Unit.Id > 0)
+            {
+                SelectedTabIndex = 2;
+                SelectedUnit = node.Unit;
+                await DeleteAsync();
+            }
         }
 
         public async Task BuildUnitTreeAsync()
         {
             UnitTreeNodes.Clear();
             var allUnits = Units.ToList();
-            if (allUnits.Count == 0) return;
 
             List<MilitaryClass> classes = new();
             if (_classService != null)
@@ -911,42 +1029,85 @@ namespace QL_HocVien.ViewModels
                 catch { }
             }
 
-            var existingUnitNames = new HashSet<string>(allUnits.Select(u => u.UnitName.Trim()), StringComparer.OrdinalIgnoreCase);
-
-            var missingParents = allUnits
-                .Where(u => !string.IsNullOrWhiteSpace(u.ParentUnit) &&
-                            !existingUnitNames.Contains(u.ParentUnit.Trim()) &&
-                            !u.ParentUnit.Equals("Học viện", StringComparison.OrdinalIgnoreCase) &&
-                            !u.ParentUnit.Equals("Bộ chỉ huy", StringComparison.OrdinalIgnoreCase))
-                .Select(u => u.ParentUnit.Trim())
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList();
-
-            int autoIdx = 1;
-            foreach (var pName in missingParents)
+            List<AcademicCohort> cohorts = new();
+            if (_cohortService != null)
             {
-                string pCode = pName.ToLower().Contains("tiểu đoàn") ? $"d_auto{autoIdx++}" :
-                               pName.ToLower().Contains("trung đoàn") ? $"e_auto{autoIdx++}" :
-                               $"u_auto{autoIdx++}";
-                var virtualUnit = new MilitaryUnit
+                try
                 {
-                    Id = 0,
-                    UnitCode = pCode,
-                    UnitName = pName,
-                    ParentUnit = "Học viện",
-                    CommanderName = $"Chỉ huy trưởng {pName}",
-                    ContactPhone = "0981111000",
-                    Description = "Cơ quan chỉ huy cấp trên (Chưa lưu CSDL)"
-                };
-                allUnits.Add(virtualUnit);
-                existingUnitNames.Add(pName);
+                    var cList = await _cohortService.GetAllCohortsAsync();
+                    cohorts = cList.ToList();
+                }
+                catch { }
             }
 
+            // 1. Tạo node Cấp Khóa Học cho các Khóa học thực tế trong CSDL
+            var cohortNodes = new Dictionary<string, UnitTreeNode>(StringComparer.OrdinalIgnoreCase);
+            foreach (var cohort in cohorts)
+            {
+                var cNode = new UnitTreeNode
+                {
+                    CohortItem = cohort,
+                    NodeId = $"cohort_{cohort.Id}",
+                    Name = !string.IsNullOrWhiteSpace(cohort.CohortName) ? cohort.CohortName : cohort.CohortCode,
+                    Code = cohort.CohortCode,
+                    Value = cohort.CohortCode,
+                    Level = 0,
+                    LevelName = "CẤP KHÓA HỌC",
+                    Commander = "Ban Chỉ huy Khóa học",
+                    Phone = cohort.AcademicYear ?? "---",
+                    Description = $"Khóa đào tạo: {cohort.CohortCode} ({cohort.AcademicYear})",
+                    Icon = "🎓",
+                    BadgeBrush = "#1E40AF",
+                    IsExpanded = true
+                };
+
+                // Hiển thị node Khóa học trên sơ đồ nếu có đơn vị con trực thuộc
+                bool hasChildUnits = allUnits.Any(u => !string.IsNullOrWhiteSpace(u.ParentUnit) &&
+                    (string.Equals(u.ParentUnit.Trim(), cohort.CohortCode.Trim(), StringComparison.OrdinalIgnoreCase) ||
+                     string.Equals(u.ParentUnit.Trim(), cohort.CohortName.Trim(), StringComparison.OrdinalIgnoreCase)));
+
+                if (hasChildUnits)
+                {
+                    cohortNodes[cohort.CohortCode] = cNode;
+                    cohortNodes[cohort.CohortName] = cNode;
+                    UnitTreeNodes.Add(cNode);
+                }
+            }
+
+            // Gắn các đơn vị con trực thuộc Khóa học
+            var attachedUnitIds = new HashSet<int>();
+            foreach (var cNode in cohortNodes.Values.Distinct())
+            {
+                var childUnits = allUnits
+                    .Where(u => !string.IsNullOrWhiteSpace(u.ParentUnit) &&
+                                (string.Equals(u.ParentUnit.Trim(), cNode.Code.Trim(), StringComparison.OrdinalIgnoreCase) ||
+                                 string.Equals(u.ParentUnit.Trim(), cNode.Name.Trim(), StringComparison.OrdinalIgnoreCase)))
+                    .ToList();
+
+                foreach (var cu in childUnits)
+                {
+                    int nextLevel = cNode.Level + 1;
+                    var childNode = CreateUnitNode(cu, nextLevel, classes);
+                    childNode.ParentNode = cNode;
+                    cNode.Children.Add(childNode);
+                    attachedUnitIds.Add(cu.Id);
+                    AttachChildrenRecursive(childNode, allUnits, classes);
+                }
+            }
+
+            // 2. Tìm các đơn vị cấp cao nhất quân sự (không thuộc Khóa học)
+            var existingUnitNames = new HashSet<string>(allUnits.Select(u => u.UnitName.Trim()), StringComparer.OrdinalIgnoreCase);
+            var existingUnitCodes = new HashSet<string>(allUnits.Select(u => u.UnitCode.Trim()), StringComparer.OrdinalIgnoreCase);
+            var cohortKeys = new HashSet<string>(cohortNodes.Keys, StringComparer.OrdinalIgnoreCase);
+
             var rootUnits = allUnits.Where(u =>
-                string.IsNullOrWhiteSpace(u.ParentUnit) ||
-                u.ParentUnit.Equals("Học viện", StringComparison.OrdinalIgnoreCase) ||
-                u.ParentUnit.Equals("Bộ chỉ huy", StringComparison.OrdinalIgnoreCase) ||
-                !existingUnitNames.Contains(u.ParentUnit.Trim())
+                !attachedUnitIds.Contains(u.Id) &&
+                (string.IsNullOrWhiteSpace(u.ParentUnit) ||
+                 u.ParentUnit.Equals("Học viện", StringComparison.OrdinalIgnoreCase) ||
+                 u.ParentUnit.Equals("Bộ chỉ huy", StringComparison.OrdinalIgnoreCase) ||
+                 (!existingUnitNames.Contains(u.ParentUnit.Trim()) &&
+                  !existingUnitCodes.Contains(u.ParentUnit.Trim()) &&
+                  !cohortKeys.Contains(u.ParentUnit.Trim())))
             ).ToList();
 
             foreach (var ru in rootUnits)
@@ -954,9 +1115,11 @@ namespace QL_HocVien.ViewModels
                 int level = DetermineLevel(ru);
                 var node = CreateUnitNode(ru, level, classes);
                 UnitTreeNodes.Add(node);
+                attachedUnitIds.Add(ru.Id);
                 AttachChildrenRecursive(node, allUnits, classes);
             }
 
+            // 3. Đơn vị mồ côi còn sót lại (nếu có)
             var addedUnitIds = new HashSet<int>();
             CollectAddedUnitIds(UnitTreeNodes, addedUnitIds);
             foreach (var u in allUnits)
@@ -1088,6 +1251,7 @@ namespace QL_HocVien.ViewModels
                 {
                     var classNode = new UnitTreeNode
                     {
+                        ClassItem = cls,
                         ParentNode = parentNode,
                         NodeId = $"class_{cls.Id}",
                         Name = $"{cls.ClassCode} - {cls.ClassName}",

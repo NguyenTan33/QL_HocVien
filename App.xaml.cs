@@ -87,6 +87,18 @@ namespace QL_HocVien
                     DbInitializer.Initialize(dbContext);
                 }
 
+                // Hỗ trợ xóa toàn bộ dữ liệu mẫu, chỉ chừa tài khoản admin (--purge-sample-data)
+                if (Array.Exists(e.Args, a => a == "--purge-sample-data"))
+                {
+                    using (var scope = ServiceProvider.CreateScope())
+                    {
+                        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                        DbInitializer.PurgeAllSampleDataExceptAdmin(dbContext);
+                    }
+                    Shutdown(0);
+                    return;
+                }
+
                 // Khởi tạo giao diện Chế độ Tác chiến (Combat Command Center) theo promt.txt & DemoUI.png
                 ServiceProvider.GetRequiredService<IThemeService>().ApplyTheme(true);
 

@@ -44,7 +44,7 @@ namespace QL_HocVien.Services.Implementations
             if (string.IsNullOrWhiteSpace(rank.RankName))
                 return (false, "Tên cấp bậc không được để trống.", null);
 
-            rank.RankCode = rank.RankCode.Trim().ToUpper();
+            rank.RankCode = rank.RankCode.Trim();
             rank.RankName = rank.RankName.Trim();
 
             if (await _rankRepo.ExistsByCodeAsync(rank.RankCode))
@@ -67,7 +67,7 @@ namespace QL_HocVien.Services.Implementations
             if (existing == null)
                 return (false, "Không tìm thấy cấp bậc cần cập nhật.");
 
-            rank.RankCode = rank.RankCode.Trim().ToUpper();
+            rank.RankCode = rank.RankCode.Trim();
             rank.RankName = rank.RankName.Trim();
 
             if (!existing.RankCode.Equals(rank.RankCode, StringComparison.OrdinalIgnoreCase))
@@ -125,7 +125,7 @@ namespace QL_HocVien.Services.Implementations
             if (string.IsNullOrWhiteSpace(position.PositionName))
                 return (false, "Tên chức vụ không được để trống.", null);
 
-            position.PositionCode = position.PositionCode.Trim().ToUpper();
+            position.PositionCode = position.PositionCode.Trim();
             position.PositionName = position.PositionName.Trim();
 
             if (await _positionRepo.ExistsByCodeAsync(position.PositionCode))
@@ -148,7 +148,7 @@ namespace QL_HocVien.Services.Implementations
             if (existing == null)
                 return (false, "Không tìm thấy chức vụ cần cập nhật.");
 
-            position.PositionCode = position.PositionCode.Trim().ToUpper();
+            position.PositionCode = position.PositionCode.Trim();
             position.PositionName = position.PositionName.Trim();
 
             if (!existing.PositionCode.Equals(position.PositionCode, StringComparison.OrdinalIgnoreCase))
@@ -208,7 +208,7 @@ namespace QL_HocVien.Services.Implementations
             if (string.IsNullOrWhiteSpace(unit.UnitName))
                 return (false, "Tên đơn vị không được để trống.", null);
 
-            unit.UnitCode = unit.UnitCode.Trim().ToUpper();
+            unit.UnitCode = unit.UnitCode.Trim();
             unit.UnitName = unit.UnitName.Trim();
 
             if (await _unitRepo.ExistsByCodeAsync(unit.UnitCode))
@@ -232,7 +232,7 @@ namespace QL_HocVien.Services.Implementations
             if (existing == null)
                 return (false, "Không tìm thấy đơn vị cần cập nhật.");
 
-            unit.UnitCode = unit.UnitCode.Trim().ToUpper();
+            unit.UnitCode = unit.UnitCode.Trim();
             unit.UnitName = unit.UnitName.Trim();
 
             if (!existing.UnitCode.Equals(unit.UnitCode, StringComparison.OrdinalIgnoreCase))
@@ -288,8 +288,9 @@ namespace QL_HocVien.Services.Implementations
 
             var allUnits = (await _unitRepo.GetAllAsync()).ToList();
             var directChildren = allUnits
-                .Where(u => u.ParentUnit.Equals(existing.UnitName, StringComparison.OrdinalIgnoreCase) ||
-                            u.ParentUnit.Equals(existing.UnitCode, StringComparison.OrdinalIgnoreCase))
+                .Where(u => !string.IsNullOrWhiteSpace(u.ParentUnit) &&
+                            (string.Equals(u.ParentUnit.Trim(), existing.UnitName.Trim(), StringComparison.OrdinalIgnoreCase) ||
+                             string.Equals(u.ParentUnit.Trim(), existing.UnitCode.Trim(), StringComparison.OrdinalIgnoreCase)))
                 .ToList();
 
             if (cascadeDeleteChildren)
@@ -298,8 +299,11 @@ namespace QL_HocVien.Services.Implementations
                 var toDelete = new List<MilitaryUnit>();
                 void CollectChildren(MilitaryUnit parent)
                 {
-                    var children = allUnits.Where(u => u.ParentUnit.Equals(parent.UnitName, StringComparison.OrdinalIgnoreCase) ||
-                                                       u.ParentUnit.Equals(parent.UnitCode, StringComparison.OrdinalIgnoreCase)).ToList();
+                    var children = allUnits
+                        .Where(u => !string.IsNullOrWhiteSpace(u.ParentUnit) &&
+                                    (string.Equals(u.ParentUnit.Trim(), parent.UnitName.Trim(), StringComparison.OrdinalIgnoreCase) ||
+                                     string.Equals(u.ParentUnit.Trim(), parent.UnitCode.Trim(), StringComparison.OrdinalIgnoreCase)))
+                        .ToList();
                     foreach (var c in children)
                     {
                         toDelete.Add(c);
@@ -358,7 +362,7 @@ namespace QL_HocVien.Services.Implementations
             if (string.IsNullOrWhiteSpace(major.MajorName))
                 return (false, "Tên chuyên ngành không được để trống.", null);
 
-            major.MajorCode = major.MajorCode.Trim().ToUpper();
+            major.MajorCode = major.MajorCode.Trim();
             major.MajorName = major.MajorName.Trim();
 
             if (await _majorRepo.ExistsByCodeAsync(major.MajorCode))
@@ -381,7 +385,7 @@ namespace QL_HocVien.Services.Implementations
             if (existing == null)
                 return (false, "Không tìm thấy chuyên ngành cần cập nhật.");
 
-            major.MajorCode = major.MajorCode.Trim().ToUpper();
+            major.MajorCode = major.MajorCode.Trim();
             major.MajorName = major.MajorName.Trim();
 
             if (!existing.MajorCode.Equals(major.MajorCode, StringComparison.OrdinalIgnoreCase))
