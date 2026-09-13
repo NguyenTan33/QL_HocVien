@@ -1503,23 +1503,39 @@ namespace QL_HocVien.Services.Implementations
                 string unit = meta.ColUnit > 0 ? ws.Cell(r, meta.ColUnit).GetString().Trim() : "b1";
                 if (string.IsNullOrWhiteSpace(unit)) unit = "b1";
 
+                // Parse chuỗi phân cấp đơn vị "dBB1/cBB1/bBB1" thành danh sách cấp
+                // Giữ nguyên chuỗi đầy đủ để lưu vào Cadet.Unit (hiển thị đầy đủ phân cấp)
+                var unitParts = ExcelService.ParseHierarchyUnitCode(unit); // ["dBB1", "cBB1", "bBB1"]
+                // Cấp thấp nhất (tiểu đội 'b') dùng để khớp học viên
+                string leafUnit = unitParts.Count > 0 ? unitParts[unitParts.Count - 1] : unit;
+
                 // Khớp học viên đa tầng:
                 // Ưu tiên 1: Khớp theo Mã học viên
                 Cadet? cadet = null;
                 if (!string.IsNullOrWhiteSpace(codeFromExcel))
                 {
-                    cadet = cadetsInDb.FirstOrDefault(cd => 
-                        !string.IsNullOrWhiteSpace(cd.CadetCode) && 
+                    cadet = cadetsInDb.FirstOrDefault(cd =>
+                        !string.IsNullOrWhiteSpace(cd.CadetCode) &&
                         cd.CadetCode.Equals(codeFromExcel, StringComparison.OrdinalIgnoreCase));
                 }
 
-                // Ưu tiên 2: Khớp theo Họ tên + Đơn vị
+                // Ưu tiên 2: Khớp theo Họ tên + Đơn vị (thử full string trước, rồi từng cấp)
                 if (cadet == null && !string.IsNullOrWhiteSpace(unit))
                 {
+                    // Khớp với chuỗi đơn vị đầy đủ
                     cadet = cadetsInDb.FirstOrDefault(cd =>
                         System.Text.RegularExpressions.Regex.Replace(cd.FullName, @"\s+", " ").Equals(fullName, StringComparison.OrdinalIgnoreCase) &&
                         !string.IsNullOrWhiteSpace(cd.Unit) &&
                         cd.Unit.Equals(unit, StringComparison.OrdinalIgnoreCase));
+
+                    // Nếu không khớp full string, thử khớp với cấp thấp nhất trong chuỗi phân cấp
+                    if (cadet == null && unitParts.Count > 1)
+                    {
+                        cadet = cadetsInDb.FirstOrDefault(cd =>
+                            System.Text.RegularExpressions.Regex.Replace(cd.FullName, @"\s+", " ").Equals(fullName, StringComparison.OrdinalIgnoreCase) &&
+                            !string.IsNullOrWhiteSpace(cd.Unit) &&
+                            unitParts.Any(p => cd.Unit.Contains(p, StringComparison.OrdinalIgnoreCase)));
+                    }
                 }
 
                 // Ưu tiên 3: Khớp theo Họ tên
@@ -1527,6 +1543,35 @@ namespace QL_HocVien.Services.Implementations
                 {
                     cadet = cadetsInDb.FirstOrDefault(cd =>
                         System.Text.RegularExpressions.Regex.Replace(cd.FullName, @"\s+", " ").Equals(fullName, StringComparison.OrdinalIgnoreCase));
+                }
+
+                // Trích số khóa học từ CadetCode để link CohortId
+                int? resolvedCohortId = null;
+                string resolvedCohortCode = effectiveCohort;
+                if (!string.IsNullOrWhiteSpace(codeFromExcel))
+                {
+                    int? cohortNumFromCode = ExcelService.ExtractCohortNumberFromCadetCode(codeFromExcel);
+                    if (cohortNumFromCode.HasValue)
+                    {
+                        string cohortCode = $"K{cohortNumFromCode}";
+                        var foundCohortObj = await _context.AcademicCohorts
+                            .FirstOrDefaultAsync(c => c.CohortCode == cohortCode || c.CohortNumber == cohortNumFromCode);
+                        if (foundCohortObj == null)
+                        {
+                            foundCohortObj = new AcademicCohort
+                            {
+                                CohortCode = cohortCode,
+                                CohortName = $"Khóa {cohortNumFromCode}",
+                                CohortNumber = cohortNumFromCode.Value,
+                                AcademicYear = $"{DateTime.Today.Year} - {DateTime.Today.Year + 4}",
+                                CreatedAt = DateTime.Now
+                            };
+                            _context.AcademicCohorts.Add(foundCohortObj);
+                            await _context.SaveChangesAsync();
+                        }
+                        resolvedCohortId = foundCohortObj.Id;
+                        resolvedCohortCode = cohortCode;
+                    }
                 }
 
                 // QUY TẮC BẢO LƯU: Nếu học viên đã tồn tại, TUYỆT ĐỐI KHÔNG ĐƯỢC sửa hoặc ghi đè CadetCode!
@@ -1547,12 +1592,13 @@ namespace QL_HocVien.Services.Implementations
                     {
                         CadetCode = newCode,
                         FullName = fullName,
-                        Unit = unit,
+                        Unit = unit,           // Lưu nguyên chuỗi phân cấp đầy đủ "dBB1/cBB1/bBB1"
                         Rank = "Binh nhì",
                         Position = "Học viên",
-                        Cohort = effectiveCohort,
+                        Cohort = resolvedCohortCode,
+                        CohortId = resolvedCohortId,
                         EnrollmentYear = detectedEnrollmentYear,
-                        AcademicYear = !string.IsNullOrWhiteSpace(effectiveCohort) && detectedEnrollmentYear.HasValue
+                        AcademicYear = !string.IsNullOrWhiteSpace(resolvedCohortCode) && detectedEnrollmentYear.HasValue
                             ? $"{detectedEnrollmentYear} - {detectedEnrollmentYear + 4}"
                             : string.Empty,
                         DateOfBirth = new DateTime(2002, 1, 1),
@@ -1566,14 +1612,19 @@ namespace QL_HocVien.Services.Implementations
                 }
                 else
                 {
-                    // Học viên đã tồn tại: giữ nguyên CadetCode 100%, cập nhật đơn vị nếu file Excel có chỉ định
+                    // Học viên đã tồn tại: giữ nguyên CadetCode 100%, cập nhật đơn vị và khóa học
                     if (!string.IsNullOrWhiteSpace(unit))
                     {
                         cadet.Unit = unit;
                     }
-                    if (string.IsNullOrWhiteSpace(cadet.Cohort) && !string.IsNullOrWhiteSpace(effectiveCohort))
+                    // Cập nhật CohortId nếu chưa có
+                    if (!cadet.CohortId.HasValue && resolvedCohortId.HasValue)
                     {
-                        cadet.Cohort = effectiveCohort;
+                        cadet.CohortId = resolvedCohortId.Value;
+                    }
+                    if (string.IsNullOrWhiteSpace(cadet.Cohort) && !string.IsNullOrWhiteSpace(resolvedCohortCode))
+                    {
+                        cadet.Cohort = resolvedCohortCode;
                     }
                     if (!cadet.EnrollmentYear.HasValue && detectedEnrollmentYear.HasValue)
                     {

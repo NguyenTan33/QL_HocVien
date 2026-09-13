@@ -110,6 +110,37 @@ namespace QL_HocVien.Services.Implementations
             return string.Empty;
         }
 
+        /// <summary>
+        /// Parse chuỗi đơn vị phân cấp kiểu "dBB1/cBB1/bBB1" thành danh sách mã từng cấp.
+        /// Thứ tự: từ cấp cao nhất (tiểu đoàn 'd') đến thấp nhất (tiểu đội 'b').
+        /// Ví dụ: "dBB1/cBB1/bBB1" → ["dBB1", "cBB1", "bBB1"]
+        /// </summary>
+        public static List<string> ParseHierarchyUnitCode(string unit)
+        {
+            if (string.IsNullOrWhiteSpace(unit)) return new List<string>();
+            return unit.Split('/', StringSplitOptions.RemoveEmptyEntries)
+                       .Select(s => s.Trim())
+                       .Where(s => !string.IsNullOrWhiteSpace(s))
+                       .ToList();
+        }
+
+        /// <summary>
+        /// Trích số khóa học từ mã học viên dạng "ĐH.075.012" → 75 (bỏ leading zero).
+        /// Hỗ trợ: ĐH.075.012 | HV-075-001 | K75.001 | ĐH_075_001 v.v.
+        /// Trả về null nếu không parse được.
+        /// </summary>
+        public static int? ExtractCohortNumberFromCadetCode(string cadetCode)
+        {
+            if (string.IsNullOrWhiteSpace(cadetCode)) return null;
+            // Pattern: <prefix><sep><2-3 digits><sep><digits>
+            // ĐH.075.012 → groups[1] = "075" → 75
+            var m = Regex.Match(cadetCode.Trim(),
+                @"^[A-Za-z\u00C0-\u024F\u1E00-\u1EFF\u0110\u0111]+[\.\-_](\d{2,3})[\.\-_](\d+)$");
+            if (m.Success && int.TryParse(m.Groups[1].Value, out int n))
+                return n;
+            return null;
+        }
+
         #region 1. XUẤT & NHẬP HỌC VIÊN
         public async Task<(bool Success, string Message)> ExportCadetsToExcelAsync(IEnumerable<Cadet> cadets, string filePath)
         {
@@ -433,10 +464,10 @@ namespace QL_HocVien.Services.Implementations
                         }
                     }
 
-                    // Tự động nhận diện Khóa học từ Mã học viên dạng ĐH.075.299 (bỏ qua ĐH, lấy 075 -> K75)
+                    // ── Tự động nhận diện Khóa học từ Mã học viên dạng ĐH.075.299 (bỏ ĐH, lấy 075 → K75) ──
                     string extractedCohort = string.Empty;
                     int? extractedCohortId = null;
-                    var cohortCodeMatch = Regex.Match(code, @"^[A-Za-zÀ-ỹĐđ]+[\.\-_](\d{2,3})[\.\-_](\d+)$");
+                    var cohortCodeMatch = Regex.Match(code, @"^[A-Za-zÀ-ỹĐđ]+[.\-_](\d{2,3})[.\-_](\d+)$");
                     if (cohortCodeMatch.Success && int.TryParse(cohortCodeMatch.Groups[1].Value, out int cohortNum))
                     {
                         extractedCohort = $"K{cohortNum}";
@@ -458,9 +489,44 @@ namespace QL_HocVien.Services.Implementations
                         extractedCohortId = foundCohort.Id;
                     }
 
-                    var matchedClass = allClasses.FirstOrDefault(c => 
-                        c.ClassName.Equals(className, StringComparison.OrdinalIgnoreCase) || 
+                    // ── Parse chuỗi đơn vị phân cấp "dBB1/cBB1/bBB1" ──
+                    // Tìm MilitaryClass tương ứng với cấp thấp nhất (tiểu đội/đại đội)
+                    // để link ClassId cho học viên nếu DB đã có cấu trúc đơn vị
+                    var matchedClass = allClasses.FirstOrDefault(c =>
+                        c.ClassName.Equals(className, StringComparison.OrdinalIgnoreCase) ||
                         c.ClassCode.Equals(className, StringComparison.OrdinalIgnoreCase));
+
+                    int? resolvedClassId = matchedClass?.Id;
+                    string displayUnit = unit; // Giữ nguyên chuỗi phân cấp đầy đủ để hiển thị
+
+                    if (resolvedClassId == null && unit.Contains('/'))
+                    {
+                        // Đây là chuỗi phân cấp như "dBB1/cBB1/bBB1"
+                        var unitParts = ParseHierarchyUnitCode(unit); // ["dBB1", "cBB1", "bBB1"]
+
+                        // Tìm theo cấp thấp nhất trước (tiểu đội 'b'), rồi đại đội 'c', rồi tiểu đoàn 'd'
+                        foreach (var part in ((IEnumerable<string>)unitParts).Reverse())
+                        {
+                            var cls = allClasses.FirstOrDefault(c =>
+                                c.ClassCode.Equals(part, StringComparison.OrdinalIgnoreCase) ||
+                                c.ClassName.Equals(part, StringComparison.OrdinalIgnoreCase));
+                            if (cls != null)
+                            {
+                                resolvedClassId = cls.Id;
+                                if (string.IsNullOrWhiteSpace(className))
+                                    className = cls.ClassName;
+                                break;
+                            }
+                        }
+                    }
+
+                    // Ưu tiên ClassId đã resolve từ phân cấp đơn vị
+                    if (resolvedClassId == null && matchedClass != null)
+                        resolvedClassId = matchedClass.Id;
+
+                    string defaultClassName = !string.IsNullOrWhiteSpace(className)
+                        ? className
+                        : (matchedClass?.ClassName ?? (extractedCohort.Length > 0 ? extractedCohort : string.Empty));
 
                     var existing = await _cadetRepository.GetByCodeAsync(code);
                     if (existing != null)
@@ -468,16 +534,16 @@ namespace QL_HocVien.Services.Implementations
                         existing.FullName = fullName;
                         if (!string.IsNullOrWhiteSpace(rank)) existing.Rank = rank;
                         if (!string.IsNullOrWhiteSpace(pos)) existing.Position = pos;
-                        if (!string.IsNullOrWhiteSpace(unit)) existing.Unit = unit;
+                        if (!string.IsNullOrWhiteSpace(unit)) existing.Unit = displayUnit;
                         if (!string.IsNullOrWhiteSpace(extractedCohort))
                         {
                             existing.Cohort = extractedCohort;
                             existing.CohortId = extractedCohortId;
                         }
-                        if (matchedClass != null)
+                        if (resolvedClassId.HasValue)
                         {
-                            existing.ClassId = matchedClass.Id;
-                            existing.ClassName = matchedClass.ClassName;
+                            existing.ClassId = resolvedClassId.Value;
+                            existing.ClassName = matchedClass?.ClassName ?? className;
                         }
                         else if (!string.IsNullOrWhiteSpace(className))
                         {
@@ -500,9 +566,9 @@ namespace QL_HocVien.Services.Implementations
                             FullName = fullName,
                             Rank = !string.IsNullOrWhiteSpace(rank) ? rank : "Binh nhì",
                             Position = !string.IsNullOrWhiteSpace(pos) ? pos : "Học viên",
-                            Unit = !string.IsNullOrWhiteSpace(unit) ? unit : fallbackUnit,
-                            ClassId = matchedClass?.Id,
-                            ClassName = matchedClass?.ClassName ?? (!string.IsNullOrWhiteSpace(className) ? className : (extractedCohort.Length > 0 ? extractedCohort : "K26A")),
+                            Unit = !string.IsNullOrWhiteSpace(displayUnit) ? displayUnit : fallbackUnit,
+                            ClassId = resolvedClassId,
+                            ClassName = defaultClassName,
                             Cohort = extractedCohort,
                             CohortId = extractedCohortId,
                             PhoneNumber = !string.IsNullOrWhiteSpace(phone) ? phone : $"09{new Random().Next(10000000, 99999999)}",
