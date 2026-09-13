@@ -998,7 +998,7 @@ namespace QL_HocVien.Tests
             });
             thread.SetApartmentState(System.Threading.ApartmentState.STA);
             thread.Start();
-            thread.Join();
+            thread.Join(10000);
 
             if (threadEx != null)
             {
@@ -1129,39 +1129,6 @@ namespace QL_HocVien.Tests
             Assert.Equal(2, delRes.DeletedCount);
         }
 
-        [Fact]
-        public void Inspect_Tbm_Excel_File()
-        {
-            var path = @"C:\Users\minht\Downloads\Điểm TBM chuẩn .xlsx";
-            if (!System.IO.File.Exists(path)) return;
-
-            try
-            {
-                using var fs = new System.IO.FileStream(path, System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.ReadWrite);
-                using var wb = new ClosedXML.Excel.XLWorkbook(fs);
-                var sb = new System.Text.StringBuilder();
-                var ws = wb.Worksheets.FirstOrDefault();
-                if (ws != null)
-                {
-                    sb.AppendLine($"=== Sheet: {ws.Name} ===");
-                    for (int c = 63; c <= 66; c++)
-                    {
-                        var cell5 = ws.Cell(5, c);
-                        var cell70 = ws.Cell(70, c);
-                        sb.AppendLine($"Row 5 Col {c}: Val='{cell5.GetString()}', Formula='{cell5.FormulaA1}'");
-                        sb.AppendLine($"Row 70 Col {c}: Val='{cell70.GetString()}', Formula='{cell70.FormulaA1}'");
-                    }
-                }
-
-                var outDir = @"C:\Users\minht\.gemini\antigravity\brain\ac0fb0d0-7340-4832-b869-e526578128d4\scratch";
-                System.IO.Directory.CreateDirectory(outDir);
-                System.IO.File.WriteAllText(System.IO.Path.Combine(outDir, "excel_dump.txt"), sb.ToString());
-            }
-            catch (System.IO.IOException)
-            {
-                // Tệp tin đang được mở bởi ứng dụng khác, bỏ qua kiểm tra ad-hoc
-            }
-        }
 
         [Fact]
         public void Test_LoginViewModel_NoExpiredTrialNotification()
