@@ -185,7 +185,8 @@
                 BorderThickness="1"
                 CornerRadius="4"
                 Cursor="Hand"
-                MouseLeftButtonDown="OnTriggerBoxClicked">
+                PreviewMouseLeftButtonDown="OnTriggerBoxPreviewMouseDown"
+                PreviewMouseLeftButtonUp="OnTriggerBoxPreviewMouseUp">
             <Border.Style>
                 <Style TargetType="Border">
                     <Style.Triggers>
@@ -247,7 +248,9 @@
                IsOpen="{Binding IsDropDownOpen, ElementName=RootUnitTreeBox, Mode=TwoWay}"
                StaysOpen="False"
                AllowsTransparency="True"
-               PopupAnimation="Slide">
+               PopupAnimation="None"
+               Opened="OnPopupOpened"
+               Closed="OnPopupClosed">
             <Border MinWidth="{Binding ActualWidth, ElementName=TriggerBox}"
                     Width="320"
                     MaxHeight="380"
@@ -323,13 +326,13 @@
                     </Border>
 
                     <!-- 3. Cây phân cấp TreeView chính -->
-                    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                        <TreeView x:Name="MainTreeView"
-                                  Background="Transparent"
-                                  BorderThickness="0"
-                                  Padding="0"
-                                  ItemContainerStyle="{StaticResource UnitTreeViewItemStyle}"/>
-                    </ScrollViewer>
+                    <TreeView Grid.Row="2" x:Name="MainTreeView"
+                              Background="Transparent"
+                              BorderThickness="0"
+                              Padding="0"
+                              ScrollViewer.VerticalScrollBarVisibility="Auto"
+                              ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                              ItemContainerStyle="{StaticResource UnitTreeViewItemStyle}"/>
                 </Grid>
             </Border>
         </Popup>

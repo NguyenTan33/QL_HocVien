@@ -173,14 +173,7 @@ namespace QL_HocVien.Views.Components
 
         private static void OnIsDropDownOpenChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (d is UnitTreeComboBox control && (bool)e.NewValue)
-            {
-                control.Dispatcher.InvokeAsync(() =>
-                {
-                    control.SearchBox.Text = string.Empty;
-                    control.SearchBox.Focus();
-                }, DispatcherPriority.Input);
-            }
+            // Popup opened/closed lifecycle handled by events
         }
 
         private void UpdateDisplayFromSelectedUnit(string? unit)
@@ -253,10 +246,77 @@ namespace QL_HocVien.Views.Components
             }
         }
 
-        private void OnTriggerBoxClicked(object sender, MouseButtonEventArgs e)
+        private long _lastClosedTimestamp;
+
+        private void OnPopupOpened(object? sender, EventArgs e)
         {
-            if (e.OriginalSource is Button) return; // Nút Clear được xử lý riêng
-            IsDropDownOpen = !IsDropDownOpen;
+            Dispatcher.InvokeAsync(() =>
+            {
+                SearchBox.Text = string.Empty;
+                if (IsDropDownOpen && TreePopup.IsOpen)
+                {
+                    SearchBox.Focus();
+                }
+            }, DispatcherPriority.Background);
+        }
+
+        private void OnPopupClosed(object? sender, EventArgs e)
+        {
+            _lastClosedTimestamp = Environment.TickCount64;
+            if (IsDropDownOpen)
+            {
+                IsDropDownOpen = false;
+            }
+        }
+
+        private void OnTriggerBoxPreviewMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (IsClickInsideButton(e.OriginalSource)) return; // Nút Clear được xử lý riêng
+
+            // Đánh dấu Handled để sự kiện chuột không truyền lên ScrollViewer hoặc container ngoài gây mất focus/capture
+            e.Handled = true;
+
+            if (IsDropDownOpen)
+            {
+                IsDropDownOpen = false;
+            }
+            else
+            {
+                // Nếu vừa mới đóng do click ra ngoài trúng ngay TriggerBox, không mở lại tức thì
+                if (Environment.TickCount64 - _lastClosedTimestamp > 250)
+                {
+                    IsDropDownOpen = true;
+                }
+            }
+        }
+
+        private void OnTriggerBoxPreviewMouseUp(object sender, MouseButtonEventArgs e)
+        {
+            if (IsClickInsideButton(e.OriginalSource)) return;
+            e.Handled = true;
+        }
+
+        private static bool IsClickInsideButton(object? originalSource)
+        {
+            if (originalSource is DependencyObject dep)
+            {
+                while (dep != null)
+                {
+                    if (dep is System.Windows.Controls.Primitives.ButtonBase) return true;
+                    dep = System.Windows.Media.VisualTreeHelper.GetParent(dep);
+                }
+            }
+            return false;
+        }
+
+        protected override void OnPreviewKeyDown(KeyEventArgs e)
+        {
+            base.OnPreviewKeyDown(e);
+            if (e.Key == Key.Escape && IsDropDownOpen)
+            {
+                IsDropDownOpen = false;
+                e.Handled = true;
+            }
         }
 
         private void OnClearClicked(object sender, RoutedEventArgs e)
@@ -276,6 +336,7 @@ namespace QL_HocVien.Views.Components
 
         private void OnAllUnitsClicked(object sender, MouseButtonEventArgs e)
         {
+            e.Handled = true;
             _isInternalSelection = true;
             try
             {
@@ -291,6 +352,7 @@ namespace QL_HocVien.Views.Components
 
         private void OnNodeRowClicked(object sender, RoutedEventArgs e)
         {
+            e.Handled = true;
             var btn = sender as Button;
             var node = btn?.Tag as UnitTreeNode;
             if (node == null) return;
