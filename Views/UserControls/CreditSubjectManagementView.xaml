@@ -407,18 +407,39 @@
                                 <Grid Grid.Row="0" Margin="0,0,0,12">
                                     <TextBlock Text="Danh sách các môn học phân bổ tín chỉ và hình thức kiểm tra/thi:" 
                                                FontSize="12.5" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
-                                    <Button Content="➕ Thêm Môn Mới" Style="{StaticResource PrimaryButtonStyle}" HorizontalAlignment="Right"
-                                            Command="{Binding OpenAddSubjectFormCommand}"/>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                        <Button Content="➕ Thêm Môn Mới" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0"
+                                                Command="{Binding OpenAddSubjectFormCommand}"/>
+                                        <Button Content="🗑️ Xóa" Style="{StaticResource DangerButtonStyle}"
+                                                ToolTip="Xóa các môn học đã tích chọn khỏi hệ thống"
+                                                Command="{Binding DeleteSelectedSubjectsCommand}"/>
+                                    </StackPanel>
                                 </Grid>
 
                                 <DataGrid Grid.Row="1" ItemsSource="{Binding Subjects}"
                                           Style="{StaticResource MilitaryDataGridStyle}"
-                                          AutoGenerateColumns="False" IsReadOnly="True"
+                                          AutoGenerateColumns="False"
                                           CanUserAddRows="False" SelectionMode="Single"
                                           GridLinesVisibility="Horizontal" HeadersVisibility="Column"
                                           RowHeight="40">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Mã Môn" Binding="{Binding SubjectCode}" Width="100">
+                                        <!-- Cột Checkbox chọn nhiều / chọn tất cả môn học -->
+                                        <DataGridTemplateColumn Width="46" CanUserResize="False" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}">
+                                            <DataGridTemplateColumn.Header>
+                                                <CheckBox IsChecked="{Binding DataContext.IsAllSubjectsSelected, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                          IsThreeState="True"
+                                                          HorizontalAlignment="Center" VerticalAlignment="Center" 
+                                                          ToolTip="Chọn tất cả / Bỏ chọn tất cả"/>
+                                            </DataGridTemplateColumn.Header>
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+
+                                        <DataGridTextColumn Header="Mã Môn" Binding="{Binding SubjectCode}" Width="100" IsReadOnly="True">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock">
                                                     <Setter Property="FontWeight" Value="Bold"/>
@@ -428,7 +449,7 @@
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
 
-                                        <DataGridTextColumn Header="Tên Môn Học" Binding="{Binding SubjectName}" Width="200">
+                                        <DataGridTextColumn Header="Tên Môn Học" Binding="{Binding SubjectName}" Width="200" IsReadOnly="True">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock">
                                                     <Setter Property="FontWeight" Value="SemiBold"/>
@@ -468,7 +489,7 @@
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
 
-                                        <DataGridTextColumn Header="Mô Tả / Ghi Chú" Binding="{Binding Description}" Width="*">
+                                        <DataGridTextColumn Header="Mô Tả / Ghi Chú" Binding="{Binding Description}" Width="*" IsReadOnly="True">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock">
                                                     <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
@@ -477,19 +498,13 @@
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
 
-                                        <DataGridTemplateColumn Header="Hành Động" Width="110" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}">
+                                        <DataGridTemplateColumn Header="Hành Động" Width="85" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                        <Button Content="✏️ Sửa" Style="{StaticResource SecondaryButtonStyle}" 
-                                                                Padding="6,2" Margin="0,0,6,0" FontSize="11"
-                                                                Command="{Binding DataContext.OpenEditSubjectFormCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                                CommandParameter="{Binding}"/>
-                                                        <Button Content="🗑️" Style="{StaticResource DangerButtonStyle}" 
-                                                                Padding="6,2" FontSize="11" ToolTip="Xóa môn học"
-                                                                Command="{Binding DataContext.DeleteSubjectCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                                CommandParameter="{Binding}"/>
-                                                    </StackPanel>
+                                                    <Button Content="✏️ Sửa" Style="{StaticResource SecondaryButtonStyle}" 
+                                                            Padding="10,2" HorizontalAlignment="Center" FontSize="11"
+                                                            Command="{Binding DataContext.OpenEditSubjectFormCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            CommandParameter="{Binding}"/>
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>

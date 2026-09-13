@@ -92,6 +92,14 @@ namespace QL_HocVien.ViewModels
         public string SelectAllButtonText => IsAllSelected == true ? "⬜ Bỏ chọn" : "☑️ Chọn tất cả";
 
         [ObservableProperty]
+        private bool? _isAllSubjectsSelected = false;
+
+        [ObservableProperty]
+        private int _selectedSubjectsCount;
+
+        private bool _isUpdatingSubjectSelection;
+
+        [ObservableProperty]
         private int _selectedTabIndex = 0; // 0: Bảng điểm học viên, 1: Danh mục môn tín chỉ
         #endregion
 
@@ -387,6 +395,34 @@ namespace QL_HocVien.ViewModels
             _isUpdatingSelection = false;
         }
 
+        partial void OnIsAllSubjectsSelectedChanged(bool? value)
+        {
+            if (_isUpdatingSubjectSelection || value == null) return;
+            _isUpdatingSubjectSelection = true;
+            bool isChecked = value.Value;
+            foreach (var item in Subjects)
+            {
+                item.IsSelected = isChecked;
+            }
+            SelectedSubjectsCount = isChecked ? Subjects.Count : 0;
+            _isUpdatingSubjectSelection = false;
+        }
+
+        private void UpdateSubjectSelectionState()
+        {
+            if (_isUpdatingSubjectSelection) return;
+            _isUpdatingSubjectSelection = true;
+            int count = Subjects.Count(s => s.IsSelected);
+            SelectedSubjectsCount = count;
+            if (count == 0)
+                IsAllSubjectsSelected = false;
+            else if (count == Subjects.Count && count > 0)
+                IsAllSubjectsSelected = true;
+            else
+                IsAllSubjectsSelected = null;
+            _isUpdatingSubjectSelection = false;
+        }
+
         public async Task InitializeAsync()
         {
             IsBusy = true;
@@ -462,7 +498,18 @@ namespace QL_HocVien.ViewModels
                 // 1. Tải danh mục môn học tín chỉ
                 var subjs = await _creditService.GetAllSubjectsAsync();
                 Subjects.Clear();
-                foreach (var s in subjs) Subjects.Add(s);
+                foreach (var s in subjs)
+                {
+                    s.PropertyChanged += (sender, e) =>
+                    {
+                        if (e.PropertyName == nameof(CreditSubject.IsSelected))
+                        {
+                            UpdateSubjectSelectionState();
+                        }
+                    };
+                    Subjects.Add(s);
+                }
+                UpdateSubjectSelectionState();
                 TotalSubjectsCount = Subjects.Count;
 
                 // 2. Tải bảng điểm học viên (không lọc theo lớp học viên)
@@ -779,6 +826,63 @@ namespace QL_HocVien.ViewModels
             catch (Exception ex)
             {
                 StatusMessage = $"Lỗi lưu môn học: {ex.Message}";
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        [RelayCommand]
+        public async Task DeleteSelectedSubjectsAsync()
+        {
+            if (!CheckCanBoOrAdminPermission("xóa môn học tín chỉ")) return;
+
+            var selected = Subjects.Where(s => s.IsSelected).ToList();
+            if (!selected.Any())
+            {
+                System.Windows.MessageBox.Show(
+                    "Vui lòng tích chọn ít nhất một môn học trong danh sách để xóa!",
+                    "Chưa Chọn Môn Học",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Information);
+                return;
+            }
+
+            if (!await _securityGate.EnsureUnlockedAsync($"Xóa {selected.Count} môn học khỏi hệ thống")) return;
+
+            var confirm = System.Windows.MessageBox.Show(
+                $"CẢNH BÁO NGUY HIỂM:\nBạn có chắc chắn muốn xóa {selected.Count} môn học đã chọn?\n\n" +
+                "Toàn bộ các đợt kiểm tra, điểm thành phần và kết quả điểm của học viên liên quan đến các môn này sẽ bị xóa vĩnh viễn khỏi hệ thống.\n\n" +
+                "Thao tác này KHÔNG THỂ HOÀN TÁC!",
+                "Xác Nhận Xóa Môn Học",
+                System.Windows.MessageBoxButton.YesNo,
+                System.Windows.MessageBoxImage.Warning);
+
+            if (confirm != System.Windows.MessageBoxResult.Yes) return;
+
+            IsBusy = true;
+            try
+            {
+                int deletedCount = 0;
+                foreach (var s in selected)
+                {
+                    var res = await _creditService.DeleteSubjectAsync(s.Id);
+                    if (res.Success) deletedCount++;
+                }
+                IsAllSubjectsSelected = false;
+                await LoadDataAsync();
+                StatusMessage = $"Đã xóa thành công {deletedCount}/{selected.Count} môn học tín chỉ.";
+                System.Windows.MessageBox.Show(
+                    $"Đã xóa thành công {deletedCount} môn học tín chỉ khỏi hệ thống!",
+                    "Thành Công",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Lỗi khi xóa môn học: {ex.Message}";
+                System.Windows.MessageBox.Show($"Lỗi: {ex.Message}", "Lỗi Xóa Môn Học", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             }
             finally
             {

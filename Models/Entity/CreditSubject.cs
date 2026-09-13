@@ -1,10 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace QL_HocVien.Models.Entity
 {
-    public class CreditSubject
+    public partial class CreditSubject : ObservableObject
     {
+        [NotMapped]
+        [ObservableProperty]
+        private bool _isSelected;
+
         public int Id { get; set; }
         public string SubjectCode { get; set; } = string.Empty;
         public string SubjectName { get; set; } = string.Empty;
