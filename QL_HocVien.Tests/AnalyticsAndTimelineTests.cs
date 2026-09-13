@@ -30,7 +30,7 @@ namespace QL_HocVien.Tests
                 .Options;
 
             _context = new AppDbContext(options);
-            DbInitializer.Initialize(_context);
+            DbInitializer.Initialize(_context, seedSampleCatalogs: true);
 
             _eventRepository = new TrainingEventRepository(_context);
             _eventService = new TrainingEventService(_eventRepository);

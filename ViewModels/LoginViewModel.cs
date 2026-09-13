@@ -125,20 +125,9 @@ namespace QL_HocVien.ViewModels
 
         public void UpdateTrialStatus()
         {
-            if (_passkeyService.IsTrialActive)
-            {
-                var remaining = _passkeyService.TrialExpirationDate - DateTime.Now;
-                int days = Math.Max(0, (int)remaining.TotalDays);
-                int hours = Math.Max(0, remaining.Hours);
-                TrialStatusText = $"★ Dùng thử miễn phí đến 23:59 ngày 12/09/2026 (Còn {days} ngày {hours} giờ)";
-                IsTrialExpired = false;
-                IsPasskeyModalVisible = false;
-            }
-            else
-            {
-                TrialStatusText = "⚠️ Đã hết hạn trải nghiệm miễn phí (12/09/2026). Yêu cầu Passkey kích hoạt.";
-                IsTrialExpired = true;
-            }
+            TrialStatusText = string.Empty;
+            IsTrialExpired = false;
+            IsPasskeyModalVisible = false;
         }
 
         [RelayCommand]

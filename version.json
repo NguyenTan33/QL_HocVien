@@ -1,7 +1,7 @@
 {
-  "latestVersion": "1.4.9",
+  "latestVersion": "1.5.0",
   "minimumVersion": "1.0.0",
   "mandatory": false,
-  "downloadUrl": "https://github.com/NguyenTan33/QL_HocVien/releases/download/v1.4.9/QL_HocVien.exe",
-  "releaseNotes": "Bản cập nhật v1.4.9:\n- Loại bỏ nút cứng 'Chuẩn Hóa 62.9 TC' trên thanh công cụ Quản lý Môn học Tín chỉ.\n- Chuyển sang cơ chế tính toán tổng tín chỉ hoàn toàn động theo danh mục môn học thực tế trong hệ thống.\n- Hỗ trợ linh hoạt khi thêm mới, sửa đổi hoặc loại bỏ môn học/thành phần mà không bị gò ép vào khung tín chỉ cố định."
+  "downloadUrl": "https://github.com/NguyenTan33/QL_HocVien/releases/download/v1.5.0/QL_HocVien.exe",
+  "releaseNotes": "Bản cập nhật v1.5.0:\n- Sửa triệt để ô CheckBox 'Chọn tất cả' ở cả 2 phần: Bảng điểm học viên (Tab 1) và Danh mục môn học tín chỉ (Tab 2).\n- Sử dụng BindingProxy và bổ sung trình xử lý sự kiện tức thì, khắc phục hoàn toàn hiện tượng xung đột khiến không chọn được tất cả."
 }

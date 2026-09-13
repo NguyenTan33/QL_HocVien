@@ -41,5 +41,21 @@ namespace QL_HocVien.Views.UserControls
                 }
             }
         }
+
+        private void HeaderSelectAllCadets_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is ViewModels.CreditSubjectManagementViewModel vm && sender is CheckBox cb)
+            {
+                vm.SetAllCadetsSelection(cb.IsChecked == true);
+            }
+        }
+
+        private void HeaderSelectAllSubjects_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is ViewModels.CreditSubjectManagementViewModel vm && sender is CheckBox cb)
+            {
+                vm.SetAllSubjectsSelection(cb.IsChecked == true);
+            }
+        }
     }
 }

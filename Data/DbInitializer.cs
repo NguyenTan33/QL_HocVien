@@ -559,20 +559,80 @@ namespace QL_HocVien.Data
                 // Bỏ qua nếu có lỗi
             }
 
-            // 4. Không tạo học viên mặc định (để trống dữ liệu học viên cho người dùng tự nhập dữ liệu thật)
-            try
+            // 4. Nếu chạy kiểm thử hệ thống (seedSampleCatalogs == true), nạp học viên mẫu để test toàn diện.
+            // Khi chạy ứng dụng thực tế (seedSampleCatalogs == false), không tạo học viên mặc định để người dùng tự nhập.
+            if (seedSampleCatalogs && !context.Cadets.Any())
             {
-                var defaultCadets = context.Cadets.Where(c => c.CadetCode == "HV-2026-001" || 
-                                                             c.CadetCode == "HV-2026-002" || 
-                                                             c.CadetCode == "HV-2026-003" || 
-                                                             c.CadetCode == "HV-2026-004").ToList();
-                if (defaultCadets.Any())
+                var classK26A = context.MilitaryClasses.FirstOrDefault(c => c.ClassCode == "K26A");
+                var classK26B = context.MilitaryClasses.FirstOrDefault(c => c.ClassCode == "K26B");
+
+                var cadets = new List<Cadet>
                 {
-                    context.Cadets.RemoveRange(defaultCadets);
-                    context.SaveChanges();
-                }
+                    new Cadet
+                    {
+                        CadetCode = "HV-2026-001",
+                        FullName = "Nguyễn Văn An",
+                        Rank = "Trung sĩ",
+                        Position = "Lớp trưởng",
+                        Unit = "Đại đội 1",
+                        ClassId = classK26A?.Id,
+                        ClassName = classK26A?.ClassName ?? "K26A - Chỉ huy Tham mưu",
+                        PhoneNumber = "0971000001",
+                        Email = "an.nv@hocvien.edu.vn",
+                        DateOfBirth = new DateTime(2003, 5, 15),
+                        Age = 23,
+                        Gender = "Nam"
+                    },
+                    new Cadet
+                    {
+                        CadetCode = "HV-2026-002",
+                        FullName = "Lê Thị Bích",
+                        Rank = "Hạ sĩ",
+                        Position = "Lớp phó",
+                        Unit = "Đại đội 1",
+                        ClassId = classK26A?.Id,
+                        ClassName = classK26A?.ClassName ?? "K26A - Chỉ huy Tham mưu",
+                        PhoneNumber = "0971000002",
+                        Email = "bich.lt@hocvien.edu.vn",
+                        DateOfBirth = new DateTime(2004, 8, 20),
+                        Age = 22,
+                        Gender = "Nữ"
+                    },
+                    new Cadet
+                    {
+                        CadetCode = "HV-2026-003",
+                        FullName = "Phạm Hoàng Dũng",
+                        Rank = "Binh nhất",
+                        Position = "Chiến sĩ",
+                        Unit = "Đại đội 2",
+                        ClassId = classK26B?.Id,
+                        ClassName = classK26B?.ClassName ?? "K26B - Hậu cần Quân sự",
+                        PhoneNumber = "0971000003",
+                        Email = "dung.ph@hocvien.edu.vn",
+                        DateOfBirth = new DateTime(2004, 1, 10),
+                        Age = 22,
+                        Gender = "Nam"
+                    },
+                    new Cadet
+                    {
+                        CadetCode = "HV-2026-004",
+                        FullName = "Trần Minh Quang",
+                        Rank = "Binh nhì",
+                        Position = "Chiến sĩ",
+                        Unit = "Đại đội 2",
+                        ClassId = classK26B?.Id,
+                        ClassName = classK26B?.ClassName ?? "K26B - Hậu cần Quân sự",
+                        PhoneNumber = "0971000004",
+                        Email = "quang.tm@hocvien.edu.vn",
+                        DateOfBirth = new DateTime(2005, 11, 28),
+                        Age = 21,
+                        Gender = "Nam"
+                    }
+                };
+
+                context.Cadets.AddRange(cadets);
+                context.SaveChanges();
             }
-            catch { }
 
             // Seed kết quả kiểm tra 2 đợt (Quý 3/2026 và Quý 4/2026) để phục vụ so sánh và phân tích
             var xdSub = context.Subjects.FirstOrDefault(s => s.SubjectCode == "XD");

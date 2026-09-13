@@ -12,10 +12,10 @@ namespace QL_HocVien.Services.Implementations
     {
         private readonly AppDbContext _context;
 
-        // Mốc hết hạn dùng thử miễn phí: 23:59:59 ngày 12/09/2026
-        public DateTime TrialExpirationDate => new DateTime(2026, 9, 12, 23, 59, 59);
+        // Phần mềm nội bộ quân đội: Hiệu lực vĩnh viễn
+        public DateTime TrialExpirationDate => DateTime.MaxValue;
 
-        public bool IsTrialActive => DateTime.Now <= TrialExpirationDate;
+        public bool IsTrialActive => true;
 
         public PasskeyService(AppDbContext context)
         {

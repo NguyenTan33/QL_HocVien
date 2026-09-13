@@ -222,11 +222,8 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
-                        <!-- Huy hiệu Trải nghiệm dùng thử / Nút kích hoạt Passkey -->
+                        <!-- Nút kích hoạt Passkey -->
                         <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" DataContext="{Binding LoginVm}">
-                            <Border Background="#E5DCB9" BorderBrush="#8C7D46" BorderThickness="1" CornerRadius="4" Padding="8,3" Margin="0,0,8,0">
-                                <TextBlock Text="{Binding TrialStatusText}" FontSize="11" FontWeight="SemiBold" Foreground="#4A5C3B"/>
-                            </Border>
                             <Button Content="🔑 Nhập Passkey" Height="22" Padding="8,0"
                                     Background="#8F1515" Foreground="#FFE17A" BorderBrush="#D4B547" BorderThickness="1"
                                     FontSize="10" FontWeight="Bold" Cursor="Hand"

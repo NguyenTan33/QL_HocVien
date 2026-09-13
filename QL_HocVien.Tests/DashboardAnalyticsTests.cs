@@ -36,7 +36,7 @@ namespace QL_HocVien.Tests
                 .Options;
 
             _context = new AppDbContext(options);
-            DbInitializer.Initialize(_context);
+            DbInitializer.Initialize(_context, seedSampleCatalogs: true);
 
             var cadetRepo = new CadetRepository(_context);
             var classRepo = new ClassRepository(_context);

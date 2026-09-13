@@ -1143,6 +1143,19 @@ namespace QL_HocVien.Tests
                 // Tệp tin đang được mở bởi ứng dụng khác, bỏ qua kiểm tra ad-hoc
             }
         }
+
+        [Fact]
+        public void Test_LoginViewModel_NoExpiredTrialNotification()
+        {
+            var lockoutService = new LoginLockoutService();
+            var passkeyService = new PasskeyService(_context);
+            var vm = new LoginViewModel(_authService, passkeyService, lockoutService);
+
+            Assert.True(passkeyService.IsTrialActive);
+            Assert.Equal(string.Empty, vm.TrialStatusText);
+            Assert.False(vm.IsTrialExpired);
+            Assert.False(vm.IsPasskeyModalVisible);
+        }
     }
 
     public class TestFileDialogService : IFileDialogService

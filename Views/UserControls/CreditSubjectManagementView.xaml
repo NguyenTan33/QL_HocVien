@@ -248,8 +248,8 @@
                                         <!-- Cột Checkbox chọn nhiều / chọn tất cả -->
                                         <DataGridTemplateColumn Width="46" CanUserResize="False" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}">
                                              <DataGridTemplateColumn.Header>
-                                                 <CheckBox IsChecked="{Binding DataContext.IsAllSelected, RelativeSource={RelativeSource AncestorType=DataGrid}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                                                           Command="{Binding DataContext.ToggleSelectAllCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                 <CheckBox IsChecked="{Binding Data.IsAllSelected, Source={StaticResource Proxy}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                           Click="HeaderSelectAllCadets_Click"
                                                            HorizontalAlignment="Center" VerticalAlignment="Center" 
                                                            ToolTip="Chọn tất cả / Bỏ chọn tất cả"/>
                                              </DataGridTemplateColumn.Header>
@@ -423,8 +423,8 @@
                                         <!-- Cột Checkbox chọn nhiều / chọn tất cả môn học -->
                                         <DataGridTemplateColumn Width="46" CanUserResize="False" HeaderStyle="{StaticResource CenterDataGridHeaderStyle}">
                                             <DataGridTemplateColumn.Header>
-                                                <CheckBox IsChecked="{Binding DataContext.IsAllSubjectsSelected, RelativeSource={RelativeSource AncestorType=DataGrid}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                                                           Command="{Binding DataContext.ToggleSelectAllSubjectsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                <CheckBox IsChecked="{Binding Data.IsAllSubjectsSelected, Source={StaticResource Proxy}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                                          Click="HeaderSelectAllSubjects_Click"
                                                           HorizontalAlignment="Center" VerticalAlignment="Center" 
                                                           ToolTip="Chọn tất cả / Bỏ chọn tất cả"/>
                                             </DataGridTemplateColumn.Header>

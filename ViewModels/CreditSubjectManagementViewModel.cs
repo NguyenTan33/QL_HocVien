@@ -82,17 +82,17 @@ namespace QL_HocVien.ViewModels
         private int _missingSubjectsStudentCount;
 
         [ObservableProperty]
-        private bool? _isAllSelected = false;
+        private bool _isAllSelected;
 
         [ObservableProperty]
         private int _selectedCadetsCount;
 
         private bool _isUpdatingSelection;
 
-        public string SelectAllButtonText => IsAllSelected == true ? "⬜ Bỏ chọn" : "☑️ Chọn tất cả";
+        public string SelectAllButtonText => IsAllSelected ? "⬜ Bỏ chọn" : "☑️ Chọn tất cả";
 
         [ObservableProperty]
-        private bool? _isAllSubjectsSelected = false;
+        private bool _isAllSubjectsSelected;
 
         [ObservableProperty]
         private int _selectedSubjectsCount;
@@ -352,89 +352,96 @@ namespace QL_HocVien.ViewModels
             _ = RefreshSchoolYearOptionsAsync(value);
         }
 
-        partial void OnIsAllSelectedChanged(bool? value)
+        partial void OnIsAllSelectedChanged(bool value)
         {
-            if (_isUpdatingSelection || value == null) return;
+            if (_isUpdatingSelection) return;
             _isUpdatingSelection = true;
-            bool isChecked = value.Value;
-            foreach (var item in CadetSummaries)
+            try
             {
-                item.IsSelected = isChecked;
+                foreach (var item in CadetSummaries)
+                {
+                    item.IsSelected = value;
+                }
+                SelectedCadetsCount = value ? CadetSummaries.Count : 0;
             }
-            SelectedCadetsCount = isChecked ? CadetSummaries.Count : 0;
-            OnPropertyChanged(nameof(SelectAllButtonText));
-            _isUpdatingSelection = false;
+            finally
+            {
+                _isUpdatingSelection = false;
+                OnPropertyChanged(nameof(SelectAllButtonText));
+            }
+        }
+
+        public void SetAllCadetsSelection(bool isSelected)
+        {
+            IsAllSelected = isSelected;
         }
 
         [RelayCommand]
         public void ToggleSelectAll()
         {
-            if (IsAllSelected == true)
-            {
-                IsAllSelected = false;
-            }
-            else
-            {
-                IsAllSelected = true;
-            }
+            IsAllSelected = !IsAllSelected;
         }
 
         private void UpdateSelectionState()
         {
             if (_isUpdatingSelection) return;
             _isUpdatingSelection = true;
-            int count = CadetSummaries.Count(c => c.IsSelected);
-            SelectedCadetsCount = count;
-            if (count == 0)
-                IsAllSelected = false;
-            else if (count == CadetSummaries.Count && count > 0)
-                IsAllSelected = true;
-            else
-                IsAllSelected = null;
-            OnPropertyChanged(nameof(SelectAllButtonText));
-            _isUpdatingSelection = false;
+            try
+            {
+                int count = CadetSummaries.Count(c => c.IsSelected);
+                SelectedCadetsCount = count;
+                IsAllSelected = (CadetSummaries.Count > 0 && count == CadetSummaries.Count);
+            }
+            finally
+            {
+                _isUpdatingSelection = false;
+                OnPropertyChanged(nameof(SelectAllButtonText));
+            }
+        }
+
+        public void SetAllSubjectsSelection(bool isSelected)
+        {
+            IsAllSubjectsSelected = isSelected;
         }
 
         [RelayCommand]
         public void ToggleSelectAllSubjects()
         {
-            bool newState = IsAllSubjectsSelected != true;
-            IsAllSubjectsSelected = newState;
-            _isUpdatingSubjectSelection = true;
-            foreach (var item in Subjects)
-            {
-                item.IsSelected = newState;
-            }
-            SelectedSubjectsCount = newState ? Subjects.Count : 0;
-            _isUpdatingSubjectSelection = false;
+            IsAllSubjectsSelected = !IsAllSubjectsSelected;
         }
 
-        partial void OnIsAllSubjectsSelectedChanged(bool? value)
+        partial void OnIsAllSubjectsSelectedChanged(bool value)
         {
             if (_isUpdatingSubjectSelection) return;
             _isUpdatingSubjectSelection = true;
-            bool isChecked = value == true;
-            foreach (var item in Subjects)
+            try
             {
-                item.IsSelected = isChecked;
+                foreach (var item in Subjects)
+                {
+                    item.IsSelected = value;
+                }
+                SelectedSubjectsCount = value ? Subjects.Count : 0;
             }
-            SelectedSubjectsCount = isChecked ? Subjects.Count : 0;
-            _isUpdatingSubjectSelection = false;
+            finally
+            {
+                _isUpdatingSubjectSelection = false;
+            }
         }
 
         private void UpdateSubjectSelectionState()
         {
             if (_isUpdatingSubjectSelection) return;
             _isUpdatingSubjectSelection = true;
-            int count = Subjects.Count(s => s.IsSelected);
-            SelectedSubjectsCount = count;
-            if (count == 0)
-                IsAllSubjectsSelected = false;
-            else if (count == Subjects.Count && count > 0)
-                IsAllSubjectsSelected = true;
-            else
-                IsAllSubjectsSelected = null;
-            _isUpdatingSubjectSelection = false;
+            try
+            {
+                int count = Subjects.Count(s => s.IsSelected);
+                SelectedSubjectsCount = count;
+                IsAllSubjectsSelected = (Subjects.Count > 0 && count == Subjects.Count);
+            }
+            finally
+            {
+                _isUpdatingSubjectSelection = false;
+            }
         }
 
         public async Task InitializeAsync()
