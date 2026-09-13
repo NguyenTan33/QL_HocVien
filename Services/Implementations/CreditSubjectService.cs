@@ -214,6 +214,7 @@ namespace QL_HocVien.Services.Implementations
         {
             var query = _context.Cadets
                 .Include(c => c.MilitaryClass)
+                .Include(c => c.AcademicCohort)
                 .AsNoTracking()
                 .AsQueryable();
 
@@ -224,7 +225,7 @@ namespace QL_HocVien.Services.Implementations
                 query = query.Where(c => c.MilitaryClass != null && c.MilitaryClass.ClassName == className);
 
             if (!string.IsNullOrWhiteSpace(cohort) && !cohort.Contains("Tất cả") && !cohort.Contains("Táº¥t cáº£") && !cohort.Equals("All", StringComparison.OrdinalIgnoreCase))
-                query = query.Where(c => c.Cohort == cohort);
+                query = query.Where(c => c.Cohort == cohort || (c.AcademicCohort != null && (c.AcademicCohort.CohortCode == cohort || c.AcademicCohort.AcademicYear == cohort)) || c.AcademicYear == cohort);
 
             if (!string.IsNullOrWhiteSpace(keyword))
             {

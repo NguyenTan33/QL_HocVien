@@ -163,20 +163,18 @@
                                 <Border Grid.Row="0" Background="{DynamicResource CardBackgroundBrush}" CornerRadius="6" Padding="12" Margin="0,0,0,14" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="1.2*"/>
+                                            <ColumnDefinition Width="8"/>
+                                            <ColumnDefinition Width="1*"/>
+                                            <ColumnDefinition Width="8"/>
+                                            <ColumnDefinition Width="1*"/>
+                                            <ColumnDefinition Width="8"/>
                                             <ColumnDefinition Width="1.1*"/>
-                                            <ColumnDefinition Width="6"/>
-                                            <ColumnDefinition Width="0.9*"/>
-                                            <ColumnDefinition Width="6"/>
-                                            <ColumnDefinition Width="0.9*"/>
-                                            <ColumnDefinition Width="6"/>
-                                            <ColumnDefinition Width="0.8*"/>
-                                            <ColumnDefinition Width="6"/>
-                                            <ColumnDefinition Width="1.1*"/>
-                                            <ColumnDefinition Width="6"/>
+                                            <ColumnDefinition Width="8"/>
                                             <ColumnDefinition Width="1.4*"/>
-                                            <ColumnDefinition Width="6"/>
+                                            <ColumnDefinition Width="8"/>
                                             <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="6"/>
+                                            <ColumnDefinition Width="8"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
 
@@ -186,10 +184,10 @@
                                             <components:UnitTreeComboBox SelectedUnit="{Binding SelectedUnit, Mode=TwoWay}" IsFilterMode="True" Height="34" Placeholder="[ Tất cả đơn vị ]"/>
                                         </StackPanel>
 
-                                        <!-- Lọc Lớp -->
+                                        <!-- Lọc Khóa học / Niên khóa -->
                                         <StackPanel Grid.Column="2">
-                                            <TextBlock Text="Lớp học viên:" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
-                                            <ComboBox ItemsSource="{Binding ClassOptions}" SelectedItem="{Binding SelectedClass}" Style="{StaticResource ModernComboBoxStyle}" Height="34"/>
+                                            <TextBlock Text="Khóa học / Niên khóa:" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
+                                            <ComboBox ItemsSource="{Binding CohortOptions}" SelectedItem="{Binding SelectedCohort}" Style="{StaticResource ModernComboBoxStyle}" Height="34"/>
                                         </StackPanel>
 
                                         <!-- Lọc Năm học -->
@@ -198,20 +196,14 @@
                                             <ComboBox ItemsSource="{Binding SchoolYearOptions}" SelectedItem="{Binding SelectedSchoolYear}" Style="{StaticResource ModernComboBoxStyle}" Height="34"/>
                                         </StackPanel>
 
-                                        <!-- Lọc Khóa học -->
-                                        <StackPanel Grid.Column="6">
-                                            <TextBlock Text="Khóa học:" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
-                                            <ComboBox ItemsSource="{Binding CohortOptions}" SelectedItem="{Binding SelectedCohort}" Style="{StaticResource ModernComboBoxStyle}" Height="34"/>
-                                        </StackPanel>
-
                                         <!-- Lọc Trạng thái học tập -->
-                                        <StackPanel Grid.Column="8">
+                                        <StackPanel Grid.Column="6">
                                             <TextBlock Text="Trạng thái môn học:" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
                                             <ComboBox ItemsSource="{Binding StatusFilterOptions}" SelectedItem="{Binding SelectedStatusFilter}" Style="{StaticResource ModernComboBoxStyle}" Height="34"/>
                                         </StackPanel>
 
                                         <!-- Tìm kiếm -->
-                                        <StackPanel Grid.Column="10">
+                                        <StackPanel Grid.Column="8">
                                             <TextBlock Text="Tìm kiếm học viên:" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
                                             <TextBox Text="{Binding SearchKeyword, UpdateSourceTrigger=PropertyChanged}" Height="34" 
                                                      VerticalContentAlignment="Center" Style="{StaticResource ModernTextBoxStyle}"
@@ -219,12 +211,12 @@
                                         </StackPanel>
 
                                         <!-- Nút Áp dụng Lọc -->
-                                        <Button Grid.Column="12" Content="🔍 Lọc" Style="{StaticResource PrimaryButtonStyle}" 
+                                        <Button Grid.Column="10" Content="🔍 Lọc" Style="{StaticResource PrimaryButtonStyle}" 
                                                 Height="34" VerticalAlignment="Bottom" Padding="14,0"
                                                 Command="{Binding FilterCommand}"/>
 
                                         <!-- Nút Đặt lại -->
-                                        <Button Grid.Column="14" Content="🔄 Đặt Lại" Style="{StaticResource SecondaryButtonStyle}" 
+                                        <Button Grid.Column="12" Content="🔄 Đặt Lại" Style="{StaticResource SecondaryButtonStyle}" 
                                                 Height="34" VerticalAlignment="Bottom" Padding="12,0"
                                                 Command="{Binding ResetFilterCommand}"/>
                                     </Grid>

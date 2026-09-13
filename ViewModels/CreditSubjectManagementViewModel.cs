@@ -1,12 +1,16 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QL_HocVien.Models;
 using QL_HocVien.Models.DTOs;
+using QL_HocVien.Models.Entity;
 using QL_HocVien.Services;
+using QL_HocVien.Services.Interfaces;
 
 namespace QL_HocVien.ViewModels
 {
@@ -18,7 +22,9 @@ namespace QL_HocVien.ViewModels
         private readonly IClassService _classService;
         private readonly IFileDialogService _fileDialogService;
         private readonly ISecurityGateService _securityGate;
+        private readonly ICohortService? _cohortService;
         private readonly IAuthService? _authService;
+        private List<AcademicCohort> _cachedCohorts = new();
 
         #region PROPERTIES & COLLECTIONS
         public ObservableCollection<CreditSubject> Subjects { get; } = new();
@@ -230,6 +236,7 @@ namespace QL_HocVien.ViewModels
             IClassService classService,
             IFileDialogService fileDialogService,
             ISecurityGateService securityGate,
+            ICohortService? cohortService = null,
             IAuthService? authService = null)
         {
             _creditService = creditService;
@@ -238,9 +245,93 @@ namespace QL_HocVien.ViewModels
             _classService = classService;
             _fileDialogService = fileDialogService;
             _securityGate = securityGate;
+            _cohortService = cohortService;
             _authService = authService;
 
             _ = InitializeAsync();
+        }
+
+        private static List<string> GenerateSchoolYearsFromCohort(AcademicCohort cohort)
+        {
+            var list = new List<string>();
+            int start = cohort.EnrollmentYear ?? 0;
+            int end = cohort.GraduationYear ?? 0;
+
+            if (start == 0 && !string.IsNullOrWhiteSpace(cohort.AcademicYear))
+            {
+                var matches = Regex.Matches(cohort.AcademicYear, @"\d{4}");
+                if (matches.Count >= 2)
+                {
+                    int.TryParse(matches[0].Value, out start);
+                    int.TryParse(matches[1].Value, out end);
+                }
+            }
+
+            if (start > 0)
+            {
+                if (end <= start) end = start + 4;
+                for (int y = start; y < end; y++)
+                {
+                    list.Add($"{y} - {y + 1}");
+                }
+            }
+            return list;
+        }
+
+        private async Task RefreshSchoolYearOptionsAsync(string? specificCohortCode = null)
+        {
+            var calculatedYears = new HashSet<string>();
+
+            // Lấy các năm học từ khóa học được tạo trong CSDL SQL
+            IEnumerable<AcademicCohort> targetCohorts = _cachedCohorts;
+            if (!string.IsNullOrWhiteSpace(specificCohortCode) && 
+                !specificCohortCode.Contains("Tất cả") && 
+                !specificCohortCode.Contains("Táº¥t cáº£") && 
+                !specificCohortCode.Equals("All", StringComparison.OrdinalIgnoreCase))
+            {
+                targetCohorts = _cachedCohorts.Where(c => c.CohortCode.Equals(specificCohortCode, StringComparison.OrdinalIgnoreCase));
+            }
+
+            foreach (var ch in targetCohorts)
+            {
+                foreach (var sy in GenerateSchoolYearsFromCohort(ch))
+                {
+                    calculatedYears.Add(sy);
+                }
+            }
+
+            // Gộp thêm năm học thực tế đã có trong bảng điểm DB (nếu xem Tất cả hoặc chưa có năm học nào)
+            if (string.IsNullOrWhiteSpace(specificCohortCode) || specificCohortCode.Contains("Tất cả"))
+            {
+                var distinctDbYears = await _creditService.GetDistinctSchoolYearsAsync();
+                foreach (var sy in distinctDbYears)
+                {
+                    if (!string.IsNullOrWhiteSpace(sy))
+                        calculatedYears.Add(sy.Trim());
+                }
+            }
+
+            var currentSelected = SelectedSchoolYear;
+            SchoolYearOptions.Clear();
+            SchoolYearOptions.Add("Tất cả");
+            foreach (var sy in calculatedYears.OrderBy(y => y))
+            {
+                SchoolYearOptions.Add(sy);
+            }
+
+            if (!string.IsNullOrEmpty(currentSelected) && SchoolYearOptions.Contains(currentSelected))
+            {
+                SelectedSchoolYear = currentSelected;
+            }
+            else
+            {
+                SelectedSchoolYear = "Tất cả";
+            }
+        }
+
+        partial void OnSelectedCohortChanged(string value)
+        {
+            _ = RefreshSchoolYearOptionsAsync(value);
         }
 
         public async Task InitializeAsync()
@@ -248,7 +339,7 @@ namespace QL_HocVien.ViewModels
             IsBusy = true;
             try
             {
-                // Nạp đơn vị thực tế từ học viên
+                // 1. Nạp đơn vị thực tế từ học viên hoặc danh mục
                 var units = await _cadetService.GetDistinctUnitsAsync();
                 UnitOptions.Clear();
                 UnitOptions.Add("Tất cả");
@@ -263,51 +354,35 @@ namespace QL_HocVien.ViewModels
                         UnitOptions.Add(u.UnitName);
                 }
 
-                // Nạp lớp thực tế từ học viên
-                var classes = await _cadetService.GetDistinctClassesAsync();
-                ClassOptions.Clear();
-                ClassOptions.Add("Tất cả");
-                if (classes.Any())
+                // 2. Nạp danh sách Khóa học thực tế từ CSDL SQL (AcademicCohorts)
+                _cachedCohorts.Clear();
+                if (_cohortService != null)
                 {
-                    foreach (var c in classes) ClassOptions.Add(c);
-                }
-                else
-                {
-                    var fallbackClasses = await _classService.GetAllClassesAsync();
-                    foreach (var c in fallbackClasses.OrderBy(c => c.ClassName))
-                        ClassOptions.Add(c.ClassName);
+                    var cohortsFromDb = await _cohortService.GetAllCohortsAsync();
+                    _cachedCohorts = cohortsFromDb.OrderBy(c => c.CohortNumber).ThenBy(c => c.CohortCode).ToList();
                 }
 
-                // Nạp danh sách năm học thực tế
-                var schoolYears = await _creditService.GetDistinctSchoolYearsAsync();
-                SchoolYearOptions.Clear();
-                SchoolYearOptions.Add("Tất cả");
-                if (schoolYears.Any())
-                {
-                    foreach (var sy in schoolYears) SchoolYearOptions.Add(sy);
-                }
-                else
-                {
-                    SchoolYearOptions.Add("2023 - 2024");
-                    SchoolYearOptions.Add("2024 - 2025");
-                }
-
-                // Nạp danh sách khóa học thực tế
-                var cohorts = await _cadetService.GetDistinctCohortsAsync();
                 CohortOptions.Clear();
                 CohortOptions.Add("Tất cả");
-                if (cohorts.Any())
+                foreach (var ch in _cachedCohorts)
                 {
-                    foreach (var ch in cohorts) CohortOptions.Add(ch);
+                    if (!string.IsNullOrWhiteSpace(ch.CohortCode) && !CohortOptions.Contains(ch.CohortCode))
+                    {
+                        CohortOptions.Add(ch.CohortCode);
+                    }
                 }
-                else
+                // Gộp thêm mã khóa nếu có học viên thực tế mang mã khóa riêng trong DB
+                var distinctCadetCohorts = await _cadetService.GetDistinctCohortsAsync();
+                foreach (var ch in distinctCadetCohorts)
                 {
-                    CohortOptions.Add("K28");
-                    CohortOptions.Add("K29");
-                    CohortOptions.Add("K30");
+                    if (!string.IsNullOrWhiteSpace(ch) && !CohortOptions.Contains(ch))
+                        CohortOptions.Add(ch);
                 }
 
-                // Nạp học viên
+                // 3. Nạp danh sách Năm học thực tế sinh ra từ các Khóa học trong SQL & Bảng điểm
+                await RefreshSchoolYearOptionsAsync();
+
+                // 4. Nạp học viên
                 var cadets = await _cadetService.GetAllCadetsAsync();
                 AllCadets.Clear();
                 foreach (var c in cadets.OrderBy(c => c.FullName))
@@ -337,9 +412,9 @@ namespace QL_HocVien.ViewModels
                 foreach (var s in subjs) Subjects.Add(s);
                 TotalSubjectsCount = Subjects.Count;
 
-                // 2. Tải bảng điểm học viên
+                // 2. Tải bảng điểm học viên (không lọc theo lớp học viên)
                 var allSummaries = await _creditService.GetCadetAcademicSummariesAsync(
-                    SelectedUnit, SelectedClass, SearchKeyword, SelectedSchoolYear, SelectedCohort);
+                    SelectedUnit, null, SearchKeyword, SelectedSchoolYear, SelectedCohort);
 
                 // Áp dụng bộ lọc trạng thái học tập
                 var filtered = allSummaries.AsEnumerable();
@@ -385,11 +460,11 @@ namespace QL_HocVien.ViewModels
         public async Task ResetFilterAsync()
         {
             SelectedUnit = "Tất cả";
-            SelectedClass = "Tất cả";
             SelectedSchoolYear = "Tất cả";
             SelectedCohort = "Tất cả";
             SelectedStatusFilter = "Tất cả học viên";
             SearchKeyword = string.Empty;
+            await RefreshSchoolYearOptionsAsync();
             await LoadDataAsync();
         }
 
