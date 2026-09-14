@@ -1129,6 +1129,117 @@ namespace QL_HocVien.Tests
             Assert.False(vm.IsTrialExpired);
             Assert.False(vm.IsPasskeyModalVisible);
         }
+
+        [Fact]
+        public async Task Test_ImportCadetsFromExcel_CreatesNewAndReconcilesDiscrepancies()
+        {
+            // 1. Chuẩn bị 2 học viên đã có trong DB
+            var cadetExisting1 = new Cadet
+            {
+                CadetCode = "HV-TEST-REC-01",
+                FullName = "Nguyễn Văn Cũ 1",
+                Rank = "Binh nhì",
+                Position = "Học viên",
+                Unit = "Đại đội 1",
+                PhoneNumber = "0911111111",
+                Email = "old1@hocvien.edu.vn",
+                DateOfBirth = new DateTime(2002, 1, 1),
+                Gender = "Nam"
+            };
+            var cadetExisting2 = new Cadet
+            {
+                CadetCode = "HV-TEST-REC-02",
+                FullName = "Trần Thị Cũ 2",
+                Rank = "Binh nhất",
+                Position = "Tiểu đội phó",
+                Unit = "Đại đội 2",
+                PhoneNumber = "0922222222",
+                Email = "old2@hocvien.edu.vn",
+                DateOfBirth = new DateTime(2003, 5, 5),
+                Gender = "Nữ"
+            };
+            _context.Cadets.AddRange(cadetExisting1, cadetExisting2);
+            await _context.SaveChangesAsync();
+
+            // 2. Tạo file Excel chứa:
+            // - HV-TEST-REC-01: Có SAI LỆCH (Cấp bậc đổi thành Hạ sĩ, SĐT đổi thành 0988888888, Đơn vị đổi thành Đại đội 3)
+            // - HV-TEST-REC-02: HOÀN TOÀN TRÙNG KHỚP (Không đổi gì)
+            // - HV-TEST-REC-03: HỌC VIÊN MỚI (chưa có trong DB)
+            var tempExcelFile = Path.Combine(Path.GetTempPath(), $"Cadet_Reconcile_Test_{Guid.NewGuid():N}.xlsx");
+            try
+            {
+                using (var wb = new ClosedXML.Excel.XLWorkbook())
+                {
+                    var ws = wb.Worksheets.Add("Danh sách học viên");
+                    string[] headers = { "STT", "Mã học viên", "Họ và tên", "Cấp bậc", "Chức vụ", "Đơn vị", "Số điện thoại", "Email", "Ngày sinh", "Tuổi", "Giới tính" };
+                    for (int i = 0; i < headers.Length; i++) ws.Cell(4, i + 1).Value = headers[i];
+
+                    // Row 1: HV-TEST-REC-01 có sai lệch
+                    ws.Cell(5, 1).Value = 1;
+                    ws.Cell(5, 2).Value = "HV-TEST-REC-01";
+                    ws.Cell(5, 3).Value = "Nguyễn Văn Cũ 1";
+                    ws.Cell(5, 4).Value = "Hạ sĩ"; // Đã thăng cấp
+                    ws.Cell(5, 5).Value = "Học viên";
+                    ws.Cell(5, 6).Value = "Đại đội 3"; // Chuyển đơn vị
+                    ws.Cell(5, 7).Value = "0988888888"; // Đổi SĐT
+                    ws.Cell(5, 8).Value = "old1@hocvien.edu.vn";
+                    ws.Cell(5, 9).Value = "01/01/2002";
+                    ws.Cell(5, 10).Value = 22;
+                    ws.Cell(5, 11).Value = "Nam";
+
+                    // Row 2: HV-TEST-REC-02 trùng khớp
+                    ws.Cell(6, 1).Value = 2;
+                    ws.Cell(6, 2).Value = "HV-TEST-REC-02";
+                    ws.Cell(6, 3).Value = "Trần Thị Cũ 2";
+                    ws.Cell(6, 4).Value = "Binh nhất";
+                    ws.Cell(6, 5).Value = "Tiểu đội phó";
+                    ws.Cell(6, 6).Value = "Đại đội 2";
+                    ws.Cell(6, 7).Value = "0922222222";
+                    ws.Cell(6, 8).Value = "old2@hocvien.edu.vn";
+                    ws.Cell(6, 9).Value = "05/05/2003";
+                    ws.Cell(6, 10).Value = 21;
+                    ws.Cell(6, 11).Value = "Nữ";
+
+                    // Row 3: HV-TEST-REC-03 mới tinh
+                    ws.Cell(7, 1).Value = 3;
+                    ws.Cell(7, 2).Value = "HV-TEST-REC-03";
+                    ws.Cell(7, 3).Value = "Lê Văn Mới 3";
+                    ws.Cell(7, 4).Value = "Binh nhì";
+                    ws.Cell(7, 5).Value = "Học viên";
+                    ws.Cell(7, 6).Value = "Đại đội 1";
+                    ws.Cell(7, 7).Value = "0933333333";
+                    ws.Cell(7, 8).Value = "new3@hocvien.edu.vn";
+                    ws.Cell(7, 9).Value = "10/10/2004";
+                    ws.Cell(7, 10).Value = 20;
+                    ws.Cell(7, 11).Value = "Nam";
+
+                    wb.SaveAs(tempExcelFile);
+                }
+
+                // 3. Thực hiện Import
+                var (success, message, importedCadets) = await _excelService.ImportCadetsFromExcelAsync(tempExcelFile);
+                Assert.True(success);
+                Assert.Contains("Tạo mới 1", message);
+                Assert.Contains("Cập nhật 1", message);
+                Assert.Contains("1 học viên đã khớp", message);
+
+                // 4. Xác nhận dữ liệu trong DB
+                var c1 = await _context.Cadets.FirstOrDefaultAsync(c => c.CadetCode == "HV-TEST-REC-01");
+                Assert.NotNull(c1);
+                Assert.Equal("Hạ sĩ", c1.Rank);
+                Assert.Equal("Đại đội 3", c1.Unit);
+                Assert.Equal("0988888888", c1.PhoneNumber);
+
+                var c3 = await _context.Cadets.FirstOrDefaultAsync(c => c.CadetCode == "HV-TEST-REC-03");
+                Assert.NotNull(c3);
+                Assert.Equal("Lê Văn Mới 3", c3.FullName);
+                Assert.NotNull(c3.DateOfBirth);
+            }
+            finally
+            {
+                if (File.Exists(tempExcelFile)) File.Delete(tempExcelFile);
+            }
+        }
     }
 
     public class TestFileDialogService : IFileDialogService

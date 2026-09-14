@@ -127,6 +127,35 @@ namespace QL_HocVien.ViewModels
         private int? _editEnrollmentYear;
 
         [ObservableProperty]
+        private DateTime? _editDateOfBirth;
+
+        partial void OnEditDateOfBirthChanged(DateTime? value)
+        {
+            UpdateEditAgeText();
+        }
+
+        [ObservableProperty]
+        private string _editAgeText = string.Empty;
+
+        private void UpdateEditAgeText()
+        {
+            if (EditDateOfBirth.HasValue)
+            {
+                int age = Cadet.CalculateAge(EditDateOfBirth.Value);
+                EditAgeText = $"(Tuổi: {age})";
+            }
+            else
+            {
+                EditAgeText = string.Empty;
+            }
+        }
+
+        [ObservableProperty]
+        private string _editGender = "Nam";
+
+        public ObservableCollection<string> AvailableGenders { get; } = new() { "Nam", "Nữ" };
+
+        [ObservableProperty]
         private string _editAcademicYear = string.Empty;
 
         [ObservableProperty]
@@ -579,6 +608,9 @@ namespace QL_HocVien.ViewModels
                 (SelectedCadet.CohortId.HasValue && c.Id == SelectedCadet.CohortId.Value));
             EditEnrollmentYear = SelectedCadet.EnrollmentYear;
             EditAcademicYear = SelectedCadet.AcademicYear;
+            EditDateOfBirth = SelectedCadet.DateOfBirth;
+            UpdateEditAgeText();
+            EditGender = string.IsNullOrWhiteSpace(SelectedCadet.Gender) ? "Nam" : SelectedCadet.Gender;
             EditRank = SelectedCadet.Rank;
             EditPosition = SelectedCadet.Position;
             EditUnit = SelectedCadet.Unit;
@@ -621,8 +653,14 @@ namespace QL_HocVien.ViewModels
                     SelectedCadet.Cohort = EditCohort?.Trim() ?? string.Empty;
                 }
             }
-            SelectedCadet.EnrollmentYear = EditEnrollmentYear;
+            SelectedCadet.EnrollmentYear = SelectedEditCohort?.EnrollmentYear ?? EditEnrollmentYear ?? SelectedCadet.EnrollmentYear;
             SelectedCadet.AcademicYear = EditAcademicYear?.Trim() ?? string.Empty;
+            SelectedCadet.DateOfBirth = EditDateOfBirth;
+            if (EditDateOfBirth.HasValue)
+            {
+                SelectedCadet.Age = Cadet.CalculateAge(EditDateOfBirth.Value);
+            }
+            SelectedCadet.Gender = EditGender;
             SelectedCadet.Rank = EditRank;
             SelectedCadet.Position = EditPosition;
             SelectedCadet.Unit = EditUnit;

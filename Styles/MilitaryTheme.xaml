@@ -132,6 +132,7 @@
     <SolidColorBrush x:Key="DashboardEventStatusBackgroundBrush" Color="#28442E"/>
     <SolidColorBrush x:Key="DashboardEventStatusBorderBrush" Color="#3F6847"/>
     <SolidColorBrush x:Key="DashboardEventStatusForegroundBrush" Color="#86EFAC"/>
+    <SolidColorBrush x:Key="DashboardEventSubtextBrush" Color="#4A5445"/>
 
     <!-- Unit Tree Organization Brushes (Cơ cấu đơn vị) -->
     <SolidColorBrush x:Key="UnitTreeContainerBackgroundBrush" Color="#0F1A12"/>

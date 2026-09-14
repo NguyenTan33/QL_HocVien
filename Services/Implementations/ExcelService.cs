@@ -477,6 +477,7 @@ namespace QL_HocVien.Services.Implementations
                 int lastRow = ws.LastRowUsed()?.RowNumber() ?? headerRow;
                 int addedCount = 0;
                 int updatedCount = 0;
+                int unchangedCount = 0;
                 var allClasses = (await _classRepository.GetAllAsync()).ToList();
 
                 for (int r = headerRow + 1; r <= lastRow; r++)
@@ -666,35 +667,105 @@ namespace QL_HocVien.Services.Implementations
                         ? className
                         : (matchedClass?.ClassName ?? (extractedCohort.Length > 0 ? extractedCohort : string.Empty));
 
-                    var existing = await _cadetRepository.GetByCodeAsync(code);
+                    var existing = await _cadetRepository.GetByCodeAsync(code)
+                        ?? importedList.FirstOrDefault(c => string.Equals(c.CadetCode, code, StringComparison.OrdinalIgnoreCase));
+
                     if (existing != null)
                     {
-                        existing.FullName = fullName;
-                        if (!string.IsNullOrWhiteSpace(rank)) existing.Rank = rank;
-                        if (!string.IsNullOrWhiteSpace(pos)) existing.Position = pos;
-                        if (!string.IsNullOrWhiteSpace(unit)) existing.Unit = displayUnit;
-                        if (!string.IsNullOrWhiteSpace(extractedCohort))
+                        bool isDiscrepancy = false;
+
+                        // 1. So sánh Họ và tên
+                        if (!string.IsNullOrWhiteSpace(fullName) && !string.Equals(existing.FullName, fullName, StringComparison.Ordinal))
+                        {
+                            existing.FullName = fullName;
+                            isDiscrepancy = true;
+                        }
+
+                        // 2. So sánh Cấp bậc
+                        if (!string.IsNullOrWhiteSpace(rank) && !string.Equals(existing.Rank, rank, StringComparison.OrdinalIgnoreCase))
+                        {
+                            existing.Rank = rank;
+                            isDiscrepancy = true;
+                        }
+
+                        // 3. So sánh Chức vụ
+                        if (!string.IsNullOrWhiteSpace(pos) && !string.Equals(existing.Position, pos, StringComparison.OrdinalIgnoreCase))
+                        {
+                            existing.Position = pos;
+                            isDiscrepancy = true;
+                        }
+
+                        // 4. So sánh Đơn vị
+                        if (!string.IsNullOrWhiteSpace(displayUnit) && !string.Equals(existing.Unit, displayUnit, StringComparison.OrdinalIgnoreCase))
+                        {
+                            existing.Unit = displayUnit;
+                            isDiscrepancy = true;
+                        }
+
+                        // 5. So sánh Khóa đào tạo
+                        if (!string.IsNullOrWhiteSpace(extractedCohort) && !string.Equals(existing.Cohort, extractedCohort, StringComparison.OrdinalIgnoreCase))
                         {
                             existing.Cohort = extractedCohort;
                             existing.CohortId = extractedCohortId;
+                            isDiscrepancy = true;
                         }
-                        if (resolvedClassId.HasValue)
+
+                        // 6. So sánh Phân cấp đơn vị / Lớp học
+                        if (resolvedClassId.HasValue && existing.ClassId != resolvedClassId.Value)
                         {
                             existing.ClassId = resolvedClassId.Value;
                             existing.ClassName = matchedClass?.ClassName ?? className;
+                            isDiscrepancy = true;
                         }
-                        else if (!string.IsNullOrWhiteSpace(className))
+                        else if (!string.IsNullOrWhiteSpace(className) && !string.Equals(existing.ClassName, className, StringComparison.OrdinalIgnoreCase))
                         {
                             existing.ClassName = className;
+                            isDiscrepancy = true;
                         }
-                        if (!string.IsNullOrWhiteSpace(phone)) existing.PhoneNumber = phone;
-                        if (!string.IsNullOrWhiteSpace(email)) existing.Email = email;
-                        if (dob.HasValue) existing.DateOfBirth = dob;
-                        if (age > 0) existing.Age = age;
-                        existing.Gender = gender;
-                        _cadetRepository.Update(existing);
-                        updatedCount++;
-                        importedList.Add(existing);
+
+                        // 7. So sánh Số điện thoại
+                        if (!string.IsNullOrWhiteSpace(phone) && !string.Equals(existing.PhoneNumber, phone, StringComparison.Ordinal))
+                        {
+                            existing.PhoneNumber = phone;
+                            isDiscrepancy = true;
+                        }
+
+                        // 8. So sánh Email
+                        if (!string.IsNullOrWhiteSpace(email) && !string.Equals(existing.Email, email, StringComparison.OrdinalIgnoreCase))
+                        {
+                            existing.Email = email;
+                            isDiscrepancy = true;
+                        }
+
+                        // 9. So sánh Ngày sinh & Tuổi
+                        if (dob.HasValue && (!existing.DateOfBirth.HasValue || existing.DateOfBirth.Value.Date != dob.Value.Date))
+                        {
+                            existing.DateOfBirth = dob;
+                            existing.Age = Cadet.CalculateAge(dob.Value);
+                            isDiscrepancy = true;
+                        }
+
+                        // 10. So sánh Giới tính
+                        if (!string.IsNullOrWhiteSpace(gender) && !string.Equals(existing.Gender, gender, StringComparison.OrdinalIgnoreCase))
+                        {
+                            existing.Gender = gender;
+                            isDiscrepancy = true;
+                        }
+
+                        if (isDiscrepancy)
+                        {
+                            _cadetRepository.Update(existing);
+                            updatedCount++;
+                        }
+                        else
+                        {
+                            unchangedCount++;
+                        }
+
+                        if (!importedList.Contains(existing))
+                        {
+                            importedList.Add(existing);
+                        }
                     }
                     else
                     {
@@ -712,7 +783,7 @@ namespace QL_HocVien.Services.Implementations
                             PhoneNumber = !string.IsNullOrWhiteSpace(phone) ? phone : $"09{new Random().Next(10000000, 99999999)}",
                             Email = !string.IsNullOrWhiteSpace(email) ? email : $"{code.ToLower().Replace("-", "").Replace(".", "").Replace(" ", "")}@hocvien.edu.vn",
                             DateOfBirth = dob,
-                            Age = age,
+                            Age = dob.HasValue ? Cadet.CalculateAge(dob.Value) : (age > 0 ? age : null),
                             Gender = gender,
                             CreatedAt = DateTime.Now
                         };
@@ -734,7 +805,10 @@ namespace QL_HocVien.Services.Implementations
                 }
                 catch { }
 
-                return (true, $"Nhập dữ liệu thành công: Thêm mới {addedCount} học viên, Cập nhật {updatedCount} học viên.", importedList);
+                string resultMsg = unchangedCount > 0
+                    ? $"Nhập dữ liệu thành công: Tạo mới {addedCount} học viên, Cập nhật {updatedCount} học viên có sai lệch, {unchangedCount} học viên đã khớp thông tin."
+                    : $"Nhập dữ liệu thành công: Tạo mới {addedCount} học viên, Cập nhật {updatedCount} học viên.";
+                return (true, resultMsg, importedList);
             }
             catch (Exception ex)
             {

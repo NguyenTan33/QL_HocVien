@@ -120,11 +120,7 @@
                         <!-- Tiêu đề lớn Vàng Ánh Kim chuẩn DemoUI -->
                         <TextBlock Text="BẢNG TỔNG QUAN HỌC VỤ TOÀN VIỆN" 
                                    FontSize="18.5" FontWeight="ExtraBold" Foreground="{DynamicResource TextPrimaryBrush}" 
-                                   TextWrapping="NoWrap">
-                            <TextBlock.Effect>
-                                <DropShadowEffect Color="#000000" BlurRadius="5" ShadowDepth="1" Opacity="0.8"/>
-                            </TextBlock.Effect>
-                        </TextBlock>
+                                   TextWrapping="NoWrap"/>
                         <TextBlock Text="Phân tích điểm trung bình GPA toàn diện, tiến độ tích lũy tín chỉ, theo dõi cảnh báo học vụ và xếp hạng thi đua đào tạo" 
                                    FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,3,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
                     </StackPanel>
@@ -634,7 +630,7 @@
                                                 <!-- Thông tin sự kiện chữ mực tối -->
                                                 <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,5,0">
                                                     <TextBlock Text="{Binding Title}" FontSize="11.5" FontWeight="Bold" Foreground="{DynamicResource TextDarkBrush}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Title}"/>
-                                                    <TextBlock FontSize="10" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,1,0,0" TextTrimming="CharacterEllipsis">
+                                                    <TextBlock FontSize="10" Foreground="{DynamicResource DashboardEventSubtextBrush}" Margin="0,1,0,0" TextTrimming="CharacterEllipsis">
                                                         <Run Text="{Binding Category}"/> <Run Text=" • "/>
                                                         <Run Text="{Binding TargetUnit}"/> <Run Text=" • "/>
                                                         <Run Text="{Binding Location}"/>

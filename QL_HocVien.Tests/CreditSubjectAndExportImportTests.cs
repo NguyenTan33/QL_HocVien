@@ -977,5 +977,34 @@ namespace QL_HocVien.Tests
             Assert.True(hoaDto.IsComplete);
             Assert.Equal(7.5, hoaDto.FinalScore);
         }
+
+        [Fact]
+        public void Test_Cadet_DynamicAgeCalculation()
+        {
+            var today = DateTime.Today;
+            // Trường hợp 1: Đã qua sinh nhật trong năm
+            var pastBirthdayDob = new DateTime(today.Year - 20, 1, 1);
+            int expectedAge1 = 20;
+            Assert.Equal(expectedAge1, Cadet.CalculateAge(pastBirthdayDob));
+
+            // Trường hợp 2: Chưa tới sinh nhật trong năm (ví dụ tháng 12)
+            var futureBirthdayDob = new DateTime(today.Year - 20, 12, 31);
+            int expectedAge2 = (today.Month == 12 && today.Day == 31) ? 20 : 19;
+            Assert.Equal(expectedAge2, Cadet.CalculateAge(futureBirthdayDob));
+
+            // Kiểm tra thuộc tính dynamic Age trên Cadet entity
+            var cadet = new Cadet
+            {
+                CadetCode = "HV-AGE-01",
+                FullName = "Nguyễn Văn Tuổi Động",
+                DateOfBirth = pastBirthdayDob
+            };
+
+            Assert.Equal(expectedAge1, cadet.Age);
+
+            // Cập nhật ngày sinh khác -> Tuổi tự động tính lại
+            cadet.DateOfBirth = new DateTime(today.Year - 25, 1, 1);
+            Assert.Equal(25, cadet.Age);
+        }
     }
 }

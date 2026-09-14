@@ -16,8 +16,41 @@ namespace QL_HocVien.Models.Entity
         public string ClassName { get; set; } = string.Empty; // Tên lớp
         public string PhoneNumber { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
-        public DateTime? DateOfBirth { get; set; }
-        public int? Age { get; set; }
+        private DateTime? _dateOfBirth;
+        public DateTime? DateOfBirth
+        {
+            get => _dateOfBirth;
+            set
+            {
+                if (SetProperty(ref _dateOfBirth, value))
+                {
+                    OnPropertyChanged(nameof(Age));
+                }
+            }
+        }
+
+        private int? _age;
+        public int? Age
+        {
+            get
+            {
+                if (DateOfBirth.HasValue)
+                {
+                    return CalculateAge(DateOfBirth.Value);
+                }
+                return _age;
+            }
+            set => SetProperty(ref _age, value);
+        }
+
+        public static int CalculateAge(DateTime dob)
+        {
+            var today = DateTime.Today;
+            int age = today.Year - dob.Year;
+            if (dob.Date > today.AddYears(-age)) age--;
+            return age >= 0 ? age : 0;
+        }
+
         public string Gender { get; set; } = "Nam";
         
         // Khóa học / Niên khóa đào tạo

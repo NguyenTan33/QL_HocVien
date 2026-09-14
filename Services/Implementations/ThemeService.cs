@@ -142,6 +142,7 @@ namespace QL_HocVien.Services.Implementations
                     SetBrush(res, "DashboardEventStatusBackgroundBrush", "#28442E");
                     SetBrush(res, "DashboardEventStatusBorderBrush", "#3F6847");
                     SetBrush(res, "DashboardEventStatusForegroundBrush", "#86EFAC");
+                    SetBrush(res, "DashboardEventSubtextBrush", "#4A5445");
 
                     // Unit Tree Cơ Cấu Đơn Vị (Tác Chiến)
                     SetBrush(res, "UnitTreeContainerBackgroundBrush", "#0F1A12");
@@ -386,6 +387,7 @@ namespace QL_HocVien.Services.Implementations
                     SetBrush(res, "DashboardEventStatusBackgroundBrush", "#F1F5F9");
                     SetBrush(res, "DashboardEventStatusBorderBrush", "#CBD5E1");
                     SetBrush(res, "DashboardEventStatusForegroundBrush", "#1E293B");
+                    SetBrush(res, "DashboardEventSubtextBrush", "#64748B");
 
                     // Unit Tree Cơ Cấu Đơn Vị (Hành Chính)
                     SetBrush(res, "UnitTreeContainerBackgroundBrush", "#F8FAFC");
