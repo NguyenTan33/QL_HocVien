@@ -1033,6 +1033,15 @@ namespace QL_HocVien.Services.Implementations
             return (subjName, false);
         }
 
+        public static string CleanSubjectBaseName(string rawName)
+        {
+            if (string.IsNullOrWhiteSpace(rawName)) return string.Empty;
+            string name = rawName.Trim();
+            name = System.Text.RegularExpressions.Regex.Replace(name, @"(?i)\s*\((?:kiểm\s*tra|thi|kt|k\.tra).*?\)$", "").Trim();
+            name = System.Text.RegularExpressions.Regex.Replace(name, @"(?i)\s+(?:lần|lan)\s*\d+$", "").Trim();
+            return !string.IsNullOrWhiteSpace(name) ? name : rawName.Trim();
+        }
+
         public sealed class CadetMetadataColumns
         {
             public int ColStt { get; set; } = 1;
@@ -1525,8 +1534,7 @@ namespace QL_HocVien.Services.Implementations
                     // Có mã gộp từ Excel: Gom các cột cùng mã này vào chung một môn lớn!
                     definedCode = groupCode.Trim();
                     bucketKey = $"CODE::{definedCode.ToUpperInvariant()}";
-                    var (grp, _) = InferSubjectGroup(compName);
-                    suggestedName = !string.IsNullOrWhiteSpace(grp) ? grp : compName;
+                    suggestedName = CleanSubjectBaseName(compName);
                 }
                 else
                 {
@@ -1558,33 +1566,30 @@ namespace QL_HocVien.Services.Implementations
                 double totalGroupCredits = Math.Round(compItems.Sum(x => x.Credits), 2);
                 if (totalGroupCredits <= 0) totalGroupCredits = 1.0;
 
+                // Tên môn lớn: Nếu có nhiều đợt thi thành phần và có mã gộp, chọn tên chung hợp lý nhất
+                string majorName = suggestedName;
+                if (!string.IsNullOrWhiteSpace(definedCode) && compItems.Count > 1)
+                {
+                    var baseNames = compItems.Select(x => CleanSubjectBaseName(x.CompName)).ToList();
+                    var common = baseNames.FirstOrDefault(n => !string.IsNullOrWhiteSpace(n)) ?? suggestedName;
+                    majorName = common;
+                }
+
                 CreditSubject? majorSubj = null;
 
                 if (!string.IsNullOrWhiteSpace(definedCode))
                 {
-                    // Ưu tiên 1: Khớp theo SubjectCode đã có
+                    // Ưu tiên 1: Khớp tuyệt đối theo SubjectCode đã có trong DB
                     majorSubj = subjectsInDb.FirstOrDefault(s => 
                         !string.IsNullOrWhiteSpace(s.SubjectCode) && 
                         s.SubjectCode.Equals(definedCode, StringComparison.OrdinalIgnoreCase));
-
-                    // Ưu tiên 2: Khớp theo Tên môn nếu môn chưa có SubjectCode hoặc có tên khớp
-                    if (majorSubj == null)
-                    {
-                        majorSubj = subjectsInDb.FirstOrDefault(s => 
-                            s.SubjectName.Equals(suggestedName, StringComparison.OrdinalIgnoreCase) ||
-                            (!string.IsNullOrWhiteSpace(s.SubjectGroup) && s.SubjectGroup.Equals(suggestedName, StringComparison.OrdinalIgnoreCase)));
-
-                        if (majorSubj != null)
-                        {
-                            majorSubj.SubjectCode = definedCode;
-                        }
-                    }
                 }
                 else
                 {
+                    // Fallback khi không có mã môn: Khớp theo Tên môn
                     majorSubj = subjectsInDb.FirstOrDefault(s => 
-                        s.SubjectName.Equals(suggestedName, StringComparison.OrdinalIgnoreCase) ||
-                        (!string.IsNullOrWhiteSpace(s.SubjectGroup) && s.SubjectGroup.Equals(suggestedName, StringComparison.OrdinalIgnoreCase)));
+                        s.SubjectName.Equals(majorName, StringComparison.OrdinalIgnoreCase) ||
+                        (!string.IsNullOrWhiteSpace(s.SubjectGroup) && s.SubjectGroup.Equals(majorName, StringComparison.OrdinalIgnoreCase)));
                 }
 
                 if (majorSubj == null)
@@ -1593,10 +1598,10 @@ namespace QL_HocVien.Services.Implementations
                     majorSubj = new CreditSubject
                     {
                         SubjectCode = subjCode,
-                        SubjectName = suggestedName,
+                        SubjectName = majorName,
                         Credits = totalGroupCredits,
                         AssessmentType = compItems.Count > 1 ? "Kiểm tra và thi" : "Kiểm tra thường xuyên",
-                        SubjectGroup = suggestedName,
+                        SubjectGroup = majorName,
                         IsComponent = false,
                         Description = $"Môn học lớn gồm {compItems.Count} đợt kiểm tra / thi ({totalGroupCredits} tín chỉ)",
                         CreatedAt = DateTime.Now
@@ -1612,11 +1617,8 @@ namespace QL_HocVien.Services.Implementations
                     {
                         majorSubj.SubjectCode = definedCode;
                     }
-                    if (string.IsNullOrWhiteSpace(majorSubj.SubjectName))
-                    {
-                        majorSubj.SubjectName = suggestedName;
-                    }
-                    majorSubj.SubjectGroup = majorSubj.SubjectName;
+                    majorSubj.SubjectName = majorName;
+                    majorSubj.SubjectGroup = majorName;
                     majorSubj.IsComponent = false;
                 }
 

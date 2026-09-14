@@ -1006,5 +1006,80 @@ namespace QL_HocVien.Tests
             cadet.DateOfBirth = new DateTime(today.Year - 25, 1, 1);
             Assert.Equal(25, cadet.Age);
         }
+
+        [Theory]
+        [InlineData("Công nghệ thông tin (Kiểm tra lần 1)", "Công nghệ thông tin")]
+        [InlineData("Công nghệ thông tin (Thi)", "Công nghệ thông tin")]
+        [InlineData("Điều lệnh quản lí bộ đội (Kiểm tra)", "Điều lệnh quản lí bộ đội")]
+        [InlineData("Điều lệnh quản lí bộ đội (Thi)", "Điều lệnh quản lí bộ đội")]
+        [InlineData("BĐT bài 1 AK", "BĐT bài 1 AK")]
+        [InlineData("BĐT bài 2 AK", "BĐT bài 2 AK")]
+        [InlineData("Bơi ếch", "Bơi ếch")]
+        [InlineData("Co tay xà đơn", "Co tay xà đơn")]
+        public void Test_CleanSubjectBaseName(string input, string expected)
+        {
+            var result = CreditSubjectService.CleanSubjectBaseName(input);
+            Assert.Equal(expected, result);
+        }
+
+        [Fact]
+        public async Task Test_Import_A1_And_T1_Excel_ExactCodeGrouping_NoOverwriting()
+        {
+            string a1Path = @"C:\Users\minht\Downloads\A1.xlsx";
+            string t1Path = @"C:\Users\minht\Downloads\T1.xlsx";
+
+            if (File.Exists(a1Path))
+            {
+                var (success, message, newCadets, importedScores) = await _creditService.ImportStandardTbmExcelAsync(a1Path);
+                Assert.True(success, message);
+
+                var majorSubjects = await _context.CreditSubjects
+                    .Where(s => !s.IsComponent)
+                    .Include(s => s.Components)
+                    .ToListAsync();
+                Assert.Equal(39, majorSubjects.Count);
+
+                var components = await _context.SubjectAssessmentComponents.ToListAsync();
+                Assert.Equal(57, components.Count);
+
+                var totalCredits = Math.Round(components.Sum(c => c.Credits), 2);
+                Assert.Equal(62.90, totalCredits);
+
+                // Đảm bảo các môn có mã khác nhau nhưng cùng nhóm từ khóa không bị ghi đè hay gộp nhầm
+                var ktA1 = majorSubjects.FirstOrDefault(s => s.SubjectCode == "KT.A1");
+                var ktA2 = majorSubjects.FirstOrDefault(s => s.SubjectCode == "KT.A2");
+                var ktR2 = majorSubjects.FirstOrDefault(s => s.SubjectCode == "KT.R2");
+                var ttBe = majorSubjects.FirstOrDefault(s => s.SubjectCode == "TT.BE");
+                var ttXd = majorSubjects.FirstOrDefault(s => s.SubjectCode == "TT.XD");
+
+                Assert.NotNull(ktA1);
+                Assert.NotNull(ktA2);
+                Assert.NotNull(ktR2);
+                Assert.NotNull(ttBe);
+                Assert.NotNull(ttXd);
+
+                Assert.NotEqual(ktA1.Id, ktA2.Id);
+                Assert.NotEqual(ktA1.Id, ktR2.Id);
+                Assert.NotEqual(ttBe.Id, ttXd.Id);
+            }
+
+            if (File.Exists(t1Path))
+            {
+                var (success, message, newCadets, importedScores) = await _creditService.ImportStandardTbmExcelAsync(t1Path);
+                Assert.True(success, message);
+
+                var majorSubjects = await _context.CreditSubjects
+                    .Where(s => !s.IsComponent)
+                    .Include(s => s.Components)
+                    .ToListAsync();
+                Assert.Equal(28, majorSubjects.Count);
+
+                var components = await _context.SubjectAssessmentComponents.ToListAsync();
+                Assert.Equal(57, components.Count);
+
+                var totalCredits = Math.Round(components.Sum(c => c.Credits), 2);
+                Assert.Equal(62.90, totalCredits);
+            }
+        }
     }
 }
