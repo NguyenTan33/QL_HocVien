@@ -166,13 +166,15 @@ namespace QL_HocVien.Data.Repositories.Implementations
             // 7. Độ tuổi tối thiểu
             if (criteria.MinAge.HasValue)
             {
-                query = query.Where(c => c.Age >= criteria.MinAge.Value);
+                var latestDobForMinAge = DateTime.Today.AddYears(-criteria.MinAge.Value).Date.AddDays(1).AddSeconds(-1);
+                query = query.Where(c => c.DateOfBirth.HasValue && c.DateOfBirth.Value <= latestDobForMinAge);
             }
 
             // 8. Độ tuổi tối đa
             if (criteria.MaxAge.HasValue)
             {
-                query = query.Where(c => c.Age <= criteria.MaxAge.Value);
+                var earliestDobForMaxAge = DateTime.Today.AddYears(-(criteria.MaxAge.Value + 1)).Date.AddDays(1);
+                query = query.Where(c => c.DateOfBirth.HasValue && c.DateOfBirth.Value >= earliestDobForMaxAge);
             }
 
             // 9. Trạng thái tài khoản người dùng

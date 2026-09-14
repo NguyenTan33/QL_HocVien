@@ -279,21 +279,21 @@ namespace QL_HocVien.Services.Implementations
 
                 // Tiêu đề
                 ws.Cell(1, 1).Value = "DANH SÁCH HỌC VIÊN - HỌC VIỆN QUÂN SỰ";
-                ws.Range(1, 1, 1, 11).Merge().Style
+                ws.Range(1, 1, 1, 10).Merge().Style
                     .Font.SetBold(true)
                     .Font.SetFontSize(14)
                     .Font.SetFontColor(XLColor.FromHtml("#0F766E"))
                     .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
 
                 ws.Cell(2, 1).Value = $"Ngày xuất: {DateTime.Now:dd/MM/yyyy HH:mm}";
-                ws.Range(2, 1, 2, 11).Merge().Style
+                ws.Range(2, 1, 2, 10).Merge().Style
                     .Font.SetItalic(true)
                     .Font.SetFontSize(10)
                     .Font.SetFontColor(XLColor.FromHtml("#64748B"))
                     .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
 
                 // Header
-                string[] headers = { "STT", "Mã học viên", "Họ và tên", "Cấp bậc", "Chức vụ", "Đơn vị", "Số điện thoại", "Email", "Ngày sinh", "Tuổi", "Giới tính" };
+                string[] headers = { "STT", "Mã học viên", "Họ và tên", "Cấp bậc", "Chức vụ", "Đơn vị", "Số điện thoại", "Email", "Ngày sinh", "Giới tính" };
                 for (int i = 0; i < headers.Length; i++)
                 {
                     var cell = ws.Cell(4, i + 1);
@@ -322,10 +322,9 @@ namespace QL_HocVien.Services.Implementations
                     ws.Cell(row, 7).Value = c.PhoneNumber;
                     ws.Cell(row, 8).Value = c.Email;
                     ws.Cell(row, 9).Value = c.DateOfBirth.HasValue ? c.DateOfBirth.Value.ToString("dd/MM/yyyy") : "";
-                    ws.Cell(row, 10).Value = c.Age;
-                    ws.Cell(row, 11).Value = c.Gender;
+                    ws.Cell(row, 10).Value = c.Gender;
 
-                    var dataRow = ws.Range(row, 1, row, 11);
+                    var dataRow = ws.Range(row, 1, row, 10);
                     dataRow.Style.Border.SetOutsideBorder(XLBorderStyleValues.Thin)
                                   .Border.SetOutsideBorderColor(XLColor.FromHtml("#E2E8F0"))
                                   .Border.SetInsideBorder(XLBorderStyleValues.Thin)
@@ -341,7 +340,6 @@ namespace QL_HocVien.Services.Implementations
                     ws.Cell(row, 4).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
                     ws.Cell(row, 9).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
                     ws.Cell(row, 10).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
-                    ws.Cell(row, 11).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
 
                     row++;
                 }
@@ -1954,7 +1952,7 @@ namespace QL_HocVien.Services.Implementations
                 var wsCadet = workbook.Worksheets.Add("Trang học viên");
                 wsCadet.Cell("A1").Value = "DANH SÁCH HỌC VIÊN QUÂN ĐỘI";
                 wsCadet.Range("A1:K1").Merge().Style.Font.SetBold().Font.SetFontSize(14).Font.SetFontColor(XLColor.FromHtml("#1E3A8A"));
-                string[] cdHeaders = { "STT", "Mã học viên", "Họ và tên", "Cấp bậc", "Chức vụ", "Đơn vị", "Lớp", "Số điện thoại", "Email", "Tuổi", "Giới tính" };
+                string[] cdHeaders = { "STT", "Mã học viên", "Họ và tên", "Cấp bậc", "Chức vụ", "Đơn vị", "Lớp", "Số điện thoại", "Email", "Ngày sinh", "Giới tính" };
                 for (int i = 0; i < cdHeaders.Length; i++)
                 {
                     wsCadet.Cell(3, i + 1).Value = cdHeaders[i];
@@ -1972,7 +1970,7 @@ namespace QL_HocVien.Services.Implementations
                     wsCadet.Cell(i + 4, 7).Value = c.ClassName;
                     wsCadet.Cell(i + 4, 8).Value = c.PhoneNumber;
                     wsCadet.Cell(i + 4, 9).Value = c.Email;
-                    wsCadet.Cell(i + 4, 10).Value = c.Age ?? 0;
+                    wsCadet.Cell(i + 4, 10).Value = c.DateOfBirth.HasValue ? c.DateOfBirth.Value.ToString("dd/MM/yyyy") : "";
                     wsCadet.Cell(i + 4, 11).Value = c.Gender;
                 }
                 wsCadet.Columns().AdjustToContents();

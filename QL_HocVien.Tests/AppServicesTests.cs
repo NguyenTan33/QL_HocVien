@@ -294,9 +294,11 @@ namespace QL_HocVien.Tests
                 {
                     var ws = wb.Worksheets.First();
                     var headerCells = ws.Row(4).CellsUsed().Select(c => c.GetString()).ToList();
-                    Assert.Equal(11, headerCells.Count);
+                    Assert.Equal(10, headerCells.Count);
                     Assert.DoesNotContain(headerCells, h => h.Contains("Lớp", StringComparison.OrdinalIgnoreCase));
+                    Assert.DoesNotContain(headerCells, h => h.Contains("Tuổi", StringComparison.OrdinalIgnoreCase));
                     Assert.Contains("Đơn vị", headerCells);
+                    Assert.Contains("Ngày sinh", headerCells);
                     Assert.Contains("Số điện thoại", headerCells);
                 }
 

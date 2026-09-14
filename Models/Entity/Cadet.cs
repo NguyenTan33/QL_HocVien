@@ -30,6 +30,7 @@ namespace QL_HocVien.Models.Entity
         }
 
         private int? _age;
+        [NotMapped]
         public int? Age
         {
             get
