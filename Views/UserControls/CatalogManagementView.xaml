@@ -185,7 +185,14 @@
                                 <TextBlock Text="{Binding Code, StringFormat='{}Mã: {0}'}" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}"/>
                             </Border>
 
-
+                            <!-- Badge Quân số học viên -->
+                            <Border Background="{DynamicResource PageBackgroundBrush}" BorderBrush="#10B981" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,6,0" VerticalAlignment="Center"
+                                    ToolTip="Quân số học viên (bao gồm các đơn vị cấp con trực thuộc)">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="👥 " FontSize="10.5" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding CadetCountText}" FontSize="11" FontWeight="ExtraBold" Foreground="#10B981" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
 
                             <!-- Badge Số lượng cấp con -->
                             <Border Background="{DynamicResource PageBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="7,2" Margin="0,0,6,0" VerticalAlignment="Center"

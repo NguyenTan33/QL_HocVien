@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QL_HocVien.Models.Entity;
@@ -92,6 +94,12 @@ namespace QL_HocVien.ViewModels
         [ObservableProperty]
         private bool _isVisible = true;
 
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(CadetCountText))]
+        private int _cadetCount;
+
+        public string CadetCountText => $"{CadetCount} HV";
+
         public ObservableCollection<UnitTreeNode> Children { get; } = new();
 
         public bool HasChildren => Children.Count > 0;
@@ -129,6 +137,181 @@ namespace QL_HocVien.ViewModels
                 p.IsExpanded = true;
                 p = p.ParentNode;
             }
+        }
+
+        /// <summary>
+        /// Phân bổ và cộng dồn quân số học viên theo cấu trúc cây phân cấp (Post-order hierarchical rollup)
+        /// </summary>
+        public static void AssignCadetCounts(IEnumerable<UnitTreeNode> rootNodes, IEnumerable<Cadet> allCadets)
+        {
+            var allNodes = new List<UnitTreeNode>();
+            void Flatten(UnitTreeNode n)
+            {
+                allNodes.Add(n);
+                foreach (var c in n.Children) Flatten(c);
+            }
+            foreach (var r in rootNodes) Flatten(r);
+
+            var directCounts = new Dictionary<UnitTreeNode, int>();
+            foreach (var n in allNodes) directCounts[n] = 0;
+
+            foreach (var cadet in allCadets)
+            {
+                var match = FindBestMatchingNode(cadet, allNodes);
+                if (match != null && directCounts.ContainsKey(match))
+                {
+                    directCounts[match]++;
+                }
+            }
+
+            int CalculateRollup(UnitTreeNode node)
+            {
+                int childSum = 0;
+                foreach (var ch in node.Children)
+                {
+                    childSum += CalculateRollup(ch);
+                }
+                int total = directCounts[node] + childSum;
+                node.CadetCount = total;
+                return total;
+            }
+
+            foreach (var r in rootNodes)
+            {
+                CalculateRollup(r);
+            }
+        }
+
+        /// <summary>
+        /// Tìm kiếm mắt xích (Node) phù hợp nhất trong sơ đồ cơ cấu tổ chức để phân bổ học viên
+        /// </summary>
+        public static UnitTreeNode? FindBestMatchingNode(Cadet cadet, IEnumerable<UnitTreeNode> allNodes)
+        {
+            var nodesList = allNodes as IList<UnitTreeNode> ?? allNodes.ToList();
+            string cCohort = (cadet.Cohort ?? "").Trim();
+            string cUnit = (cadet.Unit ?? "").Trim().Replace('\\', '/');
+
+            // 1. Ưu tiên khớp theo Lớp học (ClassId hoặc ClassName) nếu có node ClassLeaf
+            if (cadet.ClassId.HasValue && cadet.ClassId.Value > 0)
+            {
+                var classMatch = nodesList.FirstOrDefault(n => n.ClassItem != null && n.ClassItem.Id == cadet.ClassId.Value);
+                if (classMatch != null) return classMatch;
+            }
+            if (!string.IsNullOrWhiteSpace(cadet.ClassName))
+            {
+                var classMatch = nodesList.FirstOrDefault(n => n.ClassItem != null &&
+                    (string.Equals(n.Code, cadet.ClassName.Trim(), StringComparison.OrdinalIgnoreCase) ||
+                     string.Equals(n.Name, cadet.ClassName.Trim(), StringComparison.OrdinalIgnoreCase)));
+                if (classMatch != null) return classMatch;
+            }
+
+            // 2. Thu hẹp danh sách ứng viên theo Khóa học (Cohort) nếu có
+            IEnumerable<UnitTreeNode> candidates = nodesList;
+            if (!string.IsNullOrWhiteSpace(cCohort))
+            {
+                var cohortFiltered = nodesList.Where(n =>
+                    (n.CohortItem != null && (string.Equals(n.Code, cCohort, StringComparison.OrdinalIgnoreCase) || string.Equals(n.Name, cCohort, StringComparison.OrdinalIgnoreCase))) ||
+                    (!string.IsNullOrWhiteSpace(n.AncestorCohortCode) && string.Equals(n.AncestorCohortCode, cCohort, StringComparison.OrdinalIgnoreCase))
+                ).ToList();
+
+                if (cohortFiltered.Count > 0)
+                {
+                    candidates = cohortFiltered;
+                }
+            }
+
+            // 3. Khớp theo Đường dẫn đơn vị hoặc Phân cấp mã
+            UnitTreeNode? bestNode = null;
+            int bestScore = -1;
+
+            var segments = cUnit.Split('/', StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToArray();
+
+            foreach (var n in candidates)
+            {
+                int score = 0;
+
+                // Khớp chính xác toàn bộ HierarchyCodePath (ví dụ "dbb7/cbb2")
+                if (!string.IsNullOrWhiteSpace(cUnit) && !string.IsNullOrWhiteSpace(n.HierarchyCodePath))
+                {
+                    if (string.Equals(n.HierarchyCodePath, cUnit, StringComparison.OrdinalIgnoreCase))
+                    {
+                        score += 1000;
+                    }
+                    else if (n.HierarchyCodePath.EndsWith("/" + cUnit, StringComparison.OrdinalIgnoreCase) ||
+                             cUnit.EndsWith("/" + n.HierarchyCodePath, StringComparison.OrdinalIgnoreCase))
+                    {
+                        score += 800;
+                    }
+                }
+
+                // Khớp theo phân đoạn (segments)
+                if (segments.Length > 0)
+                {
+                    string lastSeg = segments[segments.Length - 1];
+
+                    // Khớp mã đơn vị con ở cuối đường dẫn (ví dụ cbb2)
+                    if (string.Equals(n.Code, lastSeg, StringComparison.OrdinalIgnoreCase))
+                    {
+                        score += 500;
+                        if (segments.Length > 1 && n.ParentNode != null &&
+                            string.Equals(n.ParentNode.Code, segments[segments.Length - 2], StringComparison.OrdinalIgnoreCase))
+                        {
+                            score += 300;
+                        }
+                    }
+                    else if (string.Equals(n.Name, lastSeg, StringComparison.OrdinalIgnoreCase))
+                    {
+                        score += 400;
+                    }
+
+                    if (segments.Length == 1 && string.Equals(n.Code, segments[0], StringComparison.OrdinalIgnoreCase))
+                    {
+                        score += 500;
+                    }
+
+                    // Khớp tên tiếng Việt thông dụng (Tiểu đoàn 1 -> dBB1, Đại đội 1 -> cBB1...)
+                    var mNum = System.Text.RegularExpressions.Regex.Match(cUnit, @"\d+");
+                    if (mNum.Success)
+                    {
+                        string num = mNum.Value;
+                        if ((cUnit.Contains("tiểu đoàn", StringComparison.OrdinalIgnoreCase) && n.Code.Equals($"dBB{num}", StringComparison.OrdinalIgnoreCase)) ||
+                            (cUnit.Contains("đại đội", StringComparison.OrdinalIgnoreCase) && n.Code.Equals($"cBB{num}", StringComparison.OrdinalIgnoreCase)) ||
+                            (cUnit.Contains("tiểu đội", StringComparison.OrdinalIgnoreCase) && n.Code.Equals($"bBB{num}", StringComparison.OrdinalIgnoreCase)))
+                        {
+                            score += 450;
+                        }
+                    }
+                }
+
+                // Nếu học viên chỉ có Khóa học mà không có thông tin Đơn vị
+                if (string.IsNullOrWhiteSpace(cUnit) && n.CohortItem != null &&
+                    string.Equals(n.Code, cCohort, StringComparison.OrdinalIgnoreCase))
+                {
+                    score += 200;
+                }
+
+                // Ưu tiên cấp sâu hơn (phân đội / lớp học / tiểu đội)
+                if (score > 0)
+                {
+                    score += n.Level * 10;
+                }
+
+                if (score > bestScore)
+                {
+                    bestScore = score;
+                    bestNode = n;
+                }
+            }
+
+            // Fallback: Nếu không tìm thấy node phù hợp trong các ứng viên, gán vào node Khóa học nếu có
+            if ((bestNode == null || bestScore <= 0) && !string.IsNullOrWhiteSpace(cCohort))
+            {
+                bestNode = nodesList.FirstOrDefault(n => n.CohortItem != null &&
+                    (string.Equals(n.Code, cCohort, StringComparison.OrdinalIgnoreCase) ||
+                     string.Equals(n.Name, cCohort, StringComparison.OrdinalIgnoreCase)));
+            }
+
+            return bestNode;
         }
     }
 }

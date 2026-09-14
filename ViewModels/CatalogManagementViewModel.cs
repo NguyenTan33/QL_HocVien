@@ -19,8 +19,9 @@ namespace QL_HocVien.ViewModels
         private readonly IExcelService _excelService;
         private readonly IFileDialogService _fileDialogService;
         private readonly ISecurityGateService _securityGate;
-        private readonly ICohortService _cohortService;
+        private readonly ICohortService? _cohortService;
         private readonly IClassService? _classService;
+        private readonly ICadetService? _cadetService;
 
         public ObservableCollection<MilitaryRank> Ranks { get; } = new();
         public ObservableCollection<MilitaryPosition> Positions { get; } = new();
@@ -190,7 +191,7 @@ namespace QL_HocVien.ViewModels
             IFileDialogService fileDialogService,
             ISecurityGateService securityGate,
             IClassService classService)
-            : this(catalogService, excelService, fileDialogService, securityGate, null, classService)
+            : this(catalogService, excelService, fileDialogService, securityGate, null, classService, null)
         {
         }
 
@@ -200,7 +201,8 @@ namespace QL_HocVien.ViewModels
             IFileDialogService fileDialogService,
             ISecurityGateService securityGate,
             ICohortService? cohortService = null,
-            IClassService? classService = null)
+            IClassService? classService = null,
+            ICadetService? cadetService = null)
         {
             _catalogService = catalogService;
             _excelService = excelService;
@@ -208,6 +210,7 @@ namespace QL_HocVien.ViewModels
             _securityGate = securityGate;
             _cohortService = cohortService;
             _classService = classService;
+            _cadetService = cadetService;
             Title = "Danh Mục Tổ Chức Quân Sự";
 
             _ = LoadAllDataAsync();
@@ -1125,6 +1128,8 @@ namespace QL_HocVien.ViewModels
                     Name = !string.IsNullOrWhiteSpace(cohort.CohortName) ? cohort.CohortName : cohort.CohortCode,
                     Code = cohort.CohortCode,
                     Value = cohort.CohortCode,
+                    AncestorCohortCode = cohort.CohortCode,
+                    HierarchyCodePath = cohort.CohortCode,
                     Level = 0,
                     LevelName = "CẤP KHÓA HỌC",
                     Commander = "Ban Chỉ huy Khóa học",
@@ -1166,6 +1171,8 @@ namespace QL_HocVien.ViewModels
                     int nextLevel = cNode.Level + 1;
                     var childNode = CreateUnitNode(cu, nextLevel, classes);
                     childNode.ParentNode = cNode;
+                    childNode.AncestorCohortCode = cNode.AncestorCohortCode;
+                    childNode.HierarchyCodePath = cu.UnitCode;
                     cNode.Children.Add(childNode);
                     AttachChildrenRecursive(childNode, allUnits, classes, null, attachedUnitIds, 0);
                 }
@@ -1191,6 +1198,7 @@ namespace QL_HocVien.ViewModels
             {
                 int level = DetermineLevel(ru);
                 var node = CreateUnitNode(ru, level, classes);
+                node.HierarchyCodePath = ru.UnitCode;
                 UnitTreeNodes.Add(node);
                 attachedUnitIds.Add(ru.Id);
                 AttachChildrenRecursive(node, allUnits, classes, null, attachedUnitIds, 0);
@@ -1202,10 +1210,22 @@ namespace QL_HocVien.ViewModels
                 if (u.Id > 0 && !attachedUnitIds.Contains(u.Id))
                 {
                     var orphanNode = CreateUnitNode(u, DetermineLevel(u), classes);
+                    orphanNode.HierarchyCodePath = u.UnitCode;
                     UnitTreeNodes.Add(orphanNode);
                     attachedUnitIds.Add(u.Id);
                     AttachChildrenRecursive(orphanNode, allUnits, classes, null, attachedUnitIds, 0);
                 }
+            }
+
+            // 4. Phân bổ và cộng dồn quân số học viên theo từng cấp bậc đơn vị
+            if (_cadetService != null)
+            {
+                try
+                {
+                    var allCadets = (await _cadetService.GetAllCadetsAsync()).ToList();
+                    UnitTreeNode.AssignCadetCounts(UnitTreeNodes, allCadets);
+                }
+                catch { }
             }
         }
 
@@ -1326,6 +1346,13 @@ namespace QL_HocVien.ViewModels
                 int nextLevel = parentNode.Level + 1;
                 var childNode = CreateUnitNode(cu, nextLevel, classes);
                 childNode.ParentNode = parentNode;
+                childNode.AncestorCohortCode = parentNode.AncestorCohortCode;
+
+                string currentPath = !string.IsNullOrWhiteSpace(parentNode.HierarchyCodePath)
+                    ? $"{parentNode.HierarchyCodePath}/{cu.UnitCode}"
+                    : cu.UnitCode;
+                childNode.HierarchyCodePath = currentPath;
+
                 parentNode.Children.Add(childNode);
 
                 var nextBranch = new HashSet<int>(branchUnitIds) { cu.Id };
@@ -1345,9 +1372,11 @@ namespace QL_HocVien.ViewModels
                     {
                         ClassItem = cls,
                         ParentNode = parentNode,
+                        AncestorCohortCode = parentNode.AncestorCohortCode,
                         NodeId = $"class_{cls.Id}",
                         Name = $"{cls.ClassCode} - {cls.ClassName}",
                         Code = cls.ClassCode,
+                        HierarchyCodePath = !string.IsNullOrWhiteSpace(parentNode.HierarchyCodePath) ? $"{parentNode.HierarchyCodePath}/{cls.ClassCode}" : cls.ClassCode,
                         Level = parentNode.Level + 1,
                         LevelName = "PHÂN ĐỘI / LỚP HỌC VIÊN",
                         Commander = !string.IsNullOrWhiteSpace(cls.OfficerInCharge) ? cls.OfficerInCharge : "Chưa phân công",

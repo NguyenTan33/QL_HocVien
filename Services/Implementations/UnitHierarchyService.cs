@@ -278,6 +278,22 @@ namespace QL_HocVien.Services.Implementations
                 }
             }
 
+            // Gắn quân số học viên vào các cấp phân vị
+            if (_scopeFactory != null)
+            {
+                try
+                {
+                    using var scope = _scopeFactory.CreateScope();
+                    var cadetService = scope.ServiceProvider.GetService<ICadetService>();
+                    if (cadetService != null)
+                    {
+                        var allCadets = (await cadetService.GetAllCadetsAsync()).ToList();
+                        UnitTreeNode.AssignCadetCounts(roots, allCadets);
+                    }
+                }
+                catch { }
+            }
+
             return roots;
         }
 
@@ -487,6 +503,7 @@ namespace QL_HocVien.Services.Implementations
                 Icon = source.Icon,
                 BadgeBrush = source.BadgeBrush,
                 IsClassLeaf = source.IsClassLeaf,
+                CadetCount = source.CadetCount,
                 IsExpanded = source.IsExpanded,
                 IsSelected = false,
                 IsVisible = true
