@@ -1100,7 +1100,7 @@
 
             <!-- ==================== MODAL: XEM CHI TIẾT PHÂN RÃ THÀNH PHẦN MÔN HỌC ==================== -->
             <Grid Background="#B0000000" Visibility="{Binding IsBreakdownModalVisible, Converter={StaticResource BoolToVis}}">
-                <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1.5" CornerRadius="10" Width="680" MaxHeight="640" VerticalAlignment="Center" HorizontalAlignment="Center"
+                <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1.5" CornerRadius="10" Width="820" MaxHeight="740" VerticalAlignment="Center" HorizontalAlignment="Center"
                         Padding="24" Effect="{StaticResource ShadowEffect}">
                     <Grid>
                         <Grid.RowDefinitions>
@@ -1111,17 +1111,29 @@
 
                         <!-- Header Modal -->
                         <Grid Grid.Row="0" Margin="0,0,0,16">
-                            <StackPanel>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
                                 <TextBlock Text="CHI TIẾT ĐIỂM THÀNH PHẦN &amp; TBM TOÀN KHÓA" FontSize="16" FontWeight="ExtraBold" Foreground="{DynamicResource AccentLightBrush}"/>
                                 <TextBlock Text="{Binding BreakdownCadetInfo}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0"/>
                             </StackPanel>
-                            <Button Content="✕" Width="28" Height="28" HorizontalAlignment="Right" VerticalAlignment="Top"
+
+                            <!-- Badge thống kê tổng môn & cột điểm -->
+                            <Border Grid.Column="1" Background="{DynamicResource SecondaryButtonBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10,4" Margin="12,0,16,0" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding BreakdownSummaryBadge}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource AccentLightBrush}"/>
+                            </Border>
+
+                            <Button Grid.Column="2" Content="✕" Width="28" Height="28" HorizontalAlignment="Right" VerticalAlignment="Top"
                                     Background="Transparent" BorderThickness="0" Foreground="{DynamicResource TextSecondaryBrush}" Cursor="Hand"
                                     Command="{Binding CloseBreakdownModalCommand}"/>
                         </Grid>
 
                         <!-- Danh sách phân rã các môn lớn và thành phần con -->
-                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,0,0,16">
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled" Margin="0,0,0,16" Focusable="True">
                             <ItemsControl ItemsSource="{Binding CadetBreakdowns}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>

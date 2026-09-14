@@ -85,7 +85,99 @@ namespace QL_HocVien.Services.Calculators
             IDictionary<int, double?> cadetScores)
         {
             var result = new List<MajorSubjectBreakdownDto>();
-            var grouped = subjects.GroupBy(s => s.DisplayGroupName);
+            var subjList = subjects.ToList();
+
+            // Kiểm tra xem danh sách subjects có chứa các đợt thi thành phần trực thuộc Components hay không
+            bool hasStructuredComponents = subjList.Any(s => s.Components != null && s.Components.Count > 0);
+
+            if (hasStructuredComponents)
+            {
+                // Xử lý theo mô hình môn lớn và các đợt kiểm tra / thi thành phần trực thuộc (SubjectAssessmentComponent)
+                var majorSubjects = subjList.Where(s => !s.IsComponent).ToList();
+                foreach (var major in majorSubjects)
+                {
+                    var compList = new List<ComponentScoreDto>();
+                    var comps = (major.Components ?? Enumerable.Empty<SubjectAssessmentComponent>())
+                        .OrderBy(c => c.OrderIndex)
+                        .ToList();
+
+                    if (comps.Count > 0)
+                    {
+                        double totalCredits = Math.Round(comps.Sum(c => c.Credits), 2);
+                        if (totalCredits <= 0) totalCredits = major.Credits > 0 ? major.Credits : 1.0;
+
+                        double weightedSum = 0;
+                        bool allComplete = true;
+
+                        foreach (var c in comps)
+                        {
+                            cadetScores.TryGetValue(c.Id, out var cScore);
+                            double weightRatio = totalCredits > 0 ? c.Credits / totalCredits : 1.0;
+                            double? contrib = cScore.HasValue && cScore.Value >= 0
+                                ? Math.Round((cScore.Value * c.Credits) / totalCredits, 2)
+                                : null;
+
+                            if (cScore.HasValue && cScore.Value >= 0)
+                            {
+                                weightedSum += cScore.Value * c.Credits;
+                            }
+                            else
+                            {
+                                allComplete = false;
+                            }
+
+                            compList.Add(new ComponentScoreDto
+                            {
+                                ComponentName = c.ComponentName,
+                                Credits = c.Credits,
+                                RecordedScore = cScore,
+                                WeightRatio = Math.Round(weightRatio, 4),
+                                ContributionScore = contrib
+                            });
+                        }
+
+                        double? finalScore = allComplete && totalCredits > 0
+                            ? Math.Round(weightedSum / totalCredits, 2)
+                            : null;
+
+                        result.Add(new MajorSubjectBreakdownDto
+                        {
+                            MajorSubjectName = major.SubjectName,
+                            TotalCredits = totalCredits,
+                            FinalScore = finalScore,
+                            IsComplete = allComplete,
+                            Components = compList
+                        });
+                    }
+                    else
+                    {
+                        // Môn độc lập không có thành phần con
+                        cadetScores.TryGetValue(major.Id, out var sScore);
+                        compList.Add(new ComponentScoreDto
+                        {
+                            ComponentName = major.SubjectName,
+                            Credits = major.Credits,
+                            RecordedScore = sScore,
+                            WeightRatio = 1.0,
+                            ContributionScore = sScore
+                        });
+
+                        result.Add(new MajorSubjectBreakdownDto
+                        {
+                            MajorSubjectName = major.SubjectName,
+                            TotalCredits = major.Credits,
+                            FinalScore = sScore,
+                            IsComplete = sScore.HasValue && sScore.Value >= 0,
+                            Components = compList
+                        });
+                    }
+                }
+
+                return result;
+            }
+
+            // Fallback: Chế độ gom nhóm theo DisplayGroupName (tương thích ngược)
+            var grouped = subjList.GroupBy(s => s.DisplayGroupName);
 
             foreach (var grp in grouped)
             {

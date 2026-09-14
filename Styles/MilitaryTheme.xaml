@@ -647,18 +647,19 @@
 
     <!-- ==================== SCROLLBAR QUÂN ĐỘI (CHỐNG VẠCH TRẮNG) ==================== -->
     <Style x:Key="MilitaryScrollBarThumbStyle" TargetType="{x:Type Thumb}">
+        <Setter Property="SnapsToDevicePixels" Value="true"/>
         <Setter Property="OverridesDefaultStyle" Value="true"/>
         <Setter Property="IsTabStop" Value="false"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type Thumb}">
                     <Border x:Name="thumbBorder"
-                            Background="#35452C"
-                            CornerRadius="3"
+                            Background="#7A6C3E"
+                            CornerRadius="4"
                             Margin="1"/>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="true">
-                            <Setter TargetName="thumbBorder" Property="Background" Value="#8C7D46"/>
+                            <Setter TargetName="thumbBorder" Property="Background" Value="#D4AF37"/>
                         </Trigger>
                         <Trigger Property="IsDragging" Value="true">
                             <Setter TargetName="thumbBorder" Property="Background" Value="#F2C94C"/>
@@ -674,11 +675,11 @@
         <Setter Property="OverridesDefaultStyle" Value="true"/>
         <Style.Triggers>
             <Trigger Property="Orientation" Value="Vertical">
-                <Setter Property="Width" Value="6"/>
+                <Setter Property="Width" Value="9"/>
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="{x:Type ScrollBar}">
-                            <Grid Background="Transparent">
+                            <Grid Background="#10000000">
                                 <Track x:Name="PART_Track" IsDirectionReversed="true">
                                     <Track.Thumb>
                                         <Thumb Style="{StaticResource MilitaryScrollBarThumbStyle}"/>
@@ -690,11 +691,11 @@
                 </Setter>
             </Trigger>
             <Trigger Property="Orientation" Value="Horizontal">
-                <Setter Property="Height" Value="6"/>
+                <Setter Property="Height" Value="9"/>
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="{x:Type ScrollBar}">
-                            <Grid Background="Transparent">
+                            <Grid Background="#10000000">
                                 <Track x:Name="PART_Track">
                                     <Track.Thumb>
                                         <Thumb Style="{StaticResource MilitaryScrollBarThumbStyle}"/>

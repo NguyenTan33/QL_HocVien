@@ -146,6 +146,9 @@ namespace QL_HocVien.ViewModels
         [ObservableProperty]
         private string _breakdownCadetInfo = string.Empty;
 
+        [ObservableProperty]
+        private string _breakdownSummaryBadge = string.Empty;
+
         public ObservableCollection<MajorSubjectBreakdownDto> CadetBreakdowns { get; } = new();
         #endregion
 
@@ -1375,11 +1378,26 @@ namespace QL_HocVien.ViewModels
         {
             if (summary == null) return;
             BreakdownCadetName = summary.FullName;
-            BreakdownCadetInfo = $"Mã HV: {summary.CadetCode}  |  Đơn vị: {summary.Unit}  |  Lớp: {summary.ClassName}  |  TBM toàn khóa: {summary.Gpa:F2}";
             
             CadetBreakdowns.Clear();
-            var breakdowns = await _creditService.GetSubjectBreakdownForCadetAsync(summary.CadetId);
+            List<MajorSubjectBreakdownDto> breakdowns;
+
+            if (summary.MajorSubjectBreakdowns != null && summary.MajorSubjectBreakdowns.Count > 0)
+            {
+                breakdowns = summary.MajorSubjectBreakdowns;
+            }
+            else
+            {
+                breakdowns = await _creditService.GetSubjectBreakdownForCadetAsync(summary.CadetId);
+            }
+
             foreach (var b in breakdowns) CadetBreakdowns.Add(b);
+
+            int totalComps = breakdowns.Sum(b => b.Components?.Count ?? 0);
+            double totalCredits = Math.Round(breakdowns.Sum(b => b.TotalCredits), 2);
+
+            BreakdownCadetInfo = $"Mã HV: {summary.CadetCode}  |  Đơn vị: {summary.Unit}  |  Lớp: {summary.ClassName}  |  TBM toàn khóa: {summary.Gpa:F2}";
+            BreakdownSummaryBadge = $"Tổng: {breakdowns.Count} môn ({totalComps} cột điểm • {totalCredits:F2} TC)";
 
             IsBreakdownModalVisible = true;
         }

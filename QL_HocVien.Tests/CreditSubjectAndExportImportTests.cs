@@ -865,5 +865,117 @@ namespace QL_HocVien.Tests
             Assert.NotNull(healedCadet);
             Assert.Equal(cohort.Id, healedCadet.CohortId);
         }
+
+        [Fact]
+        public async Task Test_GetSubjectBreakdownForCadetAsync_ReturnsAllComponents_WithCorrectWeightsAndFinalScores()
+        {
+            // 1. Tạo học viên
+            var cadet = new Cadet
+            {
+                CadetCode = "HV-BD-01",
+                FullName = "Nguyễn Văn Phân Rã",
+                Unit = "dBB1/cBB1/bBB1",
+                Cohort = "K75"
+            };
+            _context.Cadets.Add(cadet);
+            await _context.SaveChangesAsync();
+
+            // 2. Tạo môn học lớn có 2 thành phần (VKHD: Thi VKHDL 0.5 TC, VKHD 4.8 TC, Tổng 5.3 TC)
+            var subjVkhd = new CreditSubject
+            {
+                SubjectCode = "TEST.VKHD",
+                SubjectName = "VKHD",
+                Credits = 5.3,
+                IsComponent = false
+            };
+            _context.CreditSubjects.Add(subjVkhd);
+            await _context.SaveChangesAsync();
+
+            var comp1 = new SubjectAssessmentComponent
+            {
+                CreditSubjectId = subjVkhd.Id,
+                ComponentName = "Thi VKHDL",
+                Credits = 0.5,
+                OrderIndex = 1
+            };
+            var comp2 = new SubjectAssessmentComponent
+            {
+                CreditSubjectId = subjVkhd.Id,
+                ComponentName = "VKHD",
+                Credits = 4.8,
+                OrderIndex = 2
+            };
+            _context.SubjectAssessmentComponents.AddRange(comp1, comp2);
+
+            // 3. Tạo môn độc lập không có thành phần con (Hóa: 0.15 TC)
+            var subjHoa = new CreditSubject
+            {
+                SubjectCode = "TEST.HOA",
+                SubjectName = "Hóa",
+                Credits = 0.15,
+                IsComponent = false
+            };
+            _context.CreditSubjects.Add(subjHoa);
+            await _context.SaveChangesAsync();
+
+            // 4. Nhập điểm
+            var s1 = new CreditScoreRecord
+            {
+                CadetId = cadet.Id,
+                CreditSubjectId = subjVkhd.Id,
+                ComponentId = comp1.Id,
+                FinalScore = 8.0,
+                ExamDate = DateTime.Today
+            };
+            var s2 = new CreditScoreRecord
+            {
+                CadetId = cadet.Id,
+                CreditSubjectId = subjVkhd.Id,
+                ComponentId = comp2.Id,
+                FinalScore = 7.1,
+                ExamDate = DateTime.Today
+            };
+            var s3 = new CreditScoreRecord
+            {
+                CadetId = cadet.Id,
+                CreditSubjectId = subjHoa.Id,
+                FinalScore = 7.5,
+                ExamDate = DateTime.Today
+            };
+            _context.CreditScoreRecords.AddRange(s1, s2, s3);
+            await _context.SaveChangesAsync();
+
+            // 5. Gọi GetSubjectBreakdownForCadetAsync
+            var breakdowns = await _creditService.GetSubjectBreakdownForCadetAsync(cadet.Id);
+            Assert.NotNull(breakdowns);
+
+            // 6. Kiểm tra môn VKHD
+            var vkhdDto = breakdowns.FirstOrDefault(b => b.MajorSubjectName == "VKHD");
+            Assert.NotNull(vkhdDto);
+            Assert.Equal(5.3, vkhdDto.TotalCredits);
+            Assert.Equal(2, vkhdDto.Components.Count);
+            Assert.True(vkhdDto.IsComplete);
+            Assert.Equal(7.18, vkhdDto.FinalScore); // (8.0 * 0.5 + 7.1 * 4.8) / 5.3 = 7.1849 -> 7.18
+
+            var c1 = vkhdDto.Components.FirstOrDefault(c => c.ComponentName == "Thi VKHDL");
+            Assert.NotNull(c1);
+            Assert.Equal(0.5, c1.Credits);
+            Assert.Equal(8.0, c1.RecordedScore);
+            Assert.Equal(0.75, c1.ContributionScore); // 8.0 * 0.5 / 5.3 = 0.7547 -> 0.75
+
+            var c2 = vkhdDto.Components.FirstOrDefault(c => c.ComponentName == "VKHD");
+            Assert.NotNull(c2);
+            Assert.Equal(4.8, c2.Credits);
+            Assert.Equal(7.1, c2.RecordedScore);
+            Assert.Equal(6.43, c2.ContributionScore); // 7.1 * 4.8 / 5.3 = 6.4301 -> 6.43
+
+            // 7. Kiểm tra môn Hóa (môn độc lập)
+            var hoaDto = breakdowns.FirstOrDefault(b => b.MajorSubjectName == "Hóa");
+            Assert.NotNull(hoaDto);
+            Assert.Equal(0.15, hoaDto.TotalCredits);
+            Assert.Single(hoaDto.Components);
+            Assert.True(hoaDto.IsComplete);
+            Assert.Equal(7.5, hoaDto.FinalScore);
+        }
     }
 }

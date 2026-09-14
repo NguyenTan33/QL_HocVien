@@ -202,13 +202,33 @@ namespace QL_HocVien
 
                             if (Array.Exists(e.Args, a => a == "--modal") && mainWindow.DataContext is MainViewModel mv)
                             {
+                                int mIdx = Array.IndexOf(e.Args, "--modal");
+                                string mType = (mIdx >= 0 && mIdx < e.Args.Length - 1) ? e.Args[mIdx + 1].ToLowerInvariant() : string.Empty;
+
                                 if (mv.CurrentView is OfficerManagementViewModel offVm)
                                 {
                                     offVm.OpenAddFormCommand.Execute(null);
                                 }
                                 else if (mv.CurrentView is CreditSubjectManagementViewModel credVm)
                                 {
-                                    credVm.OpenAddSubjectFormCommand.Execute(null);
+                                    if (mType.Contains("breakdown"))
+                                    {
+                                        for (int waitCount = 0; waitCount < 30 && credVm.CadetSummaries.Count == 0; waitCount++)
+                                        {
+                                            System.Threading.Thread.Sleep(100);
+                                            mainWindow.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+                                        }
+
+                                        var targetCadet = credVm.CadetSummaries.FirstOrDefault();
+                                        if (targetCadet != null)
+                                        {
+                                            credVm.OpenBreakdownModalCommand.Execute(targetCadet);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        credVm.OpenAddSubjectFormCommand.Execute(null);
+                                    }
                                 }
                                 else if (mv.CurrentView is ClassManagementViewModel clsVm)
                                 {

@@ -289,6 +289,17 @@ namespace QL_HocVien.Tests
                 Assert.True(exportRes.Success, exportRes.Message);
                 Assert.True(File.Exists(tempFile));
 
+                // Kiểm tra tệp Excel không còn cột "Lớp"
+                using (var wb = new ClosedXML.Excel.XLWorkbook(tempFile))
+                {
+                    var ws = wb.Worksheets.First();
+                    var headerCells = ws.Row(4).CellsUsed().Select(c => c.GetString()).ToList();
+                    Assert.Equal(11, headerCells.Count);
+                    Assert.DoesNotContain(headerCells, h => h.Contains("Lớp", StringComparison.OrdinalIgnoreCase));
+                    Assert.Contains("Đơn vị", headerCells);
+                    Assert.Contains("Số điện thoại", headerCells);
+                }
+
                 // Nhập lại từ Excel
                 var importRes = await _excelService.ImportCadetsFromExcelAsync(tempFile);
                 Assert.True(importRes.Success, importRes.Message);

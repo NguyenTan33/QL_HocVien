@@ -623,12 +623,108 @@ namespace QL_HocVien.Services.Implementations
                 .OrderByDescending(s => s.ExamDate)
                 .ToListAsync();
 
-            var subjects = await _context.CreditSubjects.AsNoTracking().ToListAsync();
-            var dict = cadetScores
-                .GroupBy(s => s.CreditSubjectId)
-                .ToDictionary(g => g.Key, g => (double?)g.First().FinalScore);
+            var majorSubjects = await _context.CreditSubjects
+                .Include(s => s.Components)
+                .Where(s => !s.IsComponent)
+                .OrderBy(s => s.SubjectCode)
+                .ThenBy(s => s.Id)
+                .AsNoTracking()
+                .ToListAsync();
 
-            return _calculator.BuildMajorSubjectBreakdowns(subjects, dict);
+            if (majorSubjects.Count == 0)
+            {
+                majorSubjects = await _context.CreditSubjects
+                    .Include(s => s.Components)
+                    .OrderBy(s => s.SubjectCode)
+                    .ThenBy(s => s.Id)
+                    .AsNoTracking()
+                    .ToListAsync();
+            }
+
+            var compScores = cadetScores
+                .Where(s => s.ComponentId.HasValue && s.FinalScore >= 0)
+                .GroupBy(s => s.ComponentId!.Value)
+                .ToDictionary(g => g.Key, g => g.First().FinalScore);
+
+            var directSubjScores = cadetScores
+                .Where(s => s.FinalScore >= 0)
+                .GroupBy(s => s.CreditSubjectId)
+                .ToDictionary(g => g.Key, g => g.First().FinalScore);
+
+            var result = new List<MajorSubjectBreakdownDto>();
+
+            foreach (var subj in majorSubjects)
+            {
+                var compList = new List<ComponentScoreDto>();
+                var subjComps = (subj.Components ?? Enumerable.Empty<SubjectAssessmentComponent>())
+                    .OrderBy(c => c.OrderIndex)
+                    .ToList();
+
+                if (subjComps.Count > 0)
+                {
+                    double totalCompsCredits = Math.Round(subjComps.Sum(c => c.Credits), 2);
+                    if (totalCompsCredits <= 0) totalCompsCredits = subj.Credits > 0 ? subj.Credits : 1.0;
+
+                    foreach (var comp in subjComps)
+                    {
+                        double? score = compScores.TryGetValue(comp.Id, out var sc) ? sc : null;
+                        double weightRatio = totalCompsCredits > 0 ? comp.Credits / totalCompsCredits : 1.0;
+                        double? contrib = score.HasValue && score.Value >= 0
+                            ? Math.Round((score.Value * comp.Credits) / totalCompsCredits, 2)
+                            : null;
+
+                        compList.Add(new ComponentScoreDto
+                        {
+                            ComponentName = comp.ComponentName,
+                            Credits = comp.Credits,
+                            RecordedScore = score,
+                            WeightRatio = Math.Round(weightRatio, 4),
+                            ContributionScore = contrib
+                        });
+                    }
+
+                    bool isComplete = compList.All(c => c.RecordedScore.HasValue && c.RecordedScore.Value >= 0);
+                    double? finalScore = null;
+                    if (isComplete && totalCompsCredits > 0)
+                    {
+                        var pairs = subjComps.Select(c => (score: (double?)compScores[c.Id], credits: c.Credits));
+                        finalScore = _calculator.CalculateSubjectScoreFromComponents(pairs, totalCompsCredits);
+                    }
+
+                    result.Add(new MajorSubjectBreakdownDto
+                    {
+                        MajorSubjectName = subj.SubjectName,
+                        TotalCredits = totalCompsCredits,
+                        FinalScore = finalScore,
+                        IsComplete = isComplete,
+                        Components = compList
+                    });
+                }
+                else
+                {
+                    // Môn độc lập không có thành phần con
+                    double? score = directSubjScores.TryGetValue(subj.Id, out var ds) ? ds : null;
+                    compList.Add(new ComponentScoreDto
+                    {
+                        ComponentName = subj.SubjectName,
+                        Credits = subj.Credits,
+                        RecordedScore = score,
+                        WeightRatio = 1.0,
+                        ContributionScore = score
+                    });
+
+                    result.Add(new MajorSubjectBreakdownDto
+                    {
+                        MajorSubjectName = subj.SubjectName,
+                        TotalCredits = subj.Credits,
+                        FinalScore = score,
+                        IsComplete = score.HasValue && score.Value >= 0,
+                        Components = compList
+                    });
+                }
+            }
+
+            return result;
         }
 
         public async Task<(bool Success, string Message)> ExportAcademicReportAsync(
