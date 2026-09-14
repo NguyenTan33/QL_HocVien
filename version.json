@@ -1,7 +1,8 @@
 {
-  "latestVersion": "1.5.2",
+  "latestVersion": "1.5.8",
   "minimumVersion": "1.0.0",
   "mandatory": false,
-  "downloadUrl": "https://github.com/NguyenTan33/QL_HocVien/releases/download/v1.5.2/QL_HocVien.exe",
-  "releaseNotes": "Bản cập nhật v1.5.2:\n- Tối ưu hóa cây tổ chức đơn vị 7 cấp độ: hỗ trợ trùng mã đơn vị giữa các cấp cha khác nhau (ví dụ: c1 thuộc d1 và c1 thuộc d2), bảo vệ chống vòng lặp đệ quy.\n- Dual-Theme Engine: Chế độ Tác chiến dã chiến & Chế độ Hành chính công sở, sửa triệt để lỗi hiển thị lịch khi đổi theme.\n- Tinh gọn giao diện: Bỏ cột Thao tác và 2 nút dư thừa trên bảng học viên, tích hợp CheckBox chọn hàng loạt bằng BindingProxy.\n- CSDL thực tế chuẩn hóa: Khởi tạo duy nhất tài khoản admin (Admin@123) và bộ tiêu chuẩn thể lực TT32.\n- Hệ thống kiểm thử tự động: 131/131 Unit Tests Passed 100%."
+  "downloadUrl": "https://github.com/NguyenTan33/QL_HocVien/releases/download/v1.5.8/QL_HocVien.exe",
+  "releaseNotes": "Bản cập nhật v1.5.8:\n- Quản lý học viên: Chuyển đổi 'Năm nhập học' thành 'Ngày sinh' với DatePicker chuẩn hóa; Cột 'Tuổi' được tính toán tự động theo thời gian thực (không lưu cứng).\n- Đối chiếu nhập liệu Excel thông minh: Nhận diện mã học viên, tự động thêm mới nếu chưa có hoặc đối chiếu từng trường dữ liệu và cập nhật chính xác nếu có sai lệch; Báo cáo chi tiết số lượng thêm mới, cập nhật và giữ nguyên.\n- Xuất file Excel học viên: Bỏ cột 'Lớp học' theo chuẩn dữ liệu mới gồm 11 cột rõ ràng, trực quan.\n- Tối ưu hóa hiển thị Dual-Theme: Khắc phục triệt để hiện tượng chữ mờ/nhòe ở tiêu đề tổng quan trong Chế độ Hành chính và lỗi chữ trắng khó đọc tại lịch 'Trọng tâm trong tháng' trong Chế độ Tác chiến.\n- Kiểm thử tự động: Toàn bộ 136/136 bài kiểm thử (Unit Tests) hoàn thành 100%."
 }
+
