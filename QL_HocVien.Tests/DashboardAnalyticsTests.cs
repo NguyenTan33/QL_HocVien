@@ -619,5 +619,30 @@ namespace QL_HocVien.Tests
             Assert.True(summary.GraduationReadinessRate >= 0 && summary.GraduationReadinessRate <= 100);
             Assert.True(summary.TotalCreditSubjects >= 0);
         }
+
+        [Fact]
+        public void Test_FiveTier_AcademicGradingScale()
+        {
+            var cadetXs = new CadetAcademicSummaryDto { TotalSubjectsCompleted = 1, Gpa = 9.2 };
+            Assert.Equal("Xuất sắc", cadetXs.AcademicRating);
+
+            var cadetGioi = new CadetAcademicSummaryDto { TotalSubjectsCompleted = 1, Gpa = 8.5 };
+            Assert.Equal("Giỏi", cadetGioi.AcademicRating);
+
+            var cadetKha = new CadetAcademicSummaryDto { TotalSubjectsCompleted = 1, Gpa = 7.4 };
+            Assert.Equal("Khá", cadetKha.AcademicRating);
+
+            var cadetTb1 = new CadetAcademicSummaryDto { TotalSubjectsCompleted = 1, Gpa = 6.5 };
+            Assert.Equal("TB", cadetTb1.AcademicRating);
+
+            var cadetTb2 = new CadetAcademicSummaryDto { TotalSubjectsCompleted = 1, Gpa = 5.2 };
+            Assert.Equal("TB", cadetTb2.AcademicRating);
+
+            var cadetYeu = new CadetAcademicSummaryDto { TotalSubjectsCompleted = 1, Gpa = 4.8 };
+            Assert.Equal("Yếu", cadetYeu.AcademicRating);
+
+            var cadetNone = new CadetAcademicSummaryDto { TotalSubjectsCompleted = 0, Gpa = 0.0 };
+            Assert.Equal("Chưa có điểm", cadetNone.AcademicRating);
+        }
     }
 }

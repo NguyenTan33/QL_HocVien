@@ -163,8 +163,6 @@
 
                         <StackPanel Orientation="Horizontal" Grid.Column="0" VerticalAlignment="Center">
                             <TextBlock Text="🔍 BỘ LỌC NÂNG CAO HỌC VỤ &amp; TÍN CHỈ" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                            <TextBlock Text="(Lọc tức thời theo đơn vị, lớp, học kỳ, học phần tín chỉ, xếp loại và tình trạng môn)" 
-                                       FontSize="11.5" Foreground="{DynamicResource TextSecondaryBrush}" Margin="8,0,0,0" VerticalAlignment="Center"/>
                         </StackPanel>
 
                         <Button Grid.Column="1" Content="^ Mở Rộng / Thu Gọn" Style="{StaticResource SecondaryButtonStyle}" 
@@ -172,18 +170,16 @@
                     </Grid>
 
                     <StackPanel Visibility="{Binding IsAdvancedFilterExpanded, Converter={StaticResource BoolToVis}}">
-                        <!-- Hàng lọc 1: Đơn vị, Lớp, Học kỳ, Học phần, Xếp loại -->
+                        <!-- Hàng lọc 1: Đơn vị, Học kỳ, Học phần, Xếp loại -->
                         <Grid Margin="0,0,0,10">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="1.15*"/>
-                                <ColumnDefinition Width="10"/>
-                                <ColumnDefinition Width="1.15*"/>
-                                <ColumnDefinition Width="10"/>
-                                <ColumnDefinition Width="1.15*"/>
-                                <ColumnDefinition Width="10"/>
                                 <ColumnDefinition Width="1.4*"/>
-                                <ColumnDefinition Width="10"/>
-                                <ColumnDefinition Width="1*"/>
+                                <ColumnDefinition Width="12"/>
+                                <ColumnDefinition Width="1.1*"/>
+                                <ColumnDefinition Width="12"/>
+                                <ColumnDefinition Width="1.5*"/>
+                                <ColumnDefinition Width="12"/>
+                                <ColumnDefinition Width="1.1*"/>
                             </Grid.ColumnDefinitions>
 
                             <!-- Đơn vị -->
@@ -192,27 +188,21 @@
                                 <components:UnitTreeComboBox SelectedUnit="{Binding SelectedUnit, Mode=TwoWay}" IsFilterMode="True" Height="32" Placeholder="[ Tất cả đơn vị ]"/>
                             </StackPanel>
 
-                            <!-- Lớp -->
-                            <StackPanel Grid.Column="2">
-                                <TextBlock Text="Cấp Lớp / Phân đội:" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
-                                <ComboBox ItemsSource="{Binding ClassOptions}" SelectedItem="{Binding SelectedClass}" Height="32"/>
-                            </StackPanel>
-
                             <!-- Học kỳ -->
-                            <StackPanel Grid.Column="4">
+                            <StackPanel Grid.Column="2">
                                 <TextBlock Text="Học kỳ / Đợt thi:" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
                                 <ComboBox ItemsSource="{Binding SessionOptions}" SelectedItem="{Binding SelectedSession}" Height="32"/>
                             </StackPanel>
 
                             <!-- Môn tín chỉ -->
-                            <StackPanel Grid.Column="6">
+                            <StackPanel Grid.Column="4">
                                 <TextBlock Text="Học phần tín chỉ:" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
                                 <ComboBox ItemsSource="{Binding CreditSubjectOptions}" SelectedItem="{Binding SelectedCreditSubject}" 
                                           DisplayMemberPath="SubjectName" Height="32"/>
                             </StackPanel>
 
                             <!-- Xếp loại -->
-                            <StackPanel Grid.Column="8">
+                            <StackPanel Grid.Column="6">
                                 <TextBlock Text="Xếp loại học lực:" FontSize="11.5" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
                                 <ComboBox ItemsSource="{Binding GradeOptions}" SelectedItem="{Binding SelectedGrade}" Height="32"/>
                             </StackPanel>
@@ -307,8 +297,7 @@
                             </StackPanel>
                             <TextBlock Text="{Binding TotalCadets}" FontSize="28" FontWeight="ExtraBold" Foreground="{DynamicResource Kpi1ForegroundBrush}" Margin="0,2,0,0"/>
                             <TextBlock FontSize="10.5" Foreground="{DynamicResource Kpi1SubtextBrush}" Margin="0,2,0,0">
-                                <Run Text="{Binding TotalUnitsCount}"/> <Run Text="đơn vị • "/>
-                                <Run Text="{Binding TotalClassesCount}"/> <Run Text="lớp"/>
+                                <Run Text="{Binding TotalUnitsCount}"/> <Run Text="đơn vị trực thuộc"/>
                             </TextBlock>
                         </StackPanel>
                     </Grid>
@@ -370,14 +359,14 @@
                     <StackPanel>
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="🎯 " Foreground="{DynamicResource Kpi4ForegroundBrush}" FontSize="11" FontWeight="Bold"/>
-                            <TextBlock Text="ĐẠT CHUẨN TÍCH LŨY" FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource Kpi4ForegroundBrush}"/>
+                            <TextBlock Text="TIẾN ĐỘ TÍCH LŨY" FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource Kpi4ForegroundBrush}"/>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
                             <TextBlock Text="{Binding GraduationReadinessRate, StringFormat={}{0:F1}}" FontSize="28" FontWeight="ExtraBold" Foreground="{DynamicResource Kpi4ForegroundBrush}"/>
                             <TextBlock Text="%" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource Kpi4ForegroundBrush}" VerticalAlignment="Bottom" Margin="1,0,0,4"/>
                         </StackPanel>
                         <TextBlock FontSize="10.5" Foreground="{DynamicResource Kpi4SubtextBrush}" Margin="0,2,0,0">
-                            <Run Text="{Binding CompletedCadetsCount}"/> <Run Text="/"/> <Run Text="{Binding TotalCadets}"/> <Run Text="đ/c hoàn thành"/>
+                            <Run Text="{Binding CompletedCadetsCount}"/> <Run Text="/"/> <Run Text="{Binding TotalCadets}"/> <Run Text="học viên hoàn thành"/>
                         </TextBlock>
                     </StackPanel>
                 </Border>
@@ -398,7 +387,8 @@
                         </StackPanel>
                         <TextBlock FontSize="10.5" Foreground="{DynamicResource Kpi5SubtextBrush}" Margin="0,2,0,0">
                             <Run Text="{Binding ExcellentCount}"/> <Run Text="XS • "/>
-                            <Run Text="{Binding GoodCount}"/> <Run Text="Khá"/>
+                            <Run Text="{Binding GoodCount}"/> <Run Text="Giỏi • "/>
+                            <Run Text="{Binding FairCount}"/> <Run Text="Khá"/>
                         </TextBlock>
                     </StackPanel>
                 </Border>
@@ -447,7 +437,7 @@
                             <Grid Margin="0,0,0,10">
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                     <TextBlock Text="📊 " Foreground="{DynamicResource AccentBrush}" FontSize="13" FontWeight="Bold"/>
-                                    <TextBlock Text="PHÂN BỐ XẾP LOẠI HỌC LỰC &amp; TÍCH LŨY TÍN CHỈ" FontSize="12.5" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                    <TextBlock Text="PHÂN BỐ XẾP LOẠI HỌC LỰC" FontSize="12.5" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
                                 </StackPanel>
                                 <TextBlock Text="{Binding TotalCreditScores, StringFormat='Tổng số: {0} lượt điểm'}" 
                                            HorizontalAlignment="Right" FontSize="11.5" Foreground="#CBD5E1" FontWeight="SemiBold"/>
@@ -458,7 +448,7 @@
                                 <Grid>
                                     <ProgressBar Value="{Binding PassRate, Mode=OneWay}" Maximum="100" Height="24" 
                                                  Background="Transparent" Foreground="#139D4B" BorderThickness="0"/>
-                                    <TextBlock Text="{Binding PassRate, StringFormat='TỔNG TỶ LỆ QUA MÔN TÍCH LŨY: {0:F1}%'}" 
+                                    <TextBlock Text="{Binding PassRate, StringFormat='TỶ LỆ TÍCH LŨY ĐẠT (GPA ≥ 5.0): {0:F1}%'}" 
                                                FontSize="11.5" FontWeight="ExtraBold" Foreground="#FFFFFF" 
                                                HorizontalAlignment="Center" VerticalAlignment="Center">
                                         <TextBlock.Effect>
@@ -468,14 +458,14 @@
                                 </Grid>
                             </Border>
 
-                            <!-- 4 Thẻ Phân Bổ: Xuất Sắc (Tím), Giỏi (Lam), Khá / TB (Lục), Yếu / Nợ (Đỏ) -->
-                            <UniformGrid Columns="4" Margin="0,0,0,2">
+                            <!-- 5 Thẻ Phân Bổ: Xuất Sắc (Tím), Giỏi (Lam), Khá (Lục), TB (Hổ phách), Yếu (Đỏ) -->
+                            <UniformGrid Columns="5" Margin="-3,0,-3,2">
                                 <!-- Xuất sắc -->
-                                <Border Background="#ECE0FD" BorderBrush="#DDD6FE" BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,0,8,0">
+                                <Border Background="#ECE0FD" BorderBrush="#DDD6FE" BorderThickness="1" CornerRadius="6" Padding="8,8" Margin="3,0">
                                     <StackPanel>
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="★ " Foreground="#7C3AED" FontWeight="Bold" FontSize="12"/>
-                                            <TextBlock Text="Xuất sắc (≥ 9.0)" FontSize="11.5" FontWeight="Bold" Foreground="#5B21B6"/>
+                                            <TextBlock Text="★ " Foreground="#7C3AED" FontWeight="Bold" FontSize="11"/>
+                                            <TextBlock Text="Xuất sắc (≥ 9.0)" FontSize="10.5" FontWeight="Bold" Foreground="#5B21B6"/>
                                         </StackPanel>
                                         <TextBlock FontSize="13" FontWeight="ExtraBold" Foreground="#7C3AED" Margin="0,4,0,0">
                                             <Run Text="{Binding ExcellentCount}"/> <Run Text="lượt" FontSize="10" FontWeight="Normal" Foreground="#6B7280"/>
@@ -484,11 +474,11 @@
                                 </Border>
 
                                 <!-- Giỏi -->
-                                <Border Background="#DBEAFE" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,0,8,0">
+                                <Border Background="#DBEAFE" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="6" Padding="8,8" Margin="3,0">
                                     <StackPanel>
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="🏅 " Foreground="#2563EB" FontWeight="Bold" FontSize="12"/>
-                                            <TextBlock Text="Giỏi (8.0 - 8.9)" FontSize="11.5" FontWeight="Bold" Foreground="#1E40AF"/>
+                                            <TextBlock Text="🏅 " Foreground="#2563EB" FontWeight="Bold" FontSize="11"/>
+                                            <TextBlock Text="Giỏi (8.0 - 8.9)" FontSize="10.5" FontWeight="Bold" Foreground="#1E40AF"/>
                                         </StackPanel>
                                         <TextBlock FontSize="13" FontWeight="ExtraBold" Foreground="#2563EB" Margin="0,4,0,0">
                                             <Run Text="{Binding GoodCount}"/> <Run Text="lượt" FontSize="10" FontWeight="Normal" Foreground="#6B7280"/>
@@ -496,25 +486,38 @@
                                     </StackPanel>
                                 </Border>
 
-                                <!-- Khá / Đạt -->
-                                <Border Background="#DCFCE7" BorderBrush="#BBF7D0" BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,0,8,0">
+                                <!-- Khá -->
+                                <Border Background="#DCFCE7" BorderBrush="#BBF7D0" BorderThickness="1" CornerRadius="6" Padding="8,8" Margin="3,0">
                                     <StackPanel>
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="✔ " Foreground="#16A34A" FontWeight="Bold" FontSize="12"/>
-                                            <TextBlock Text="Khá &amp; TB (≥ 5.0)" FontSize="11.5" FontWeight="Bold" Foreground="#166534"/>
+                                            <TextBlock Text="✔ " Foreground="#16A34A" FontWeight="Bold" FontSize="11"/>
+                                            <TextBlock Text="Khá (7.0 - 7.9)" FontSize="10.5" FontWeight="Bold" Foreground="#166534"/>
                                         </StackPanel>
                                         <TextBlock FontSize="13" FontWeight="ExtraBold" Foreground="#16A34A" Margin="0,4,0,0">
-                                            <Run Text="{Binding PassCount}"/> <Run Text="lượt" FontSize="10" FontWeight="Normal" Foreground="#6B7280"/>
+                                            <Run Text="{Binding FairCount}"/> <Run Text="lượt" FontSize="10" FontWeight="Normal" Foreground="#6B7280"/>
                                         </TextBlock>
                                     </StackPanel>
                                 </Border>
 
-                                <!-- Yếu / Trượt -->
-                                <Border Background="#FEE2E2" BorderBrush="#FECACA" BorderThickness="1" CornerRadius="6" Padding="10,8">
+                                <!-- TB -->
+                                <Border Background="#FEF3C7" BorderBrush="#FDE68A" BorderThickness="1" CornerRadius="6" Padding="8,8" Margin="3,0">
                                     <StackPanel>
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="✖ " Foreground="#DC2626" FontWeight="Bold" FontSize="12"/>
-                                            <TextBlock Text="Yếu / Nợ môn" FontSize="11.5" FontWeight="Bold" Foreground="#991B1B"/>
+                                            <TextBlock Text="⚖ " Foreground="#D97706" FontWeight="Bold" FontSize="11"/>
+                                            <TextBlock Text="TB (5.0 - 6.9)" FontSize="10.5" FontWeight="Bold" Foreground="#B45309"/>
+                                        </StackPanel>
+                                        <TextBlock FontSize="13" FontWeight="ExtraBold" Foreground="#D97706" Margin="0,4,0,0">
+                                            <Run Text="{Binding AverageCount}"/> <Run Text="lượt" FontSize="10" FontWeight="Normal" Foreground="#6B7280"/>
+                                        </TextBlock>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Yếu -->
+                                <Border Background="#FEE2E2" BorderBrush="#FECACA" BorderThickness="1" CornerRadius="6" Padding="8,8" Margin="3,0">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="✖ " Foreground="#DC2626" FontWeight="Bold" FontSize="11"/>
+                                            <TextBlock Text="Yếu (&lt; 5.0)" FontSize="10.5" FontWeight="Bold" Foreground="#991B1B"/>
                                         </StackPanel>
                                         <TextBlock FontSize="13" FontWeight="ExtraBold" Foreground="#DC2626" Margin="0,4,0,0">
                                             <Run Text="{Binding FailCount}"/> <Run Text="lượt" FontSize="10" FontWeight="Normal" Foreground="#6B7280"/>
@@ -533,7 +536,7 @@
                                     <TextBlock Text="🏆 " Foreground="{DynamicResource AccentBrush}" FontSize="13" FontWeight="Bold"/>
                                     <TextBlock Text="XẾP HẠNG THI ĐUA HỌC VỤ ĐƠN VỊ" FontSize="12.5" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
                                 </StackPanel>
-                                <TextBlock Text="Đo lường theo Điểm TB (GPA) &amp; Tỷ lệ Đạt chuẩn học phần" HorizontalAlignment="Right" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Text="Đo lường theo Điểm TB (GPA) và Tỷ lệ Đạt" HorizontalAlignment="Right" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             </Grid>
 
                             <ItemsControl ItemsSource="{Binding UnitLeaderboard}">
@@ -603,8 +606,8 @@
                                        HorizontalAlignment="Right" FontSize="11.5" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}"/>
                         </Grid>
 
-                        <TextBlock Text="Các mốc sự kiện kiểm tra, thi cử, rèn luyện trong tháng xếp từ ngày gần nhất đến xa nhất:" 
-                                   FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                        <TextBlock Text="Các mốc sự kiện trong tháng:" 
+                                   FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8"/>
 
                         <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="340">
                             <ItemsControl ItemsSource="{Binding MonthlyFocusEvents}">
@@ -660,11 +663,9 @@
                         <Border Padding="14">
                             <StackPanel>
                                 <Grid Margin="0,0,0,12">
-                                    <StackPanel>
-                                        <TextBlock Text="Bảng Vàng Biểu Dương Học Viên Có Điểm GPA &amp; Tích Lũy Tín Chỉ Dẫn Đầu" 
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="Bảng Vàng Biểu Dương Học Viên Dẫn Đầu" 
                                                    FontSize="14" FontWeight="Bold" Foreground="#22C55E"/>
-                                        <TextBlock Text="Tôn vinh các học viên có thành tích học tập xuất sắc, tích lũy vượt chuẩn và xếp loại học lực Giỏi/Xuất sắc:" 
-                                                   FontSize="11.5" Foreground="#CBD5E1"/>
                                     </StackPanel>
                                     <TextBlock Text="{Binding HonoredCadets.Count, StringFormat='{}{0} gương mặt tiêu biểu'}" 
                                                HorizontalAlignment="Right" VerticalAlignment="Center" FontWeight="Bold" Foreground="#22C55E"/>
@@ -674,15 +675,14 @@
                                           AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" MaxHeight="500">
                                     <DataGrid.Columns>
                                         <DataGridTextColumn Header="Mã HV" Binding="{Binding CadetCode}" FontWeight="Bold" Width="100"/>
-                                        <DataGridTextColumn Header="Họ và Tên" Binding="{Binding FullName}" FontWeight="Bold" Width="170"/>
+                                        <DataGridTextColumn Header="Họ và Tên" Binding="{Binding FullName}" FontWeight="Bold" Width="180"/>
                                         <DataGridTextColumn Header="Cấp Bậc" Binding="{Binding Rank}" Width="90"/>
-                                        <DataGridTextColumn Header="Đơn Vị" Binding="{Binding Unit}" Width="100"/>
-                                        <DataGridTextColumn Header="Lớp" Binding="{Binding ClassName}" Width="120"/>
+                                        <DataGridTextColumn Header="Đơn Vị" Binding="{Binding Unit}" Width="110"/>
                                         <DataGridTextColumn Header="Điểm GPA" Binding="{Binding Gpa, StringFormat='{}{0:F2}'}" FontWeight="ExtraBold" Foreground="#10B981" Width="100"/>
                                         <DataGridTextColumn Header="Tín Chỉ Đạt" Binding="{Binding TotalCreditsEarned, StringFormat='{}{0:F1} TC'}" FontWeight="Bold" Width="105"/>
                                         <DataGridTextColumn Header="Danh Hiệu Vinh Danh" Binding="{Binding HonorTitle}" FontWeight="Bold" Foreground="#22C55E" Width="180"/>
                                         <DataGridTextColumn Header="Môn Đạt XS" Binding="{Binding ExcellentExams, StringFormat='{}{0} môn'}" FontWeight="Bold" Foreground="#A855F7" Width="100"/>
-                                        <DataGridTextColumn Header="Học Phần Tiêu Biểu" Binding="{Binding BestSubject}" Width="180"/>
+                                        <DataGridTextColumn Header="Học Phần Tiêu Biểu" Binding="{Binding BestSubject}" Width="190"/>
                                         <DataGridTextColumn Header="Điểm Cao Nhất" Binding="{Binding BestScore}" FontWeight="Bold" Width="*"/>
                                     </DataGrid.Columns>
                                 </DataGrid>
@@ -695,11 +695,9 @@
                         <Border Padding="14">
                             <StackPanel>
                                 <Grid Margin="0,0,0,12">
-                                    <StackPanel>
-                                        <TextBlock Text="Danh Sách Cảnh Báo Học Vụ, Nợ Học Phần &amp; Điểm GPA Thấp Cần Phụ Đạo" 
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="Danh Sách Cảnh Báo Học Vụ &amp; Nợ Học Phần" 
                                                    FontSize="14" FontWeight="Bold" Foreground="#EF4444"/>
-                                        <TextBlock Text="Hệ thống tự động phát hiện học viên có GPA dưới chuẩn hoặc còn nợ môn tín chỉ để chỉ huy đơn vị kịp thời xử lý:" 
-                                                   FontSize="11.5" Foreground="#CBD5E1"/>
                                     </StackPanel>
                                     <TextBlock Text="{Binding AcademicWarnings.Count, StringFormat='{}{0} đồng chí cần theo dõi'}" 
                                                HorizontalAlignment="Right" VerticalAlignment="Center" FontWeight="Bold" Foreground="#EF4444"/>
@@ -709,10 +707,9 @@
                                           AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" MaxHeight="500">
                                     <DataGrid.Columns>
                                         <DataGridTextColumn Header="Mã HV" Binding="{Binding CadetCode}" FontWeight="Bold" Width="95"/>
-                                        <DataGridTextColumn Header="Họ và Tên" Binding="{Binding FullName}" Width="160"/>
+                                        <DataGridTextColumn Header="Họ và Tên" Binding="{Binding FullName}" Width="170"/>
                                         <DataGridTextColumn Header="Cấp Bậc" Binding="{Binding Rank}" Width="85"/>
-                                        <DataGridTextColumn Header="Đơn Vị" Binding="{Binding Unit}" Width="95"/>
-                                        <DataGridTextColumn Header="Lớp" Binding="{Binding ClassName}" Width="110"/>
+                                        <DataGridTextColumn Header="Đơn Vị" Binding="{Binding Unit}" Width="105"/>
                                         <DataGridTextColumn Header="Điểm GPA" Binding="{Binding Gpa, StringFormat='{}{0:F2}'}" FontWeight="ExtraBold" Foreground="#EF4444" Width="85"/>
                                         <DataGridTextColumn Header="Nợ/Thiếu Môn" Binding="{Binding FailedSubjectsCount, StringFormat='{}{0} môn'}" FontWeight="Bold" Foreground="#EF4444" Width="105"/>
                                         <DataGridTextColumn Header="Chi Tiết Môn Nợ / Thiếu" Binding="{Binding FailedSubjectsDisplay}" Foreground="#EF4444" Width="200"/>
@@ -730,11 +727,9 @@
                         <Border Padding="14">
                             <StackPanel>
                                 <Grid Margin="0,0,0,12">
-                                    <StackPanel>
-                                        <TextBlock Text="Bảng Phân Tích Chất Lượng &amp; Hiệu Suất Từng Học Phần Đào Tạo Tín Chỉ" 
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="Bảng Phân Tích Hiệu Suất Từng Học Phần Tín Chỉ" 
                                                    FontSize="14" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}"/>
-                                        <TextBlock Text="Đo lường phổ điểm, tỷ lệ qua môn, tỷ lệ giỏi xuất sắc và mức độ khó của từng bộ môn tín chỉ:" 
-                                                   FontSize="11.5" Foreground="#CBD5E1"/>
                                     </StackPanel>
                                     <TextBlock Text="{Binding SubjectPerformances.Count, StringFormat='{}{0} môn học'}" 
                                                HorizontalAlignment="Right" VerticalAlignment="Center" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}"/>
@@ -759,16 +754,14 @@
                         </Border>
                     </TabItem>
 
-                    <!-- ==================== TAB 4: THI ĐUA ĐƠN VỊ & CẤP LỚP ==================== -->
-                    <TabItem Header="🎖️  Thi Đua Đơn Vị &amp; Cấp Lớp" Style="{StaticResource TabHeaderStyle}">
+                    <!-- ==================== TAB 4: THI ĐUA ĐƠN VỊ ==================== -->
+                    <TabItem Header="🎖️  Xếp Hạng Thi Đua Đơn Vị" Style="{StaticResource TabHeaderStyle}">
                         <Border Padding="14">
                             <StackPanel>
                                 <Grid Margin="0,0,0,12">
-                                    <StackPanel>
-                                        <TextBlock Text="Bảng Tổng Hợp Chỉ Tiêu Thi Đua Học Thuật Toàn Viện Theo Đơn Vị &amp; Cấp Lớp" 
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="Bảng Tổng Hợp Chỉ Tiêu Thi Đua Học Thuật Theo Đơn Vị" 
                                                    FontSize="14" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                        <TextBlock Text="Xếp hạng học vụ dựa trên Điểm GPA trung bình, tỷ lệ hoàn thành tín chỉ và tỷ lệ sinh viên Giỏi/Xuất sắc:" 
-                                                   FontSize="11.5" Foreground="#CBD5E1"/>
                                     </StackPanel>
                                 </Grid>
 

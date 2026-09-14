@@ -30,7 +30,7 @@ namespace QL_HocVien.ViewModels
         public ObservableCollection<Subject> SubjectOptions { get; } = new();
         public ObservableCollection<string> GradeOptions { get; } = new()
         {
-            "Tất cả", "Giỏi", "Khá", "Trung bình", "Yếu"
+            "Tất cả", "Xuất sắc", "Giỏi", "Khá", "TB", "Yếu"
         };
         public ObservableCollection<string> StatusOptions { get; } = new()
         {
@@ -121,6 +121,15 @@ namespace QL_HocVien.ViewModels
         private int _passCount;
 
         [ObservableProperty]
+        private double _passRateOnly;
+
+        [ObservableProperty]
+        private int _averageCount;
+
+        [ObservableProperty]
+        private double _averageRate;
+
+        [ObservableProperty]
         private int _failCount;
 
         [ObservableProperty]
@@ -208,10 +217,6 @@ namespace QL_HocVien.ViewModels
                 UnitOptions.Clear();
                 foreach (var u in units) UnitOptions.Add(u);
 
-                var classes = await _analyticsService.GetAvailableClassesAsync();
-                ClassOptions.Clear();
-                foreach (var c in classes) ClassOptions.Add(c);
-
                 var sessions = await _analyticsService.GetAvailableSessionsAsync();
                 SessionOptions.Clear();
                 foreach (var s in sessions) SessionOptions.Add(s);
@@ -277,7 +282,7 @@ namespace QL_HocVien.ViewModels
                 var criteria = new DashboardFilterCriteria
                 {
                     Unit = SelectedUnit,
-                    ClassName = SelectedClass,
+                    ClassName = null,
                     ExamSession = SelectedSession,
                     SubjectId = SelectedCreditSubject?.Id ?? SelectedSubject?.Id,
                     Grade = SelectedGrade,
@@ -306,6 +311,9 @@ namespace QL_HocVien.ViewModels
                 GoodCount = summary.GoodCount;
                 FairCount = summary.FairCount;
                 PassCount = summary.PassCount;
+                AverageCount = summary.AverageCount;
+                AverageRate = summary.AverageRate;
+                PassRateOnly = summary.PassRateOnly;
                 FailCount = summary.FailCount;
                 FailRate = summary.FailRate;
                 WarningCount = summary.WarningCount;
@@ -352,7 +360,7 @@ namespace QL_HocVien.ViewModels
                 CumulativeCadets.Clear();
                 foreach (var c in cumulative) CumulativeCadets.Add(c);
 
-                StatusMessage = $"Cập nhật thành công số liệu học vụ: {TotalCadets} học viên, Điểm TB GPA {AverageGpa:F2}/10, Tỷ lệ đạt chuẩn {GraduationReadinessRate:F1}%.";
+                StatusMessage = $"Cập nhật thành công số liệu học vụ: {TotalCadets} học viên, Điểm TB GPA {AverageGpa:F2}/10, Tỷ lệ Đạt {GraduationReadinessRate:F1}%.";
             }
             catch (Exception ex)
             {
@@ -421,6 +429,7 @@ namespace QL_HocVien.ViewModels
                     GoodCount = GoodCount,
                     FairCount = FairCount,
                     PassCount = PassCount,
+                    AverageCount = AverageCount,
                     FailCount = FailCount,
                     WarningCount = WarningCount,
                     CompletedCadetsCount = CompletedCadetsCount,

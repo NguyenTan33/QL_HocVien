@@ -81,9 +81,10 @@ namespace QL_HocVien.Services.Implementations
             }
             int totalScoresCount = await scoresQuery.CountAsync();
 
-            int excellentCount = cadets.Count(c => c.AcademicRating == "Giỏi");
-            int goodCount = cadets.Count(c => c.AcademicRating == "Khá");
-            int fairCount = cadets.Count(c => c.AcademicRating == "Trung bình");
+            int excellentCount = cadets.Count(c => c.AcademicRating == "Xuất sắc");
+            int goodCount = cadets.Count(c => c.AcademicRating == "Giỏi");
+            int fairCount = cadets.Count(c => c.AcademicRating == "Khá");
+            int averageCount = cadets.Count(c => c.AcademicRating == "TB" || c.AcademicRating == "Trung bình");
             int weakCount = cadets.Count(c => c.AcademicRating == "Yếu");
             int completedCount = cadets.Count(c => !c.HasMissingSubjects);
             int warningCount = cadets.Count(c => c.HasMissingSubjects || c.Gpa < 5.0);
@@ -96,7 +97,7 @@ namespace QL_HocVien.Services.Implementations
             {
                 TotalCadets = totalCadets,
                 TotalUnitsCount = totalUnits,
-                TotalClassesCount = totalClasses,
+                TotalClassesCount = 0,
                 TotalCreditSubjects = totalCreditSubjects,
                 TotalCreditScores = totalScoresCount,
                 TotalTestedSubjects = totalCreditSubjects,
@@ -106,7 +107,8 @@ namespace QL_HocVien.Services.Implementations
                 ExcellentCount = excellentCount,
                 GoodCount = goodCount,
                 FairCount = fairCount,
-                PassCount = excellentCount + goodCount + fairCount,
+                PassCount = 0,
+                AverageCount = averageCount,
                 FailCount = weakCount,
                 WarningCount = warningCount,
                 CompletedCadetsCount = completedCount
@@ -123,8 +125,8 @@ namespace QL_HocVien.Services.Implementations
             foreach (var u in academicData.UnitComparisons)
             {
                 int totalCadets = u.TotalCadets;
-                int passed = u.ExcellentCount + u.GoodCount + u.AverageCount;
-                int elite = u.ExcellentCount + u.GoodCount;
+                int passed = totalCadets - u.WeakCount;
+                int elite = u.ExcellentCount + u.GoodCount + u.FairCount;
 
                 list.Add(new UnitLeaderboardDto
                 {
@@ -136,7 +138,7 @@ namespace QL_HocVien.Services.Implementations
                     FailedCount = u.WeakCount,
                     ExcellentCount = u.ExcellentCount,
                     GoodCount = u.GoodCount,
-                    FairCount = u.AverageCount,
+                    FairCount = u.FairCount,
                     AverageGpa = u.AverageGpa
                 });
             }

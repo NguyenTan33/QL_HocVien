@@ -2978,7 +2978,7 @@ namespace QL_HocVien.Services.Implementations
                     ws1.Cell("A5").Value = "I. CHỈ SỐ HỌC VỤ CHIẾN LƯỢC TOÀN VIỆN";
                     ws1.Range("A5:G5").Merge().Style.Font.SetBold().Font.SetFontSize(12).Font.SetFontColor(XLColor.FromHtml("#1E3A8A"));
 
-                    string[] kpiHeaders = { "Tổng Quân Số", "Học Phần Tín Chỉ", "Điểm TB GPA Toàn Viện", "Tỷ Lệ Đạt Chuẩn", "Tỷ Lệ Giỏi / Khá", "Cảnh Báo Nợ Môn", "Đánh Giá Học Vụ" };
+                    string[] kpiHeaders = { "Tổng Quân Số", "Học Phần Tín Chỉ", "Điểm TB GPA Toàn Viện", "Tỷ Lệ Tích Lũy Đạt", "Tỷ Lệ Giỏi / Khá", "Cảnh Báo Nợ Môn", "Đánh Giá Học Vụ" };
                     for (int i = 0; i < kpiHeaders.Length; i++)
                     {
                         var cell = ws1.Cell(6, i + 1);
@@ -3017,10 +3017,11 @@ namespace QL_HocVien.Services.Implementations
 
                     int totalEvaluated = summary.TotalCadets > 0 ? summary.TotalCadets : 1;
                     (string Tier, string Criteria, int Count, string Note, string ColorHex)[] distData = {
-                        ("Xuất sắc / Giỏi", "GPA >= 8.0", summary.ExcellentCount, $"{summary.ExcellentCount * 100.0 / totalEvaluated:F1}%", "Khen thưởng, đưa vào danh sách nguồn cán bộ"),
-                        ("Khá", "7.0 <= GPA < 8.0", summary.GoodCount, $"{summary.GoodCount * 100.0 / totalEvaluated:F1}%", "Đạt yêu cầu đào tạo chính quy, duy trì phong độ"),
-                        ("Trung bình", "5.0 <= GPA < 7.0", summary.FairCount, $"{summary.FairCount * 100.0 / totalEvaluated:F1}%", "Cần kèm cặp nâng cao các học phần cơ sở ngành"),
-                        ("Yếu / Cảnh báo nợ môn", "GPA < 5.0 hoặc nợ môn", summary.FailCount, $"{summary.FailCount * 100.0 / totalEvaluated:F1}%", "Đưa vào diện phụ đạo học kỳ hè, bố trí thi lại")
+                        ("Xuất sắc", "GPA >= 9.0", summary.ExcellentCount, $"{summary.ExcellentCount * 100.0 / totalEvaluated:F1}%", "Khen thưởng tiêu biểu, nguồn cán bộ"),
+                        ("Giỏi", "8.0 <= GPA < 9.0", summary.GoodCount, $"{summary.GoodCount * 100.0 / totalEvaluated:F1}%", "Học lực giỏi, biểu dương khen thưởng"),
+                        ("Khá", "7.0 <= GPA < 8.0", summary.FairCount, $"{summary.FairCount * 100.0 / totalEvaluated:F1}%", "Đạt yêu cầu đào tạo chính quy, duy trì phong độ"),
+                        ("Trung bình (TB)", "5.0 <= GPA < 7.0", summary.AverageCount, $"{summary.AverageCount * 100.0 / totalEvaluated:F1}%", "Hoàn thành nội dung đào tạo"),
+                        ("Yếu", "GPA < 5.0", summary.FailCount, $"{summary.FailCount * 100.0 / totalEvaluated:F1}%", "Đưa vào diện phụ đạo, bố trí thi lại")
                     };
 
                     int distRow = 11;

@@ -21,6 +21,7 @@ namespace QL_HocVien.Models.DTOs
         public int GoodCount { get; set; }
         public int FairCount { get; set; }
         public int PassCount { get; set; }
+        public int AverageCount { get; set; }
         public int FailCount { get; set; }
         public int TotalTestedSubjects { get; set; }
 
@@ -48,6 +49,12 @@ namespace QL_HocVien.Models.DTOs
             set { }
         }
 
+        public double AverageRate
+        {
+            get => TotalExamRecords > 0 ? Math.Round((double)AverageCount / TotalExamRecords * 100, 1) : 0;
+            set { }
+        }
+
         public double OverallPassRate
         {
             get => TotalExamRecords > 0 ? Math.Round((double)(TotalExamRecords - FailCount) / TotalExamRecords * 100, 1) : 100;
@@ -68,7 +75,7 @@ namespace QL_HocVien.Models.DTOs
 
         public double EliteRate
         {
-            get => Math.Round(ExcellentRate + GoodRate, 1);
+            get => Math.Round(ExcellentRate + GoodRate + FairRate, 1);
             set { }
         }
 
@@ -83,10 +90,10 @@ namespace QL_HocVien.Models.DTOs
             get
             {
                 if (TotalExamRecords == 0) return "Chưa có dữ liệu";
-                if (OverallPassRate >= 100 && ExcellentRate >= 50) return "Đơn vị Đạt Xuất Sắc";
-                if (OverallPassRate >= 95 && (ExcellentRate + GoodRate) >= 50) return "Đơn vị Đạt Chuẩn Giỏi";
-                if (OverallPassRate >= 90 && (ExcellentRate + GoodRate + FairRate) >= 50) return "Đơn vị Đạt Chuẩn Khá";
-                return "Đơn vị Đạt Mức Trung Bình";
+                if (OverallPassRate >= 100 && ExcellentRate >= 50) return "Xuất sắc";
+                if (OverallPassRate >= 95 && (ExcellentRate + GoodRate) >= 50) return "Giỏi";
+                if (OverallPassRate >= 90 && (ExcellentRate + GoodRate + FairRate) >= 50) return "Khá";
+                return "Trung bình";
             }
             set { }
         }

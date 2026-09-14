@@ -12,12 +12,18 @@ namespace QL_HocVien.Models.DTOs
         public int TotalCadetsEvaluated { get; set; }
         public double AverageGpa { get; set; }
 
-        // Xếp loại học lực chung
+        // Xếp loại học lực chung (6 mức chuẩn)
         public int ExcellentCount { get; set; }
         public double ExcellentPercentage { get; set; }
 
         public int GoodCount { get; set; }
         public double GoodPercentage { get; set; }
+
+        public int FairCount { get; set; }
+        public double FairPercentage { get; set; }
+
+        public int PassCount { get; set; }
+        public double PassPercentage { get; set; }
 
         public int AverageCount { get; set; }
         public double AveragePercentage { get; set; }
@@ -53,6 +59,12 @@ namespace QL_HocVien.Models.DTOs
 
         public int GoodCount { get; set; }
         public double GoodRate { get; set; }
+
+        public int FairCount { get; set; }
+        public double FairRate { get; set; }
+
+        public int PassCount { get; set; }
+        public double PassRate { get; set; }
 
         public int AverageCount { get; set; }
         public double AverageRate { get; set; }
@@ -110,9 +122,11 @@ namespace QL_HocVien.Models.DTOs
         {
             get
             {
+                if (TotalCreditsEarned <= 0 && Gpa <= 0) return "Chưa có điểm";
+                if (Gpa >= 9.0) return "Xuất sắc";
                 if (Gpa >= 8.0) return "Giỏi";
                 if (Gpa >= 7.0) return "Khá";
-                if (Gpa >= 5.0) return "Trung bình";
+                if (Gpa >= 5.0) return "TB";
                 if (Gpa > 0) return "Yếu";
                 return "Chưa có điểm";
             }
@@ -121,17 +135,19 @@ namespace QL_HocVien.Models.DTOs
         public string RatingColor => ThemeService.CurrentIsCombatMode
             ? (AcademicRating switch
             {
+                "Xuất sắc" => "#C084FC",
                 "Giỏi" => "#93C5FD",
                 "Khá" => "#86EFAC",
-                "Trung bình" => "#FDE047",
+                "TB" or "Trung bình" => "#FCD34D",
                 "Yếu" => "#FCA5A5",
                 _ => "#B9B99E"
             })
             : (AcademicRating switch
             {
+                "Xuất sắc" => "#7C3AED",
                 "Giỏi" => "#1E40AF",
                 "Khá" => "#166534",
-                "Trung bình" => "#92400E",
+                "TB" or "Trung bình" => "#92400E",
                 "Yếu" => "#991B1B",
                 _ => "#475569"
             });
@@ -139,17 +155,19 @@ namespace QL_HocVien.Models.DTOs
         public string RatingBackground => ThemeService.CurrentIsCombatMode
             ? (AcademicRating switch
             {
+                "Xuất sắc" => "#3B1B54",
                 "Giỏi" => "#1E3048",
                 "Khá" => "#183622",
-                "Trung bình" => "#3D3014",
+                "TB" or "Trung bình" => "#3D3014",
                 "Yếu" => "#421818",
                 _ => "#253628"
             })
             : (AcademicRating switch
             {
+                "Xuất sắc" => "#F3E8FF",
                 "Giỏi" => "#DBEAFE",
                 "Khá" => "#DCFCE7",
-                "Trung bình" => "#FEF3C7",
+                "TB" or "Trung bình" => "#FEF3C7",
                 "Yếu" => "#FEE2E2",
                 _ => "#F1F5F9"
             });

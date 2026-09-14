@@ -64,7 +64,8 @@ namespace QL_HocVien.Models.DTOs
         {
             get
             {
-                if (TotalSubjectsCompleted == 0) return "Chưa có điểm";
+                if (TotalSubjectsCompleted == 0 && Gpa <= 0) return "Chưa có điểm";
+                if (Gpa >= 9.0) return "Xuất sắc";
                 if (Gpa >= 8.0) return "Giỏi";
                 if (Gpa >= 7.0) return "Khá";
                 if (Gpa >= 5.0) return "TB";
@@ -78,17 +79,19 @@ namespace QL_HocVien.Models.DTOs
             get => ThemeService.CurrentIsCombatMode
                 ? (AcademicRating switch
                 {
+                    "Xuất sắc" => "#C084FC",
                     "Giỏi" => "#93C5FD",
                     "Khá" => "#86EFAC",
-                    "TB" => "#FCD34D",
+                    "TB" or "Trung bình" => "#FCD34D",
                     "Yếu" => "#FCA5A5",
                     _ => "#CBD5E1"
                 })
                 : (AcademicRating switch
                 {
+                    "Xuất sắc" => "#7C3AED",
                     "Giỏi" => "#1E40AF",
                     "Khá" => "#166534",
-                    "TB" => "#92400E",
+                    "TB" or "Trung bình" => "#92400E",
                     "Yếu" => "#991B1B",
                     _ => "#475569"
                 });
@@ -100,17 +103,19 @@ namespace QL_HocVien.Models.DTOs
             get => ThemeService.CurrentIsCombatMode
                 ? (AcademicRating switch
                 {
+                    "Xuất sắc" => "#3B1B54",
                     "Giỏi" => "#1E3A5F",
                     "Khá" => "#143D24",
-                    "TB" => "#452A12",
+                    "TB" or "Trung bình" => "#452A12",
                     "Yếu" => "#4A1A1A",
                     _ => "#253628"
                 })
                 : (AcademicRating switch
                 {
+                    "Xuất sắc" => "#F3E8FF",
                     "Giỏi" => "#DBEAFE",
                     "Khá" => "#DCFCE7",
-                    "TB" => "#FEF3C7",
+                    "TB" or "Trung bình" => "#FEF3C7",
                     "Yếu" => "#FEE2E2",
                     _ => "#F1F5F9"
                 });

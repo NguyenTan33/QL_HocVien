@@ -115,13 +115,19 @@ namespace QL_HocVien.Services.Implementations
             if (result.TotalCadetsEvaluated > 0)
             {
                 result.AverageGpa = Math.Round(cadetAnalyticsList.Average(c => c.Gpa), 2);
-                result.ExcellentCount = cadetAnalyticsList.Count(c => c.AcademicRating == "Giỏi");
+                result.ExcellentCount = cadetAnalyticsList.Count(c => c.AcademicRating == "Xuất sắc");
                 result.ExcellentPercentage = Math.Round((double)result.ExcellentCount * 100.0 / result.TotalCadetsEvaluated, 1);
 
-                result.GoodCount = cadetAnalyticsList.Count(c => c.AcademicRating == "Khá");
+                result.GoodCount = cadetAnalyticsList.Count(c => c.AcademicRating == "Giỏi");
                 result.GoodPercentage = Math.Round((double)result.GoodCount * 100.0 / result.TotalCadetsEvaluated, 1);
 
-                result.AverageCount = cadetAnalyticsList.Count(c => c.AcademicRating == "Trung bình");
+                result.FairCount = cadetAnalyticsList.Count(c => c.AcademicRating == "Khá");
+                result.FairPercentage = Math.Round((double)result.FairCount * 100.0 / result.TotalCadetsEvaluated, 1);
+
+                result.PassCount = 0;
+                result.PassPercentage = 0;
+
+                result.AverageCount = cadetAnalyticsList.Count(c => c.AcademicRating == "TB" || c.AcademicRating == "Trung bình");
                 result.AveragePercentage = Math.Round((double)result.AverageCount * 100.0 / result.TotalCadetsEvaluated, 1);
 
                 result.WeakCount = cadetAnalyticsList.Count(c => c.AcademicRating == "Yếu");
@@ -143,19 +149,21 @@ namespace QL_HocVien.Services.Implementations
                 var list = grp.ToList();
                 int total = list.Count;
                 double avgGpa = total > 0 ? Math.Round(list.Average(c => c.Gpa), 2) : 0;
-                int exc = list.Count(c => c.AcademicRating == "Giỏi");
-                int good = list.Count(c => c.AcademicRating == "Khá");
-                int avg = list.Count(c => c.AcademicRating == "Trung bình");
+                int exc = list.Count(c => c.AcademicRating == "Xuất sắc");
+                int good = list.Count(c => c.AcademicRating == "Giỏi");
+                int fair = list.Count(c => c.AcademicRating == "Khá");
+                int pass = 0;
+                int avg = list.Count(c => c.AcademicRating == "TB" || c.AcademicRating == "Trung bình");
                 int weak = list.Count(c => c.AcademicRating == "Yếu");
                 int missing = list.Count(c => c.HasMissingSubjects);
                 int complete = total - missing;
 
                 string comment;
-                if (avgGpa >= 7.5 && missing == 0)
+                if (avgGpa >= 8.0 && missing == 0)
                     comment = "Đơn vị học tập xuất sắc, quân số đủ 100% môn";
                 else if (avgGpa >= 7.0)
                     comment = missing > 0 ? $"Học lực Khá, cần đôn đốc {missing} đ/c thi bù" : "Đơn vị đạt danh hiệu Học tập Khá toàn diện";
-                else if (avgGpa >= 6.0)
+                else if (avgGpa >= 5.0)
                     comment = $"Học lực trung bình, có {missing} đ/c chưa hoàn thành nội dung";
                 else
                     comment = "Cần tăng cường phụ đạo và tổ chức ôn tập kiểm tra bù";
@@ -169,6 +177,10 @@ namespace QL_HocVien.Services.Implementations
                     ExcellentRate = total > 0 ? Math.Round((double)exc * 100.0 / total, 1) : 0,
                     GoodCount = good,
                     GoodRate = total > 0 ? Math.Round((double)good * 100.0 / total, 1) : 0,
+                    FairCount = fair,
+                    FairRate = total > 0 ? Math.Round((double)fair * 100.0 / total, 1) : 0,
+                    PassCount = pass,
+                    PassRate = total > 0 ? Math.Round((double)pass * 100.0 / total, 1) : 0,
                     AverageCount = avg,
                     AverageRate = total > 0 ? Math.Round((double)avg * 100.0 / total, 1) : 0,
                     WeakCount = weak,
