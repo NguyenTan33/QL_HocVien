@@ -1,8 +1,7 @@
 {
-  "latestVersion": "1.5.8",
+  "latestVersion": "1.6.0",
   "minimumVersion": "1.0.0",
   "mandatory": false,
-  "downloadUrl": "https://github.com/NguyenTan33/QL_HocVien/releases/download/v1.5.8/QL_HocVien.exe",
-  "releaseNotes": "Bản cập nhật v1.5.8:\n- Quản lý học viên: Chuyển đổi 'Năm nhập học' thành 'Ngày sinh' với DatePicker chuẩn hóa; Cột 'Tuổi' được tính toán tự động theo thời gian thực (không lưu cứng).\n- Đối chiếu nhập liệu Excel thông minh: Nhận diện mã học viên, tự động thêm mới nếu chưa có hoặc đối chiếu từng trường dữ liệu và cập nhật chính xác nếu có sai lệch; Báo cáo chi tiết số lượng thêm mới, cập nhật và giữ nguyên.\n- Xuất file Excel học viên: Bỏ cột 'Lớp học' theo chuẩn dữ liệu mới gồm 11 cột rõ ràng, trực quan.\n- Tối ưu hóa hiển thị Dual-Theme: Khắc phục triệt để hiện tượng chữ mờ/nhòe ở tiêu đề tổng quan trong Chế độ Hành chính và lỗi chữ trắng khó đọc tại lịch 'Trọng tâm trong tháng' trong Chế độ Tác chiến.\n- Kiểm thử tự động: Toàn bộ 136/136 bài kiểm thử (Unit Tests) hoàn thành 100%."
+  "downloadUrl": "https://github.com/NguyenTan33/QL_HocVien/releases/download/v1.6.0/QL_HocVien.exe",
+  "releaseNotes": "Bản nâng cấp v1.6.0:\n- Nâng cấp tính năng Điều chuyển học viên sang bộ phận/đơn vị khác theo năm học.\n- Bảo toàn dữ liệu lịch sử cơ cấu tổ chức: Tra cứu theo năm học, mở lại năm cũ dữ liệu vẫn chính xác, năm mới cập nhật theo đơn vị mới.\n- Bổ sung Dòng thời gian đào tạo (Timeline): Xem chi tiết từng năm học từ nhập học đến nay (Khóa, Đơn vị, TBM từng năm, Xếp loại học lực, Huy hiệu Đã hoàn thành/Tốt nghiệp).\n- Tra cứu quân số cơ cấu tổ chức theo năm học trong Danh Mục & Đại Đội.\n- Nâng cấp cơ sở dữ liệu an toàn, bảo vệ toàn vẹn dữ liệu mã hóa SQLCipher AES-256."
 }
-

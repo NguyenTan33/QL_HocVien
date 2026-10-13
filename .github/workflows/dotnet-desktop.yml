@@ -68,15 +68,16 @@ jobs:
           -p:EnableCompressionInSingleFile=true `
           --output publish/win-x64
 
-    # Đóng gói thành ZIP
+    # Đóng gói thành ZIP & Chuẩn bị file thực thi EXE
     - name: Zip artifacts
       run: |
         $tag = "${{ github.ref_name }}"
         $zipName = "QL_HocVien_$tag_win-x64.zip"
         Compress-Archive -Path publish/win-x64/* -DestinationPath $zipName
         echo "ZIP_NAME=$zipName" >> $env:GITHUB_ENV
+        Copy-Item -Path publish/win-x64/QL_HocVien.exe -Destination .
 
-    # Tạo GitHub Release và upload file ZIP
+    # Tạo GitHub Release và upload file ZIP + EXE
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v2
       with:
@@ -86,20 +87,22 @@ jobs:
           ## 📦 Phiên Bản ${{ github.ref_name }}
 
           ### ✅ Tính năng mới trong ${{ github.ref_name }}:
-          - 🎓 **Quản Lý Khóa Học** (AcademicCohort): tạo, sửa, xóa khóa K75, K26...
-          - 🔍 **Tự động nhận diện mã học viên**: `ĐH.075.299` → Khóa K75
-          - 🔄 **Đồng bộ CohortId hàng loạt**: 1 click gán đúng khóa cho toàn bộ học viên
-          - 🗄️ **DB migration tự động**: bảng `AcademicCohorts`, cột `CohortId` tự thêm khi khởi động
-          - 🚫 Không còn dữ liệu đơn vị "ảo" cứng trong hệ thống
+          - 🔄 **Điều chuyển đơn vị học viên theo năm học**: Điều chuyển linh hoạt giữa các phân đội/tiểu đội/đại đội; bảo toàn 100% dữ liệu đơn vị của năm cũ khi tra cứu cơ cấu tổ chức theo năm học.
+          - 📜 **Dòng thời gian đào tạo (Timeline)**: Vertical Stepper theo dõi quá trình đào tạo từ nhập học đến nay (Khóa, Đơn vị, TBM từng năm, Xếp loại học lực, Huy hiệu Đã hoàn thành/Tốt nghiệp).
+          - 📊 **Quy chuẩn điểm TBM từng năm**: Tự động tính toán điểm trung bình môn có trọng số tín chỉ của từng năm học và xếp loại chuẩn xác: Xuất sắc (≥9.0), Giỏi (8.0-8.9), Khá (7.0-7.9), Trung bình (5.0-6.9), Yếu (<5.0).
+          - 📅 **Bộ lọc năm học cơ cấu tổ chức**: Tra cứu cơ cấu tổ chức và quân số học viên ứng với từng năm học cụ thể trong Danh Mục & Đại Đội.
+          - 🗄️ **Migration CSDL an toàn**: Bảng `CadetUnitHistories` và cột `Status` tự động tạo/cập nhật trên CSDL mã hóa cấp độ quân sự SQLCipher AES-256.
 
-          ### 📥 Hướng dẫn cài đặt:
-          1. Tải file **QL_HocVien_${{ github.ref_name }}_win-x64.zip**
+          ### 📥 Hướng dẫn cài đặt & Cập nhật:
+          1. Tải file **QL_HocVien_${{ github.ref_name }}_win-x64.zip** (hoặc chạy trực tiếp **QL_HocVien.exe**)
           2. Giải nén ra thư mục bất kỳ
-          3. Chạy **QL_HocVien.exe** — không cần cài đặt .NET riêng
+          3. Chạy **QL_HocVien.exe** — không cần cài đặt .NET riêng (Self-contained)
           4. Đăng nhập: `admin` / `Admin@123`
 
           > ⚠️ Cơ sở dữ liệu mã hóa AES-256 SQLCipher — giữ nguyên file `ql_hocvien.db` khi cập nhật phiên bản mới.
-        files: ${{ env.ZIP_NAME }}
+        files: |
+          ${{ env.ZIP_NAME }}
+          QL_HocVien.exe
         draft: false
         prerelease: false
       env:
