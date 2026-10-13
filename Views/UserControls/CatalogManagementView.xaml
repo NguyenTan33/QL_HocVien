@@ -509,6 +509,16 @@
 
                                     <!-- Các nút mở rộng, thu gọn, chuyển chế độ xem -->
                                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <!-- Bộ lọc năm học lịch sử -->
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
+                                            <TextBlock Text="📅 Năm học:" VerticalAlignment="Center" FontWeight="Bold" FontSize="12" 
+                                                       Foreground="{DynamicResource AccentBrush}" Margin="0,0,6,0"/>
+                                            <ComboBox ItemsSource="{Binding AvailableSchoolYears}" 
+                                                      SelectedItem="{Binding SelectedSchoolYearFilter}"
+                                                      Width="170" Height="32" VerticalContentAlignment="Center" FontSize="12"
+                                                      ToolTip="Chọn năm học để xem cơ cấu tổ chức và phân bổ quân số học viên tương ứng với năm đó"/>
+                                        </StackPanel>
+
                                         <Button Content="➕ Thêm Đơn Vị Gốc" Style="{StaticResource PrimaryButtonStyle}" Height="32" Padding="12,0" Margin="0,0,8,0"
                                                 ToolTip="Thêm một nhánh đơn vị mới cấp cao nhất (Học viện / Độc lập)"
                                                 Command="{Binding AddRootUnitCommand}"/>

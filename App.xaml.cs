@@ -7,6 +7,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using QL_HocVien.Data;
 using QL_HocVien.Data.Repositories;
+using QL_HocVien.Data.Repositories.Interfaces;
+using QL_HocVien.Data.Repositories.Implementations;
 using QL_HocVien.Infrastructure.Factory;
 using QL_HocVien.Services;
 using QL_HocVien.Services.Calculators;
@@ -234,6 +236,23 @@ namespace QL_HocVien
                                 {
                                     clsVm.OpenAddFormCommand.Execute(null);
                                 }
+                                else if (mv.CurrentView is CadetManagementViewModel cdtVm)
+                                {
+                                    for (int waitCount = 0; waitCount < 30 && cdtVm.Cadets.Count == 0; waitCount++)
+                                    {
+                                        System.Threading.Thread.Sleep(100);
+                                        mainWindow.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+                                    }
+                                    var firstCadet = cdtVm.Cadets.FirstOrDefault();
+                                    if (mType.Contains("timeline"))
+                                    {
+                                        cdtVm.OpenTimelineModalCommand.Execute(firstCadet);
+                                    }
+                                    else if (mType.Contains("transfer"))
+                                    {
+                                        cdtVm.OpenTransferModalCommand.Execute(firstCadet);
+                                    }
+                                }
                             }
                         }
                     }
@@ -328,6 +347,7 @@ namespace QL_HocVien
             services.AddScoped<IUnitRepository, UnitRepository>();
             services.AddScoped<IMajorRepository, MajorRepository>();
             services.AddScoped<ITrainingEventRepository, TrainingEventRepository>();
+            services.AddScoped<ICadetUnitHistoryRepository, CadetUnitHistoryRepository>();
 
             // Đăng ký Services (SOLID - SRP, OCP)
             services.AddScoped<IAuthService, AuthService>();

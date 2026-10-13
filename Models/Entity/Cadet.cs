@@ -72,7 +72,10 @@ namespace QL_HocVien.Models.Entity
         public MilitaryClass? MilitaryClass { get; set; }
         
         public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public string Status { get; set; } = "Đang học"; // "Đang học", "Đã hoàn thành", "Bảo lưu", "Thôi học"
+
         public ICollection<PhysicalExamRecord> ExamRecords { get; set; } = new List<PhysicalExamRecord>();
+        public ICollection<CadetUnitHistory> UnitHistories { get; set; } = new List<CadetUnitHistory>();
 
         private bool _isSelected;
 

@@ -26,6 +26,7 @@ namespace QL_HocVien.Data
         public DbSet<CreditScoreRecord> CreditScoreRecords => Set<CreditScoreRecord>();
         public DbSet<AccountPasskey> AccountPasskeys => Set<AccountPasskey>();
         public DbSet<AcademicCohort> AcademicCohorts => Set<AcademicCohort>();
+        public DbSet<CadetUnitHistory> CadetUnitHistories => Set<CadetUnitHistory>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -118,6 +119,8 @@ namespace QL_HocVien.Data
                 entity.Property(e => e.Cohort).HasMaxLength(50).HasDefaultValue(string.Empty);
                 entity.Property(e => e.AcademicYear).HasMaxLength(50).HasDefaultValue(string.Empty);
 
+                entity.Property(e => e.Status).HasMaxLength(50).HasDefaultValue("Đang học");
+
                 entity.HasOne(e => e.User)
                       .WithMany()
                       .HasForeignKey(e => e.UserId)
@@ -127,6 +130,22 @@ namespace QL_HocVien.Data
                       .WithMany(m => m.Cadets)
                       .HasForeignKey(e => e.ClassId)
                       .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasMany(e => e.UnitHistories)
+                      .WithOne(h => h.Cadet)
+                      .HasForeignKey(h => h.CadetId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Cấu hình CadetUnitHistory
+            modelBuilder.Entity<CadetUnitHistory>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.CadetId);
+                entity.HasIndex(e => e.SchoolYear);
+                entity.Property(e => e.SchoolYear).IsRequired().HasMaxLength(30);
+                entity.Property(e => e.Unit).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Status).HasMaxLength(50).HasDefaultValue("Đang học");
             });
 
             // Cấu hình Subject

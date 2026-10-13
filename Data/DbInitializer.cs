@@ -226,6 +226,37 @@ namespace QL_HocVien.Data
                 context.Database.ExecuteSqlRaw(@"ALTER TABLE ""Cadets"" ADD COLUMN ""AcademicYear"" TEXT NOT NULL DEFAULT '';");
             }
             catch { }
+            try
+            {
+                context.Database.ExecuteSqlRaw(@"ALTER TABLE ""Cadets"" ADD COLUMN ""Status"" TEXT NOT NULL DEFAULT 'Đang học';");
+            }
+            catch { }
+
+            // Đảm bảo bảng CadetUnitHistories tồn tại để theo dõi dòng thời gian luân chuyển đơn vị theo từng năm học
+            try
+            {
+                context.Database.ExecuteSqlRaw(@"
+                    CREATE TABLE IF NOT EXISTS ""CadetUnitHistories"" (
+                        ""Id"" INTEGER NOT NULL CONSTRAINT ""PK_CadetUnitHistories"" PRIMARY KEY AUTOINCREMENT,
+                        ""CadetId"" INTEGER NOT NULL,
+                        ""SchoolYear"" TEXT NOT NULL,
+                        ""YearOrder"" INTEGER NOT NULL DEFAULT 1,
+                        ""Cohort"" TEXT NOT NULL DEFAULT '',
+                        ""Unit"" TEXT NOT NULL,
+                        ""UnitName"" TEXT NOT NULL DEFAULT '',
+                        ""ClassName"" TEXT NOT NULL DEFAULT '',
+                        ""Status"" TEXT NOT NULL DEFAULT 'Đang học',
+                        ""AnnualGpa"" REAL NULL,
+                        ""TransferReason"" TEXT NULL,
+                        ""EffectiveDate"" TEXT NULL,
+                        ""CreatedAt"" TEXT NOT NULL,
+                        CONSTRAINT ""FK_CadetUnitHistories_Cadets_CadetId"" FOREIGN KEY (""CadetId"") REFERENCES ""Cadets"" (""Id"") ON DELETE CASCADE
+                    );
+                    CREATE INDEX IF NOT EXISTS ""IX_CadetUnitHistories_CadetId"" ON ""CadetUnitHistories"" (""CadetId"");
+                    CREATE INDEX IF NOT EXISTS ""IX_CadetUnitHistories_SchoolYear"" ON ""CadetUnitHistories"" (""SchoolYear"");
+                ");
+            }
+            catch { }
 
             // Đảm bảo cột SchoolYear tồn tại trong bảng CreditScoreRecords
             try

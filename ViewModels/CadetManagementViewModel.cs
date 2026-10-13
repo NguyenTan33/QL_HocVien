@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QL_HocVien.Models;
+using QL_HocVien.Models.DTOs;
 using QL_HocVien.Models.Entity;
 using QL_HocVien.Services;
 using QL_HocVien.Services.Interfaces;
@@ -22,6 +24,7 @@ namespace QL_HocVien.ViewModels
         private readonly ICatalogService _catalogService;
         private readonly ISecurityGateService _securityGate;
         private readonly ICohortService? _cohortService;
+        private readonly IUnitHierarchyService? _unitHierarchyService;
 
         public ObservableCollection<AcademicCohort> AvailableCohorts { get; } = new();
 
@@ -195,6 +198,64 @@ namespace QL_HocVien.ViewModels
         [ObservableProperty]
         private int _totalFilteredCount;
 
+        // Modal Điều chuyển đơn vị đào tạo
+        [ObservableProperty]
+        private bool _isTransferModalOpen;
+
+        [ObservableProperty]
+        private Cadet? _transferCadet;
+
+        [ObservableProperty]
+        private string _transferSchoolYear = string.Empty;
+
+        [ObservableProperty]
+        private int _transferYearOrder = 2;
+
+        [ObservableProperty]
+        private string _transferCohort = string.Empty;
+
+        [ObservableProperty]
+        private string _transferUnit = string.Empty;
+
+        [ObservableProperty]
+        private string _transferClassName = string.Empty;
+
+        [ObservableProperty]
+        private string _transferStatus = "Đang học";
+
+        [ObservableProperty]
+        private string _transferReason = string.Empty;
+
+        [ObservableProperty]
+        private DateTime? _transferEffectiveDate = DateTime.Today;
+
+        public ObservableCollection<string> TransferStatusList { get; } = new()
+        {
+            "Đang học", "Đã hoàn thành", "Bảo lưu", "Chuyển ngành", "Kỷ luật / Buộc thôi học"
+        };
+
+        public ObservableCollection<UnitTreeNode> TransferUnitTreeNodes { get; } = new();
+
+        [ObservableProperty]
+        private UnitTreeNode? _transferSelectedUnitNode;
+
+        partial void OnTransferSelectedUnitNodeChanged(UnitTreeNode? value)
+        {
+            if (value != null && !string.IsNullOrWhiteSpace(value.Value))
+            {
+                TransferUnit = value.DisplayText;
+            }
+        }
+
+        // Modal Dòng thời gian đào tạo (Timeline)
+        [ObservableProperty]
+        private bool _isTimelineModalOpen;
+
+        [ObservableProperty]
+        private Cadet? _timelineCadet;
+
+        public ObservableCollection<CadetTimelineNodeDto> TimelineNodes { get; } = new();
+
         public event Action? OnRequestAddCadet;
         public event Action? OnRequestManageUnits;
 
@@ -209,7 +270,8 @@ namespace QL_HocVien.ViewModels
             IFileDialogService fileDialogService,
             ICatalogService catalogService,
             ISecurityGateService securityGate,
-            ICohortService? cohortService = null)
+            ICohortService? cohortService = null,
+            IUnitHierarchyService? unitHierarchyService = null)
         {
             _cadetService = cadetService;
             _classService = classService;
@@ -219,6 +281,7 @@ namespace QL_HocVien.ViewModels
             _catalogService = catalogService;
             _securityGate = securityGate;
             _cohortService = cohortService;
+            _unitHierarchyService = unitHierarchyService;
             Title = "Quản Lý Danh Sách Học Viên";
 
             _ = InitializeAsync();
@@ -971,5 +1034,142 @@ namespace QL_HocVien.ViewModels
         partial void OnFilterMaxAgeChanged(int? value) { if (!_isSuppressingFilterEvents) _ = LoadCadetsAsync(); }
         partial void OnSelectedHasAccountChanged(string value) { if (!_isSuppressingFilterEvents) _ = LoadCadetsAsync(); }
         partial void OnSelectedFitnessGradeChanged(string value) { if (!_isSuppressingFilterEvents) _ = LoadCadetsAsync(); }
+
+        #region Điều Chuyển Đơn Vị & Dòng Thời Gian Đào Tạo (Timeline)
+
+        [RelayCommand]
+        public async Task OpenTransferModalAsync(Cadet? cadet)
+        {
+            var target = cadet ?? SelectedCadet;
+            if (target == null)
+            {
+                MessageBox.Show("Vui lòng chọn một học viên cần điều chuyển đơn vị.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            TransferCadet = target;
+            TransferCohort = target.Cohort ?? string.Empty;
+            TransferUnit = target.Unit ?? string.Empty;
+            TransferClassName = target.ClassName ?? string.Empty;
+            TransferStatus = !string.IsNullOrWhiteSpace(target.Status) ? target.Status : "Đang học";
+            TransferReason = "Điều chuyển sang đơn vị mới theo kế hoạch đào tạo";
+            TransferEffectiveDate = DateTime.Today;
+
+            // Xác định năm học và năm thứ
+            int currentYear = DateTime.Today.Year;
+            TransferSchoolYear = $"{currentYear} - {currentYear + 1}";
+            TransferYearOrder = 2;
+
+            // Nạp cây đơn vị cho ComboBox chọn nhanh
+            TransferUnitTreeNodes.Clear();
+            if (_unitHierarchyService != null)
+            {
+                try
+                {
+                    var tree = await _unitHierarchyService.GetUnitTreeAsync(false);
+                    foreach (var node in tree) TransferUnitTreeNodes.Add(node);
+                }
+                catch { }
+            }
+
+            IsTransferModalOpen = true;
+        }
+
+        [RelayCommand]
+        public void CloseTransferModal()
+        {
+            IsTransferModalOpen = false;
+        }
+
+        [RelayCommand]
+        public async Task ExecuteTransferAsync()
+        {
+            if (TransferCadet == null) return;
+
+            if (string.IsNullOrWhiteSpace(TransferUnit))
+            {
+                MessageBox.Show("Vui lòng nhập hoặc chọn đơn vị mới cần điều chuyển đến.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(TransferSchoolYear))
+            {
+                MessageBox.Show("Vui lòng nhập năm học áp dụng điều chuyển (ví dụ: 2024 - 2025).", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!await _securityGate.EnsureUnlockedAsync("Điều chuyển đơn vị học viên")) return;
+
+            IsBusy = true;
+            try
+            {
+                var result = await _cadetService.TransferCadetAsync(
+                    TransferCadet.Id,
+                    TransferUnit,
+                    TransferSchoolYear,
+                    TransferYearOrder,
+                    TransferCohort,
+                    TransferClassName,
+                    TransferReason,
+                    TransferEffectiveDate,
+                    TransferStatus);
+
+                if (result.Success)
+                {
+                    MessageBox.Show(result.Message, "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+                    IsTransferModalOpen = false;
+                    await LoadCadetsAsync();
+                }
+                else
+                {
+                    MessageBox.Show(result.Message, "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi điều chuyển: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        [RelayCommand]
+        public async Task OpenTimelineModalAsync(Cadet? cadet)
+        {
+            var target = cadet ?? SelectedCadet;
+            if (target == null)
+            {
+                MessageBox.Show("Vui lòng chọn một học viên để xem dòng thời gian đào tạo.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            TimelineCadet = target;
+            TimelineNodes.Clear();
+            IsTimelineModalOpen = true;
+
+            try
+            {
+                var nodes = await _cadetService.GetCadetTimelineAsync(target.Id);
+                TimelineNodes.Clear();
+                foreach (var n in nodes)
+                {
+                    TimelineNodes.Add(n);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi tải dòng thời gian học viên: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        [RelayCommand]
+        public void CloseTimelineModal()
+        {
+            IsTimelineModalOpen = false;
+        }
+
+        #endregion
     }
 }

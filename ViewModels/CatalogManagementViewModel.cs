@@ -29,6 +29,16 @@ namespace QL_HocVien.ViewModels
         public ObservableCollection<MilitaryMajor> Majors { get; } = new();
         public ObservableCollection<UnitTreeNode> UnitTreeNodes { get; } = new();
 
+        public ObservableCollection<string> AvailableSchoolYears { get; } = new();
+
+        [ObservableProperty]
+        private string _selectedSchoolYearFilter = "[ Hiện tại / Mặc định ]";
+
+        partial void OnSelectedSchoolYearFilterChanged(string value)
+        {
+            _ = BuildUnitTreeAsync();
+        }
+
         [ObservableProperty]
         private bool _isTreeViewMode = true;
 
@@ -254,6 +264,34 @@ namespace QL_HocVien.ViewModels
                 var majors = await _catalogService.GetAllMajorsAsync();
                 Majors.Clear();
                 foreach (var m in majors) Majors.Add(m);
+
+                if (_cadetService != null)
+                {
+                    try
+                    {
+                        var historyYears = await _cadetService.GetDistinctSchoolYearsFromHistoryAsync();
+                        var cadetYears = await _cadetService.GetDistinctAcademicYearsAsync();
+                        var combinedYears = cadetYears.Concat(historyYears).Where(y => !string.IsNullOrWhiteSpace(y)).Distinct().OrderByDescending(y => y).ToList();
+
+                        string currentSelection = SelectedSchoolYearFilter;
+                        AvailableSchoolYears.Clear();
+                        AvailableSchoolYears.Add("[ Hiện tại / Mặc định ]");
+                        foreach (var y in combinedYears)
+                        {
+                            AvailableSchoolYears.Add(y);
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(currentSelection) && AvailableSchoolYears.Contains(currentSelection))
+                        {
+                            SelectedSchoolYearFilter = currentSelection;
+                        }
+                        else
+                        {
+                            SelectedSchoolYearFilter = "[ Hiện tại / Mặc định ]";
+                        }
+                    }
+                    catch { }
+                }
 
                 await BuildUnitTreeAsync();
 
@@ -1222,8 +1260,24 @@ namespace QL_HocVien.ViewModels
             {
                 try
                 {
-                    var allCadets = (await _cadetService.GetAllCadetsAsync()).ToList();
-                    UnitTreeNode.AssignCadetCounts(UnitTreeNodes, allCadets);
+                    if (!string.IsNullOrWhiteSpace(SelectedSchoolYearFilter) &&
+                        !SelectedSchoolYearFilter.Equals("[ Hiện tại / Mặc định ]", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var histories = await _cadetService.GetUnitHistoriesBySchoolYearAsync(SelectedSchoolYearFilter);
+                        var cadetsInYear = histories.Select(h => new Cadet
+                        {
+                            Id = h.CadetId,
+                            Unit = h.Unit,
+                            Cohort = h.Cohort,
+                            ClassName = h.ClassName
+                        }).ToList();
+                        UnitTreeNode.AssignCadetCounts(UnitTreeNodes, cadetsInYear);
+                    }
+                    else
+                    {
+                        var allCadets = (await _cadetService.GetAllCadetsAsync()).ToList();
+                        UnitTreeNode.AssignCadetCounts(UnitTreeNodes, allCadets);
+                    }
                 }
                 catch { }
             }

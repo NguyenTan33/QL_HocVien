@@ -1,18 +1,32 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using QL_HocVien.Data;
 using QL_HocVien.Data.Repositories;
+using QL_HocVien.Data.Repositories.Interfaces;
 using QL_HocVien.Models;
+using QL_HocVien.Models.DTOs;
+using QL_HocVien.Models.Entity;
+using QL_HocVien.Services.Interfaces;
 
 namespace QL_HocVien.Services.Implementations
 {
     public class CadetService : ICadetService
     {
         private readonly ICadetRepository _cadetRepository;
+        private readonly ICadetUnitHistoryRepository _unitHistoryRepository;
+        private readonly AppDbContext _context;
 
-        public CadetService(ICadetRepository cadetRepository)
+        public CadetService(
+            ICadetRepository cadetRepository,
+            ICadetUnitHistoryRepository unitHistoryRepository,
+            AppDbContext context)
         {
             _cadetRepository = cadetRepository;
+            _unitHistoryRepository = unitHistoryRepository;
+            _context = context;
         }
 
         public async Task<IEnumerable<Cadet>> GetAllCadetsAsync()
@@ -144,6 +158,189 @@ namespace QL_HocVien.Services.Implementations
             int year = DateTime.Today.Year;
             int nextSeq = await _cadetRepository.GetNextCadetSequenceNumberAsync(year);
             return $"HV-{year}-{nextSeq:D3}";
+        }
+
+        public async Task EnsureInitialUnitHistoryAsync(int cadetId)
+        {
+            var cadet = await _cadetRepository.GetByIdAsync(cadetId);
+            if (cadet == null) return;
+
+            var existing = await _unitHistoryRepository.GetByCadetIdAsync(cadetId);
+            if (existing.Count == 0)
+            {
+                string schoolYear = !string.IsNullOrWhiteSpace(cadet.AcademicYear)
+                    ? cadet.AcademicYear
+                    : $"{DateTime.Today.Year} - {DateTime.Today.Year + 1}";
+
+                var initialHistory = new CadetUnitHistory
+                {
+                    CadetId = cadet.Id,
+                    SchoolYear = schoolYear,
+                    YearOrder = 1,
+                    Cohort = cadet.Cohort ?? string.Empty,
+                    Unit = cadet.Unit ?? string.Empty,
+                    UnitName = cadet.Unit ?? string.Empty,
+                    ClassName = cadet.ClassName ?? string.Empty,
+                    Status = string.IsNullOrWhiteSpace(cadet.Status) ? "Đang học" : cadet.Status,
+                    TransferReason = "Tiếp nhận học viên ban đầu",
+                    EffectiveDate = DateTime.Today
+                };
+
+                await _unitHistoryRepository.AddAsync(initialHistory);
+                await _unitHistoryRepository.SaveChangesAsync();
+            }
+        }
+
+        public async Task<(bool Success, string Message)> TransferCadetAsync(
+            int cadetId,
+            string newUnit,
+            string newSchoolYear,
+            int yearOrder,
+            string? newCohort = null,
+            string? newClassName = null,
+            string? reason = null,
+            DateTime? effectiveDate = null,
+            string status = "Đang học")
+        {
+            if (cadetId <= 0) return (false, "Học viên không hợp lệ.");
+            if (string.IsNullOrWhiteSpace(newUnit)) return (false, "Vui lòng chọn đơn vị mới cần điều chuyển.");
+            if (string.IsNullOrWhiteSpace(newSchoolYear)) return (false, "Vui lòng nhập hoặc chọn năm học áp dụng.");
+
+            var cadet = await _cadetRepository.GetByIdAsync(cadetId);
+            if (cadet == null) return (false, "Không tìm thấy học viên trong hệ thống.");
+
+            // Đảm bảo có lịch sử mốc ban đầu trước khi thêm mốc điều chuyển mới
+            await EnsureInitialUnitHistoryAsync(cadetId);
+
+            var existingHistory = await _unitHistoryRepository.GetByCadetAndYearAsync(cadetId, newSchoolYear);
+            if (existingHistory != null)
+            {
+                existingHistory.Unit = newUnit.Trim();
+                existingHistory.UnitName = newUnit.Trim();
+                existingHistory.YearOrder = yearOrder > 0 ? yearOrder : existingHistory.YearOrder;
+                if (!string.IsNullOrWhiteSpace(newCohort)) existingHistory.Cohort = newCohort.Trim();
+                if (!string.IsNullOrWhiteSpace(newClassName)) existingHistory.ClassName = newClassName.Trim();
+                existingHistory.Status = status;
+                existingHistory.TransferReason = reason ?? existingHistory.TransferReason;
+                existingHistory.EffectiveDate = effectiveDate ?? DateTime.Today;
+                _unitHistoryRepository.Update(existingHistory);
+            }
+            else
+            {
+                var newHistory = new CadetUnitHistory
+                {
+                    CadetId = cadetId,
+                    SchoolYear = newSchoolYear.Trim(),
+                    YearOrder = yearOrder > 0 ? yearOrder : 1,
+                    Cohort = !string.IsNullOrWhiteSpace(newCohort) ? newCohort.Trim() : (cadet.Cohort ?? string.Empty),
+                    Unit = newUnit.Trim(),
+                    UnitName = newUnit.Trim(),
+                    ClassName = !string.IsNullOrWhiteSpace(newClassName) ? newClassName.Trim() : (cadet.ClassName ?? string.Empty),
+                    Status = status,
+                    TransferReason = reason ?? "Điều chuyển đơn vị đào tạo",
+                    EffectiveDate = effectiveDate ?? DateTime.Today
+                };
+                await _unitHistoryRepository.AddAsync(newHistory);
+            }
+
+            // Đồng thời cập nhật trạng thái và đơn vị hiện hành của học viên
+            cadet.Unit = newUnit.Trim();
+            if (!string.IsNullOrWhiteSpace(newCohort)) cadet.Cohort = newCohort.Trim();
+            if (!string.IsNullOrWhiteSpace(newClassName)) cadet.ClassName = newClassName.Trim();
+            cadet.Status = status;
+            _cadetRepository.Update(cadet);
+
+            await _context.SaveChangesAsync();
+            return (true, "Điều chuyển học viên sang bộ phận/đơn vị mới thành công!");
+        }
+
+        public async Task<List<CadetTimelineNodeDto>> GetCadetTimelineAsync(int cadetId)
+        {
+            var cadet = await _cadetRepository.GetByIdAsync(cadetId);
+            if (cadet == null) return new List<CadetTimelineNodeDto>();
+
+            await EnsureInitialUnitHistoryAsync(cadetId);
+
+            var histories = await _unitHistoryRepository.GetByCadetIdAsync(cadetId);
+            if (histories.Count == 0) return new List<CadetTimelineNodeDto>();
+
+            // Lấy tất cả bảng điểm tín chỉ của học viên này
+            var allScores = await _context.CreditScoreRecords
+                .Include(r => r.CreditSubject)
+                .Where(r => r.CadetId == cadetId)
+                .ToListAsync();
+
+            // Sắp xếp theo Năm thứ (YearOrder) hoặc thứ tự năm học
+            var sortedHistories = histories.OrderBy(h => h.YearOrder).ThenBy(h => h.SchoolYear).ToList();
+            var result = new List<CadetTimelineNodeDto>();
+
+            for (int i = 0; i < sortedHistories.Count; i++)
+            {
+                var h = sortedHistories[i];
+                var yearScores = allScores
+                    .Where(s => string.Equals(s.SchoolYear?.Trim(), h.SchoolYear?.Trim(), StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+
+                double? gpa = null;
+                if (yearScores.Count > 0)
+                {
+                    double totalWeighted = 0;
+                    double totalCredits = 0;
+                    foreach (var s in yearScores)
+                    {
+                        double cred = (s.CreditSubject != null && s.CreditSubject.Credits > 0) ? s.CreditSubject.Credits : 1.0;
+                        totalWeighted += s.FinalScore * cred;
+                        totalCredits += cred;
+                    }
+
+                    if (totalCredits > 0)
+                    {
+                        gpa = Math.Round(totalWeighted / totalCredits, 2);
+                    }
+                }
+                else if (h.AnnualGpa.HasValue && h.AnnualGpa.Value > 0)
+                {
+                    gpa = h.AnnualGpa.Value;
+                }
+
+                bool isLast = (i == sortedHistories.Count - 1);
+                string nodeStatus = !string.IsNullOrWhiteSpace(h.Status) ? h.Status : (cadet.Status ?? "Đang học");
+                bool isGrad = string.Equals(nodeStatus, "Đã hoàn thành", StringComparison.OrdinalIgnoreCase) ||
+                              string.Equals(nodeStatus, "Đã tốt nghiệp", StringComparison.OrdinalIgnoreCase) ||
+                              string.Equals(cadet.Status, "Đã hoàn thành", StringComparison.OrdinalIgnoreCase) ||
+                              string.Equals(cadet.Status, "Đã tốt nghiệp", StringComparison.OrdinalIgnoreCase);
+
+                var node = new CadetTimelineNodeDto
+                {
+                    Id = h.Id,
+                    CadetId = h.CadetId,
+                    SchoolYear = h.SchoolYear,
+                    YearOrder = h.YearOrder,
+                    Cohort = !string.IsNullOrWhiteSpace(h.Cohort) ? h.Cohort : (cadet.Cohort ?? string.Empty),
+                    Unit = h.Unit,
+                    UnitName = !string.IsNullOrWhiteSpace(h.UnitName) ? h.UnitName : h.Unit,
+                    ClassName = !string.IsNullOrWhiteSpace(h.ClassName) ? h.ClassName : (cadet.ClassName ?? string.Empty),
+                    Status = nodeStatus,
+                    AnnualGpa = gpa,
+                    TransferReason = h.TransferReason ?? string.Empty,
+                    EffectiveDate = h.EffectiveDate,
+                    IsCurrent = isLast
+                };
+
+                result.Add(node);
+            }
+
+            return result;
+        }
+
+        public async Task<List<CadetUnitHistory>> GetUnitHistoriesBySchoolYearAsync(string schoolYear)
+        {
+            return await _unitHistoryRepository.GetBySchoolYearAsync(schoolYear);
+        }
+
+        public async Task<List<string>> GetDistinctSchoolYearsFromHistoryAsync()
+        {
+            return await _unitHistoryRepository.GetDistinctSchoolYearsAsync();
         }
     }
 }

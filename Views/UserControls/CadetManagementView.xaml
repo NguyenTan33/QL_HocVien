@@ -41,6 +41,10 @@
                         Command="{Binding ExportExcelCommand}"/>
                 <Button Content="➕ Thêm HV" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,8"
                         Command="{Binding RequestAddNewCommand}"/>
+                <Button Content="🔄 Chuyển Đơn Vị" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,8"
+                        Command="{Binding OpenTransferModalCommand}" ToolTip="Điều chuyển học viên sang bộ phận / đơn vị khác theo năm học"/>
+                <Button Content="📜 Dòng Thời Gian" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,8"
+                        Command="{Binding OpenTimelineModalCommand}" ToolTip="Xem dòng thời gian đào tạo (các khóa, đơn vị, TBM từng năm, hoàn thành)"/>
                 <Button Content="✏️ Sửa" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,8"
                         Command="{Binding StartEditCommand}"/>
                 <Button Content="🗑️ Xóa" Style="{StaticResource DangerButtonStyle}" Margin="0,0,0,8"
@@ -182,6 +186,24 @@
                 <DataGrid ItemsSource="{Binding Cadets}" SelectedItem="{Binding SelectedCadet}"
                           Style="{StaticResource MilitaryDataGridStyle}"
                           HeadersVisibility="Column" RowHeaderWidth="0">
+                    <DataGrid.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="🔄 Điều Chuyển Đơn Vị Mới..." 
+                                      Command="{Binding OpenTransferModalCommand}" 
+                                      CommandParameter="{Binding SelectedCadet}"/>
+                            <MenuItem Header="📜 Dòng Thời Gian Đào Tạo (Timeline)..." 
+                                      Command="{Binding OpenTimelineModalCommand}" 
+                                      CommandParameter="{Binding SelectedCadet}"/>
+                            <Separator/>
+                            <MenuItem Header="✏️ Sửa Thông Tin Học Viên" 
+                                      Command="{Binding StartEditCommand}"/>
+                            <MenuItem Header="🔑 Đặt Lại Mật Khẩu" 
+                                      Command="{Binding ResetPasswordCommand}"/>
+                            <Separator/>
+                            <MenuItem Header="🗑️ Xóa Học Viên" 
+                                      Command="{Binding DeleteCadetCommand}"/>
+                        </ContextMenu>
+                    </DataGrid.ContextMenu>
                     <DataGrid.Columns>
                         <!-- Cột Chọn checkbox -->
                         <DataGridTemplateColumn Width="48" CanUserResize="False">
@@ -203,6 +225,15 @@
                         <DataGridTextColumn Header="Cấp Bậc" Binding="{Binding Rank}" Width="105" IsReadOnly="True"/>
                         <DataGridTextColumn Header="Chức Vụ" Binding="{Binding Position}" Width="130" IsReadOnly="True"/>
                         <DataGridTextColumn Header="Đơn Vị" Binding="{Binding Unit}" MinWidth="160" Width="*" IsReadOnly="True"/>
+                        <DataGridTemplateColumn Header="Trạng Thái" Width="120" IsReadOnly="True">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="{DynamicResource PageBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2" HorizontalAlignment="Center">
+                                        <TextBlock Text="{Binding Status, TargetNullValue='Đang học', FallbackValue='Đang học'}" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
                         <DataGridTextColumn Header="Số Điện Thoại" Binding="{Binding PhoneNumber}" Width="120" IsReadOnly="True"/>
                         <DataGridTextColumn Header="Tuổi" Binding="{Binding Age}" Width="70" IsReadOnly="True"/>
                         <DataGridTextColumn Header="Giới Tính" Binding="{Binding Gender}" Width="90" IsReadOnly="True"/>
@@ -344,6 +375,247 @@
                                 Command="{Binding ConfirmResetPasswordCommand}"/>
                     </StackPanel>
                 </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- ==================== MODAL ĐIỀU CHUYỂN ĐƠN VỊ ==================== -->
+        <Grid Background="#7F000000" Visibility="{Binding IsTransferModalOpen, Converter={x:Static local_cv:BooleanToVisibilityConverter.Instance}}">
+            <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" 
+                    BorderThickness="1" CornerRadius="10" Width="560" MaxHeight="680" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="24">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="30" Color="#000000" Opacity="0.35" ShadowDepth="6"/>
+                </Border.Effect>
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <!-- Tiêu đề Modal -->
+                        <TextBlock Text="🔄 ĐIỀU CHUYỂN HỌC VIÊN SANG ĐƠN VỊ MỚI" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" Margin="0,0,0,8"/>
+                        <TextBlock Text="Cập nhật bộ phận / đơn vị đào tạo theo từng năm học. Dữ liệu các năm trước vẫn được bảo toàn nguyên vẹn trong lịch sử tra cứu." 
+                                   FontSize="11.5" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,16"/>
+
+                        <!-- Thông tin học viên hiện tại -->
+                        <Border Background="{DynamicResource PageBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,16">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="{Binding TransferCadet.FullName, StringFormat='Đồng chí: {0}'}" FontWeight="Bold" FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                    <TextBlock Text="{Binding TransferCadet.CadetCode, StringFormat='Mã học viên: {0}'}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,3,0,0"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="{Binding TransferCadet.Unit, StringFormat='Đơn vị hiện tại: {0}'}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}"/>
+                                    <TextBlock Text="{Binding TransferCadet.Cohort, StringFormat='Khóa: {0}'}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,3,0,0"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- Năm học & Năm thứ -->
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="12"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Năm học áp dụng (*):" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                                <TextBox Text="{Binding TransferSchoolYear, UpdateSourceTrigger=PropertyChanged}" 
+                                         Style="{StaticResource ModernTextBoxStyle}" Height="36" Tag="Ví dụ: 2024 - 2025"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Năm thứ đào tạo (*):" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                                <ComboBox SelectedValue="{Binding TransferYearOrder, Mode=TwoWay}"
+                                          SelectedValuePath="Tag" Height="36" Style="{StaticResource ModernComboBoxStyle}">
+                                    <ComboBoxItem Content="Năm thứ 1 (Năm 1)" Tag="1"/>
+                                    <ComboBoxItem Content="Năm thứ 2 (Năm 2)" Tag="2" IsSelected="True"/>
+                                    <ComboBoxItem Content="Năm thứ 3 (Năm 3)" Tag="3"/>
+                                    <ComboBoxItem Content="Năm thứ 4 (Năm 4)" Tag="4"/>
+                                    <ComboBoxItem Content="Năm thứ 5 (Năm 5)" Tag="5"/>
+                                </ComboBox>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Đơn vị mới cần chuyển đến -->
+                        <StackPanel Margin="0,0,0,12">
+                            <TextBlock Text="Đơn vị mới điều chuyển đến (*):" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                            <components:UnitTreeComboBox SelectedUnit="{Binding TransferUnit, Mode=TwoWay}" Height="36" Placeholder="Chọn hoặc gõ đơn vị mới (Tiểu đội / Đại đội / Tiểu đoàn)..."/>
+                        </StackPanel>
+
+                        <!-- Trạng thái đào tạo & Ngày hiệu lực -->
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="12"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Trạng thái đào tạo:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                                <ComboBox ItemsSource="{Binding TransferStatusList}" SelectedItem="{Binding TransferStatus}" 
+                                          Style="{StaticResource ModernComboBoxStyle}" Height="36"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Ngày có hiệu lực:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                                <DatePicker SelectedDate="{Binding TransferEffectiveDate, Mode=TwoWay}" Height="36" VerticalContentAlignment="Center"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Lý do / Quyết định điều chuyển -->
+                        <StackPanel Margin="0,0,0,20">
+                            <TextBlock Text="Lý do / Quyết định điều chuyển:" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding TransferReason, UpdateSourceTrigger=PropertyChanged}" 
+                                     Style="{StaticResource ModernTextBoxStyle}" Height="60" TextWrapping="Wrap" AcceptsReturn="True" Tag="Ghi rõ số quyết định hoặc lý do điều chuyển..."/>
+                        </StackPanel>
+
+                        <!-- Nút thao tác -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="Hủy Bỏ" Style="{StaticResource SecondaryButtonStyle}" Width="90" Height="36" Margin="0,0,10,0"
+                                    Command="{Binding CloseTransferModalCommand}"/>
+                            <Button Content="Xác Nhận Điều Chuyển" Style="{StaticResource PrimaryButtonStyle}" Height="36" Padding="14,0"
+                                    Command="{Binding ExecuteTransferCommand}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+
+        <!-- ==================== MODAL DÒNG THỜI GIAN ĐÀO TẠO (TIMELINE) ==================== -->
+        <Grid Background="#7F000000" Visibility="{Binding IsTimelineModalOpen, Converter={x:Static local_cv:BooleanToVisibilityConverter.Instance}}">
+            <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" 
+                    BorderThickness="1" CornerRadius="12" Width="680" MaxHeight="720" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="24">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="30" Color="#000000" Opacity="0.35" ShadowDepth="6"/>
+                </Border.Effect>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Header Modal -->
+                    <Grid Grid.Row="0" Margin="0,0,0,12">
+                        <StackPanel>
+                            <TextBlock Text="📜 DÒNG THỜI GIAN QUÁ TRÌNH ĐÀO TẠO" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}"/>
+                            <TextBlock Text="Lịch sử luân chuyển đơn vị, kết quả học tập (TBM) và tiến trình đào tạo qua từng năm học." 
+                                       FontSize="11.5" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,3,0,0"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Thông tin tổng quan học viên -->
+                    <Border Grid.Row="1" Background="{DynamicResource PageBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,10" Margin="0,0,0,16">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="14"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <!-- Avatar quân sự -->
+                            <Border Grid.Column="0" Width="44" Height="44" CornerRadius="22" Background="{DynamicResource PrimaryBrush}" VerticalAlignment="Center">
+                                <TextBlock Text="🎖️" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <!-- Chi tiết -->
+                            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding TimelineCadet.FullName}" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                <WrapPanel Orientation="Horizontal" Margin="0,3,0,0">
+                                    <TextBlock Text="{Binding TimelineCadet.CadetCode, StringFormat='Mã: {0}  •  '}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    <TextBlock Text="{Binding TimelineCadet.Rank, StringFormat='Cấp bậc: {0}  •  '}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    <TextBlock Text="{Binding TimelineCadet.Position, StringFormat='Chức vụ: {0}'}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                </WrapPanel>
+                            </StackPanel>
+                            <!-- Badge Trạng thái hiện tại -->
+                            <Border Grid.Column="3" Background="{DynamicResource PageBackgroundBrush}" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" CornerRadius="6" Padding="10,4" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding TimelineCadet.Status, TargetNullValue='Đang học', FallbackValue='Đang học'}" FontWeight="Bold" FontSize="12" Foreground="{DynamicResource AccentBrush}"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+
+                    <!-- Vùng danh sách mốc thời gian (Vertical Timeline) -->
+                    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Margin="0,0,0,16">
+                        <ItemsControl ItemsSource="{Binding TimelineNodes}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,0,0,14">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="32"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- Cột mốc Timeline (Vạch dọc + Icon chấm tròn) -->
+                                        <Grid Grid.Column="0">
+                                            <!-- Đường vạch kẻ đứng -->
+                                            <Rectangle Width="2" Fill="{DynamicResource CardBorderBrush}" HorizontalAlignment="Center"/>
+                                            <!-- Chấm tròn mốc -->
+                                            <Ellipse Width="16" Height="16" Fill="{DynamicResource AccentBrush}" Stroke="{DynamicResource PageBackgroundBrush}" StrokeThickness="3" VerticalAlignment="Top" Margin="0,8,0,0"/>
+                                        </Grid>
+
+                                        <!-- Thẻ nội dung mốc thời gian -->
+                                        <Border Grid.Column="1" Background="{DynamicResource PageBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="14,12" Margin="6,0,0,0">
+                                            <StackPanel>
+                                                <!-- Hàng 1: Năm học + Huy hiệu Đơn vị / Trạng thái -->
+                                                <Grid Margin="0,0,0,6">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding YearLabel}" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}"/>
+                                                        <!-- Huy hiệu Node hiện hành -->
+                                                        <Border Background="#10B981" CornerRadius="4" Padding="6,1" Margin="8,0,0,0" VerticalAlignment="Center"
+                                                                Visibility="{Binding IsCurrent, Converter={x:Static local_cv:BooleanToVisibilityConverter.Instance}}">
+                                                            <TextBlock Text="Đang theo học" FontSize="10.5" FontWeight="Bold" Foreground="#FFFFFF"/>
+                                                        </Border>
+                                                    </StackPanel>
+                                                    <Border Grid.Column="1" Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="7,2">
+                                                        <TextBlock Text="{Binding Status}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                    </Border>
+                                                </Grid>
+
+                                                <!-- Hàng 2: Cơ cấu Đơn vị & Khóa học -->
+                                                <WrapPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                                    <TextBlock Text="🚩 Đơn vị: " FontSize="12.5" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                    <TextBlock Text="{Binding UnitDisplay}" FontSize="12.5" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,14,0"/>
+                                                    <TextBlock Text="{Binding CohortDisplay}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                                    <TextBlock Text="{Binding ClassName, StringFormat='{}Lớp: {0}'}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"
+                                                               Visibility="{Binding ClassName, Converter={x:Static local_cv:StringToVisibilityConverter.Instance}}"/>
+                                                </WrapPanel>
+
+                                                <!-- Hàng 3: Điểm trung bình môn (TBM / GPA) & Xếp loại -->
+                                                <Border Background="{DynamicResource CardBackgroundBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="10,6" Margin="0,2,0,6">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                                            <TextBlock Text="📊 Điểm Trung Bình Môn (TBM): " FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                            <TextBlock Text="{Binding AnnualGpaDisplay}" FontSize="13" FontWeight="ExtraBold" Foreground="{DynamicResource AccentBrush}"/>
+                                                        </StackPanel>
+                                                        <Border Grid.Column="1" Background="{DynamicResource PageBackgroundBrush}" BorderThickness="1" CornerRadius="4" Padding="8,2"
+                                                                BorderBrush="{Binding RatingBadgeColor}">
+                                                            <TextBlock Text="{Binding AcademicRating}" FontSize="11" FontWeight="Bold" Foreground="{Binding RatingBadgeColor}"/>
+                                                        </Border>
+                                                    </Grid>
+                                                </Border>
+
+                                                <!-- Hàng 4: Quyết định / Lý do điều chuyển (nếu có) -->
+                                                <TextBlock Text="{Binding TransferReason, StringFormat='{}• Ghi chú: {0}'}" FontSize="11.5" FontStyle="Italic" Foreground="{DynamicResource TextSecondaryBrush}"
+                                                           Visibility="{Binding TransferReason, Converter={x:Static local_cv:StringToVisibilityConverter.Instance}}"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <!-- Nút Đóng -->
+                    <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Đóng" Style="{StaticResource SecondaryButtonStyle}" Width="100" Height="36"
+                                Command="{Binding CloseTimelineModalCommand}"/>
+                    </StackPanel>
+                </Grid>
             </Border>
         </Grid>
         </Grid>
